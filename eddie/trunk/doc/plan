@@ -41,7 +41,7 @@ PROJECT PLAN:
 	Actions:
 		email()					Chris	100%
 		system()				Chris	100%
-		restart()
+		restart()				Chris	100%
 		nice()
 		log()
 		syslog()
