@@ -4,9 +4,9 @@
 ## Author       : Rod Telford  <rtelford@psychofx.com>
 ##                Chris Miles  <chris@psychofx.com>
 ## 
-## Date		: 971217 
+## Start Date	: 971217 
 ## 
-## Description	: 
+## Description	: Defines all the actions available to Eddie directives.
 ##
 ## $Id$
 ##
@@ -26,28 +26,21 @@
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 ########################################################################
 
-import os, string, sys, log, utils
+# Python imports
+import os, string, sys
 
-# Elvin
-import eddieElvin4, definition
-
-# Page test
-#import snpp
-
-
-#### CONSTANTS ####
-
-DEFAULTSUBJ='Message from Eddie'
-
-
-#### Exceptions ####
-
-GetMessageError = 'GetMessageError'
+# Eddie imports
+import log, utils, eddieElvin4
 
 
 #### DEFINE ALL THE ACTIONS AVAILABLE ####
 
 class action:
+    """The action class defines all the available actions available to
+    Eddie directives. Every action method (excluding __init__()) is
+    an Eddie action, called from directive arguments such as 'action'
+    and 'act2ok'."""
+
     def __init__(self):
 	# define a default From: address for email action
 	try:
@@ -78,14 +71,6 @@ class action:
 	that msg is also the subject.
 	"""
 
-	# Replace any ALIASes if needed.
-#	if user in self.aliasDict.keys():
-#	    user = self.aliasDict[user]
-#	if msg in self.aliasDict.keys():
-#	    msg = self.aliasDict[msg]
-#	if msgbody in self.aliasDict.keys():
-#	    msgbody = self.aliasDict[msgbody]
-
 	# Multiple email recipients are seperated by '|'.
 	multUsers = string.split( user, '|' )
 
@@ -94,19 +79,6 @@ class action:
 
 	# Create user recipient list delimited by ','
 	users = string.join( multUsers, ',' )
-
-#	try:
-#	    MSG = self.getMessage(msg)
-#	    subj = MSG.subject
-#	    body = MSG.message
-#	except (KeyError, GetMessageError):
-#	    # Use msg string as the body
-#	    #subj = "Eddie Alert"
-#	    subj = msg
-#	    if msgbody == None:
-#		body = msg
-#	    else:
-#		body = msgbody
 
 	if type(msg) != type("string"):
 	    # if msg is not a string, assume it is a MSG object
@@ -162,11 +134,8 @@ class action:
 	# run thru parseVars() to substitute variables from varDict
 	users = parseVars( users, self.varDict )
 	subj = parseVars( subj, self.varDict )
-	#subj = parseVars( subj, self.varDict )	# twice to substitute substituted variables!!
 	body = parseVars( body, self.varDict )
-	#body = parseVars( body, self.varDict )	# twice to substitute substituted variables!!
 
-	#tmp = os.popen('/usr/lib/sendmail -t', 'w')
 	tmp = utils.safe_popen('/usr/lib/sendmail -t', 'w')
 	tmp.write( 'To: '+users+'\n' )
 	tmp.write( 'From: %s\n' % (self.EMAIL_FROM) )
@@ -175,36 +144,38 @@ class action:
 	tmp.write( 'X-Generated-By: %s:%s\n' % (os.uname()[1], sys.argv[0]) )
 	tmp.write( '\n' )
 	tmp.write( body+'\n' )
-	#tmp.write( '.\n' )
-	#tmp.close()
 	utils.safe_pclose( tmp )
 
-	if not log.log( "<action.py>action.email(), email sent to '%s', subject '%s', body '%s'" % (u,subj,body), 9 ):
-	    log.log( "<action.py>action.email('%s', '%s', '%s')" % (u,subj,body[:20]), 6 )
-	
+	if not log.log( "<action>action.email(), email sent to '%s', subject '%s', body '%s'" % (u,subj,body), 9 ):
+	    log.log( "<action>action.email('%s', '%s', '%s')" % (u,subj,body[:20]), 6 )
 
 
-    # system()
     def system(self, cmd):
-	# cmd contains the cmd to execute
-	# TODO: can we check this cmd for security problems ??
+	"""This action allows execution of external commands via the
+	os.system() call.  The only user argument, 'cmd', contains the
+	string of commands to execute.
+	TODO: can/should we check this cmd for security problems ??
+	"""
 
 	# Substitute variables in string
 	cmd = parseVars( cmd, self.varDict )
 
 	if len(cmd) == 0:
-	    log.log( "<action.py>action.system(), Error, no command given", 2)
+	    log.log( "<action>action.system(), Error, no command given", 5 )
 	    return
 
 	# Call system() to execute the command
-	log.log( "<action.py>action.system(), calling os.system() with cmd '%s'" % (cmd), 8 )
+	log.log( "<action>action.system(), calling os.system() with cmd '%s'" % (cmd), 6 )
+	# TODO: possibly not thread-safe to simply call os.system() without
+	# locking; this might have to be part of the thread-safe group of
+	# system commands in utils.py
 	retval = os.system( cmd )
 
 	# Alert if return value != 0
 	if retval != 0:
-	    log.log( "<action.py>action.system(), Alert, return value for cmd '%s' is %d" % (cmd,retval), 3 )
+	    log.log( "<action>action.system(), Alert, return value for cmd '%s' is %d" % (cmd,retval), 5 )
 
-	log.log( "<action.py>action.system(), cmd '%s', return value %d" % (cmd,retval), 6 )
+	log.log( "<action>action.system(), cmd '%s', return value %d" % (cmd,retval), 6 )
 
 
     # restart()
@@ -223,25 +194,28 @@ class action:
 	# Security: if cmd contains any illegal characters, "/#;!$%&*|~`", then we abort.
 	#if string.find( cmd, '/' ) != -1:
 	if utils.charpresent( cmd, '/#;!$%&*|~`' ) != 0:
-	    log.log( "<action.py>action.restart(), Alert, restart() arg contains illegal character and is not being executed, cmd is '%s'" % (cmd), 3 )
+	    log.log( "<action>action.restart(), Alert, restart() arg contains illegal character and is not being executed, cmd is '%s'" % (cmd), 5 )
 	    return 1001
 
 	if len(cmd) == 0:
-	    log.log( "<action.py>action.restart(), Error, no command given", 2)
+	    log.log( "<action>action.restart(), Error, no command given", 5 )
 	    return 1002
 	
 	# Build command
 	cmd = '/etc/init.d/'+cmd+' start'
 
 	# Call system() to execute the command
-	log.log( "<action.py>action.restart(), calling os.system() with cmd '%s'" % (cmd), 8 )
+	log.log( "<action>action.restart(), calling os.system() with cmd '%s'" % (cmd), 6 )
+	# TODO: possibly not thread-safe to simply call os.system() without
+	# locking; this might have to be part of the thread-safe group of
+	# system commands in utils.py
 	retval = os.system( cmd )
 
 	# Alert if return value != 0
 	if retval != 0:
-	    log.log( "<action.py>action.restart(), Alert, return value for cmd '%s' is %d" % (cmd,retval), 3 )
+	    log.log( "<action>action.restart(), Alert, return value for cmd '%s' is %d" % (cmd,retval), 5 )
 
-	log.log( "<action.py>action.restart(), cmd '%s', return value %d" % (cmd,retval), 6 )
+	log.log( "<action>action.restart(), cmd '%s', return value %d" % (cmd,retval), 6 )
 
 	return retval
 
@@ -264,7 +238,7 @@ class action:
 	nice_max = 19
 
 	if len(arg) < 0 or len(arg) > 2:
-	    log.log( "<action.py>action.nice(), Error, %d arguments found, expecting 1 or 2" % (len(arg)), 2 )
+	    log.log( "<action>action.nice(), Error, %d arguments found, expecting 1 or 2" % (len(arg)), 5 )
 	    return
 
 	# if one argument given, it is absolute priority level.
@@ -277,14 +251,14 @@ class action:
 
 	    # If val out of range, error.
 	    if val < nice_min or val > nice_max:
-		log.log( "<action.py>action.nice(), Error, val out of range, val is %d, range is %d-%d" % (val,nice_min,nice_max), 2 )
+		log.log( "<action>action.nice(), Error, val out of range, val is %d, range is %d-%d" % (val,nice_min,nice_max), 5 )
 		return
 	elif len(arg) == 2:
 	    # Relative priority given, incr must be '-' or '+'
 	    incr = arg[0]
 	    val = string.atoi(arg[1])
 	    if incr != '-' and incr != '+':
-		log.log( "<action.py>action.nice(), Error, incremental is '%s', expecting '-' or '+'" % (incr), 2 )
+		log.log( "<action>action.nice(), Error, incremental is '%s', expecting '-' or '+'" % (incr), 5 )
 		return
 
 
@@ -292,7 +266,7 @@ class action:
 	try:
 	    pid = varDict['pid']
 	except KeyError:
-	    log.log( "<action.py>action.nice(), Error, %pid is not defined", 2 )
+	    log.log( "<action>action.nice(), Error, %%pid is not defined", 5 )
 
 	# Build command
 	if incr == '':
@@ -301,14 +275,17 @@ class action:
 	    cmd = '/usr/bin/renice -n %s%d %s' % (incr,val,pid)
 
 	# Call renice()
-	log.log( "<action.py>action.nice(), calling os.system() with cmd '%s'" % (cmd), 8 )
+	log.log( "<action>action.nice(), calling os.system() with cmd '%s'" % (cmd), 9 )
+	# TODO: possibly not thread-safe to simply call os.system() without
+	# locking; this might have to be part of the thread-safe group of
+	# system commands in utils.py
 	retval = os.system( cmd )
 
 	# Alert if return value != 0
 	if retval != 0:
-	    log.log( "<action.py>action.nice(), Alert, return value for cmd '%s' is %d" % (cmd,retval), 3 )
+	    log.log( "<action>action.nice(), Alert, return value for cmd '%s' is %d" % (cmd,retval), 5 )
 
-	log.log( "<action.py>action.nice(), cmd '%s', return value %d" % (cmd,retval), 6 )
+	log.log( "<action>action.nice(), cmd '%s', return value %d" % (cmd,retval), 6 )
 
 
     # eddielog()
@@ -317,7 +294,7 @@ class action:
 	# if two arguments, first is text to log, second is log level.
 
 	if len(arg) < 0 or len(arg) > 2:
-	    log.log( "<action.py>action.eddielog(), Error, %d arguments found, expecting 1 or 2" % (len(arg)), 2 )
+	    log.log( "<action>action.eddielog(), Error, %d arguments found, expecting 1 or 2" % (len(arg)), 5 )
 	    return
 
 	logstr = arg[0]
@@ -328,7 +305,7 @@ class action:
 
 	    # If loglevel out of range, error.
 	    if loglevel < log.loglevel_min or loglevel > log.loglevel_max:
-		log.log( "<action.py>action.eddielog(), Error, loglevel out of range, loglevel is %d, range is %d-%d" % (loglevel,log.loglevel_min,log.loglevel_max), 2 )
+		log.log( "<action>action.eddielog(), Error, loglevel out of range, loglevel is %d, range is %d-%d" % (loglevel,log.loglevel_min,log.loglevel_max), 5 )
 		return
 	else:
 	    loglevel = log.loglevel_min
@@ -341,15 +318,15 @@ class action:
 
 	# Alert if return value == 0
 	if retval == 0:
-	    log.log( "<action.py>action.eddielog(), Alert, return value for log.log( '%s', %d ) is %d" % (logstr,loglevel,retval), 3 )
+	    log.log( "<action>action.eddielog(), Alert, return value for log.log( '%s', %d ) is %d" % (logstr,loglevel,retval), 5 )
 	else:
-	    log.log( "<action.py>action.eddielog(), text '%s', loglevel %d" % (logstr,loglevel), 6 )
+	    log.log( "<action>action.eddielog(), text '%s', loglevel %d" % (logstr,loglevel), 6 )
 
 
     # Send Elvin Ticker message
     def ticker(self, msg):
 	if eddieElvin4.UseElvin == 0:
-	    log.log( "<action.py>action.ticker(), Elvin is not available - skipping.", 7 )
+	    log.log( "<action>action.ticker(), Elvin is not available - skipping.", 5 )
 	    return 0
 
 	if type(msg) != type("string"):
@@ -361,7 +338,7 @@ class action:
 
 	if len(body) == 0:
 	    # body must contain something
-	    log.log( "<action.py>action.ticker(), Error, body is empty", 2 )
+	    log.log( "<action>action.ticker(), Error, body is empty", 5 )
 	    return
 
 	# Substitute variables in string
@@ -370,22 +347,22 @@ class action:
 	try:
 	    e = eddieElvin4.elvinTicker()
 	except eddieElvin4.ElvinError:
-	    log.log( "<action.py>action.ticker(), Error, elvinTicker() error", 2 )
+	    log.log( "<action>action.ticker(), Error, elvinTicker() error", 5 )
 	    return
 
 	retval = e.sendmsg( body )
 
 	# Alert if return value != 0
 	if retval != 0:
-	    log.log( "<action.py>action.ticker(), Alert, return value for e.sendmsg('%s') is %d" % (body,retval), 3 )
+	    log.log( "<action>action.ticker(), Alert, return value for e.sendmsg('%s') is %d" % (body,retval), 5 )
 	else:
-	    log.log( "<action.py>action.ticker('%s')" % (body), 6 )
+	    log.log( "<action>action.ticker('%s')" % (body), 6 )
 
 
     # elvinPage()
     def elvinPage(self, pager, msg):
 	if eddieElvin.UseElvin == 0:
-	    #log.log( "<action.py>action.elvin(), Elvin is not available - skipping.", 8 )
+	    #log.log( "<action>action.elvin(), Elvin is not available - skipping.", 5 )
 	    return 0
 
 	# send a message via Elvin message system to Pager
@@ -401,7 +378,7 @@ class action:
 
 	if len(body) == 0:
 	    # body must contain something
-	    log.log( "<action.py>action.elvinPage(), Error, body is empty", 2 )
+	    log.log( "<action>action.elvinPage(), Error, body is empty", 5 )
 	    return
 
 	# Substitute variables in string
@@ -410,63 +387,22 @@ class action:
 	try:
 	    e = eddieElvin.elvinPage( elvinServer, elvinPort )
 	except eddieElvin.ElvinError:
-	    log.log( "<action.py>action.elvinPage(), Error, eddieElvin(%s, %d) could not connect" % (elvinServer,elvinPort), 2 )
+	    log.log( "<action>action.elvinPage(), Error, eddieElvin(%s, %d) could not connect" % (elvinServer,elvinPort), 5 )
 	    return
 
 	retval = e.sendmsg(pager, body)
 
 	# Alert if return value != 0
 	if retval != 0:
-	    log.log( "<action.py>action.elvinPage(), Alert, return value for e.sendmsg('%s') is %d" % (body,retval), 3 )
+	    log.log( "<action>action.elvinPage(), Alert, return value for e.sendmsg('%s') is %d" % (body,retval), 5 )
 	else:
-	    log.log( "<action.py>action.elvinPage('%s')" % (body), 6 )
+	    log.log( "<action>action.elvinPage('%s')" % (body), 6 )
 
 
     # Temporary: page via email for now...
     # page()
     def page(self, pager, msg):
 	self.email(pager, msg)
-
-    # Paging via SNPP to paging server
-    # page()
-    #def page(self, pager, msg):
-#    def snpp_page(self, pager, msg):
-#	# send a page via SNPP
-#	pageServer = 'chintoo'
-#
-#	# Replace any ALIASes if needed.
-#	if pager in self.aliasDict.keys():
-#	    pager = self.aliasDict[pager]
-#	if msg in self.aliasDict.keys():
-#	    msg = self.aliasDict[msg]
-#
-#	if len(msg) == 0:
-#	    # msg must contain something
-#	    log.log( "<action.py>action.page(), Error, msg is empty", 2 )
-#	    return
-#
-#	try:
-#	    MSG = self.getMessage(msg)
-#	    msg = MSG.message
-#	except (KeyError, GetMessageError):
-#	    # Use msg string as the message
-#	    pass
-#
-#	# Substitute variables in string
-#	msg = parseVars( msg, self.varDict )
-#
-#	p = snpp.level1(pageServer)
-#	p.pager(pager)
-#	p.message(msg)
-#
-#
-#	try:
-#	    p.send()
-#	except snpp.SNPPpageFail:
-#	    log.log( "<action.py>action.snpp_page(), Error, %s, returned %s" % (pageServer,snpp.SNPPpageFail), 2 )
-#	    return
-#
-#	log.log( "<action.py>action.snpp_page('%s')" % (msg), 5 )
 
 
     def elvindb(self, table, data=None):
@@ -476,16 +412,16 @@ class action:
 	   use self.storedict
 	"""
 
-	log.log( "<action.py>action.elvindb( table='%s' data='%s' )"%(table,data), 8 )
+	log.log( "<action>action.elvindb( table='%s' data='%s' )"%(table,data), 6 )
 
 	if eddieElvin4.UseElvin == 0:
-	    log.log( "<action.py>action.elvindb(), Elvin is not available - skipping.", 8 )
+	    log.log( "<action>action.elvindb(), Elvin is not available - skipping.", 5 )
 	    return 0
 
 	try:
 	    e = eddieElvin4.elvindb()
 	except eddieElvin4.ElvinError:
-	    log.log( "<action.py>action.elvindb(), Error, eddieElvin4.elvindb() could not connect", 2 )
+	    log.log( "<action>action.elvindb(), Error, eddieElvin4.elvindb() could not connect", 5 )
 	    return
 
 	#print "created elvindb() connection to elvin"
@@ -519,9 +455,9 @@ class action:
 
 	# Alert if return value != 0
 	if retval != 0:
-	    log.log( "<action.py>action.elvindb('%s', dict), Alert, return value for e.send() is %d" % (table,retval), 3 )
+	    log.log( "<action>action.elvindb('%s', dict), Alert, return value for e.send() is %d" % (table,retval), 5 )
 	else:
-	    log.log( "<action.py>action.elvindb('%s', dict): store ok" % (table), 7 )
+	    log.log( "<action>action.elvindb('%s', dict): store ok" % (table), 6 )
 
 
 
@@ -536,16 +472,16 @@ class action:
 				action="elvinrrd('loadavg1-%(h)s', 'loadavg1=%(sysloadavg1)f')"
 	"""
 
-	log.log( "<action.py>action.elvinrrd( key='%s' data='%s' )"%(key,data), 8 )
+	log.log( "<action>action.elvinrrd( key='%s' data='%s' )"%(key,data), 6 )
 
 	if eddieElvin4.UseElvin == 0:
-	    log.log( "<action.py>action.elvinrrd(), Elvin is not available - skipping.", 8 )
+	    log.log( "<action>action.elvinrrd(), Elvin is not available - skipping.", 5 )
 	    return 0
 
 	try:
 	    e = eddieElvin4.elvinrrd()
 	except eddieElvin4.ElvinError:
-	    log.log( "<action.py>action.elvinrrd(), Error, eddieElvin4.elvinrrd() could not connect", 2 )
+	    log.log( "<action>action.elvinrrd(), Error, eddieElvin4.elvinrrd() could not connect", 5 )
 	    return
 
 	if len(data) == 0:
@@ -562,14 +498,14 @@ class action:
 
 	key = parseVars( key, self.varDict )	# substitute variables
 
-	log.log( "<action.py>action.elvinrrd() sending: key='%s' data=%s"%(key,datadict), 8 )
+	log.log( "<action>action.elvinrrd() sending: key='%s' data=%s"%(key,datadict), 6 )
 	retval = e.send(key, datadict)
 
 	# Alert if return value != 0
 	if retval != 0:
-	    log.log( "<action.py>action.elvinrrd(%s, %s), Alert, return value for e.send() is %d" % (key,datadict,retval), 3 )
+	    log.log( "<action>action.elvinrrd(%s, %s), Alert, return value for e.send() is %d" % (key,datadict,retval), 5 )
 	else:
-	    log.log( "<action.py>action.elvinrrd(%s, %s): store ok" % (key,datadict), 7 )
+	    log.log( "<action>action.elvinrrd(%s, %s): store ok" % (key,datadict), 6 )
 
 
 
@@ -584,10 +520,10 @@ def parseVars(text, vDict):
     try:
 	return text % vDict
     except KeyError:
-	log.log( "<action>parseVars(), KeyError exception for '%s' from string '%s' with dictionary '%s'" % (sys.exc_value, text, vDict), 3 )
+	log.log( "<action>parseVars(), KeyError exception for '%s' from string '%s' with dictionary '%s'" % (sys.exc_value, text, vDict), 5 )
 	return text
     except TypeError:
-	log.log( "<action>parseVars(), TypeError exception for '%s' from string '%s' with dictionary '%s'" % (sys.exc_value, text, vDict), 3 )
+	log.log( "<action>parseVars(), TypeError exception for '%s' from string '%s' with dictionary '%s'" % (sys.exc_value, text, vDict), 5 )
 	return text
 
 

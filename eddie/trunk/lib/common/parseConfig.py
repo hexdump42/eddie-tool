@@ -4,7 +4,7 @@
 ## Author       : Rod Telford  <rtelford@psychofx.com>
 ##                Chris Miles  <chris@psychofx.com>
 ## 
-## Date         : 971204 
+## Start Date   : 19971204 
 ## 
 ## Description  : Parses Eddie configuration files
 ##
@@ -167,7 +167,7 @@ class State:
 		    del self.toklist[-1]
 		    self.toklist.append(aval)
 		    token = aval
-		    log.log( "<parseConfig>tokeneater(), ALIAS substituted %s for %s" % (aval,token), 7 )
+		    log.log( "<parseConfig>tokeneater(), ALIAS substituted %s for %s" % (aval,token), 8 )
 
 	    # DEBUG
 	    #print "toklist:",self.toklist
@@ -360,7 +360,7 @@ def readFile(file, state):
     	conf = open(file, 'r')
     except IOError:
 	print "Error opening file '%s'" % file;
-	log.log( "<parseConfig>readFile(), Error, Cannot open '%s' - skipping" % (file), 2 )
+	log.log( "<parseConfig>readFile(), Error, Cannot open '%s' - skipping" % (file), 4 )
 	return
 
     # add this filename to the list of config files

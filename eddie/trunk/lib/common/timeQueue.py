@@ -3,7 +3,7 @@
 ## 
 ## Author       : Chris Miles  <chris@psychofx.com>
 ## 
-## Date		: 20001005
+## Start Date	: 20001005
 ## 
 ## Description	: Queue-derived queue ordering objects by next-run time.
 ##
@@ -46,10 +46,9 @@ import Queue
 
 
 class timeQueue(Queue.Queue):
-    # We only need to override the methods below to implement
-    # our own type of queue.  The parent Queue class handles
-    # the rest.
-    # These will only be called with appropriate locks held.
+    """We only need to override the methods below to implement
+    our own type of queue.  The parent Queue class handles the rest.
+    These will only be called with appropriate locks held."""
 
     def head(self, block=1):
 	"""Return the head item in the queue without removing it from
@@ -58,8 +57,8 @@ class timeQueue(Queue.Queue):
         If optional arg 'block' is 1 (the default), block if
         necessary until an item is available.  Otherwise (block is 0),
         return an item if one is immediately available, else raise the
-        Empty exception.
-        """
+        Empty exception."""
+
         if block:
             self.esema.acquire()
         elif not self.esema.acquire(0):

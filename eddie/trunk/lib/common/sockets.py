@@ -97,7 +97,7 @@ def listen(s, Config, die_event):
 
 	    if e[1][0] == 4:	# Interrupted system call, caused by CTRL-C,
 				# which is already being handled
-		log.log( "<sockets>listen(), Interrupted system call, ignored.", 8 )
+		log.log( "<sockets>listen(), Interrupted system call, ignored.", 5 )
 		continue
 	    else:
 		log.log( "<sockets>listen(), exception in select(): %s, %s, %s" % (e[0], e[1], tb), 3 )
@@ -105,7 +105,7 @@ def listen(s, Config, die_event):
 
         if r:
             ccsock, addr = s.accept()
-	    log.log( "<sockets>listen(), accepted connection from %s:%d"%addr, 7 )
+	    log.log( "<sockets>listen(), accepted connection from %s:%d"%addr, 6 )
 
             ccsock.send('Eddie Console Gateway')
 
@@ -127,7 +127,7 @@ def console_server_thread(Config, die_event, consport):
 
             s.listen(50)
 
-            log.log( "<sockets>console_server_thread(), Bind to port %d successful" % (consport), 6 )
+            log.log( "<sockets>console_server_thread(), Bind to port %d successful" % (consport), 5 )
 
             # main loop
             listen(s, Config, die_event)
@@ -142,19 +142,19 @@ def console_server_thread(Config, die_event, consport):
             s = None
 
             if e[1][0] == errno.EADDRINUSE:		# address already in use
-                log.log("<sockets>console_server_thread(), Port %d already in use - exiting" % (consport), 1 )
+                log.log("<sockets>console_server_thread(), Port %d already in use - exiting" % (consport), 3 )
 		sys.stderr.write( "Eddie: port %d already in use, quitting\n" % (consport) )
                 die_event.set()		# signal other threads to exit
 		return
 
             if e[1][0] == errno.ECONNRESET:         # 'Connection reset by peer'
-                log.log( "<sockets>console_server_thread(), Connection reset by peer - continuing.", 8 )
+                log.log( "<sockets>console_server_thread(), Connection reset by peer - continuing.", 5 )
                 continue
 
-            log.log( "<sockets>console_server_thread(), Socket error - resetting socket and continuing: %s, %s" % (e[1][0],e[1][1]), 8 )
+            log.log( "<sockets>console_server_thread(), Socket error - resetting socket and continuing: %s, %s" % (e[1][0],e[1][1]), 5 )
 
             if socketerrors > 100:
-                log.log( "<sockets>console_server_thread(), Too many socket errors - exiting.", 1 )
+                log.log( "<sockets>console_server_thread(), Too many socket errors - exiting.", 3 )
                 die_event.set()		# signal other threads to exit
 		return
 

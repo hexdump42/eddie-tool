@@ -52,10 +52,10 @@ class DataStore:
 	"""Check if cached data is invalid, ie: refresh_time has been exceeded."""
 
 	if time.time() > self.refresh_time:
-	    log.log( "<DataStore>checkCache(), refreshing data", 8 )
+	    log.log( "<DataStore>checkCache(), refreshing data", 7 )
 	    self.refresh()
 	else:
-	    log.log( "<DataStore>checkCache(), using cache'd data", 8 )
+	    log.log( "<DataStore>checkCache(), using cache'd data", 7 )
 
 
     def fetchData(self):

@@ -4,7 +4,7 @@
 ## Author       : Rod Telford  <rtelford@psychofx.com>
 ##                Chris Miles  <chris@psychofx.com>
 ## 
-## Date         : 980209 
+## Start Date   : 19980209 
 ## 
 ## Description  : Eddie history handler
 ##
@@ -37,8 +37,8 @@ historySize = 5	# keep 5 levels of history max
 class history:
     def __init__(self):
 	self.histdict = {}
-	#log.log( "<history>__init__(), created new history instance", 9 )
-    
+
+
     def save(self,name,item):
 	try:
 	    histlist = self.histdict[name]

@@ -82,7 +82,7 @@ class State:
 
 	self.lastfailtime = timenow
 
-	log.log( "<directive>State.statefail(), ID '%s' status '%s' checkcount %d lastfailtime %s faildetecttime %s"%(self.ID, self.status, self.checkcount, self.lastfailtime, self.faildetecttime), 6 )
+	log.log( "<directive>State.statefail(), ID '%s' status '%s' checkcount %d lastfailtime %s faildetecttime %s"%(self.ID, self.status, self.checkcount, self.lastfailtime, self.faildetecttime), 7 )
 
 	#TODO: Post an EVENT about this failure...
 	#      EVENTS are either: new failure/problem detected
@@ -102,7 +102,7 @@ class State:
 	    timenow = time.localtime(time.time())
 	    self.lastfailtime = timenow
 
-	    log.log( "<directive>State.stateok(), State changed to OK.  ID '%s'."%(self.ID), 6 )
+	    log.log( "<directive>State.stateok(), State changed to OK.  ID '%s'."%(self.ID), 7 )
 
 	    self.thisdirective.performAction(Config,self.thisdirective.args.actokList)
 
@@ -112,7 +112,7 @@ class State:
 
 	self.checkcount = 0	# reset check counter
 
-	log.log( "<directive>State.stateok(), ID '%s' status '%s'"%(self.ID, self.status), 8 )
+	log.log( "<directive>State.stateok(), ID '%s' status '%s'"%(self.ID, self.status), 7 )
 
 
     def age(self):
@@ -356,6 +356,7 @@ class Directive:
 	    for m in msgtree[1:]:
 		M = M[m]
 
+	    #DEBUG
 	    #print "self.Action.msg:",self.Action.msg
 	    #print "self.Action.level:",self.Action.level
 	    #print "self.Action.MDict:",self.Action.MDict
@@ -365,7 +366,6 @@ class Directive:
 	    actionEnv.update(M.MDict)			# add MSGs
 
 	actionEnv['_Action'] = self.Action		# add Action object
-	#print "actionEnv:",actionEnv
 	acall = "_Action.%s" % (actioncall)		# the string to be evaluated
 	try:
 	    ret = eval( acall, actionEnv )		# Call the Action
@@ -373,7 +373,7 @@ class Directive:
 	    # Handle any action evaluation exceptions neatly
 	    e = sys.exc_info()
 	    tb = traceback.format_list( traceback.extract_tb( e[2] ) )
-	    log.log( "<directive>Directive.evalAction(), Error evaluating %s: %s, %s, %s; actionEnv=%s" % (acall, e[0], e[1], tb, actionEnv), 2 )
+	    log.log( "<directive>Directive.evalAction(), Error evaluating %s: %s, %s, %s; actionEnv=%s" % (acall, e[0], e[1], tb, actionEnv), 5 )
 	    return
 
 	# Update the action reports
@@ -428,10 +428,8 @@ class Directive:
 		    # Get the actions to execute from the given Level of the N object
 		    afunc = Config.NDict[notif].levels[level]
 		except KeyError:
-		    log.log( "<directive>doAction(), Error in directive.py line 371: Config.NDict[notif].levels[level], level=%s" % level, 1 )
+		    log.log( "<directive>Directive.performAction(), Error in directive.py line 431: Config.NDict[notif].levels[level], level=%s" % level, 5 )
 		else:
-		    #print ">>>> afunc:",afunc
-
 		    self.Action.notif = notif
 		    self.Action.msg = msg
 		    self.Action.level = level
@@ -452,7 +450,7 @@ class Directive:
 	    # need to wait before re-checking
 	    # when put back in queue only wait checkwait seconds
 	    self.requeueTime = time.time()+self.args.checkwait
-	    log.log( "<directive>doAction(), scheduling for recheck in %d seconds" % self.args.checkwait, 7 )
+	    log.log( "<directive>doAction(), scheduling for recheck in %d seconds" % self.args.checkwait, 6 )
 	    return
 	else:
 	    self.state.checkcount = 0	# performing action so reset counter
@@ -464,71 +462,6 @@ class Directive:
 	#actionList = self.args.actionList
 
 	self.performAction(Config, self.args.actionList)
-
-
-#    def doOkAct(self, Config):
-#    	"""Perform actions for a directive."""
-#
-#	actionList = self.args.actokList
-#
-#	# Set the 'action' variables with the expanded action list
-#	self.Action.varDict['act'] = 'The following actions were attempted:\n'
-#	self.Action.varDict['actnm'] = 'The following (non-email) actions were attempted:\n'
-#
-#	self.Action.state = self.state
-#	self.Action.aliasDict = Config.aliasDict
-#
-#	# Perform each action
-#	ret = None
-#	self.Action.actionReports = {}		# dict of actions and their return status
-#	for a in actionList:
-#	    sre = re.compile( "([A-Za-z0-9_]+)\(([A-Za-z0-9_.]+),?([0-9]?)\)" )
-#	    inx = sre.search( a )
-#
-#            notif = inx.group(1)
-#            msg = inx.group(2)
-#            level = inx.group(3)
-#            if level == None or level == '':
-#                level = '0'
-#
-#	    # print ">>>> notif:",notif
-#            # print ">>>> msg:",msg
-#            # print ">>>> level:",level
-#
-#            try:
-#                afunc = Config.NDict[notif].levels[level]
-#            except KeyError:
-#                log.log( "<directive>doAction(), Error in directive.py line 371: Config.NDict[notif].levels[level], level=%s" % level, 1 )
-#            else:
-#		#print ">>>> afunc:",afunc
-#
-#		self.Action.notif = notif
-#		self.Action.msg = msg
-#		self.Action.level = level
-#		self.Action.MDict = Config.MDict #TODO: move to init() ?
-#
-#		aList = utils.trickySplit( afunc[0], ',' )
-#		# Put quotes around arguments so we can use eval()
-#		aList = utils.quoteArgs( aList )
-#		for aa in aList:
-#		    # Call the action
-#		    log.log( "<directive>Directive, calling N ok-action '%s'" % (aa), 9 )
-#		    try:
-#		        ret = eval( 'self.Action.'+aa )
-#		    except:
-#		        e = sys.exc_info()
-#			tb = traceback.format_list( traceback.extract_tb( e[2] ) )
-#		        log.log( "<directive>doAction(), Error evaluating self.Action.%s: %s, %s, %s" % (aa, e[0], e[1], tb), 2 )
-#			return
-#
-#		    self.Action.actionReports[aa] = ret
-#		    if ret == None:
-#			self.Action.varDict['actnm'] = self.Action.varDict['actnm'] + '    %s\n' % aa
-#
-#	            elif ret == 0:
-#			self.Action.varDict['actnm'] = self.Action.varDict['actnm'] + '    %s - Successful\n' % aa
-#		    else:
-#			self.Action.varDict['actnm'] = self.Action.varDict['actnm'] + '    %s - FAILED, return code %d\n' % (aa, ret)
 
 
     def parseAction(self, toklist):
@@ -560,10 +493,10 @@ class Directive:
 		    i = i + 3
 
 		else:
-		    log.log( "<directive>parseArgs(), unknown directive token '%s'" % (toklist[i]), 3)
+		    log.log( "<directive>Directive.parseArgs(), unknown directive token '%s'" % (toklist[i]), 1)
 		    raise ParseFailure, "unknown directive token '%s'" %(toklist[i])
 	    except KeyError:
-		log.log( "<directive>parseArgs(), error parsing directive arguments at i=%d" % (i), 2)
+		log.log( "<directive>parseArgs(), error parsing directive arguments at i=%d" % (i), 1)
 		raise ParseFailure, "Error parsing directive arguments"
 
 	return argdict
@@ -576,12 +509,12 @@ class Directive:
 	    # a specific requeueTime has been requested
 	    q.put( (self,self.requeueTime) )
 	    self.requeueTime = None
-	    log.log( "<directive>putInQueue(), %s re-queued by requeueTime" % (self), 8)
+	    log.log( "<directive>Directive.putInQueue(), %s re-queued by requeueTime" % (self), 7)
 
 	else:
 	    # reschedule in scanperiod seconds
 	    q.put( (self,time.time()+self.scanperiod) )
-	    log.log( "<directive>putInQueue(), %s re-queued by scanperiod (%d secs)" % (self,self.scanperiod), 8)
+	    log.log( "<directive>Directive.putInQueue(), %s re-queued by scanperiod (%d secs)" % (self,self.scanperiod), 7)
 
 
     def safeCheck( self, Config ):
@@ -590,17 +523,17 @@ class Directive:
 	   exceptions can be captured and the thread exited nicely.
 	"""
 
-	log.log( "<Directive>safeCheck(), ID '%s', calling self.docheck()" % (self.state.ID), 9 )
+	log.log( "<directive>Directive.safeCheck(), ID '%s', calling self.docheck()" % (self.state.ID), 7 )
 
 	try:
 	    self.docheck( Config )
 	except:
 	    e = sys.exc_info()
 	    tb = traceback.format_list( traceback.extract_tb( e[2] ) )
-	    log.log( "<Directive>safeCheck(), ID '%s', Uncaught exception: %s, %s, %s" % (self.state.ID, e[0], e[1], tb), 3 )
+	    log.log( "<directive>Directive.safeCheck(), ID '%s', Uncaught exception: %s, %s, %s" % (self.state.ID, e[0], e[1], tb), 3 )
 	    return
 
-	log.log( "<Directive>safeCheck(), ID '%s', self.docheck() returned successfully" % (self.state.ID), 9 )
+	log.log( "<directive>Directive.safeCheck(), ID '%s', self.docheck() returned successfully" % (self.state.ID), 7 )
 
 
 ##
@@ -635,18 +568,18 @@ class FS(Directive):
 	    self.ID = '%s.FS.%s' % (log.hostname,self.args.fs)
 	self.state.ID = self.ID
 
-	log.log( "<Directive>FS, ID '%s' fs '%s' rule '%s' action '%s'" % (self.state.ID, self.args.fs, self.args.rule, self.args.actionList), 8 )
+	log.log( "<directive>FS.tokenparser(), ID '%s' fs '%s' rule '%s' action '%s'" % (self.state.ID, self.args.fs, self.args.rule, self.args.actionList), 8 )
 
 
     def docheck(self, Config):
-	log.log( "<directive>FS(), docheck(), fs '%s', rule '%s'" % (self.args.fs,self.args.rule), 7 )
+	log.log( "<directive>FS.docheck(), fs '%s', rule '%s'" % (self.args.fs,self.args.rule), 7 )
 
 	if self.state.checkcount > 0:
 	    dlist.refresh()	# force refresh of list if re-checking
 
 	df = dlist[self.args.fs]
 	if df == None:
-	    log.log( "<directive>FS(), Error, no df with fs '%s'" % (self.args.fs), 2 )
+	    log.log( "<directive>FS.docheck(), Error, filesystem not found '%s'" % (self.args.fs), 4 )
 	    return
 
 	dfenv = {}			# environment for df rules execution
@@ -690,7 +623,7 @@ class FS(Directive):
 
 	    self.Action.varDict['fsls'] = fsls_output
 	
-    	    log.log( "<directive>FS(), rule '%s' was false, calling doAction()" % (self.args.rule), 6 )
+    	    log.log( "<directive>FS.docheck(), rule '%s' was false, calling doAction()" % (self.args.rule), 7 )
     	    self.doAction(Config)
 
 	self.putInQueue( Config.q )	# put self back in the Queue
@@ -768,11 +701,11 @@ class PID(Directive):
 	    self.ID = '%s.PID.%s.%s' % (log.hostname,self.args.pid,self.args.rule)
 	self.state.ID = self.ID
 
-	log.log( "<Directive>PID, ID '%s' pid '%s' rule '%s' action '%s'" % (self.state.ID, self.args.pid, self.args.rule, self.args.actionList), 8 )
+	log.log( "<directive>PID.tokenparser(), ID '%s' pid '%s' rule '%s' action '%s'" % (self.state.ID, self.args.pid, self.args.rule, self.args.actionList), 8 )
 
 
     def docheck(self, Config):
-	log.log( "<directive>PID(), docheck(), pid '%s', rule '%s'" % (self.args.pid,self.args.rule), 7 )
+	log.log( "<directive>PID.docheck(), pid '%s', rule '%s'" % (self.args.pid,self.args.rule), 7 )
 
 	if self.args.rule == "EX":
 	    # Check if pidfile exists
@@ -780,11 +713,11 @@ class PID(Directive):
 		pidfile = open( self.args.pid, 'r' )
 	    except IOError:
 		# pidfile not found
-		log.log( "<directive>PID(), EX, pidfile '%s' not found" % (self.args.pid), 6 )
+		log.log( "<directive>PID.docheck(), EX, pidfile '%s' not found" % (self.args.pid), 7 )
 		self.state.statefail()	# update state info for check failed
 		self.doAction(Config)
 	    else:
-		log.log( "<directive>PID(), EX, pidfile '%s' found" % (self.args.pid), 8 )
+		log.log( "<directive>PID.docheck(), EX, pidfile '%s' found" % (self.args.pid), 7 )
 		self.state.stateok(Config)		# update state info for check passed
 		pidfile.close()
 
@@ -794,9 +727,9 @@ class PID(Directive):
 		pidfile = open( self.args.pid, 'r' )
 	    except IOError:
 		# pidfile not found
-		log.log( "<directive>PID(), PR, pidfile '%s' not found" % (self.args.pid), 6 )
+		log.log( "<directive>PID.docheck(), PR, pidfile '%s' not found" % (self.args.pid), 7 )
 	    else:
-		log.log( "<directive>PID(), PR, pidfile '%s' found" % (self.args.pid), 8 )
+		log.log( "<directive>PID.docheck(), PR, pidfile '%s' found" % (self.args.pid), 7 )
 		pid = pidfile.readline()
 		pidfile.close()
 		pid = string.strip(pid)
@@ -814,17 +747,17 @@ class PID(Directive):
 		# Search for pid from process list
 		if plist.pidExists( pid ) == 0:
 		    # there is no process with pid == pid
-		    log.log( "<directive>PID(), PR, pid %s not in process list" % (pid), 6 )
+		    log.log( "<directive>PID.docheck(), PR, pid %s not in process list" % (pid), 7 )
 		    self.state.statefail()	# update state info for check failed
 		    self.doAction(Config)
 		else:
-		    log.log( "<directive>PID(), PR, pid %s is in process list" % (pid), 7 )
+		    log.log( "<directive>PID.docheck(), PR, pid %s is in process list" % (pid), 7 )
 		    self.state.stateok(Config)		# update state info for check passed
 
 
 	else:
 	    # invalid rule
-	    log.log( "<directive>PID, Error, '%s' is not a valid PID rule, config line follows,\n%s\n" % (self.args.rule,self.raw), 2 )
+	    log.log( "<directive>PID.docheck(), Error, '%s' is not a valid PID rule, config line follows,\n%s\n" % (self.args.rule,self.raw), 4 )
 	    return
 
 	self.putInQueue( Config.q )	# put self back in the Queue
@@ -877,13 +810,13 @@ class PROC(Directive):
 	    self.ID = '%s.PROC.%s' % (log.hostname,self.args.procname)
 	self.state.ID = self.ID
 
-	log.log( "<Directive>PROC, ID '%s' procname '%s' rule '%s' action '%s'" % (self.state.ID, self.args.procname, self.args.rule, self.args.actionList), 8 )
+	log.log( "<directive>PROC.tokenparser(), ID '%s' procname '%s' rule '%s' action '%s'" % (self.state.ID, self.args.procname, self.args.rule, self.args.actionList), 8 )
 
 
     def docheck(self, Config):
 	"""Perform specified check."""
 
-	log.log( "<directive>PROC(), docheck(), procname '%s', rule '%s'" % (self.args.procname,self.args.rule), 7 )
+	log.log( "<directive>PROC.docheck(), procname '%s', rule '%s'" % (self.args.procname,self.args.rule), 7 )
 	self.args.rule(Config)
 
 	self.putInQueue( Config.q )	# put self back in the Queue
@@ -896,7 +829,7 @@ class PROC(Directive):
 	    plist.refresh()	# force refresh of list if re-checking
 
 	if plist.procExists( self.args.procname ) == 0:
-	    log.log( "<directive>NR(PROC) procname not running, '%s'" % (self.args.procname), 6 )
+	    log.log( "<directive>PROC.NR() procname not running, '%s'" % (self.args.procname), 7 )
 	    self.state.statefail()	# update state info for check failed
 	    self.doAction(Config)
 	    return
@@ -908,7 +841,7 @@ class PROC(Directive):
 	"""Call action if process is found to BE running."""
 
 	if plist.procExists( self.args.procname ) > 0:
-	    log.log( "<directive>R(PROC) procname is running, '%s'" % (self.args.procname), 6 )
+	    log.log( "<directive>PROC.R() procname is running, '%s'" % (self.args.procname), 7 )
 	    # Set %procpid variable.
 	    self.Action.varDict['procpid'] = plist[self.args.procname].pid
 	    self.state.statefail()	# update state info for check failed
@@ -926,7 +859,7 @@ class PROC(Directive):
 		try:
 		    procenv = p.procinfo()		# get dictionary of process details
 		except AttributeError:
-		    log.log( "<directive>PROC.check() warning, no process '%s'." % (self.args.procname), 8 )
+		    log.log( "<directive>PROC.check() warning, no process '%s'." % (self.args.procname), 5 )
 		    return
 
 		result = eval( self.checkstring, procenv )
@@ -983,21 +916,21 @@ class SP(Directive):
 	    self.ID = '%s.SP.%s/%s.%s' % (log.hostname,self.args.protocol,self.port_n,self.args.bindaddr)
 	self.state.ID = self.ID
 
-	log.log( "<Directive>SP, ID '%s' protocol '%s', port '%s', bind addr '%s', action '%s'" % (self.state.ID, self.args.protocol, self.port, self.args.bindaddr, self.args.actionList), 8 )
+	log.log( "<directive>SP.tokenparser(), ID '%s' protocol '%s', port '%s', bind addr '%s', action '%s'" % (self.state.ID, self.args.protocol, self.port, self.args.bindaddr, self.args.actionList), 8 )
 
 
     def docheck(self, Config):
-	log.log( "<directive>SP(), docheck(), protocol '%s', port '%s', addr '%s'" % (self.args.protocol,self.port_n,self.args.bindaddr), 7 )
+	log.log( "<directive>SP.docheck(), protocol '%s', port '%s', addr '%s'" % (self.args.protocol,self.port_n,self.args.bindaddr), 7 )
 
 	if self.state.checkcount > 0:
 	    nlist.refresh()	# force refresh of list if re-checking
 
 	ret = nlist.portExists(self.args.protocol, self.port, self.args.bindaddr) != None
 	if ret != 0:
-	    log.log( "<directive>SP(), port %s/%s listener found bound to %s" % (self.args.protocol , self.port_n, self.args.bindaddr), 8 )
+	    log.log( "<directive>SP.docheck(), port %s/%s listener found bound to %s" % (self.args.protocol , self.port_n, self.args.bindaddr), 7 )
 	    self.state.stateok(Config)	# update state info for check passed
 	else:
-	    log.log( "<directive>SP(), port %s/%s no listener found bound to %s" % (self.args.protocol , self.port_n, self.args.bindaddr), 6 )
+	    log.log( "<directive>SP.docheck(), port %s/%s no listener found bound to %s" % (self.args.protocol , self.port_n, self.args.bindaddr), 7 )
 	    self.state.statefail()	# update state info for check failed
 	    self.doAction(Config)
 
@@ -1035,17 +968,17 @@ class COM(Directive):
 	    self.ID = '%s.COM.%s.%s' % (log.hostname,self.args.cmd,self.args.rule)
 	self.state.ID = self.ID
 
-	log.log( "<directive>COM, ID '%s' cmd '%s' rule '%s' action '%s'" % (self.state.ID, self.args.cmd, self.args.rule, self.args.actionList), 8 )
+	log.log( "<directive>COM.tokenparser(), ID '%s' cmd '%s' rule '%s' action '%s'" % (self.state.ID, self.args.cmd, self.args.rule, self.args.actionList), 8 )
 
 
     def docheck(self, Config):
 	log.log( "<directive>COM.docheck(), cmd '%s', rule '%s'" % (self.args.cmd,self.args.rule), 7 )
-	log.log( "<directive>COM.docheck(), acquiring semaphore lock for cmd '%s'" % (self.args.cmd), 8 )
+	log.log( "<directive>COM.docheck(), acquiring semaphore lock for cmd '%s'" % (self.args.cmd), 9 )
 	COMsemaphore.acquire()
-	log.log( "<directive>COM.docheck(), semaphore acquired for cmd '%s'" % (self.args.cmd), 8 )
+	log.log( "<directive>COM.docheck(), semaphore acquired for cmd '%s'" % (self.args.cmd), 9 )
 	tmpprefix = "/var/tmp/com%d" % os.getpid()
 	cmd = "{ %s ; } >%s.out 2>%s.err" % (self.args.cmd, tmpprefix, tmpprefix )
-	log.log( "<directive>COM.docheck(), calling system('%s')" % (cmd), 8 )
+	log.log( "<directive>COM.docheck(), calling system('%s')" % (cmd), 7 )
 	retval = os.system( cmd )
 	signum = None
 	if (retval & 0xff) == 0:
@@ -1063,7 +996,7 @@ class COM(Directive):
 	    outf = open( tmpprefix + ".out", 'r' )
 	except IOError:
 	    # stdout tmp file not found
-	    log.log( "<directive>COM.docheck(), Error, could not open '%s'" % (tmpprefix + ".out"), 2 )
+	    log.log( "<directive>COM.docheck(), Error, could not open '%s'" % (tmpprefix + ".out"), 4 )
 	else:
 	    out = outf.read()
 	    outf.close()
@@ -1077,7 +1010,7 @@ class COM(Directive):
 	    errf = open( tmpprefix + ".err", 'r' )
 	except IOError:
 	    # stderr tmp file not found
-	    log.log( "<directive>COM.docheck(), Error, could not open '%s'" % (tmpprefix + ".err"), 2 )
+	    log.log( "<directive>COM.docheck(), Error, could not open '%s'" % (tmpprefix + ".err"), 4 )
 	else:
 	    err = errf.read()
 	    errf.close()
@@ -1087,12 +1020,12 @@ class COM(Directive):
 		err = err[:-1]
 
 	COMsemaphore.release()
-	log.log( "<directive>COM.docheck(), released semaphore lock for cmd '%s'" % (self.args.cmd), 8 )
+	log.log( "<directive>COM.docheck(), released semaphore lock for cmd '%s'" % (self.args.cmd), 9 )
 
-        log.log( "<directive>COM.docheck(), retval=%d" % retval, 8 )
-        log.log( "<directive>COM.docheck(), signum=%s" % signum, 8 )
-	log.log( "<directive>COM.docheck(), stdout='%s'" % out, 8 )
-	log.log( "<directive>COM.docheck(), stderr='%s'" % err, 8 )
+        log.log( "<directive>COM.docheck(), retval=%d" % retval, 7 )
+        log.log( "<directive>COM.docheck(), signum=%s" % signum, 9 )
+	log.log( "<directive>COM.docheck(), stdout='%s'" % out, 9 )
+	log.log( "<directive>COM.docheck(), stderr='%s'" % err, 9 )
 
 	# save values in variable dictionary
 	self.Action.varDict['comout'] = out
@@ -1110,7 +1043,7 @@ class COM(Directive):
 	    log.log( "<directive>COM.docheck() : an error occured with rule '%s' exception type: '%s' exception value: '%s' - env was: %s"%(self.args.rule,sys.exc_type,sys.exc_value,comenv), 3 )
 	    return
 
-        log.log( "<directive>COM.docheck(), eval:'%s', result='%s'" % (self.args.rule,result), 9 )
+        log.log( "<directive>COM.docheck(), eval:'%s', result='%s'" % (self.args.rule,result), 7 )
 	if result != 0:
 	    self.state.statefail()	# update state info for check failed
 	    self.doAction(Config)
@@ -1167,7 +1100,7 @@ class PORT(Directive):
 	    self.ID = '%s.PORT.%s.%d' % (log.hostname,self.args.host,self.args.port)
 	self.state.ID = self.ID
 
-	log.log( "<Directive>PORT, ID '%s' host '%s' port '%d' send '%s' expect '%s'" % (self.state.ID, self.args.host, self.args.port, self.args.send, self.args.expect), 8 )
+	log.log( "<directive>PORT.tokenparser(), ID '%s' host '%s' port '%d' send '%s' expect '%s'" % (self.state.ID, self.args.host, self.args.port, self.args.send, self.args.expect), 8 )
 
 
     def docheck(self, Config):
@@ -1203,11 +1136,11 @@ class PORT(Directive):
 		    sendlist = string.split(send, '\n')		# split each line
 		    # send each line - only compare last output received
 		    for line in sendlist:
-			log.log( "<directive>PORT.isalive(): sending '%s'" % (line), 8 )
+			log.log( "<directive>PORT.isalive(): sending '%s'" % (line), 7 )
 			s.send(line+'\n')
 			data=''
 			data=s.recv(1024)
-			log.log( "<directive>PORT.isalive(): received '%s'" % (data), 8 )
+			log.log( "<directive>PORT.isalive(): received '%s'" % (data), 7 )
 
                     self.Action.varDict['portrecv'] = data
 
@@ -1221,18 +1154,18 @@ class PORT(Directive):
 		e = sys.exc_info()
 		s.close()
 		if e[1][0] == 146:		# Connection Refused
-		    log.log( "<Directive>PORT.isalive(), ID '%s', Connection refused" % (self.state.ID), 5 )
+		    log.log( "<directive>PORT.isalive(), ID '%s', Connection refused" % (self.state.ID), 5 )
 		    return 0
 		elif e[1][0] == 145:		# Connection Timed Out
-		    log.log( "<Directive>PORT.isalive(), ID '%s', Connection Timed Out" % (self.state.ID), 5 )
+		    log.log( "<directive>PORT.isalive(), ID '%s', Connection Timed Out" % (self.state.ID), 5 )
 		    return 0
 		else:
 		    tb = traceback.format_list( traceback.extract_tb( e[2] ) )
-		    log.log( "<Directive>PORT.isalive(), ID '%s', Uncaught: %s, %s, %s" % (self.state.ID, e[0], e[1], tb), 3 )
+		    log.log( "<directive>PORT.isalive(), ID '%s', Uncaught: %s, %s, %s" % (self.state.ID, e[0], e[1], tb), 3 )
         except:
 	    e = sys.exc_info()
 	    tb = traceback.format_list( traceback.extract_tb( e[2] ) )
-	    log.log( "<Directive>PORT.isalive(), ID '%s', Uncaught exception: %s, %s, %s" % (self.state.ID, e[0], e[1], tb), 3 )
+	    log.log( "<directive>PORT.isalive(), ID '%s', Uncaught exception: %s, %s, %s" % (self.state.ID, e[0], e[1], tb), 3 )
 
 	return 0
 
@@ -1286,13 +1219,13 @@ class IF(Directive):
 	    self.ID = '%s.IF.%s.%s' % (log.hostname,self.args.name,self.rule)
 	self.state.ID = self.ID
 
-	log.log( "<Directive>IF, ID '%s' name '%s', rule '%s', checkstring '%s', action '%s'" % (self.state.ID, self.args.name, self.rule, self.checkstring, self.args.actionList), 8 )
+	log.log( "<directive>IF.tokenparser(), ID '%s' name '%s', rule '%s', checkstring '%s', action '%s'" % (self.state.ID, self.args.name, self.rule, self.checkstring, self.args.actionList), 8 )
 
 
     def docheck(self, Config):
 	"""Perform the check."""
 
-	log.log( "<directive>IF(), docheck(), name '%s', check '%s', checkstring '%s'" % (self.args.name,self.check,self.checkstring), 7 )
+	log.log( "<directive>IF.docheck(), name '%s', check '%s', checkstring '%s'" % (self.args.name,self.check,self.checkstring), 7 )
 
 	self.rule(Config)
 
@@ -1307,7 +1240,7 @@ class IF(Directive):
 
 	if nlist.getInterface(self.args.name) == None:
 	    # interface doesn't exist
-	    log.log( "<directive>IF.NE() interface '%s' does not exist" % (self.args.name), 6 )
+	    log.log( "<directive>IF.NE() interface '%s' does not exist" % (self.args.name), 7 )
 	    self.state.statefail()	# update state info for check failed
 	    self.doAction(Config)
 	else:
@@ -1322,7 +1255,7 @@ class IF(Directive):
 
 	if nlist.getInterface(self.args.name) != None:
 	    # interface exists
-	    log.log( "<directive>IF.EX() interface '%s' exists" % (self.args.name), 6 )
+	    log.log( "<directive>IF.EX() interface '%s' exists" % (self.args.name), 7 )
 	    self.state.statefail()	# update state info for check failed
 	    self.doAction(Config)
 	else:
@@ -1337,7 +1270,7 @@ class IF(Directive):
 
 	i = nlist.getInterface(self.args.name)
 	if i == None:
-	    log.log( "<directive>IF.check() warning, no interface '%s'." % (self.args.name), 7 )
+	    log.log( "<directive>IF.check() warning, no interface '%s'." % (self.args.name), 5 )
 	    return		# ignore if this interface doesn't exist
 
 	ifenv = i.ifinfo()	# get dictionary of interface details
@@ -1383,13 +1316,13 @@ class NET(Directive):
 	    self.ID = '%s.NET.%s' % (log.hostname,self.args.rule)
 	self.state.ID = self.ID
 
-	log.log( "<Directive>NET, ID '%s' rule '%s', action '%s'" % (self.state.ID, self.args.rule, self.args.actionList), 8 )
+	log.log( "<directive>NET.tokenparser(), ID '%s' rule '%s', action '%s'" % (self.state.ID, self.args.rule, self.args.actionList), 8 )
 
 
     def docheck(self, Config):
 	"""Perform the check."""
 
-	log.log( "<directive>NET(), docheck(), rule '%s'" % (self.args.rule), 7 )
+	log.log( "<directive>NET.docheck(), docheck(), rule '%s'" % (self.args.rule), 7 )
 
 	if self.state.checkcount > 0:
 	    nlist.refresh()	# force refresh of list if re-checking
@@ -1441,13 +1374,13 @@ class SYS(Directive):
 	    self.ID = '%s.SYS.%s' % (log.hostname,self.args.rule)
 	self.state.ID = self.ID
 
-	log.log( "<Directive>SYS, ID '%s' rule '%s' action '%s'" % (self.state.ID, self.args.rule, self.args.actionList), 8 )
+	log.log( "<directive>SYS.tokenparser(), ID '%s' rule '%s' action '%s'" % (self.state.ID, self.args.rule, self.args.actionList), 8 )
 
 
     def docheck(self, Config):
 	"""Perform the check."""
 
-	log.log( "<directive>SYS(), docheck(), rule '%s'" % (self.args.rule), 7 )
+	log.log( "<directive>SYS.docheck(), rule '%s'" % (self.args.rule), 7 )
 
 	if self.state.checkcount > 0:
 	    system.refresh()	# force refresh of data if re-checking
@@ -1457,7 +1390,7 @@ class SYS(Directive):
 	try:
 	    result = eval( self.args.rule, sysenv )
 	except SyntaxError:
-	    log.log( "<directive>SYS(), docheck(), SyntaxError evaluating rule '%s'" % (self.args.rule), 3 )
+	    log.log( "<directive>SYS(), docheck(), SyntaxError evaluating rule '%s'" % (self.args.rule), 4 )
 	    return
 
 	# build varDict from sysenv
@@ -1503,13 +1436,13 @@ class STORE(Directive):
 	    self.ID = '%s.STORE.%s' % (log.hostname,self.args.rule)
 	self.state.ID = self.ID
 
-	log.log( "<Directive>STORE, ID '%s' rule '%s' action '%s'" % (self.state.ID, self.args.rule, self.args.actionList), 8 )
+	log.log( "<directive>STORE.tokenparser(), ID '%s' rule '%s' action '%s'" % (self.state.ID, self.args.rule, self.args.actionList), 8 )
 
 
     def docheck(self, Config):
 	"""Perform the check.  In this case, the 'check' is automatically true (we always want to store)."""
 
-	log.log( "<directive>STORE(), docheck(), rule '%s'" % (self.args.rule), 7 )
+	log.log( "<directive>STORE.docheck(), rule '%s'" % (self.args.rule), 7 )
 
 	datahash = None
 
@@ -1530,14 +1463,8 @@ class STORE(Directive):
 	    datahash = iostat.getHash()			# get dictionary of iostat data
 
 	if datahash == None:
-	    log.log( "<directive>STORE(), docheck(), rule '%s' is invalid." % (self.args.rule), 3 )
+	    log.log( "<directive>STORE.docheck(), rule '%s' is invalid." % (self.args.rule), 4 )
 	    return
-
-	# Create a new hash with 'data.' prepended to each key (as required by estored).
-# Don't do this anymore.
-#	storeenv = {}
-#	for i in datahash.keys():
-#	    storeenv['data.'+i] = datahash[i]
 
 	self.Action.storedict = datahash
 

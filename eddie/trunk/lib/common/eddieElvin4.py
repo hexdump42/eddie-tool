@@ -47,7 +47,7 @@ try:
 except ImportError:
     # no Elvin modules... disable Elvin
     UseElvin = 0
-    log.log( "<eddieElvin4>ImportError: Elvin4 not available - disabling Elvin functions", 3 );
+    log.log( "<eddieElvin4> ImportError: Elvin4 not available - disabling Elvin functions", 5 )
 
 
 ################################################################
@@ -73,11 +73,11 @@ class elvinConnection:
 	    constr = ""			# use server discovery
 
 	try:
-	    log.log("<eddieElvin4>Attempting to connect to Elvin, '%s'" %(constr), 7)
+	    log.log("<eddieElvin4>elvinConnection, Attempting to connect to Elvin, '%s'" %(constr), 6)
 	    self.elvinc = elvin.connect(constr)
 
 	except:
-	    log.log("<eddieElvin4>Connection to elvin failed. Tried to connect with '%s'. Error: %s, %s" %(constr, sys.exc_type, sys.exc_value), 2)
+	    log.log("<eddieElvin4>elvinConnection, Connection to elvin failed. Tried to connect with '%s'. Error: %s, %s" %(constr, sys.exc_type, sys.exc_value), 3)
 	    raise ElvinError, "Connection failed to %s" % (constr)
 
 
@@ -98,16 +98,16 @@ class eddieElvin:
 	if UseElvin:
 	    self.connect()		# make an Elvin connection
 	else:
-	    log.log( "<eddieElvin4>eddieElvin.__init__(), Elvin functionality disabled - probably because modules do not exist", 3 )
+	    log.log( "<eddieElvin4>eddieElvin, Elvin functionality disabled - probably because modules do not exist", 5 )
 
 
     def connect(self):
 	"""Try to make an Elvin connection."""
 
-	log.log( "<eddieElvin4>eddieElvin.connect(), acquiring semaphore lock...", 8 )
+	log.log( "<eddieElvin4>eddieElvin.connect(), acquiring semaphore lock...", 6 )
 	elvin_connect_semaphore.acquire()	# semaphore lock around Elvin connect
 						# only 1 thread connects at a time
-	log.log( "<eddieElvin4>eddieElvin.connect(), got semaphore lock", 8 )
+	log.log( "<eddieElvin4>eddieElvin.connect(), got semaphore lock", 6 )
 
 	global ec
 
@@ -126,27 +126,27 @@ class eddieElvin:
 		    ec = elvinConnection( url=ELVINURL, scope=ELVINSCOPE )
 		    log.log( "<eddieElvin4>eddieElvin.connect(), Connected to Elvin server, url='%s' scope='%s'" % (ELVINURL, ELVINSCOPE), 6 )
 	    except elvin.errors.ElvinConnectNotReady:
-		log.log( "<eddieElvin4>eddieElvin.connect(), received ElvinConnectNotReady - trying again", 8 )
+		log.log( "<eddieElvin4>eddieElvin.connect(), received ElvinConnectNotReady - trying again", 5 )
 		tryagain = 1
 		time.sleep(5)
 	    except:
 		e = sys.exc_info()
 		tb = traceback.format_list( traceback.extract_tb( e[2] ) )
-		log.log( "<eddieElvin4>eddieElvin.connect(), connect failed: %s, %s, %s." % (e[0], e[1], tb), 3 )
+		log.log( "<eddieElvin4>eddieElvin.connect(), connect failed: %s, %s, %s." % (e[0], e[1], tb), 5 )
 		elvin_connect_semaphore.release()	# release lock
 		return 1
 
 	if not ec:
 	    log.log( "<eddieElvin4>eddieElvin.connect(), Could not connect to Elvin server", 4 )
 
-	log.log( "<eddieElvin4>eddieElvin.connect(), releasing semaphore lock", 8 )
+	log.log( "<eddieElvin4>eddieElvin.connect(), releasing semaphore lock", 6 )
 	elvin_connect_semaphore.release()	# release lock
 
 
     def reconnect(self):
 	global ec
 
-	log.log( "<eddieElvin4>eddieElvin.reconnect(), attempting to reconnect to server", 7 )
+	log.log( "<eddieElvin4>eddieElvin.reconnect(), attempting to reconnect to server", 6 )
 	try:
 	    ec.elvinc.close()	# try to close connection, just in case
 	except:
@@ -160,7 +160,7 @@ class eddieElvin:
         """Send an Elvin notification.  msg must be a dictionary."""
 
 	if UseElvin == 0:
-	    log.log( "<eddieElvin4>eddieElvin.notify(), Elvin is disabled - request ignored", 7 )
+	    log.log( "<eddieElvin4>eddieElvin.notify(), Elvin is disabled - request ignored", 5 )
 	    return 2
 
 	elvin_connect_semaphore.acquire()	# semaphore lock around Elvin notify
@@ -169,7 +169,7 @@ class eddieElvin:
 
 	if not ec:
 	    # if not connected to Elvin, try to connect again
-	    log.log( "<eddieElvin4>eddieElvin.notify(), not connected - calling connect()", 7 )
+	    log.log( "<eddieElvin4>eddieElvin.notify(), not connected - calling connect()", 6 )
 	    self.connect()
 
 	if ec:
@@ -186,24 +186,24 @@ class eddieElvin:
 		try:
 		    ec.elvinc.notify( nfn=msg )
 		except elvin.errors.ElvinConnectNotReady:
-		    log.log( "<eddieElvin4>eddieElvin.notify(), received ElvinConnectNotReady - trying again", 8 )
+		    log.log( "<eddieElvin4>eddieElvin.notify(), received ElvinConnectNotReady - trying again", 5 )
 		    tryagain = 1
 		    time.sleep(5)
 		except:
 		    e = sys.exc_info()
 		    tb = traceback.format_list( traceback.extract_tb( e[2] ) )
-		    log.log( "<eddieElvin4>eddieElvin.notify(), notify failed: %s, %s, %s." % (e[0], e[1], tb), 3 )
+		    log.log( "<eddieElvin4>eddieElvin.notify(), notify failed: %s, %s, %s." % (e[0], e[1], tb), 4 )
 		    elvin_connect_semaphore.release()	# semaphore lock around Elvin notify
 		    return 1
 
 	    if tries > maxtries:
-		log.log( "<eddieElvin4>eddieElvin.notify(), too many retries - trying to reconnect", 4 )
+		log.log( "<eddieElvin4>eddieElvin.notify(), too many retries - trying to reconnect", 5 )
 		self.reconnect()
 		elvin_connect_semaphore.release()	# semaphore lock around Elvin notify
 		return 1
 
 	else:
-	    log.log( "<eddieElvin4>eddieElvin.notify(), no connection - cannot send Elvin message", 7 )
+	    log.log( "<eddieElvin4>eddieElvin.notify(), no connection - cannot send Elvin message", 5 )
 	    self.reconnect()
 	    elvin_connect_semaphore.release()	# semaphore lock around Elvin notify
 	    return 1
@@ -252,11 +252,11 @@ class elvinTicker(eddieElvin):
 	r = self.notify( elvinmsg )	# Send Elvin message
 
 	if r != 0:
-	    log.log( "<eddieElvin4>elvinTicker.sendmsg(), notify failed, msg '%s'" % (msg), 4 )
+	    log.log( "<eddieElvin4>elvinTicker.sendmsg(), notify failed, msg '%s'" % (msg), 5 )
 	    return r	# failed
 
 	else:
-	    log.log( "<eddieElvin4>elvinTicker.sendmsg(), notify successful, msg '%s'" % (msg), 8 )
+	    log.log( "<eddieElvin4>elvinTicker.sendmsg(), notify successful, msg '%s'" % (msg), 6 )
 	    return r	# succeeded
 
 
@@ -305,11 +305,11 @@ class elvindb(eddieElvin):
 	r = self.notify( edict )	# Send Elvin message
 
 	if r != 0:
-	    log.log( "<eddieElvin4>elvinTicker.elvindb(), notify failed, table %s" % (table), 4 )
+	    log.log( "<eddieElvin4>elvinTicker.elvindb(), notify failed, table %s" % (table), 5 )
 	    return r	# failed
 
 	else:
-	    log.log( "<eddieElvin4>elvinTicker.elvindb(), notify successful table %s" % (table), 8 )
+	    log.log( "<eddieElvin4>elvinTicker.elvindb(), notify successful table %s" % (table), 6 )
 	    return r	# succeeded
 
 
@@ -333,11 +333,11 @@ class elvinrrd(eddieElvin):
 	r = self.notify( edict )	# Send Elvin message
 
 	if r != 0:
-	    log.log( "<eddieElvin4>elvinTicker.elvinrrd(), notify failed, key %s" % (key), 4 )
+	    log.log( "<eddieElvin4>elvinTicker.elvinrrd(), notify failed, key %s" % (key), 5 )
 	    return r	# failed
 
 	else:
-	    log.log( "<eddieElvin4>elvinTicker.elvinrrd(), notify successful, key %s" % (key), 8 )
+	    log.log( "<eddieElvin4>elvinTicker.elvinrrd(), notify successful, key %s" % (key), 6 )
 	    return r	# succeeded
 
 ##

@@ -4,7 +4,7 @@
 ## Author       : Rod Telford  <rtelford@psychofx.com>
 ##                Chris Miles  <chris@psychofx.com>
 ## 
-## Date		: 971217 
+## Start Date	: 19971217 
 ## 
 ## Description	: General utility functions
 ##

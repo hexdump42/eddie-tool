@@ -4,7 +4,7 @@
 ## Author       : Rod Telford  <rtelford@psychofx.com>
 ##                Chris Miles  <chris@psychofx.com>
 ## 
-## Date		: 971215
+## Start Date	: 19971215
 ## 
 ## Description	: 
 ##
@@ -126,7 +126,7 @@ class MSG(Definition):
 		# tokens left and subject/message already defined
 		raise ParseFailure, "Parse error during MSG definition"
 
-	log.log( "<Definition>tokenparser(), MSG parsed, subject:'%s' message:'%s'" % (self.subject,self.message), 9 )
+	log.log( "<Definition>tokenparser(), MSG parsed, subject:'%s' message:'%s'" % (self.subject,self.message), 8 )
 
 	#if self.indent == 0:
 	#    self.subject = utils.stripquote(toklist[0])
@@ -168,12 +168,6 @@ class M(Definition):
 	return self.MDict[item]
 
 
-#    def tokenparser(self, toklist, toktypes, indent):
-#	## M doesn't need to parse any tokens.
-#	log.log( "<Definition>M(), Warning, M shouldn't see tokens, toklist: %s" % (toklist), 3 )
-#	return
-
-
     def give(self, obj):
 	if obj.type == 'M':
 	    self.MDict[obj.name] = obj
@@ -182,34 +176,6 @@ class M(Definition):
 	else:
 	    raise SyntaxError, "M can't take object of type %s" % obj.type
 
-
-
-
-## DEFs replaced by ALIAS's everywhere, without the '$'...
-#class DEF(Definition):
-#    """DEF Definition - defines global string aliases to be replaced
-#       during config file parsing only.  eg:
-#	DEF FSRULE="capac>=90%"
-#	...
-#	FS: fs='/' rule=$FSRULE action=" ... "
-#
-#	This goes against the general Python-like format of the config
-#	file and may disappear in the future.
-#    """
-#
-#    def __init__(self, list):
-#	apply( Definition.__init__, (self,list) )
-#
-#	# if we don't have 4 elements ['DEF', <str>, '=', <str>] then
-#	# raise an error
-#	if len(list) != 4:
-#	    #print "..DEF list:",list
-#	    raise ParseFailure, "DEF definition has %d tokens when expecting 4" % len(list)
-#
-#	# OK, grab values
-#	self.name = list[1]		# the name of this DEFinition
-#	self.text = list[3]		# the text that is assigned to it
-#	log.log( "<Definition>DEF(), DEF created, name '%s', text '%s'" % (self.name,self.text), 8 )
 
 
 class ALIAS(Definition):
@@ -275,7 +241,7 @@ class N(Definition):
 
 	self.hastokenparser = 1
 
-	log.log( "<Definition>N(), N created, name '%s'" % (self.name), 8 )
+	log.log( "<Definition>N(), N created, name '%s'" % (self.name), 9 )
 
 
     def __str__(self):
@@ -346,7 +312,7 @@ class N(Definition):
 		    del toktypes[:self.delcnt]
 
 	# Finished parsing tokens
-	log.log( "<Definition>N.tokenparser(), '%s'" % (self), 9 )
+	log.log( "<Definition>N.tokenparser(), '%s'" % (self), 8 )
 	
 
 

@@ -171,7 +171,8 @@ class Config:
 		    return 1
 	    except os.error:
 		if sys.exc_value == 'Connection timed out':
-		    log.log( "<config>Checkfiles(), Timeout while trying to stat '%s' - skipping file checks."%(f), 4 )
+		    # can happen when files on NFS mounted filesystem
+		    log.log( "<config>Config.checkfiles(), Timeout while trying to stat '%s' - skipping file checks."%(f), 5 )
 		    return 0
 
 	return 0
@@ -225,7 +226,7 @@ class SCANPERIOD(ConfigOption):
 	if value > 0:
 	    global scanperiod
 	    scanperiod = value			# set the config option
-	log.log( "<config>SCANPERIOD(), scanperiod set to %s (%d seconds)." % (scanperiodraw, scanperiod), 6 )
+	log.log( "<config>SCANPERIOD(), scanperiod set to %s (%d seconds)." % (scanperiodraw, scanperiod), 8 )
 
 
 ## LOGFILE - where to store log messages
@@ -239,7 +240,7 @@ class LOGFILE(ConfigOption):
 
 	# ok, value is 3rd list element
 	log.logfile = utils.stripquote(list[2])			# set the config option
-	log.log( "<config>LOGFILE(), logfile set to '%s'." % (log.logfile), 6 )
+	log.log( "<config>LOGFILE(), logfile set to '%s'." % (log.logfile), 8 )
 
 
 
@@ -254,7 +255,7 @@ class LOGLEVEL(ConfigOption):
 
 	# ok, value is 3rd list element
 	log.loglevel = string.atoi(list[2])		# set the config option
-	log.log( "<config>LOGLEVEL(), loglevel set to %d" % (log.loglevel), 6 )
+	log.log( "<config>LOGLEVEL(), loglevel set to %d" % (log.loglevel), 8 )
 
 
 
@@ -272,7 +273,7 @@ class ADMIN(ConfigOption):
 
 	# ok, value is 3rd list element
 	log.adminemail = utils.stripquote(list[2])		# set the config option
-	log.log( "<config>ADMIN(), admin set to '%s'." % (log.adminemail), 6 )
+	log.log( "<config>ADMIN(), admin set to '%s'." % (log.adminemail), 8 )
 
 
 ## ADMINLEVEL - how much logging to send to admin
@@ -287,7 +288,7 @@ class ADMINLEVEL(ConfigOption):
 
 	# ok, value is 3rd list element
 	log.adminlevel = string.atoi(list[2])		# set the config option
-	log.log( "<config>ADMINLEVEL(), adminlevel set to '%d'." % (log.adminlevel), 6 )
+	log.log( "<config>ADMINLEVEL(), adminlevel set to '%d'." % (log.adminlevel), 8 )
 
 
 ## ADMIN_NOTIFY - how often to send admin-logs to admin
@@ -308,7 +309,7 @@ class ADMIN_NOTIFY(ConfigOption):
 	value = utils.val2secs( rawval )		# convert value to seconds
 	if value > 0:
 	    log.admin_notify = value		# set the config option
-	log.log( "<config>ADMIN_NOTIFY(), admin_notify set to %s (%d seconds)." % (rawval, log.admin_notify), 6 )
+	log.log( "<config>ADMIN_NOTIFY(), admin_notify set to %s (%d seconds)." % (rawval, log.admin_notify), 8 )
 
 
 ## INTERPRETERS - define the list of interpreters
@@ -322,7 +323,7 @@ class INTERPRETERS(ConfigOption):
 
 	value = utils.stripquote(list[2])
 	proc.interpreters = string.split(value, ',')
-	log.log( "<config>INTERPRETERS(), interpreters defined as '%s'." % (proc.interpreters), 6 )
+	log.log( "<config>INTERPRETERS(), interpreters defined as '%s'." % (proc.interpreters), 8 )
 
 
 ## CLASS - define a class
@@ -357,7 +358,7 @@ class ELVINURL(ConfigOption):
 
 	# ok, value is 3rd list element
 	eddieElvin4.ELVINURL = utils.stripquote(list[2])		# set the config option
-	log.log( "<config>ELVINURL(), elvin url set to '%s'." % (eddieElvin4.ELVINURL), 6 )
+	log.log( "<config>ELVINURL(), elvin url set to '%s'." % (eddieElvin4.ELVINURL), 8 )
 
 
 ## ELVINSCOPE - Scope of Elvin server
@@ -371,7 +372,7 @@ class ELVINSCOPE(ConfigOption):
 
 	# ok, value is 3rd list element
 	eddieElvin4.ELVINSCOPE = utils.stripquote(list[2])		# set the config option
-	log.log( "<config>ELVINSCOPE(), elvin scope set to '%s'." % (eddieElvin4.ELVINSCOPE), 6 )
+	log.log( "<config>ELVINSCOPE(), elvin scope set to '%s'." % (eddieElvin4.ELVINSCOPE), 8 )
 
 
 ## NUMTHREADS - limit thread creation
@@ -386,7 +387,7 @@ class NUMTHREADS(ConfigOption):
 	# ok, value is 3rd list element
 	global num_threads
 	num_threads = int(list[2])		# set the config option
-	log.log( "<config>NUMTHREADS, num_threads set to '%d'." % (num_threads), 6 )
+	log.log( "<config>NUMTHREADS, num_threads set to '%d'." % (num_threads), 8 )
 
 class CONSOLE_PORT(ConfigOption):
     """Set the tcp port to listen on for console connections"""
@@ -408,7 +409,7 @@ class CONSOLE_PORT(ConfigOption):
 	if consport < 0:
 	    raise ParseFailure, "CONSOLE_PORT must be a positive integer, %d" % (consport)
 
-	log.log( "<config>CONSOLE_PORT, consport set to '%d'." % (consport), 6 )
+	log.log( "<config>CONSOLE_PORT, consport set to '%d'." % (consport), 8 )
 
 
 class EMAIL_FROM(ConfigOption):
@@ -423,7 +424,7 @@ class EMAIL_FROM(ConfigOption):
         import action
 	action.action.EMAIL_FROM = utils.stripquote(list[2])	# set value in action class
 
-	log.log( "<config>EMAIL_FROM, email From: set to '%s'" % (action.action.EMAIL_FROM), 6 )
+	log.log( "<config>EMAIL_FROM, email From: set to '%s'" % (action.action.EMAIL_FROM), 8 )
 
 
 class EMAIL_REPLYTO(ConfigOption):
@@ -438,7 +439,7 @@ class EMAIL_REPLYTO(ConfigOption):
         import action
 	action.action.EMAIL_REPLYTO = utils.stripquote(list[2])	# set value in action class
 
-	log.log( "<config>EMAIL_REPLYTO, email From: set to '%s'" % (action.action.EMAIL_REPLYTO), 6 )
+	log.log( "<config>EMAIL_REPLYTO, email From: set to '%s'" % (action.action.EMAIL_REPLYTO), 8 )
 
 
 
