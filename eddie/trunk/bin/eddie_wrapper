@@ -5,7 +5,7 @@
 ## 19990302 Chris Miles <chris@psychofx.com>
 ##
 ########################################################################
-## (C) Chris Miles 2001
+## (C) Chris Miles 2001-2004
 ##
 ## The author accepts no responsibility for the use of this software and
 ## provides it on an ``as is'' basis without express or implied warranty.
@@ -19,31 +19,22 @@
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 ########################################################################
 
-# Address to receive restart messages
-EDDIE_ADMIN=eddie-adm
+## Address to receive restart messages
+#EDDIE_ADMIN=eddie-adm@domain.name
+EDDIE_ADMIN=root
 
-MAX_TRIES=10	# only restart MAX_TRIES time in a short period of time
+## Failure to start Eddie-Tool after MAX_RETRIES in a short period of time
+## indicates a serious problem.  eddie_wrapper will then die.
+MAX_TRIES=10
 
-
-# Set path for mail/sleep/gtime/etc
-PATH=/bin:/usr/bin:/opt/local/bin
+## Set path for mail/sleep/date/...
+PATH=/bin:/usr/bin:/usr/local/bin:$PATH
 export PATH
 
-
-# Exit if host is called 'testjump*'
-host=`uname -n`
-echo $host | grep testjump >/dev/null
-if [ $? = 0 ]; then
-	echo "eddie_wrapper: host is a testjump - quitting."
-	exit 0
-fi
-
-
-# stdout/err from Eddie stored in temp file
+## stdout/err from Eddie stored in temp file
 RUNFILE=/var/run/eddie/tmp/eddie$$.out
 
-
-# Create (if necessary) /var/run/eddie/tmp
+## Create (if necessary) /var/run/eddie/tmp
 if [ ! -d /var/run/eddie/tmp ]; then
  	mkdir -p /var/run/eddie/tmp >/dev/null 2>&1
 	if [ $? -gt 0 ]; then
@@ -52,7 +43,7 @@ if [ ! -d /var/run/eddie/tmp ]; then
         fi
 fi
 
-# Find mail program
+## Find mail program
 if [ -x /bin/mailx ]; then		# Solaris
     MAIL=/bin/mailx
 elif [ -x /bin/mail ]; then		# Linux
@@ -61,20 +52,46 @@ else
     MAIL=mail				# dunno...
 fi
 
-# Find GNU date program - used for 'gdate "+%s"' below
+## Find GNU date program - used for 'gdate "+%s"' below
 GDATE=`which gdate 2>/dev/null | grep -v "^no "`
 if [ "$GDATE" = "" ]; then
     GDATE=`which date`		# hopefully standard 'date' is GNU date (ie, Linux)
 fi
+if [ "$GDATE" = "" ]; then
+    echo "** Can't find date or gdate - eddie_wrapper will have problems"
+    GDATE=date			# can't find a date command
+fi
 
-
-# clean up a bit
+## clean up a bit
 rm -f /var/run/eddie/tmp/*.out
+
+## Find pgrep
+PGREP=`which pgrep`
+if [ "$PGREP" = "" ]
+then
+    PGREP="useps"
+fi
+
+## Find eddie/bin/
+EDDIEPATH=`dirname $0`
+if [ "$EDDIEPATH" = "" ]
+then
+    EDDIEPATH="."
+fi
+
+
+## Start the loop to startup Eddie-Tool and try and restart it if it dies
 
 tries=0
 
 while [ 1 ]; do
-	pid=`ps -ef | grep \.\*python\.\*eddie.py  | grep -v grep | awk '{ print $2 }'`
+    	if [ "$PGREP" = "useps" ]
+	then
+	    pid=`ps -ef | grep \.\*python\.\*eddie.py  | grep -v grep | awk '{ print $2 }'`
+	else
+	    pid=`$PGREP eddie.py`
+	fi
+
         if [ "${pid}" != "" ]; then
                 echo "Error: Eddie is already running."
                 exit 2
@@ -82,8 +99,7 @@ while [ 1 ]; do
 
 	start_time=`$GDATE "+%s"`
 
-	cd /opt/eddie/bin
-	./eddie.py >>$RUNFILE
+	$EDDIEPATH/eddie.py >>$RUNFILE
 
 	retcode=$?
 	echo "eddie_wrapper: eddie died at `date` return code: $retcode" >> $RUNFILE
