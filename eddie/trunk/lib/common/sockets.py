@@ -29,7 +29,7 @@
 
 
 
-import sys,os,socket,string,select,time,threading,traceback
+import sys,socket,string,select,traceback
 import log
 
 # class wrapper for socket
@@ -134,22 +134,27 @@ def console_server_thread(Config, die_event, consport):
             s.close()
 
         except socket.error:
+            e = sys.exc_info()
+
             socketerrors = socketerrors + 1
             s.close()
             s = None
 
-            if sys.exc_value[0] == 125:         # port already in use
-                log.log("<sockets>console_server_thread(), Port %d already in use." % (consport), 6 )
-                exit(2)
+            if e[1][0] == 98:		# address already in use
+                log.log("<sockets>console_server_thread(), Port %d already in use - exiting" % (consport), 1 )
+		sys.stderr.write( "Eddie: port %d already in use, quitting\n" % (consport) )
+                die_event.set()		# signal other threads to exit
+		return
 
-            if sys.exc_value[0] == 131:         # 'Connection reset by peer'
+            if e[1][0] == 131:         # 'Connection reset by peer'
                 log.log( "<sockets>console_server_thread(), Connection reset by peer - continuing.", 8 )
                 continue
 
-            log.log( "<sockets>console_server_thread(), Socket error - resetting socket and continuing: %s, %s" % (sys.exc_type,sys.exc_value), 8 )
+            log.log( "<sockets>console_server_thread(), Socket error - resetting socket and continuing: %s, %s" % (e[1][0],e[1][1]), 8 )
 
             if socketerrors > 100:
-                log.log( "<sockets>console_server_thread(), Too many socket errors ... exiting.", 7 )
-                exit(5)
+                log.log( "<sockets>console_server_thread(), Too many socket errors - exiting.", 1 )
+                die_event.set()		# signal other threads to exit
+		return
 
 

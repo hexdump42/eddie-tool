@@ -401,7 +401,14 @@ class CONSPORT(ConfigOption):
 
 	# ok, value is 3rd list element
 	global consport
-	consport = int(list[2])		# set the config option
+	try:
+	    consport = int(list[2])		# set the config option
+	except TypeError:			# must be integer
+	    raise ParseFailure, "CONSPORT is not an integer, '%s'" % (list[2])
+
+	if consport < 0:
+	    raise ParseFailure, "CONSPORT must be a positive integer, %d" % (consport)
+
 	log.log( "<config>CONSPORT, consport set to '%d'." % (consport), 6 )
 
 def loadExtraDirectives( directivedir ):
