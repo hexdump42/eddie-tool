@@ -143,12 +143,22 @@ class METASTAT(directive.Directive):
 
     def docheck(self, Config):
 	log.log( "<solaris>METASTAT.docheck(): ", 7 )
-	metastat = "/usr/opt/SUNWmd/sbin/metastat"
 
-	try:
-	    os.stat( metastat )
-	except:
-	    log.log( "<solaris>METASTAT.docheck(): %s not found, directive cancelled" % (metastat), 4 )
+        # where to find the metastat command
+	metastat_list = [ "/usr/opt/SUNWmd/sbin/metastat", "/usr/sbin/metastat" ]
+
+	metastat = None
+
+        for m in metastat_list:
+	    try:
+	        os.stat( m )
+		metastat = m
+	    except:
+		pass
+
+	if metastat == None:
+	    log.log( "<solaris>METASTAT.docheck(): metastat not found at %s, directive cancelled" % (metastat_list), 4 )
+
 	else:
 	    # metastat exists, so check for anything requiring Maintenance
 
@@ -213,6 +223,8 @@ class PRTDIAG(directive.Directive):
     def docheck(self, Config):
 	log.log( "<solaris>PRTDIAG.docheck(): ", 7 )
 
+        prtdiag = None
+
 	# Determine system type and parse system-specific output
 	cmd = "/usr/bin/uname -i"
 	(retval, output) = utils.safe_getstatusoutput( cmd )
@@ -220,6 +232,8 @@ class PRTDIAG(directive.Directive):
 	    prtdiag_dict = self.parse_prtdiag_u450()
 	elif output == "SUNW,Ultra-250":
 	    prtdiag_dict = self.parse_prtdiag_u250()
+	elif output == "SUNW,Sun-Fire-280R":
+	    prtdiag_dict = self.parse_prtdiag_u280r()
 	else:
 	    log.log( "<solaris>PRTDIAG.docheck(): system type %s not supported yet, directive cancelled" % (output), 4 )
 
@@ -338,6 +352,32 @@ class PRTDIAG(directive.Directive):
 
 	return prtdiag_dict
 		
+
+    def parse_prtdiag_u280r(self):
+	"""Parse prtdiag for a U280R."""
+
+	prtdiag = "/usr/platform/sun4u/sbin/prtdiag"
+
+	try:
+	    os.stat( prtdiag )
+	except:
+	    log.log( "<solaris>PRTDIAG.parse_prtdiag_u280r(): %s not found, directive cancelled" % (prtdiag), 4 )
+	    return None
+
+	cmd = "%s -v" % (prtdiag)
+	(retval, output) = utils.safe_getstatusoutput( cmd )
+
+	# Initialise prtdiag dictionary of values
+	prtdiag_dict = {}
+	prtdiag_dict['temp_cpu0'] = None
+	prtdiag_dict['temp_cpu1'] = None
+
+	inx = re.search( "cpu([0-9])\s+([0-9])\s*-+\s*([0-9]+)\s+([0-9]+)", output)
+	if inx:	# CPU temps
+	    prtdiag_dict['temp_cpu%s'%(inx.group(1))] = int(inx.group(3))
+	    prtdiag_dict['temp_cpu%s'%(inx.group(2))] = int(inx.group(4))
+
+	return prtdiag_dict
 
 
 ##
