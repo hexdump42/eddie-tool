@@ -142,6 +142,7 @@ class State:
 	self.checkcount = 0		# reset check counter
 	self.failcount = 0		# reset fail count
 	self.thisdirective.current_actionperiod = 0	# reset the current actionperiod
+	self.thisdirective.Action.runcount = 0	# chris 2002-12-29: reset action run counter
 
 	log.log( "<directive>State.stateok(): ID '%s' status '%s'"%(self.ID, self.status), 7 )
 
@@ -239,6 +240,7 @@ class Directive:
 	self.history = None	# keep historical data for checks, if required
 
 	self.excludehosts = []	# chris 2002-12-24: hosts to exclude from directive execution
+	self.actionmaxcalls = None	# chris 2002-12-24: can set limit on number of action calls
 
 
     def request_collector(self):
@@ -484,6 +486,20 @@ class Directive:
 	else:
 	    for host in excludehosts:
 		self.excludehosts.append( string.strip(host) )
+
+	# chris 2002-12-29: actionmaxcalls parameter to specify maximum number of
+	#	times the action(s) will be called for a particular check in
+	#	failed state.
+	try:
+	    actionmaxcalls = int(self.args.actionmaxcalls)
+	except AttributeError:
+	    pass	# no actionmaxcalls given
+	except ValueError:
+	    raise ParseFailure, "actionmaxcalls must be an integer: '%s'"%(self.args.actionmaxcalls)
+	else:
+	    if actionmaxcalls < 0:
+		raise ParseFailure, "actionmaxcalls must be >= 0: %s"%(self.args.actionmaxcalls)
+	    self.actionmaxcalls = actionmaxcalls
 
 	# Set any default action variables
 	if 'rule' in dir(self.args):
@@ -820,7 +836,14 @@ class Directive:
 	    if failed_deps:
     	        log.log( "<directive>Directive.docheck(): dependencies %s failed, %s not calling actions" % (failed_deps, self.ID), 7 )
 	    else:
-    	        self.doAction(Config)
+		if self.actionmaxcalls != None and self.Action.runcount > self.actionmaxcalls:
+		    log.log( "<directive>Directive.docheck(): actionmaxcalls reached (%d) - actions skipped" % (self.actionmaxcalls), 7 )
+		    self.putInQueue( Config.q )	# put self back in the Queue
+		    return
+		else:
+		    self.doAction(Config)
+		    self.Action.runcount = self.Action.runcount + 1
+		    log.log( "<directive>Directive.docheck(): Action.runcount=%d" % (self.Action.runcount), 9 )
 
 	# Save historical data
 	if self.history:

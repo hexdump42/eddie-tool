@@ -41,7 +41,8 @@ class action:
     an Eddie action, called from directive arguments such as 'action'
     and 'act2ok'."""
 
-    # No __init__
+    def __init__(self):
+	self.runcount = 0	# chris 2002-12-29: count consecutive action calls
 
 
     def email(self, address, subject="", body=""):
