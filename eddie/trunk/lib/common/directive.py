@@ -1020,7 +1020,7 @@ class SYS(Directive):
 
 	log.log( "<directive>SYS(), docheck(), rulestring '%s'" % (self.rulestring), 7 )
 
-	sysenv = syslist.getHash()		# get dictionary of system stats
+	sysenv = system.getHash()		# get dictionary of system stats
 
 	result = eval( self.rulestring, sysenv )
 
@@ -1082,7 +1082,7 @@ class STORE(Directive):
 	# cleaned up later to handle any type of rule (TODO)
 
 	if self.rulestring[:6] == 'system':
-	    datahash = syslist.getHash()			# get dictionary of system stats
+	    datahash = system.getHash()			# get dictionary of system stats
 	elif self.rulestring[:7] == 'netstat':
 	    #datahash = nlist.statstable.getHash()		# get dictionary of network stats
 	    datahash = nlist.getNetworkStats()			# get dictionary of network stats
@@ -1090,6 +1090,8 @@ class STORE(Directive):
 	    datahash = plist.allprocs()				# get dictionary of process details
 	elif self.rulestring[:2] == 'if':
 	    datahash = nlist.getAllInterfaces()			# get dictionary of interface details
+	elif self.rulestring[:6] == 'iostat':
+	    datahash = iostat.getHash()			# get dictionary of iostat data
 
 	if datahash == None:
 	    log.log( "<directive>STORE(), docheck(), rulestring '%s' is invalid." % (self.rulestring), 3 )

@@ -29,6 +29,7 @@ try:
     #import Elvin, ElvinMisc
     #from Elvin import *
     import Elvin
+    #import elvin
 except ImportError:
     # no Elvin modules... disable Elvin
     UseElvin = 0
@@ -242,7 +243,7 @@ class elvindb(eddieElvin):
 	    edict = {      'ELVIN.TABLE' : table,
 		         'ELVIN.COMMAND' : 'CREATE',
 		            'ELVIN.HOST' : log.hostname,
-			       'ELVINDB' : 'ELVINDB',		# put in for the exists() to work - shouldn't be needed...
+			       'ELVINDB' : 'ELVINDB',		# put in for the exists() to work - shouldn't be needed but is...
 		       'ELVIN.TIMESTAMP' : timestamp
 		    }
 
