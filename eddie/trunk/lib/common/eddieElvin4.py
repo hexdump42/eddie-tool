@@ -90,6 +90,7 @@ class elvinConnection:
 
 
 elvin_connect_semaphore = threading.Semaphore()
+elvin_notify_semaphore = threading.Semaphore()
 
 class eddieElvin:
 
@@ -158,11 +159,13 @@ class eddieElvin:
     def notify(self, msg):
         """Send an Elvin notification.  msg must be a dictionary."""
 
-	global ec
-
 	if UseElvin == 0:
 	    log.log( "<eddieElvin4>eddieElvin.notify(), Elvin is disabled - request ignored", 7 )
 	    return 2
+
+	elvin_connect_semaphore.acquire()	# semaphore lock around Elvin notify
+
+	global ec
 
 	if not ec:
 	    # if not connected to Elvin, try to connect again
@@ -190,17 +193,22 @@ class eddieElvin:
 		    e = sys.exc_info()
 		    tb = traceback.format_list( traceback.extract_tb( e[2] ) )
 		    log.log( "<eddieElvin4>eddieElvin.notify(), notify failed: %s, %s, %s." % (e[0], e[1], tb), 3 )
+		    elvin_connect_semaphore.release()	# semaphore lock around Elvin notify
 		    return 1
 
 	    if tries > maxtries:
 		log.log( "<eddieElvin4>eddieElvin.notify(), too many retries - trying to reconnect", 4 )
 		self.reconnect()
+		elvin_connect_semaphore.release()	# semaphore lock around Elvin notify
 		return 1
 
 	else:
 	    log.log( "<eddieElvin4>eddieElvin.notify(), no connection - cannot send Elvin message", 7 )
 	    self.reconnect()
+	    elvin_connect_semaphore.release()	# semaphore lock around Elvin notify
 	    return 1
+
+	elvin_connect_semaphore.release()	# semaphore lock around Elvin notify
 
 	return 0
 
