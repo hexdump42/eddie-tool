@@ -79,7 +79,8 @@ class Pinger:
 		self.destinfo = (aliases[0], ipaddr[0])
 	    else:
 		self.destinfo = (name, ipaddr[0])
-	except socket.herror:
+	except socket.error:
+	    # host not found: just use IP address
 	    self.destinfo = ("", addr)
 
     def send_packet(self):
