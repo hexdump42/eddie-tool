@@ -232,7 +232,7 @@ class IntTable(datacollect.DataCollect):
 		continue		# should be 9 fields per line
 
 	    # only want lines where Address is a valid IP address
-	    ip_re = "[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+"
+	    int_re = "[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+"
 	    sre = re.compile(int_re)
 	    inx = sre.search( f[3] )
 	    if inx != None:
@@ -263,7 +263,7 @@ class interface:
 	self.mtu = int(fields[1])
 
 	# net
-	self.net = int(fields[2])
+	self.net = fields[2]
 
 	# MAC address
 	self.mac = fields[3]
@@ -292,7 +292,7 @@ class interface:
 	info['name'] = self.name
 	info['mtu'] = self.mtu
 	info['net'] = self.net
-	info['address'] = self.address
+	info['mac'] = self.mac
 	info['ipkts'] = self.ipkts
 	info['opkts'] = self.opkts
 	info['ierrs'] = self.ierrs
