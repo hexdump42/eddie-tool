@@ -1195,7 +1195,7 @@ class PORT(Directive):
 		else:
 		    s.close()
 		    tb = traceback.format_list( traceback.extract_tb( e[2] ) )
-		    log.log( "<Directive>PORT.isalive(), ID '%s', Uncaught exception: %s, %s, %s" % (self.state.ID, e[0], e[1], tb), 3 )
+		    log.log( "<Directive>PORT.isalive(), ID '%s', Uncaught: %s, %s, %s" % (self.state.ID, e[0], e[1], tb), 3 )
         except:
 	    e = sys.exc_info()
 	    tb = traceback.format_list( traceback.extract_tb( e[2] ) )

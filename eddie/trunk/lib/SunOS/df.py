@@ -68,12 +68,14 @@ class dfList:
 	    
 
     def keys(self):
+	self.refresh()
         return(self.hash.keys())
 
     # Overload '[]', eg: returns corresponding df object for given filesystem
     # device - if there isn't one, will try to find a df object based on the
     # mount point.  If both fail, returns None.
     def __getitem__(self, name):
+	self.refresh()
         try:
             return self.hash[name]		# try to find filesystem device
         except KeyError:
