@@ -11,10 +11,6 @@
 ##
 ## $Id$
 ##
-## $Log$
-## Revision 1.9  1997/12/15 04:15:22  rtelford
-## added log to directive
-##
 ##
 
 import os
