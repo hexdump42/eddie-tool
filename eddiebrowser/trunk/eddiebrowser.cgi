@@ -1,9 +1,11 @@
 #!/opt/python/bin/python
 
 ## EDDIE RRD Browser - Chris Miles <chris@psychofx.com> 2002-06-16
+##
 ##  A smart CGI interface for browsing and graphing RRD stats.  Can be used
 ##  with any RRDs but commonly used in conjuction with EDDIE-Tool and
 ##  elvinrrd generated system/network RRD stats.
+##
 ## $Id$
 ## $Source$
 
@@ -17,10 +19,16 @@ GLOBAL_CONFIG = '/export/rrd/eddiebrowser.cfg'
 ## End of settings ##
 
 
-__version__ = '0.3.0'
+__version__ = '0.4.0'
 
 
-import cgi, os, sys, traceback, string, re
+import cgi
+import os
+import sys
+import traceback
+import string
+import re
+import cgitb; cgitb.enable()
 
 
 
@@ -31,6 +39,10 @@ class GlobalConfig:
 	self.settings['ho'] = 'h'		# order by hosts (default)
 	self.settings['start'] = "-151200"	# daily view (default)
 	self.aliases = {}
+	self.hosts = []				# list of all hostnames
+	self.datanames = []			# list of all data names
+	self.datagroups = {}			# dict of all data groups
+	self.filter = None			# Filter object
 
 
     def parseGlobalConfig(self,cfgfile):
@@ -119,16 +131,81 @@ class GlobalConfig:
 	if type=='form':
 	    for s in self.settings.keys():
 		if s not in exclude:
-		    settingstr += '<input type=hidden name="%s" value="%s">\n' % (s,self.settings[s])
+		    settingstr += '<input type="hidden" name="%s" value="%s">\n' % (s,self.settings[s])
+	    if self.filter:
+		for g in self.filter.filtergroups:
+		    settingstr += '<input type="hidden" name="fltgroup" value="%s">\n' % (g)
+		#TODO
 
 	elif type=='get':
+	    settings = []
 	    for s in self.settings.keys():
 		if s not in exclude:
-		    if settingstr != '':
-			settingstr += '&'
-		    settingstr += '%s=%s' % (s,self.settings[s])
+		    settings.append( '%s=%s' % (s,self.settings[s]) )
+	    if self.filter:
+		for g in self.filter.filtergroups:
+		    settings.append( 'fltgroup=%s' % (g) )
+	    settingstr = string.join( settings, '&' )
 
 	return settingstr
+
+
+    # chris 2003-06-22: Read all settings from dir/.eddiebrowser.cfg
+    #	into GlobalConfig object.
+    def readDirConfigs( self ):
+	"""Read settings from all directory/.eddiebrowser.cfg files."""
+
+	dirs = os.listdir( RRD_DIR )
+	for d in dirs:
+	    dir = os.path.join( RRD_DIR, d )
+	    self.getSettingsFromDir(dir)
+
+
+    def getSettingsFromDir( self, dir ):
+	"""Read settings from dir/.eddiebrowser.cfg"""
+
+	cfg = parseConfig(dir)
+	if cfg == None:
+	    return None
+
+	# Get data name
+	dataname = cfg['NAME']
+	self.datanames.append( dataname )
+
+	# Get data group
+	groupname = cfg['GROUP']
+	if groupname in self.datagroups.keys():
+	    self.datagroups[groupname].append( dataname )
+	else:
+	    self.datagroups[groupname] = [dataname,]
+
+	# Get hostnames from filenames
+	files = cfg['FILES']
+	inx = re.compile( files )
+
+	for f in os.listdir(dir):
+	    sre = inx.match(f)
+	    if sre != None:
+		h = sre.group('hostname')
+		if h not in self.hosts:
+		    self.hosts.append(h)
+
+
+    def getAllHosts( self ):
+	"""Return list of hostnames."""
+
+	return self.hosts
+
+
+    def getFilter( self, form ):
+	"""Create a filter if required."""
+
+	self.filter = Filter( form )
+	if not self.filter.on:
+	    self.filter = None
+	    return None
+	else:
+	    return self.filter
 
 
 
@@ -160,30 +237,6 @@ def parseConfig(dir):
     return cfg
 
 
-def getHostsFromDir(dir, hosts):
-    cfg = parseConfig(dir)
-    if cfg == None:
-	return None
-
-    files = cfg['FILES']
-    inx = re.compile( files )
-
-    for f in os.listdir(dir):
-    	sre = inx.match(f)
-	if sre != None:
-	    h = sre.group('hostname')
-	    if h not in hosts:
-		hosts.append(h)
-
-
-def getAllHosts():
-    hosts = []
-    dirs = os.listdir( RRD_DIR )
-    for d in dirs:
-	dir = os.path.join( RRD_DIR, d )
-	getHostsFromDir(dir, hosts)
-
-    return hosts
 
 
 def nocaseSort( a, b ):
@@ -199,15 +252,27 @@ def nocaseSort( a, b ):
 
 
 def controlPanel(cfg):
+    print "<HEAD><Title>eddiebrowser control panel</Title>"
+    print """<SCRIPT TYPE="text/javascript">
+	<!--
+	function cbclear(cbname){
+		document.getElementById(cbname).checked=false;
+		return true;
+	}
+	//-->
+	</SCRIPT>"""
+    print "</HEAD><BODY>"
+
     print "<center><b>EDDIE RRD Browser (v%s)</b>" % (__version__)
     print "<br>&copy; Chris Miles 2002-2003</center>"
 
-    print "<p>Select a host</p>"
+    cfg.readDirConfigs()
+    hosts = cfg.getAllHosts()
 
-    hosts = getAllHosts()
-
-    #print "<p>hosts:",hosts,"</p>"
     print "<form name='selecthost' action='%s' method=GET>" % (os.environ['SCRIPT_NAME'])
+
+    print '<Table width="100%" align="center" border="0">'
+    print '<tr valign="top"><td><p>Select a host</p>'
 
     print cfg.keepSettings(type='form')	# print settings as hidden fields
 
@@ -232,13 +297,38 @@ def controlPanel(cfg):
 		print " (%s)"%(cfg.aliases[h])
 
     print "</select>"
-    print '<input type=submit value="GO">'
+    print '<input type=submit value="GO"><br>'
 
-    print "</form>"
     if cfg.settings['ho'] == 'a':
 	print '<font size=-1>[<a href="%s?ho=h">sort by hostname</a>]</font>' % (os.environ['SCRIPT_NAME'])
     else:
 	print '<font size=-1>[<a href="%s?ho=a">sort by alias</a>]</font>' % (os.environ['SCRIPT_NAME'])
+
+    print "</td>"
+
+    # chris 2003-06-22: show options for restricting to selected data types
+    #	or data groups.
+
+    print '<td align="left">Limit DataTypes to: <input type="checkbox" name="noflt">ALL, or:'
+    print "<dl>"
+    groups = cfg.datagroups.keys()
+    groups.sort()
+    numgroups = len(groups)
+    i = 0
+    for g in groups:
+	print '<dt><input type="checkbox" name="fltgroup" value="%s" onchange="cbclear(\'noflt\')">%s'%(g,g)
+	print "<dl>"
+	for d in cfg.datagroups[g]:
+	    print '<dd><input type="checkbox" name="fltgrp%s" value="%s">%s'%(g,d,d)
+	print "</dl>"
+	i += 1
+	if i == numgroups/2:
+	    print "</dl></td><td>&nbsp;<dl>"
+
+    print "</dl></td></tr>"
+    print "</Table>"
+    print "</form>"
+    print "</BODY>"
 
 
 def error_html( msg ):
@@ -465,10 +555,14 @@ def graph( form ):
 #	) )
 
 
-def showHostInfo(dir, hostname, start):
+def showHostInfo(dir, hostname, start, filter=None):
     cfg = parseConfig(dir)
     if cfg == None:
 	return None
+
+    if filter:
+	if cfg['GROUP'] not in filter.filtergroups and cfg['NAME'] not in filter.filtertypes:
+	    return None
 
     files = cfg['FILES']
     inx = re.compile( files )
@@ -496,7 +590,7 @@ def showHostInfo(dir, hostname, start):
 
 
 
-def showTypes( hostname, start ):
+def showTypes( hostname, start, filter=None ):
     """Get types of data to show for <hostname>."""
 
     types = {}
@@ -504,7 +598,7 @@ def showTypes( hostname, start ):
     dirs = os.listdir( RRD_DIR )
     for d in dirs:
 	dir = os.path.join( RRD_DIR, d )
-	showHostInfo(dir, hostname, start)
+	showHostInfo(dir, hostname, start, filter)
 
     return
 
@@ -530,8 +624,10 @@ def showHost( hostname, start, cfg ):
 
     cursettings = cfg.keepSettings(type='get')
 
+    # chris 2003-06-22: moved host list to cfg object
+    cfg.readDirConfigs()
     # chris 2003-05-26: get hosts to make selection list and next/previous links
-    hosts = getAllHosts()
+    hosts = cfg.getAllHosts()
     hostselect = "<select name='hostname' onChange=selecthost.submit()>"
     if cfg.settings['ho'] == 'a':
 	# sort by aliases
@@ -612,9 +708,44 @@ def showHost( hostname, start, cfg ):
 	print '[&nbsp;<a href="%s?hostname=%s&start=-41472000&%s">yearly</a>&nbsp;]' % (os.environ['SCRIPT_NAME'], hostname, cursettings)
     print "</center>"
 
-    showTypes( hostname, start )
+    showTypes( hostname, start, cfg.filter )
 
     print "</BODY>"
+
+
+class Filter:
+    def __init__( self, form ):
+	self.on = False
+	if 'noflt' in form.keys() and form['noflt'].value == 'on':
+	    # No filtering; i.e., show everything
+	    return
+
+	self.filtergroups = []
+	self.filtertypes = []
+
+	value = form.getvalue("fltgroup", "")
+	if isinstance(value, list):
+	    # Multiple fields specified
+	    self.filtergroups = value
+	    self.on = True
+	elif value:
+	    # Single or no field specified
+	    self.filtergroups = [value,]
+	    self.on = True
+
+	for f in form.keys():
+	    if f[:6] == 'fltgrp':
+		value = form.getvalue(f, "")
+		if isinstance(value, list):
+		    # Multiple fields specified
+		    self.filtertypes += value
+		    self.on = True
+		elif value:
+		    # Single or no field specified
+		    self.filtertypes += [value,]
+		    self.on = True
+
+
 
 
 def main():
@@ -623,6 +754,7 @@ def main():
 
     if 'mode' in form.keys():
 	if form['mode'].value == 'graph':
+	    # Graph an RRD data source and output a PNG image
 	    graph( form )
 	    return 1
 
@@ -640,6 +772,7 @@ def main():
 	    start = form['start'].value
 	else:
 	    start = "-151200"		# default to daily
+	filter = cfg.getFilter( form )		# get groups/datatypes to filter by
 	showHost( form['hostname'].value, start, cfg )
     else:
         controlPanel(cfg)
@@ -656,20 +789,23 @@ def main():
 
 if __name__ == "__main__":
 
-    try:
-	main()
-    except:
-	print "Content-Type: text/html"     # html error msg
-	print                               # blank line, end of headers
-	e = sys.exc_info()
-	tb = traceback.format_list( traceback.extract_tb( e[2] ) )
-	print "<p><font color=blue>Exception in %s :</font>" % (sys.argv[0])
-	#print "<br><pre><font color=red>%s, %s, %s</font></pre></p>" % (e[0], e[1], tb)
-	print "<br><font color=red><pre>"
-	print e[0]
-	print e[1]
-	for t in tb:
-	    print t,
-	print "</pre></font></p>"
+    main()
+
+    # chris 2003-06-22: use cgitb for displaying exceptions now
+#    try:
+#	main()
+#    except:
+#	print "Content-Type: text/html"     # html error msg
+#	print                               # blank line, end of headers
+#	e = sys.exc_info()
+#	tb = traceback.format_list( traceback.extract_tb( e[2] ) )
+#	print "<p><font color=blue>Exception in %s :</font>" % (sys.argv[0])
+#	#print "<br><pre><font color=red>%s, %s, %s</font></pre></p>" % (e[0], e[1], tb)
+#	print "<br><font color=red><pre>"
+#	print e[0]
+#	print e[1]
+#	for t in tb:
+#	    print t,
+#	print "</pre></font></p>"
 
 
