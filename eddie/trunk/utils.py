@@ -20,8 +20,8 @@ import string
 ## trickySplit( line, delim ) - split line by delimiter delim, but ignoring
 ## delimiters found inside ()'s, []'s, {}'s, '''s and ""'s.
 ##
-## eg: trickySplit( "mail(root,'hi there'),system('echo hi, mum')", ',' )
-## would return: [ "mail(root,'hi there')", "system('echo hi, mum')" ]
+## eg: trickySplit( "email(root,'hi there'),system('echo hi, mum')", ',' )
+## would return: [ "email(root,'hi there')", "system('echo hi, mum')" ]
 ##
 def trickySplit( line, delim ):
     parenCnt = 0		# count of ()'s

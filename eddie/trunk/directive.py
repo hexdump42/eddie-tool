@@ -86,7 +86,7 @@ class Directive:
 	#         were taken:" if any were taken
 	self.varDict['act'] = '[act not yet defined]'
 
-	#  %actnm = show list of actions taken (excluding mail()'s) preceded by
+	#  %actnm = show list of actions taken (excluding email()'s) preceded by
 	#         "The following actions were taken:" if any were taken
 	self.varDict['actnm'] = '[actnm not yet defined]'
 
@@ -119,10 +119,10 @@ class Directive:
 
 	# Set the 'action' variables with the expanded action list
 	self.varDict['act'] = 'The following actions are being taken:\n'
-	self.varDict['actnm'] = 'The following (non-mail) actions are being taken:\n'
+	self.varDict['actnm'] = 'The following (non-email) actions are being taken:\n'
 	for a in actionList:
 	    self.varDict['act'] = self.varDict['act'] + '\t' + a + '\n'
-	    if a[:4] != 'mail':
+	    if a[:4] != 'email':
 		self.varDict['actnm'] = self.varDict['actnm'] + '\t' + a + '\n'
 
 	# Setup current varDict in action module

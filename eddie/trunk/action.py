@@ -28,8 +28,8 @@ DEFAULTSUBJ='Message from Otto'
 
 #### DEFINE ALL THE ACTIONS AVAILABLE ####
 
-# mail()
-def mail(user,*arg):
+# email()
+def email(user,*arg):
     # Multiple email recipients are seperated by '|'.
     multUsers = string.split( user, '|' )
 
@@ -45,7 +45,7 @@ def mail(user,*arg):
 	    subj = DEFAULTSUBJ
 
 	    if len(arg) > 2:
-		print "Error in mail() action: more than 2 arguments given:",arg
+		log.log( "<action>email(), Error, more than 2 arguments given '%s'" % arg, 2 )
 		return
 
 	    if len(arg) > 1:
@@ -63,7 +63,7 @@ def mail(user,*arg):
 
 	else:
 	    # ERROR
-	    print "Error in mail() action: no arguments given."
+	    log.log( "<action>email(), Error, no arguments given", 2 )
 
 	subj = parseVars( subj, varDict )
 	body = parseVars( body, varDict )
@@ -86,8 +86,8 @@ def mail(user,*arg):
 	tmp.write( '.\n' )
 	tmp.close()
 
-	if not log.log( "<action>mail(), mail sent to '%s', subject '%s', body '%s'" % (u,subj,body), 9 ):
-	    log.log( "<action>mail(%s, '%s')" % (u,subj) ,5 )
+	if not log.log( "<action>email(), email sent to '%s', subject '%s', body '%s'" % (u,subj,body), 9 ):
+	    log.log( "<action>email(%s, '%s')" % (u,subj) ,5 )
 
 
 # Parse text string replacing occurences of %var with corresponding value from
