@@ -27,7 +27,7 @@
 
 
 # Imports: Python
-import sys, os, commands, time
+import sys, os, time
 # Imports: Eddie
 import log, directive, utils
 
@@ -79,9 +79,10 @@ class IPF(directive.Directive):
             try:
 	        os.stat( i )
 		ipfstatcmd = i
+		log.log( "<ipf>IPF.docheck(): ipfstat found at %s" % (i), 8)
 		break
 	    except os.error, detail:
-		log.log( "<ipf>IPF.docheck(): ipfstat not found, stat returned error %d, '%s'" % (detail[0], detail[1]), 8)
+		log.log( "<ipf>IPF.docheck(): ipfstat not found at %s, stat returned error %d, '%s'" % (i, detail[0], detail[1]), 8)
 
 	if ipfstatcmd == None:
 	    # no ipfstat
@@ -89,17 +90,17 @@ class IPF(directive.Directive):
 	    ipfstatin = None
 	    ipfstatout = None
 	else:
-	    (r, ipfstat) = commands.getstatusoutput(ipfstatcmd)
+	    (r, ipfstat) = utils.safe_getstatusoutput(ipfstatcmd)
 	    if r != 0:
 		# ipfstat call failed
 		log.log( "<ipf>IPF.docheck(): %s call failed, returned %d, '%s'" % (ipfstatcmd, r, ipfstat), 3)
 
-	    (r, ipfstatin) = commands.getstatusoutput(ipfstatcmd+" -ih")
+	    (r, ipfstatin) = utils.safe_getstatusoutput(ipfstatcmd+" -ih")
 	    if r != 0:
 		# ipfstat -ih call failed
 		log.log( "<ipf>IPF.docheck(): %s -ih call failed, returned %d, '%s'" % (ipfstatcmd, r, ipfstatin), 3)
 
-	    (r, ipfstatout) = commands.getstatusoutput(ipfstatcmd+" -oh")
+	    (r, ipfstatout) = utils.safe_getstatusoutput(ipfstatcmd+" -oh")
 	    if r != 0:
 		# ipfstat -oh call failed
 		log.log( "<ipf>IPF.docheck(): %s -oh call failed, returned %d, '%s'" % (ipfstatcmd, r, ipfstatout), 3)

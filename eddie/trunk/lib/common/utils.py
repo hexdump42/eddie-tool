@@ -26,7 +26,7 @@
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 ########################################################################
 
-import re, string, threading, os
+import re, string, threading, os, commands
 
 
 ##
@@ -212,7 +212,11 @@ safe_popen_semaphore = threading.Semaphore()
 def safe_popen( cmd, mode ):
     """A thread-safe wrapper for os.popen() which did not appear to like
     being called simultaneously from multiple threads.  Obviously only
-    allows one thread at a time to call os.popen()."""
+    allows one thread at a time to call os.popen().
+    
+    NOTE: safe_pclose() _must_ be called or the semaphore will never be
+    released.
+    """
 
     safe_popen_semaphore.acquire()
     #print "<utils>safe_popen(), semaphore acquired for '%s', '%s'" % (cmd,mode)
@@ -227,6 +231,26 @@ def safe_pclose( fh ):
     #print "<utils>safe_popen(), releasing semaphore for '%s'" % (fh)
     safe_popen_semaphore.release()
 
+
+safe_getstatusoutput_semaphore = threading.Semaphore()
+
+def safe_getstatusoutput( cmd ):
+    """A thread-safe wrapper for commands.getstatusoutput() which did not
+    appear to like being called simultaneously from multiple threads.
+    Semaphore locking allows only one call to commands.getstatusoutput()
+    to be executed at any one time.
+
+    NOTE: It is still not known whether a call to commands.getstatusoutput
+    and popen() [and os.system() for that matter] can be called
+    simultaneously.  If not, a global semaphore will have to be used to
+    protect them all.
+    """
+
+    safe_getstatusoutput_semaphore.acquire()
+    (r, output) = commands.getstatusoutput( cmd )
+    safe_getstatusoutput_semaphore.release()
+
+    return (r, output)
 
 ##
 ## END - utils.py
