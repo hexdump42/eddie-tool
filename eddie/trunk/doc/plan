@@ -146,5 +146,6 @@ ACTIONS
 		  specifying what loglevel to log at).
 	- syslog( MSGNAME )
 		- logs message to syslog
+	- elvin( MSG ) - send a message via Elvin system
 
 
