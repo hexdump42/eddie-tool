@@ -32,24 +32,33 @@ import sys, os, time, re
 import log, directive, utils
 
 
-
+##
+## Directives
+##
 
 class CRON(directive.Directive):
-    """An Eddie directive for checking that cron is working.
-	A cron job should be setup to touch the test file at least as often
-	as the CRON check will be performed.  This directive simply checks
-	that the file has been touched (modified) within the last 15 minutes,
-	implying that cron is running properly.
+    """
+    An Eddie directive for checking that cron is working.
+    A cron job should be setup to touch the test file at least as often
+    as the CRON check will be performed.  This directive simply checks
+    that the file has been touched (modified) within the last 15 minutes,
+    implying that cron is running properly.
 
-	Eg:
-	CRON: file="/tmp/cron.touch" rule="!alive" action="email('alert', 'cron alive check failed on %(h)s')"
+    Example:
+	CRON crontest: file="/tmp/cron.touch"
+	               rule="now - mtime > 60 * 15"	# default rule
+		       action="email('alert', 'cron alive check failed on %(h)s')"
     """
 
-    def __init__(self, toklist, toktypes):
-	apply( directive.Directive.__init__, (self, toklist, toktypes) )
+    def __init__(self, toklist):
+	apply( directive.Directive.__init__, (self, toklist) )
 
 
     def tokenparser(self, toklist, toktypes, indent):
+	"""
+	Parse directive arguments.
+	"""
+
 	apply( directive.Directive.tokenparser, (self, toklist, toktypes, indent) )
 
 	# test required arguments
@@ -60,11 +69,12 @@ class CRON(directive.Directive):
 	try:
 	    self.args.rule		# the rule
 	except AttributeError:
-	    raise directive.ParseFailure, "Rule not specified"
+	    self.args.rule = "now - mtime > 60 * 15"	# use default rule
 
 	# Set any FS-specific variables
 	#  rule = rule
-	self.Action.varDict['rule'] = self.args.rule
+	self.defaultVarDict['file'] = self.args.file
+	self.defaultVarDict['rule'] = self.args.rule
 
 	# define the unique ID
         if self.ID == None:
@@ -74,75 +84,72 @@ class CRON(directive.Directive):
 	log.log( "<solaris>CRON.tokenparser(): ID '%s' rule '%s' action '%s'" % (self.ID, self.args.rule, self.args.actionList), 8 )
 
 
-    def docheck(self, Config):
-	log.log( "<solaris>CRON.docheck(): rule '%s'" % (self.args.rule), 7 )
+    def getData(self):
 
 	from stat import *				# for ST_MTIME
 	try:
 	    mtime = os.stat( self.args.file )[ST_MTIME]
 	except OSError, detail:
-    	    log.log( "<solaris>CRON.docheck(): stat had error %d, '%s'" % (detail[0], detail[1]), 4 )
-	    return
+    	    log.log( "<solaris>CRON.getData(): stat had error %d, '%s'" % (detail[0], detail[1]), 4 )
+	    return None
 
-	import time
 	now = time.time()
 
-	if now - mtime > 60 * 15:
-	    # if file not touched within the last 15 minutes (safety factor
-	    # assuming checks and touches every 10 minutes) then fail check
+	data = {}
+	data['mtime'] = mtime		# file modification time
+	data['now'] = now		# current time
 
-	    self.state.statefail()	# update state info for check failed
-
-	    # assign variables
-	    self.Action.varDict['cronfile'] = self.args.file
-	    self.Action.varDict['cronfilemtime'] = str(mtime)
-
-    	    log.log( "<solaris>CRON.docheck(): check failed, calling doAction()", 7 )
-    	    self.doAction(Config)
-
-	else:
-	    self.state.stateok(Config)	# update state info for check passed
-
-        self.putInQueue( Config.q )     # put self back in the Queue
-
+        return data
 
 
 
 class METASTAT(directive.Directive):
-    """Solaris Disksuite checks for bad metadevices/disks.
-	This directive only currently checks for any devices that require
-	'Maintenance' from the metastat output.
-	TODO: parse metastat output better and report the actual device
-	that is having the problem.
+    """
+    Solaris Disksuite checks for bad metadevices/disks.
+    This directive only currently checks for any devices that require
+    'Maintenance' from the metastat output.
 
-	Eg:
-	METASTAT: action="email('alert', 'A metadevice requires maintenance on %(h)s.')"
+    TODO: parse metastat output better and report the actual device
+    that is having the problem.
+
+    Example:
+	METASTAT maint: rule='need_maintenance'
+	                action="email('alert', 'A metadevice requires maintenance on %(h)s.')"
     """
 
-    def __init__(self, toklist, toktypes):
-	apply( directive.Directive.__init__, (self, toklist, toktypes) )
+    def __init__(self, toklist):
+	apply( directive.Directive.__init__, (self, toklist) )
 
 
     def tokenparser(self, toklist, toktypes, indent):
+	"""
+	Parse directive arguments.
+	"""
+
 	apply( directive.Directive.tokenparser, (self, toklist, toktypes, indent) )
 
 	# test required arguments
-	## nothing but action so far! (Already tested in Directive.tokenparser())
+	try:
+	    self.args.rule
+	except AttributeError:
+	    raise directive.ParseFailure, "Rule not specified"
 
-
-	# Set any FS-specific variables
-	#  rule = rule
+	# Set any directive-specific variables
+	self.defaultVarDict['rule'] = self.args.rule
 
 	# define the unique ID
         if self.ID == None:
 	    self.ID = '%s.METASTAT' % (log.hostname)
 	self.state.ID = self.ID
 
-	log.log( "<solaris>METASTAT.tokenparser(): ID '%s' action '%s'" % (self.ID, self.args.actionList), 8 )
+	log.log( "<solaris>METASTAT.tokenparser(): ID '%s' rule '%s'" % (self.ID, self.args.rule), 8 )
 
 
-    def docheck(self, Config):
-	log.log( "<solaris>METASTAT.docheck(): performing standard check", 7 )
+    def getData(self):
+	"""
+	Called by Directive docheck() method to fetch the data required for
+	evaluating the directive rule.
+	"""
 
         # where to find the metastat command
 	metastat_list = [ "/usr/opt/SUNWmd/sbin/metastat", "/usr/sbin/metastat" ]
@@ -157,7 +164,8 @@ class METASTAT(directive.Directive):
 		pass
 
 	if metastat == None:
-	    log.log( "<solaris>METASTAT.docheck(): metastat not found at %s, directive cancelled" % (metastat_list), 4 )
+	    log.log( "<solaris>METASTAT.getData(): metastat not found at %s, directive cancelled" % (metastat_list), 4 )
+	    raise directive.DirectiveError, "metastat not found at %s, directive cancelled" % (metastat_list)
 
 	else:
 	    # metastat exists, so check for anything requiring Maintenance
@@ -171,36 +179,36 @@ class METASTAT(directive.Directive):
 
 	    if r > 0:
 		# something requires Maintenance
-
-		self.state.statefail()	# update state info for check failed
-
-		# assign variables
-		self.Action.varDict['metastatmaintcnt'] = int(result)
-
-		log.log( "<solaris>METASTAT.docheck(): check failed, calling doAction()", 7 )
-		self.doAction(Config)
-
+		data['need_maintenance'] = 1	# true
 	    else:
-		self.state.stateok(Config)	# update state info for check passed
+		data['need_maintenance'] = 0	# false
 
-            self.putInQueue( Config.q )     # put self back in the Queue
+	return data
+
+
 
 
 class PRTDIAG(directive.Directive):
-    """Solaris checks using prtdiag output.
-	Currently only supports AMBIENT and CPU temperatures.
-	TODO: parse rest of prtdiag.
+    """
+    Solaris checks using prtdiag output.
+    Currently only supports AMBIENT and CPU temperatures.
 
-	Eg:
+    TODO: parse rest of prtdiag.
+
+    Example:
 	PRTDIAG: rule="temp_ambient > 40"
-                 action="email('alert', 'Ambient temperature on %(h)s is %(PRTDIAG_temp_ambient)s.')"
+                 action="email('alert', 'Ambient temperature on %(h)s is %(temp_ambient)s.')"
     """
 
-    def __init__(self, toklist, toktypes):
-	apply( directive.Directive.__init__, (self, toklist, toktypes) )
+    def __init__(self, toklist):
+	apply( directive.Directive.__init__, (self, toklist) )
 
 
     def tokenparser(self, toklist, toktypes, indent):
+	"""
+	Parse directive arguments.
+	"""
+
 	apply( directive.Directive.tokenparser, (self, toklist, toktypes, indent) )
 
 	# test required arguments
@@ -210,7 +218,7 @@ class PRTDIAG(directive.Directive):
 	    raise directive.ParseFailure, "Rule not specified"
 
 	# Set any PRTDIAG-specific variables
-	self.Action.varDict['rule'] = self.args.rule
+	self.defaultVarDict['rule'] = self.args.rule
 
 	# define the unique ID
         if self.ID == None:
@@ -220,9 +228,7 @@ class PRTDIAG(directive.Directive):
 	log.log( "<solaris>PRTDIAG.tokenparser(): ID '%s' rule '%s' action '%s'" % (self.ID, self.args.rule, self.args.actionList), 8 )
 
 
-    def docheck(self, Config):
-	log.log( "<solaris>PRTDIAG.docheck(): performing standard check", 7 )
-
+    def getData(self):
         prtdiag = None
 
 	# Determine system type and parse system-specific output
@@ -237,33 +243,16 @@ class PRTDIAG(directive.Directive):
 	elif output == "SUNW,Ultra-Enterprise":
 	    prtdiag_dict = self.parse_prtdiag_Enterprise()
 	else:
-	    log.log( "<solaris>PRTDIAG.docheck(): system type %s not supported yet, directive cancelled" % (output), 4 )
-	    return
+	    log.log( "<solaris>PRTDIAG.getData(): system type %s not supported yet, directive cancelled" % (output), 4 )
+	    raise directive.DirectiveError, "system type %s not supported yet, directive cancelled" % (output)
 
 	if prtdiag_dict == None:	# there was an error, just exit
-	    log.log( "<solaris>PRTDIAG.docheck(): prtdiag returned no data, directive cancelled", 4 )
-	    return
+	    log.log( "<solaris>PRTDIAG.getData(): prtdiag returned no data, directive cancelled", 4 )
+	    raise directive.DirectiveError, "prtdiag returned no data, directive cancelled"
 
-	rulesenv = {}
-	rulesenv.update(prtdiag_dict)
+	data = prtdiag_dict
 
-	# Evaluate rule
-	result = eval( self.args.rule, rulesenv )
-
-	if result:
-	    self.state.statefail()	# update state info for check failed
-
-	    # assign variables
-	    for i in prtdiag_dict.keys():
-		self.Action.varDict['PRTDIAG_%s'%(i)] = prtdiag_dict[i]
-
-	    log.log( "<solaris>PRTDIAG.docheck(): check failed, calling doAction()", 7 )
-	    self.doAction(Config)
-
-	else:
-	    self.state.stateok(Config)	# update state info for check passed
-
-	self.putInQueue( Config.q )     # put self back in the Queue
+	return data
 
 
     def parse_prtdiag_u450(self):
@@ -435,7 +424,6 @@ class PRTDIAG(directive.Directive):
 
 	return prtdiag_dict
 		
-
 
 ##
 ## END - solaris.py

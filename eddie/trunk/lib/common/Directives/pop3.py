@@ -37,7 +37,10 @@ POP3error = "POP3error"
 
 
 class pop3:
-    """A simple pop3 client."""
+    """
+    A simple pop3 client.
+    Used by the Eddie Directives in this module.
+    """
 
     def __init__(self, host, port=110):
 	if host == "":
@@ -148,7 +151,8 @@ class pop3:
 
 
     def retr(self, msg):
-	"""Send a POP3 RETR command.
+	"""
+	Send a POP3 RETR command.
 	"""
 
 	if self.connected == 0:
@@ -181,23 +185,33 @@ class pop3:
 
 
 
-## Directives ##
-
+##
+## Directives
+##
 
 class POP3TIMING(directive.Directive):
-    """POP3TIMING directive.  Make a pop3 connection and time various
-       actions such as connecting, authenticating, retrieving messages,
-       etc.
+    """
+    POP3TIMING directive.  Make a pop3 connection and time various
+    actions such as connecting, authenticating, retrieving messages,
+    etc.
 
-       Sample rule:
-       POP3TIMING: server='hostname:port' user='username' password='password' action="<actions>"
+    Directive format:
+       POP3TIMING test: server='hostname[:port]'
+                        user='username'
+			password='password'
+			rule=1			# always call action
+			action="<actions>"
     """
 
-    def __init__(self, toklist, toktypes):
-	apply( directive.Directive.__init__, (self, toklist, toktypes) )
+    def __init__(self, toklist):
+	apply( directive.Directive.__init__, (self, toklist) )
 
 
     def tokenparser(self, toklist, toktypes, indent):
+	"""
+	Parse directive arguments.
+	"""
+
 	apply( directive.Directive.tokenparser, (self, toklist, toktypes, indent) )
 
 	# test required arguments
@@ -209,6 +223,10 @@ class POP3TIMING(directive.Directive):
 	    self.args.user		# username
         except AttributeError:
             raise directive.ParseFailure, "Username not specified"
+	try:
+	    self.args.rule
+	except AttributeError:
+	    raise ParseFailure, "Rule not specified"
 
 	try:
 	    self.args.password	# password
@@ -224,10 +242,10 @@ class POP3TIMING(directive.Directive):
 
 
 	# Set variables for Actions to use
-	self.Action.varDict['pop3timinghost'] = self.host
-	self.Action.varDict['pop3timingport'] = self.port
-	self.Action.varDict['pop3timingusername'] = self.args.user
-	self.Action.varDict['pop3timingpassword'] = self.args.password
+	self.defaultVarDict['server'] = self.host
+	self.defaultVarDict['port'] = self.port
+	self.defaultVarDict['username'] = self.args.user
+	self.defaultVarDict['password'] = self.args.password
 
 	# define the unique ID
         if self.ID == None:
@@ -237,13 +255,13 @@ class POP3TIMING(directive.Directive):
 	log.log( "<pop3>POP3TIMING.tokenparser(): ID '%s' host '%s' port %d user '%s'" % (self.ID, self.host, self.port, self.args.user), 8 )
 
 
-    def docheck(self, Config):
-	"""The 'check' in this case is to login to the pop3 server and
+    def getData(self):
+	"""
+	The 'check' in this case is to login to the pop3 server and
 	perform a few actions, recording the timing of each action.
-	The directive actions are always called.  Usually these will
-	record the timing details in some way."""
+	"""
 
-	log.log( "<pop3>POP3TIMING.docheck(): host '%s' port %d user '%s'" % (self.host, self.port, self.args.user), 7 )
+	data = {}
 
 	connecttime = None
 	authtime = None
@@ -253,6 +271,7 @@ class POP3TIMING(directive.Directive):
 	# create pop3 connection object
 	p = pop3( self.host, self.port )
 	if p.connect():			# login to pop3 server
+	    data['connected'] = 1
 	    connecttime = p.timing	# get timing for connection to return banner
 
 	    if p.auth( self.args.user, self.args.password ):	# authenticate user
@@ -267,37 +286,18 @@ class POP3TIMING(directive.Directive):
 
 	    p.close()
 
-
-
+	else:
+	    data['connected'] = 0
 
 	# assign variables
-	self.Action.varDict['pop3timingconnecttime'] = connecttime
-	self.Action.varDict['pop3timingauthtime'] = authtime
-	self.Action.varDict['pop3timinglisttime'] = listtime
-	self.Action.varDict['pop3timingretrtime'] = retrtime
+	data['connecttime'] = connecttime
+	data['authtime'] = authtime
+	data['listtime'] = listtime
+	data['retrtime'] = retrtime
 
-	# Values are set to None if there was some problem performing the
-	# commands.
-	if connecttime == None:
-	    connecttime = 0
-	    log.log( "<pop3>POP3TIMING.docheck(): connecttime could not be measured, setting to 0", 5 )
-	if authtime == None:
-	    authtime = 0
-	    log.log( "<pop3>POP3TIMING.docheck(): authtime could not be measured, setting to 0", 5 )
-	if listtime == None:
-	    listtime = 0
-	    log.log( "<pop3>POP3TIMING.docheck(): listtime could not be measured, setting to 0", 5 )
-	if retrtime == None:
-	    retrtime = 0
-	    log.log( "<pop3>POP3TIMING.docheck(): retrtime could not be measured, setting to 0", 5 )
+	log.log( "<pop3>POP3TIMING.getData(): connecttime=%s authtime=%s listtime=%s retrtime=%s" % (connecttime, authtime, listtime, retrtime), 7 )
 
-	log.log( "<pop3>POP3TIMING.docheck(): connecttime=%s authtime=%s listtime=%s retrtime=%s" % (connecttime, authtime, listtime, retrtime), 7 )
-
-	self.state.statefail()	# set state to fail before calling doAction()
-	self.doAction(Config)
-	self.state.stateok(Config)	# reset state info
-
-        self.putInQueue( Config.q )     # put self back in the Queue
+        return data
 
 
 

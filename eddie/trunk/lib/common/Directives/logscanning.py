@@ -27,35 +27,40 @@
 
 
 # Imports: Python
-import re, string, os
+import re, string, os, sys
 # Imports: Eddie
 import log, directive
 
 
-
-## Directives ##
-
+##
+## Directives
+##
 
 class LOGSCAN(directive.Directive):
-    """LOGSCAN directive.  Scan a file looking for regex matches.
+    """
+    LOGSCAN directive.  Scan a file looking for regex matches.
 
-       Sample rule:
+    Sample rule:
        LOGSCAN messages: file="/var/log/messages"
                          regex=".*error.*"
                          action="email('alert', 'Log match', '%(logscanmatch)s')"
 
-       Optional arguments:
+    Optional arguments:
 	negate=true	# only lines NOT matching regex will cause action
     """
 
-    def __init__(self, toklist, toktypes):
-	apply( directive.Directive.__init__, (self, toklist, toktypes) )
+    def __init__(self, toklist):
+	apply( directive.Directive.__init__, (self, toklist) )
 
 	self.filepos = 0	# position in file saved between checks
 	self.filestat = None	# stat of log file
 
 
     def tokenparser(self, toklist, toktypes, indent):
+	"""
+	Parse directive arguments.
+	"""
+
 	apply( directive.Directive.tokenparser, (self, toklist, toktypes, indent) )
 
 	# test required arguments
@@ -79,10 +84,13 @@ class LOGSCAN(directive.Directive):
         except AttributeError:
             self.args.negate=0
 
+	# Default rule for this directive
+	self.args.rule = "linecount > 0"
+
 	# Set variables for Actions to use
-	self.Action.varDict['logscanfile'] = self.args.file
-	self.Action.varDict['logscanregex'] = self.args.regex
-	self.Action.varDict['logscannegate'] = self.args.negate
+	self.defaultVarDict['file'] = self.args.file
+	self.defaultVarDict['regex'] = self.args.regex
+	self.defaultVarDict['negate'] = self.args.negate
 
 	# define the unique ID
         if self.ID == None:
@@ -92,18 +100,21 @@ class LOGSCAN(directive.Directive):
 	log.log( "<logscanning>LOGSCAN.tokenparser(): ID '%s' file '%s' regex '%s'" % (self.ID, self.args.file, self.args.regex), 8 )
 
 
-    def docheck(self, Config):
-	"""The check is to read the specified file and save any lines
+    def getData(self):
+	"""
+	Called by Directive docheck() method to fetch the data required for
+	evaluating the directive rule.
+
+	The check is to read the specified file and save any lines
         which match the given regular expression.  Only lines which
         are new to the file since the last check are examined.
 	"""
-
-	log.log( "<logscanning>LOGSCAN.docheck(): ID '%s' file '%s' regex '%s'" % (self.ID, self.args.file, self.args.regex), 7 )
 
 	try:
 	    s = os.stat( self.args.file )
 	except OSError, err:
 	    log.log( "<logscanning>LOGSCAN.docheck(): ID '%s' OSError stat-ing file '%s': %s" % (self.ID, self.args.file, err), 5 )
+	    raise directive.DirectiveError, "OSError stat-ing file '%s': %s" % (self.args.file, err)
 
 	else:
 	    if self.filestat == None:
@@ -111,6 +122,8 @@ class LOGSCAN(directive.Directive):
 		# for next check
 		self.filestat = s
 		self.filepos = s[6]
+
+		return None
 
 	    else:
 		if s[6] < self.filestat[6]:
@@ -126,6 +139,7 @@ class LOGSCAN(directive.Directive):
 		except IOError:
 		    e = sys.exc_info()
 		    log.log( "<logscanning>LOGSCAN.docheck(): ID '%s' IOError opening file '%s': %s, %s" % (self.ID, self.args.file, e[0], e[1]), 5 )
+		    raise directive.DirectiveError, "IOError opening file '%s': %s, %s" % (self.args.file, e[0], e[1])
 
 		else:
 		    if self.filepos > 0:
@@ -148,18 +162,11 @@ class LOGSCAN(directive.Directive):
 		    matchedcount = len(matchedlines)
 
 		    # assign variables
-		    self.Action.varDict['logscanlines'] = string.join(matchedlines, "")
-		    self.Action.varDict['logscanlinecount'] = matchedcount
+		    data = {}
+		    data['lines'] = string.join(matchedlines, "")
+		    data['linecount'] = matchedcount
 
-		    log.log( "<logscanning>LOGSCAN.docheck(): matchedlinecount=%d" % (matchedcount), 7 )
-
-		    if matchedcount > 0:
-			self.state.statefail()	# set state to fail before calling doAction()
-			self.doAction(Config)
-		    else:
-			self.state.stateok(Config)	# reset state info
-
-        self.putInQueue( Config.q )     # put self back in the Queue
+	return data
 
 
 

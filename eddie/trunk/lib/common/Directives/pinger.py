@@ -101,7 +101,8 @@ class Pinger:
 	except KeyError:
 	    return
 	# limit to ms precision
-	delta = int((when - sent) * 1000.)
+	#delta = int((when - sent) * 1000.)
+	delta = when - sent
 	self.deltas.append(delta)
 	self.recv_output(self.plen, self.destinfo[0],
 			 self.destinfo[1], pkt.seq, delta)

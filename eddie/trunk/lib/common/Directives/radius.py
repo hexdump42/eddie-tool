@@ -35,21 +35,23 @@ import log, directive, utils
 import radcm
 
 
-## Directives ##
-
+##
+## Directives
+##
 
 class RADIUS(directive.Directive):
-    """RADIUS directive.  Perform a Radius authentication and return
-       results.  Rules can be specified to test the results.
+    """
+    RADIUS directive.  Perform a Radius authentication and return
+    results.  Rules can be specified to test the results.
 
-       Rule format:
+    Rule format:
        RADIUS: server='hostname[:port]'
                secret='secret'
 	       user='username'
 	       password='password'
 	       rule='rule'
 	       action='<actions>'
-       Example:
+    Example:
        RADIUS: server='radius.domain.name:1645'
                secret='s3cr3t'
 	       user='bob@domain.name'
@@ -58,16 +60,20 @@ class RADIUS(directive.Directive):
 	       action='email("alert", "radius FAILED to %(radiushost)s:%(radiusport)d")'
     """
 
-    def __init__(self, toklist, toktypes):
-	apply( directive.Directive.__init__, (self, toklist, toktypes) )
+    def __init__(self, toklist):
+	apply( directive.Directive.__init__, (self, toklist) )
 
 
     def tokenparser(self, toklist, toktypes, indent):
+	"""
+	Parse directive arguments.
+	"""
+
 	apply( directive.Directive.tokenparser, (self, toklist, toktypes, indent) )
 
 	# test required arguments
 	try:
-	    self.args.server		# hostname:port
+	    self.args.server		# hostname[:port]
 	except AttributeError:
 	    raise directive.ParseFailure, "Server not specified"
 	try:
@@ -87,7 +93,7 @@ class RADIUS(directive.Directive):
 	try:
 	    self.args.rule		# rule
 	except AttributeError:
-	    self.args.rule = None
+	    self.args.rule = 1		# always true if no supplied rule
 
 	if ':' in self.args.server:
 	    (self.host, self.port) = string.split( self.args.server, ':' )
@@ -98,13 +104,12 @@ class RADIUS(directive.Directive):
 
 
 	# Set any directive-specific variables
-	self.Action.varDict['radiushost'] = self.host
-	self.Action.varDict['radiusport'] = self.port
-	self.Action.varDict['radiussecret'] = self.args.secret
-	self.Action.varDict['radiususername'] = self.args.user
-	self.Action.varDict['radiuspassword'] = self.args.password
-	if self.args.rule:
-	    self.Action.varDict['radiusrule'] = self.args.rule
+	self.defaultVarDict['server'] = self.host
+	self.defaultVarDict['port'] = self.port
+	self.defaultVarDict['secret'] = self.args.secret
+	self.defaultVarDict['username'] = self.args.user
+	self.defaultVarDict['password'] = self.args.password
+	self.Action.varDict['rule'] = self.args.rule
 
 	# define the unique ID
         if self.ID == None:
@@ -114,10 +119,10 @@ class RADIUS(directive.Directive):
 	log.log( "<radius>RADIUS.tokenparser(): ID '%s' host '%s' port %d secret '%s' user '%s'" % (self.ID, self.host, self.port, self.args.secret, self.args.user), 8 )
 
 
-    def docheck(self, Config):
-	"""Perform a Radius authentication and return results."""
-
-	log.log( "<radius>RADIUS.docheck(): host '%s' port %d user '%s'" % (self.host, self.port, self.args.user), 7 )
+    def getData(self):
+	"""
+	Perform a Radius authentication and return results.
+	"""
 
 	timing = None
 
@@ -135,39 +140,16 @@ class RADIUS(directive.Directive):
 	# commands.
 	if timing == None:
 	    timing = 0
-	    log.log( "<radius>RADIUS.docheck(): timing could not be measured, setting to 0", 5 )
+	    log.log( "<radius>RADIUS.getData(): timing could not be measured, setting to 0", 5 )
+
+	log.log( "<radius>RADIUS.getData(): timing=%s passed=%s" % (timing,passed), 7 )
 
 	# assign variables
-	self.Action.varDict['radiustiming'] = timing
-	self.Action.varDict['radiuspassed'] = passed
+	data = {}
+	data['timing'] = timing
+	data['passed'] = passed
 
-	log.log( "<radius>RADIUS.docheck(): timing=%s passed=%s" % (timing,passed), 7 )
-
-	if self.args.rule:
-	    # setup for rule
-	    rulesenv = {}                   # environment for rules execution
-	    rulesenv['timing'] = time
-	    rulesenv['passed'] = passed
-
-	    result = eval( self.args.rule, rulesenv )
-
-	    if result == 0:
-		self.state.stateok(Config)	# update state info for check passed
-	    else:
-		self.state.statefail()      		# set state to fail before calling doAction()
-		self.doAction(Config)
-
-	else:
-	    # no rule, call action automatically
-
-	    self.state.statefail()	# set to fail before calling doAction()
-	    self.doAction(Config)
-
-	    if passed:
-		self.state.stateok(Config)	# update state info for check passed
-
-        self.putInQueue( Config.q )     # put self back in the Queue
-
+	return data
 
 
 ##
