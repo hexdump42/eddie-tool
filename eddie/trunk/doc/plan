@@ -67,6 +67,10 @@ fs : '%fsls' - want a list directories under the examined fs 'ls -ld $fs'.
 
 SIG : quit nicely on appropriate signals
 
+MAINT : Check "Maintenance" file to ignore certain checks.
+
+ADMIN_INTERVAL : only send OTTOADMIN messages at certain intervals (ie: daily).
+
 
 
 DIRECTIVES:
