@@ -15,10 +15,21 @@ group host1:
 	rule='not exists'
 	action=COMMONALERT(commonmsg.proc,2)
 
+    ## Alert if /var/log is 95% full or more
     FS varlog:
 	fs='/var/log'
 	rule='pctused >= 95'
+	actionperiod='t * 2'	# double time between consequetive alerts
 	action=COMMONALERT(commonmsg.fs,2)
+
+    # Alert if average filesystem growth over the past 3 scan periods
+    # was over 5% between scan period.
+    FS varlog_grow:
+	fs='/var/log'
+	scanperiod='2m'
+	history = 3
+	rule='(pctused + history[1].pctused + history[2].pctused + history[3].pctused) / 3 > 5'
+	action=email(ALERT,'%(mountpt)s grew to %(pctused)s')
 
     PID namedex:
 	pidfile='/var/run/named.pid'
