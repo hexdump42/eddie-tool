@@ -41,8 +41,16 @@ def readFile(file, ruleList, defDict, MDict):
 
 	line = string.rstrip(line)
 
+	# **ROD** - why do you do stuff to 'wl' then use 'line' again below??
 	wl = string.strip(line)
 	if wl[:1] != '#' and len(wl) > 0:
+
+	    # Strip any comments (#) from end of line
+	    hashpos = regex.search( '#.*', line )
+	    if hashpos != -1:
+		line = line[:hashpos]
+	    line = string.strip(line)
+
 	    elements = string.split(line)
 
 	    d = elements[0]

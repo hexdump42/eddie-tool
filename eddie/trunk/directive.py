@@ -66,7 +66,6 @@ class Directive:
 	self.action = ''			# each directive will have an action
 
     def parseRaw(self):
-	# TODO - remove comments (ie: everything after #)
 	sre = regex.compile( self.regexp )
 	inx = sre.search( self.raw )
 	if inx == -1:
@@ -83,10 +82,6 @@ class Directive:
 ## COMMANDS - TODO : move this somewhere else!!
 ##
 class SCANPERIOD(Directive):
-    # remove docheck()
-    def docheck(self):
-	print "SCANPERIOD - this shouldn't have docheck()"
-    
     def setConfig( self, line ):
 	print "SCANPERIOD:setConfig( "+line+" )"
 

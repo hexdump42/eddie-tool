@@ -66,7 +66,6 @@ class Definition:
 	return self.raw
 
     def parseRaw(self):
-	# TODO - remove comments (ie: everything after #)
 	sre = regex.compile( self.regexp )
 	inx = sre.search( self.raw )
 	if inx == -1:
