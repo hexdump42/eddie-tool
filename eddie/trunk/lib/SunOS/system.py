@@ -54,10 +54,6 @@ class system:
 		cpu_kernel	- (float)
 		cpu_iowait	- (float)
 		cpu_swap	- (float)
-		mem_real	- (string)
-		mem_free	- (string)
-		mem_swapuse	- (string)
-		mem_swapfree	- (string)
 
 	    System stats from '/usr/bin/uptime':
 		uptime		- (string)
@@ -186,7 +182,7 @@ class system:
 	reline1 = ".*load averages:\s*([0-9]+\.[0-9]+),\s*([0-9]+\.[0-9]+),\s*([0-9]+\.[0-9]+)\s+([0-9]+:[0-9]+:[0-9]+)"
 	reline2 = "([0-9]+)\s+processes:(?:\s+(?P<sleeping>[0-9]+)\s+sleeping,)?(?:\s+(?P<zombie>[0-9]+)\s+zombie,)?(?:\s+(?P<running>[0-9]+)\s+running,)?(?:\s+(?P<stopped>[0-9]+)\s+stopped,)?(?:\s+(?P<oncpu>[0-9]+)\s+on cpu)?.*"
 	reline3 = "CPU states:\s*([0-9.]+)% idle,\s*([0-9.]+)% user,\s*([0-9.]+)% kernel,\s*([0-9.]+)% iowait,\s*([0-9.]+)% swap"
-	reline4 = "Memory:\s*(?P<mem_real>\w+)\s*real,\s*(?P<mem_free>\w+)\s*free,(?:\s*(?P<mem_swapuse>\w+)\s*swap in use,)?\s*(?P<mem_swapfree>\w+)\s*swap free"
+	#reline4 = "Memory:\s*(?P<mem_real>\w+)\s*real,\s*(?P<mem_free>\w+)\s*free,(?:\s*(?P<mem_swapuse>\w+)\s*swap in use,)?\s*(?P<mem_swapfree>\w+)\s*swap free"
 
 	# line 1
 	inx = re.search( reline1, line )
@@ -240,56 +236,57 @@ class system:
 	self.cpu_iowait = float(inx.group(4))
 	self.cpu_swap = float(inx.group(5))
 
+	#### DISABLED: not used anymore
 	# line 4
-	line = rawList.readline()
-	inx = re.search( reline4, line )
-	if inx == None:
-	    log.log( "<system>system._getSystemstate() error parsing line4 'top' output.", 2 )
-	    return
-	mem_real = inx.group('mem_real')
-	mem_free = inx.group('mem_free')
-	mem_swapuse = inx.group('mem_swapuse')
-	mem_swapfree = inx.group('mem_swapfree')
+	#line = rawList.readline()
+	#inx = re.search( reline4, line )
+	#if inx == None:
+	#    log.log( "<system>system._getSystemstate() error parsing line4 'top' output.", 2 )
+	#    return
+	#mem_real = inx.group('mem_real')
+	#mem_free = inx.group('mem_free')
+	#mem_swapuse = inx.group('mem_swapuse')
+	#mem_swapfree = inx.group('mem_swapfree')
 
-        try:
-	    if mem_real[-1] == 'K':
-	        self.mem_real = int(mem_real[:-1]) * 1024
-	    elif mem_real[-1] == 'M':
-	        self.mem_real = int(mem_real[:-1]) * 1024 * 1024
-	    else:
-	        self.mem_real = int(mem_real)
-        except:
-            self.mem_real = 0
+        #try:
+	#    if mem_real[-1] == 'K':
+	#        self.mem_real = int(mem_real[:-1]) * 1024
+	#    elif mem_real[-1] == 'M':
+	#        self.mem_real = int(mem_real[:-1]) * 1024 * 1024
+	#    else:
+	#        self.mem_real = int(mem_real)
+        #except:
+        #    self.mem_real = 0
 
-        try:
-	    if mem_free[-1] == 'K':
-	        self.mem_free = int(mem_free[:-1]) * 1024
-	    elif mem_free[-1] == 'M':
-	        self.mem_free = int(mem_free[:-1]) * 1024 * 1024
-	    else:
-	        self.mem_free = int(mem_free)
-        except:
-            self.mem_free = 0
+        #try:
+	#    if mem_free[-1] == 'K':
+	#        self.mem_free = int(mem_free[:-1]) * 1024
+	#    elif mem_free[-1] == 'M':
+	#        self.mem_free = int(mem_free[:-1]) * 1024 * 1024
+	#    else:
+	#        self.mem_free = int(mem_free)
+        #except:
+        #    self.mem_free = 0
 
-        try:
-	    if mem_swapuse[-1] == 'K':
-	        self.mem_swapuse = int(mem_swapuse[:-1]) * 1024
-	    elif mem_swapuse[-1] == 'M':
-	        self.mem_swapuse = int(mem_swapuse[:-1]) * 1024 * 1024
-	    else:
-	        self.mem_swapuse = int(mem_swapuse)
-        except:
-            self.mem_swapuse = 0
+        #try:
+	#    if mem_swapuse[-1] == 'K':
+	#        self.mem_swapuse = int(mem_swapuse[:-1]) * 1024
+	#    elif mem_swapuse[-1] == 'M':
+	#        self.mem_swapuse = int(mem_swapuse[:-1]) * 1024 * 1024
+	#    else:
+	#        self.mem_swapuse = int(mem_swapuse)
+        #except:
+        #    self.mem_swapuse = 0
 
-        try:
-	    if mem_swapfree[-1] == 'K':
-	        self.mem_swapfree = int(mem_swapfree[:-1]) * 1024
-	    elif mem_swapfree[-1] == 'M':
-	        self.mem_swapfree = int(mem_swapfree[:-1]) * 1024 * 1024
-	    else:
-	        self.mem_swapfree = int(mem_swapfree)
-        except:
-            self.mem_swapfree = 0
+        #try:
+	#    if mem_swapfree[-1] == 'K':
+	#        self.mem_swapfree = int(mem_swapfree[:-1]) * 1024
+	#    elif mem_swapfree[-1] == 'M':
+	#        self.mem_swapfree = int(mem_swapfree[:-1]) * 1024 * 1024
+	#    else:
+	#        self.mem_swapfree = int(mem_swapfree)
+        #except:
+        #    self.mem_swapfree = 0
 
 
 	utils.safe_pclose( rawList )
@@ -339,14 +336,18 @@ class system:
 	self.hash['cpu_iowait'] = self.cpu_iowait
 	self.hash['cpu_swap'] = self.cpu_swap
 
-	self.hash['mem_real'] = self.mem_real
-	self.hash['mem_free'] = self.mem_free
-	self.hash['mem_swapuse'] = self.mem_swapuse
-	self.hash['mem_swapfree'] = self.mem_swapfree
+	#self.hash['mem_real'] = self.mem_real
+	#self.hash['mem_free'] = self.mem_free
+	#self.hash['mem_swapuse'] = self.mem_swapuse
+	#self.hash['mem_swapfree'] = self.mem_swapfree
 
 	vmstat_dict = self._getvmstat()
 	if vmstat_dict:
 	    self.hash.update(vmstat_dict)
+
+	vmstat2_dict = self._getvmstat2()
+	if vmstat2_dict:
+	    self.hash.update(vmstat2_dict)
 
 	uptime_dict = self._getuptime()
 	if uptime_dict:
@@ -466,6 +467,38 @@ class system:
 	uptime_dict['loadavg15'] = float(uptime_dict['loadavg15'])
 
 	return uptime_dict
+
+
+    def _getvmstat2(self):
+	"""Get system statistics from the output of the 'vmstat' command.
+	This is only used to get free memory and free swap currently.
+	This should work for Solaris 2.5.1/2.6/2.7/2.8."""
+
+	vmstat_cmd = "/usr/bin/vmstat 1 2 | /usr/bin/tail -1"
+
+	(retval, output) = utils.safe_getstatusoutput( vmstat_cmd )
+
+	if retval != 0:
+	    log.log( "<system>system._getvmstat2(), error calling '%s'"%(vmstat_cmd), 4 )
+	    return None
+
+	v_split = string.split( output )
+	if len(v_split) < 5:
+	    log.log( "<system>system._getvmstat2(), vmstat output invalid, '%s'"%(output), 4 )
+	    return None
+
+	vmstat_dict = {}
+	try:
+	    vmstat_dict['procs_running'] = int(v_split[0])
+	    vmstat_dict['procs_blocked'] = int(v_split[1])
+	    vmstat_dict['procs_waiting'] = int(v_split[2])
+	    vmstat_dict['mem_swapfree'] = int(v_split[3])
+	    vmstat_dict['mem_free'] = int(v_split[4])
+	except ValueError:
+	    log.log( "<system>system._getvmstat2(), could not parse vmstat output '%s'"%(output), 4 )
+	    return None
+
+	return vmstat_dict
 
 
 ##
