@@ -1,227 +1,24 @@
-# Eddie config file
+# EDDIE config file
 #  Common rules for all machines
-#  This is a sample configuration only.
+#  This is a sample configuration only, and only provided as a guide
+#  for designing your own rules.
 
-
-###########################################################################
-# MESSAGES
-# Define MSGs to use in actions.  These are grouped by the M objects.
-
-M commonmsg:
-    M proc:
-	MSG WARN: "Warning: %(procp)s on %(h)s not running"
-	    """The %(procp)s process on %(h)s is not running
-
-This is just a Warning.
-Eddie.
-
-%(problemage)s
-%(problemfirstdetect)s
-"""
-
-	MSG WARN_P: "Warn: The %(procp)s daemon on %(h)s is not running." ""
-
-	MSG ALERT: "Alert: %(procp)s on %(h)s not running"
-	    """ALERT: The %(procp)s daemon on %(h)s is not running.
-
-%(actnm)s
-
-Eddie.
-
-%(problemage)s
-%(problemfirstdetect)s
-"""
-
-	MSG ALERT_P: "ALERT: The %(procp)s daemon on %(h)s is not running." ""
-
-	MSG RE_WARN: "Alert: %(procp)s on %(h)s not running and is being restarted"
-	    """ALERT: The %(procp)s daemon on %(h)s not running and is being restarted.
-
-%(actnm)s
-
-Eddie.
-
-%(problemage)s
-%(problemfirstdetect)s
-"""
-
-	MSG RE_WARN_P: "ALERT: The %(procp)s daemon on %(h)s not running and is being restarted." ""
-
-	MSG RE_ERR: "Alert: %(procp)s on %(h)s not restarting"
-	    """ALERT: The %(procp)s daemon on %(h)s will not restart.
-
-%(actnm)s
-
-Eddie.
-
-%(problemage)s
-%(problemfirstdetect)s
-"""
-
-	MSG RE_ERR_P: "ALERT: The %(procp)s daemon on %(h)s will not restart." ""
-
-    M pid:
-	MSG WARN: "Warning: pid file %(pidf)s not found on %(h)s"
-	    """Pid file %(pidf)s not found on %(h)s.
-
-Eddie.
-
-%(problemage)s
-%(problemfirstdetect)s
-"""
-
-	MSG WARN_P: "%(h)s: pid file %(pidf)s not found" ""
-
-	MSG ALERT: "ALERT: pid file %(pidf)s not found on %(h)s"
-	    """Pid file %(pidf)s not found on %(h)s.
-
-Eddie.
-
-%(problemage)s
-%(problemfirstdetect)s
-"""
-
-	MSG ALERT_P: "%(h)s: pid file %(pidf)s not found" ""
-
-    M pidpr:
-	MSG WARN: "Warning: process %(pid)s (from %(pidf)s) on %(h)s not running"
-	    """Warning: The process with pid %(pid)s (from pidfile '%(pidf)s') on %(h)s is not running.
-
-Eddie.
-
-%(problemage)s
-%(problemfirstdetect)s
-"""
-
-	MSG WARN_P: "%(h)s warn: pid %(pid)s from %(pidf)s not running" ""
-
-	MSG ALERT: "Warning: process %(pid)s (from %(pidf)s) on %(h)s not running"
-	    """ALERT: The process with pid %(pid)s (from pidfile '%(pidf)s') on %(h)s is not running.
-
-%(act)s
-Eddie.
-
-%(problemage)s
-%(problemfirstdetect)s
-"""
-
-	MSG ALERT_P: "%(h)s alert: pid %(pid)s from %(pidf)s not running" ""
-
-    M fs:
-	MSG WARN: "Warning: %(h)s:%(fsf)s at %(fscapac)s%% - %(fsavail)s of %(fssize)s remain"
-	    """Filesystem %(fsf)s on %(h)s has failed this FS rule:
-    %(fsrule)s
-
-----------------------------------------------------------------------
-%(fsdf)s
-----------------------------------------------------------------------
-
-This is just a Warning.
-Eddie.
-
-%(problemage)s
-%(problemfirstdetect)s
-"""
-
-	MSG WARN_P: "Warn: %(h)s:%(fsf)s at %(fscapac)s%% - %(fsavail)s of %(fssize)s remain" ""
-
-	MSG ALERT: "Alert: %(h)s:%(fsf)s at %(fscapac)s%% - %(fsavail)s of %(fssize)s remain"
-	    """Filesystem %(fsf)s on %(h)s has failed this FS rule:
-    %(fsrule)s
-
-----------------------------------------------------------------------
-%(fsdf)s
-----------------------------------------------------------------------
-
-Please free up space immediately.
-Eddie.
-
-%(problemage)s
-%(problemfirstdetect)s
-"""
-
-	MSG ALERT_P: "Alert: %(h)s:%(fsf)s at %(fscapac)s%% - %(fsavail)s of %(fssize)s remain" ""
-
-    M sp:
-	MSG WARN: "Warning: Port %(spprot)s/%(spport)s on %(h)s not responding"
-	    """The service port %(spprot)s/%(spport)s on %(h)s is not responding.
-
-Eddie.
-
-%(problemage)s
-%(problemfirstdetect)s
-"""
-
-	MSG WARN_P: "%(h)s warn: Port %(spprot)s/%(spport)s not responding" ""
-
-	MSG ALERT: "ALERT: Port %(spprot)s/%(spport)s on %(h)s not responding"
-	    """The service port %(spprot)s/%(spport)s on %(h)s is not responding.
-Please fix this immediately.
-
-Eddie.
-
-%(problemage)s
-%(problemfirstdetect)s
-"""
-                    
-	MSG ALERT_P: "%(h)s ALERT: Port %(spprot)s/%(spport)s not responding" ""
-
-    M port:
-	MSG WARN: "Warning: Port %(portport)s on %(porthost)s not responding"
-	    """The service port %(portport)s on %(porthost)s is not responding.
-
-This is just a Warning.
-Eddie.
-
-%(problemage)s
-%(problemfirstdetect)s
-"""
-	MSG WARN_P: "Warn: Port %(portport)s on %(porthost)s not responding" ""
-	MSG ALERT: "Alert: Port %(portport)s on %(porthost)s not responding"
-	    """Alert: The service port %(portport)s on %(porthost)s is not responding.
-
-Send data: %(portsend)s
-Expecting: %(portexpect)s
-Actually received: %(portrecv)s
-
-Please examine if appropriate.
-Eddie.
-
-%(problemage)s
-%(problemfirstdetect)s
-"""
-
-	MSG ALERT_P: "Alert: Port %(portport)s on %(porthost)s not responding" ""
-
-    M ping:
-        MSG ALERT: "%(pinghost)s FAILED Ping"
-            """Alert: %(pinghost)s has failed ping.
-
-%(problemage)s
-%(problemfirstdetect)s
-"""
-
-        MSG ALERT_P: "%(pinghost)s FAILED Ping %(problemage)s" ""
-
-        MSG FIXED: "%(pinghost)s PASSED Ping"
-            """OK: %(pinghost)s has passed ping.
-
-%(problemage)s
-%(problemfirstdetect)s
-"""
-
-        MSG FIXED_P: "%(pinghost)s PASSED Ping %(problemage)s" ""
 
 
 ###########################################################################
 # Notification Definitions
 # These define notification levels, and what actions to perform at each level.
+# (Future versions of EDDIE will support problem escalation from lower levels
+# to higher levels; but this has not been implemented yet)
 
+# COMMONALERT definition
+#  Common notification object which defines various levels of problem severity
+#  and what actions to take at each level, and can be used by most directives.
 N COMMONALERT:
 
     # Notification
     Level 0:
-	email(ALERT_EMAIL,WARN)
+	email(ALERT_EMAIL,WARN)		# email( <address>, <MSG object> )
 
     # Warning
     Level 1:
@@ -229,45 +26,43 @@ N COMMONALERT:
 
     # Alert
     Level 2:
-	email(SYSSUP_EMAIL,ALERT_P),ticker(ALERT_P)
+	email(ONCALL_EMAIL,ALERT_P),ticker(ALERT_P)
 
     # Serious Alert
     Level 3:
-	email(ALERT_EMAIL,ALERT),email(SYSSUP_EMAIL,ALERT_P),ticker(ALERT_P)
+	email(ALERT_EMAIL,ALERT),email(ONCALL_EMAIL,ALERT_P),ticker(ALERT_P)
 
 
+# COMMONFIXED definition
+#  Common notification object used for when directives are OK again
+#  (i.e., change state from "fail" to "ok")
 N COMMONFIXED:
-    # The rule has changed state to OK
+
     Level 0:
         email(ALERT_EMAIL,FIXED)
 
     Level 1:
-        email(ALERT_EMAIL,FIXED),email(SYSSUP_EMAIL,FIXED_P)
+        email(ALERT_EMAIL,FIXED),email(ONCALL_EMAIL,FIXED_P)
 
 
-
+# COMMONRESTART definition
+#  Common notification object used for PROC directives that try and restart
+#  a dead process.
 N COMMONRESTART:
 
     # Restart and notify
     Level 0:
-	restart("%(procp)s"),email(ALERT_EMAIL,RE_WARN)
+	restart("%(name)s"),email(ALERT_EMAIL,RE_WARN)
 
     # Restart/page
     Level 1:
-	restart("%(procp)s"),email(SYSSUP_EMAIL,RE_WARN),ticker(RE_WARN_P)
+	restart("%(name)s"),email(ONCALL_EMAIL,RE_WARN),ticker(RE_WARN_P)
 
 
-N SYSLOGRESTART:
-
-    # Restart and notify
-    Level 0:
-	restart("syslog"),email(ALERT_EMAIL,RE_WARN)
-
-    # Restart/page
-    Level 1:
-	restart("syslog"),email(SYSSUP_EMAIL,RE_WARN),ticker(RE_WARN_P)
-
-
+# NAMEDRESTART definition
+#  A specific notification object used to restart the 'named' process because
+#  the COMMONRESTART object wasn't sufficient (init script differs from process
+#  name, which COMMONRESTART relies on).
 N NAMEDRESTART:
 
     # Restart and notify
@@ -276,64 +71,65 @@ N NAMEDRESTART:
 
     # Restart/page
     Level 1:
-	restart("bind"),email(SYSSUP_EMAIL,RE_WARN),ticker(RE_WARN_P)
+	restart("bind"),email(ONCALL_EMAIL,RE_WARN),ticker(RE_WARN_P)
 
 
 ###########################################################################
 # RULES
 
-# PROC rules to perform checks on processes
-#   NR = process not running
-#   R  = process is running
-
 # define a PROC template to make the other PROC definitions much simpler
 #  PROCs using this template will inherit all the settings, but the settings
 #  can still be overridden per directive.
-PROC 'proctpl': template=self           # indicates this is a template definition
-		scanperiod='10m'        # default scanperiod
+PROC proctpl:   template=self           # indicates this is a template definition
+		scanperiod='20m'        # check processes every 20 mins
 		numchecks=3             # number of checks to make before alerting
 		checkwait=10            # interval between re-checks
-		rule=NR                 # default rule to use
+		rule='not exists'       # default rule to use
+		act2ok=COMMONFIXED(commonmsg.proc,0)
 
-PROC cron:	procname='cron'
-		template='proctpl'
-		action='COMMONRESTART(commonmsg.proc)'
-PROC syslogd:	procname='syslogd'
-		template='proctpl'
-		action='SYSLOGRESTART(commonmsg.proc)'
-PROC inetd:	procname='inetd'
-		template='proctpl'
-		action='COMMONALERT(commonmsg.proc,1)'
-PROC sshd:	procname='sshd'
-		template='proctpl'
-		action='COMMONALERT(commonmsg.proc,1)'
+PROC cron:	name='cron'
+		template=proctpl
+		action=COMMONRESTART(commonmsg.proc)
+PROC syslogd:	name='syslogd'
+		template=proctpl
+		action=SYSLOGRESTART(commonmsg.proc)
+PROC inetd:	name='inetd'
+		template=proctpl
+		action=COMMONALERT(commonmsg.proc,1)
+PROC sshd:	name='sshd'
+		template=proctpl
+		action=COMMONALERT(commonmsg.proc,1)
+
 
 # FS directives perform checks on filesystems.
 FS root:	fs='/'
-		rule='capac>=90'
-		action='COMMONALERT(commonmsg.fs,1)'
+		rule='pctused >= 90'
+		action=COMMONALERT(commonmsg.fs,1)
+		act2ok=COMMONFIXED(commonmsg.fs,0)
 FS var:		fs='/var'
-		rule='capac>=90'
-		action='COMMONALERT(commonmsg.fs,2)'
+		rule='pctused >= 90'
+		action=COMMONALERT(commonmsg.fs,2)
+		act2ok=COMMONFIXED(commonmsg.fs,0)
 
 
 # PID directives use pidfiles to perform checks.
-#  EX rule means run actions if pidfile does not exist
-#  PR rule means run actions if pid defined in pidfile is not currently in process table
 PID sshd1:	pid='/var/run/sshd.pid'
-		rule=EX
-		action='COMMONALERT(commonmsg.pid,0)'
+		rule='not exists'
+		action=COMMONALERT(commonmsg.pid,0)
 PID sshd2:	pid='/var/run/sshd.pid'
-		rule=PR
-		action='COMMONALERT(commonmsg.pidpr,1)'
+		rule='exists and not running'
+		action=COMMONALERT(commonmsg.pidpr,1)
+
 
 # SP directives perform service port checks by examining the current list of
 #  active listening ports (eg: 'netstat -anv') and performing actions if the
 #  defined port/protocol/bind-address is not in the list.
-SP ssh:		port='ssh'	# port to check, as defined in /etc/services
-		protocol='tcp'	# protocol, eg: tcp or udp
-		bindaddr='*'	# '*' on Solaris, or '0.0.0.0' on Linux
-		action='COMMONALERT(commonmsg.sp,1)'
+SP ssh:		port='ssh'		# port to check, as defined in /etc/services
+		protocol='tcp'		# protocol, eg: tcp or udp
+		bindaddr='0.0.0.0'	# '*' on Solaris, or '0.0.0.0' on Linux
+		rule='not exists'
+		action=COMMONALERT(commonmsg.sp,1)
+
 
 # COM directives can execute any commands and process rules based on the
 #  output (stdout, stderr or return value) of the commands.
@@ -341,7 +137,7 @@ SP ssh:		port='ssh'	# port to check, as defined in /etc/services
 # This is one way to check the loadavg of a server.
 COM loadavg:	cmd="uptime | cut -d, -f4 | awk '{print $3}'"
 		rule="float(out) > 6.0"
-		action='elvin("Load on %(h)s is %(comout)s")'
+		action=elvin("Load on %(h)s is %(out)s")
 
 
 # LOGSCAN directive scans logfiles, looking for lines which match the given
@@ -349,12 +145,12 @@ COM loadavg:	cmd="uptime | cut -d, -f4 | awk '{print $3}'"
 LOGSCAN daemonlog:	file='/var/log/daemonlog'	# logfile to scan
 			regex='.*'			# regex to match
 			scanperiod='12h'		# how often to scan
-			action='email("alert", "daemonlog %(h)s:%(logscanfile)s", "-- Logscan matched %(logscanlinecount)d lines: --\n%(logscanlines)s")'
+			action=email("alert", "daemonlog %(h)s:%(file)s", "-- Logscan matched %(linecount)d lines: --\n%(lines)s")
 
 LOGSCAN priv:		file='/var/log/messages'	# logfile to scan
 			regex='.*priv.*'		# regex to match
 			scanperiod='2h'			# how often to scan
-			action='email("alert", "priv scan %(h)s:%(logscanfile)s", "-- Logscan matched %(logscanlinecount)d lines: --\n%(logscanlines)s")'
+			action=email("alert", "priv scan %(h)s:%(file)s", "-- Logscan matched %(linecount)d lines: --\n%(lines)s")
 
 
 # PING directive pings hosts and allows checks to be made on the results.  The
@@ -364,6 +160,6 @@ PING hostalive:     host='10.1.1.1'
                     scanperiod='15m'
                     numchecks=2
                     checkwait='1m'
-                    action="COMMONALERT(commonmsg.ping,2)"
-                    act2ok="COMMONFIXED(commonmsg.ping,1)"
+                    action=COMMONALERT(commonmsg.ping,2)
+                    act2ok=COMMONFIXED(commonmsg.ping,1)
 

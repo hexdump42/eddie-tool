@@ -1,6 +1,8 @@
-# Eddie config file
+# EDDIE config file
 #  Rules specific to News servers.
-#  This is a sample configuration only.
+#  This is a sample configuration only, and only provided as a guide
+#  for designing your own rules.
+
 
 group news:
 

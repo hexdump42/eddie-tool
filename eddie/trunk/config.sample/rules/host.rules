@@ -1,43 +1,48 @@
-# Eddie config file
+# EDDIE config file
 #  Rules specific to certain hosts.
-#  This is a sample configuration only.
+#  This is a sample configuration only, and only provided as a guide
+#  for designing your own rules.
 
-group koro:
+
+group host1:
 
     PROC radiusd:	procname='radiusd'
-			rule=NR
-			action='COMMONALERT(commonmsg.proc,1)'
+			rule='not exists'
+			action=COMMONALERT(commonmsg.proc,1)
     PROC named:		procname='named'
-			rule=NR
-			action='COMMONALERT(commonmsg.proc,2)'
+			rule='not exists'
+			action=COMMONALERT(commonmsg.proc,2)
 
     FS varlog:		fs='/var/log'
-			rule='capac>=95'
-			action='COMMONALERT(commonmsg.fs,2)'
+			rule='pctused >= 95'
+			action=COMMONALERT(commonmsg.fs,2)
 
     PID namedex:	pid='/var/run/named.pid'
-			rule=EX
-			action='COMMONALERT(commonmsg.pid,0)'
+			rule='not exists'
+			action=COMMONALERT(commonmsg.pid,0)
     PID namedpr:	pid='/var/run/named.pid'
-			rule=PR
-			action='COMMONALERT(commonmsg.pidpr,1)'
+			rule='exists and not running'
+			action=COMMONALERT(commonmsg.pidpr,1)
 
     SP ftp:		port='ftp'
 			protocol='tcp'
 			bindaddr='*'
-			action='COMMONALERT(commonmsg.sp,0)'
+			rule='not exists'
+			action=COMMONALERT(commonmsg.sp,0)
     SP telnet:		port='telnet'
 			protocol='tcp'
 			bindaddr='*'
-			action='COMMONALERT(commonmsg.sp,0)'
-    SP pop3:		port='pop3'
+			rule='not exists'
+			action=COMMONALERT(commonmsg.sp,0)
+    SP pop3:		port=110
 			protocol='tcp'
 			bindaddr='*'
-			action='COMMONALERT(commonmsg.sp,1)'
+			rule='not exists'
+			action=COMMONALERT(commonmsg.sp,1)
 
     ## Check ntp stratum is sane
     COM stratum3:	cmd="/opt/local/sbin/xntpdc -c sysinfo | grep stratum | awk '{ print $2 }'"
 			rule="int(out) > 3"
-			action='email(ALERT_EMAIL,"Stratum > 3")'
+			action=email(ALERT_EMAIL,"NTP Stratum > 3")
 
 

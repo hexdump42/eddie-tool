@@ -1,82 +1,78 @@
-# Eddie config file
+# EDDIE config file
 #  Rules specific to cache boxes.
-#  This is just a sample configuration.
+#  This is just a sample configuration, and only provided as a guide
+#  for designing your own rules.
 
-group myeah:
-    # This group will be used by the server with hostname 'myeah'.
 
-    PROC named:		procname='named'
-			rule=NR
+group host5:
+    # This group will be used by the server with hostname 'host5'.
+
+    PROC named:		name='named'
+			rule='not exists'
 			numchecks=2		# do 2 checks before alerting
 			checkwait='30s'		# wait 30 secs between 2nd check
-			action='COMMONALERT(commonmsg.proc,2)'
+			action=COMMONALERT(commonmsg.proc,2)
 
     PID named1:		pid='/var/run/named.pid'
-			rule=EX
+			rule='not exists'
 			scanperiod='30m'	# only check every 30min
-			action='COMMONALERT(commonmsg.pid,0)'
+			action=COMMONALERT(commonmsg.pid,0)
     PID named2:		pid='/var/run/named.pid'
-			rule=PR
+			rule='exists and not running'
 			scanperiod='30m'	# only check every 30min
-			action='COMMONALERT(commonmsg.pidpr,1)'
+			action=COMMONALERT(commonmsg.pidpr,1)
 
-group myponga:
-    # This group will be used by the server with hostname 'myponga'.
 
-    PROC named:		procname='named'
-			rule=NR
+group host6:
+    # This group will be used by the server with hostname 'host6'.
+
+    PROC syslog:	name='syslog'
+			rule='not exists'
 			numchecks=2		# do 2 checks before alerting
 			checkwait='30s'		# wait 30 secs between 2nd check
-			action='COMMONALERT(commonmsg.proc,2)'
+			action=COMMONALERT(commonmsg.proc,2)
 
-    PID named1:		pid='/var/run/named.pid'
-			rule=EX
+    PID syslog1:	pid='/var/run/syslog.pid'
+			rule='not exists'
 			scanperiod='30m'	# only check every 30min
-			action='COMMONALERT(commonmsg.pid,0)'
-    PID named2:		pid='/var/run/named.pid'
-			rule=PR
+			action=COMMONALERT(commonmsg.pid,0)
+    PID syslog1:	pid='/var/run/syslog.pid'
+			rule='exists and not running'
 			scanperiod='30m'	# only check every 30min
-			action='COMMONALERT(commonmsg.pidpr,1)'
+			action=COMMONALERT(commonmsg.pidpr,1)
 
 
 group cache:
     # This group will be used by any hosts defined in the CLASS 'cache'
     # (see eddie.cf).  Any host called 'cache' would also use this.
 
-    PROC bgp:		procname='bgp'
-			rule=NR
-			numchecks=2		# do 2 checks before alerting
-			checkwait='1m'		# wait 1 min between 2nd check
-			action='COMMONALERT(commonmsg.proc,2)'
+    PROC squid:		name='squid'
+			rule='not exists'
+			numchecks=3		# do 3 checks before alerting
+			checkwait='20s'		# wait 20 secs between 2nd & 3rd checks
+			action=COMMONALERT(commonmsg.proc,2)
 
-    # Proxy-related processes
-    PROC httpd:		procname='httpd'
-			rule=NR
+    PROC httpd:		name='httpd'
+			rule='not exists'
 			scanperiod='30m'	# only check every 30 mins
 			numchecks=2		# do 2 checks before alerting
 			checkwait='1m'		# wait 1 min between 2nd check
-			action='COMMONALERT(commonmsg.proc,2)'
-    PROC squid:		procname='squid'
-			rule=NR
-			numchecks=3		# do 3 checks before alerting
-			checkwait='20s'		# wait 20 secs between 2nd & 3rd checks
-			action='COMMONALERT(commonmsg.proc,2)'
-
+			action=COMMONALERT(commonmsg.proc,2)
 
     FS home:		fs='/home'
-			rule='capac>=99'	# alert if >= 99% full
+			rule='pctused >= 99'	# alert if >= 99% full
 			scanperiod='1h'		# only check once an hour
-			action='COMMONALERT(commonmsg.fs,0)'
+			action=COMMONALERT(commonmsg.fs,0)
     FS opt:		fs='/opt'
-			rule='capac>=97'
+			rule='pctused >= 97'
 			scanperiod='1h'		# only check once an hour
-			action='COMMONALERT(commonmsg.fs,2)'
+			action=COMMONALERT(commonmsg.fs,2)
     FS varlog:		fs='/var/log'
-			rule='capac>=95'
-			action='COMMONALERT(commonmsg.fs,2)'
+			rule='pctused >= 95'
+			action=COMMONALERT(commonmsg.fs,2)
     FS varlogcache:	fs='/var/log/cache'
-			rule='capac>=95'
-			action='COMMONALERT(commonmsg.fs,2)'
+			rule='pctused >= 95'
+			action=COMMONALERT(commonmsg.fs,2)
 
     SP http:		port='http'	# check http port is listening
 			protocol='tcp'	# tcp protocol
@@ -84,11 +80,13 @@ group cache:
 			scanperiod='30m'	# check every 30 mins
 			numchecks=2		# perform 2 checks
 			checkwait='30s'		# wait 30s before 2nd check
-			action='COMMONALERT(commonmsg.sp,1)'
-    SP proxy:		port='http-proxy'
+			rule='not exists'
+			action=COMMONALERT(commonmsg.sp,1)
+    SP proxy:		port=8080
 			protocol='*'
 			scanperiod='30m'
 			numchecks=2
 			checkwait='30s'
-			action='COMMONALERT(commonmsg.sp,1)'
+			rule='not exists'
+			action=COMMONALERT(commonmsg.sp,1)
 
