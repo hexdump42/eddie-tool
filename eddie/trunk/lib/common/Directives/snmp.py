@@ -58,14 +58,25 @@ class SNMP(directive.Directive):
 	   maxretry=10
            action=email('alert', 'Head for the lifeboats: %(snmpresponse)s')
 
-    SNMP router_traffic:
-	scanperiod='5m'
-        host='10.0.0.1'
-        oid='1.3.6.1.2.1.2.2.1.10.2, 1.3.6.1.2.1.2.2.1.16.2'
-        community='special'
-        rule='not failed'
-        maxretry=10
-        action=elvinrrd("net-router_BRI01", "ibytes=%(response1)s", "obytes=%(response2)s")
+       SNMP router_traffic:
+	   scanperiod='5m'
+           host='10.0.0.1'
+           oid='1.3.6.1.2.1.2.2.1.10.2, 1.3.6.1.2.1.2.2.1.16.2'
+           community='special'
+           rule='not failed'
+           maxretry=10
+           action=elvinrrd("net-router_BRI01", "ibytes=%(response1)s", "obytes=%(response2)s")
+
+       # Now supports 64-bit counter split into high/low OIDs.  Specify these
+       # as "OIDhigh:OIDlow".
+       SNMP router_traffic_64bit:
+	   scanperiod='5m'
+           host='10.0.0.1'
+           oid='1.3.6.1.2.1.2.2.1.10.2:1.3.6.1.2.1.2.2.1.10.3, 1.3.6.1.2.1.2.2.1.16.2:1.3.6.1.2.1.2.2.1.16.3'
+           community='special'
+           rule='not failed'
+           maxretry=10
+           action=elvinrrd("net-router_BRI01", "ibytes=%(response1)s", "obytes=%(response2)s")
     """
 
     ############################################################################
@@ -110,11 +121,28 @@ class SNMP(directive.Directive):
 		# pysnmp requires a list of ints
 		o = string.strip(o)
 		self.defaultVarDict['oid%d'%i] = o	# store variable
-		t = string.split(o, '.')
-		transoid = []
-		for n in t:
-		    transoid.append(int(n))
-		self.oidlist.append(transoid)
+
+		# chris 2003-05-03: support for 64bit (high/low) counters
+		if ':' in o:
+		    (highoid,lowoid) = string.split(o, ':')
+		    th = string.split(highoid, '.')
+		    tl = string.split(lowoid, '.')
+		    transoidh = []
+		    for n in th:
+			transoidh.append(int(n))
+		    transoidl = []
+		    for n in tl:
+			transoidl.append(int(n))
+		    self.oidlist.append( (transoidh,transoidl) )	# add high/low OIDs
+
+		else:
+		    # standard OIDs
+		    t = string.split(o, '.')
+		    transoid = []
+		    for n in t:
+			transoid.append(int(n))
+		    self.oidlist.append(transoid)
+
 		i = i + 1
 
 	try:
@@ -164,48 +192,69 @@ class SNMP(directive.Directive):
 	s.port = self.args.port
 
 	i = 1
-	for oid in self.oidlist:
-	    oid = s.encode_oid(oid)
-	    question = s.encode_request('GETREQUEST', [oid], [])
-	    try:
-		answer = s.send_and_receive(question)
-	    except self.session.error.NoResponse:	# If timeout dont panic
-		log.log( "<snmp>SNMP.getData(): ID '%s': Timeout talking to host '%s' port %d" % (self.ID, self.args.host, self.args.port), 5 )
-		self.errors = self.errors+1
-		if self.errors >= self.args.maxretry:
-		    # Too many failed snmp requests - cancel directive
-		    raise directive.DirectiveError, "Too Many Retries: Failed %d times" % self.errors
-		else:
+	for eachoid in self.oidlist:
+	    # chris 2003-05-03: support for 64bit (high/low) counters
+	    if type(eachoid) == type(()):	# high/low OID tuple
+		oids = eachoid
+		highlow = 1
+	    else:
+		oids = (eachoid,)
+		highlow = 0
+
+	    for oid in oids:
+		oid = s.encode_oid(oid)
+		question = s.encode_request('GETREQUEST', [oid], [])
+		try:
+		    answer = s.send_and_receive(question)
+		except self.session.error.NoResponse:	# If timeout dont panic
+		    log.log( "<snmp>SNMP.getData(): ID '%s': Timeout talking to host '%s' port %d" % (self.ID, self.args.host, self.args.port), 5 )
+		    self.errors = self.errors+1
+		    if self.errors >= self.args.maxretry:
+			# Too many failed snmp requests - cancel directive
+			raise directive.DirectiveError, "Too Many Retries: Failed %d times" % self.errors
+		    else:
+			data['failed'] = 1
+			return data
+		except self.pysnmperror.TransportError, msg:		# Problem establishing snmp connection
+		    log.log( "<snmp>SNMP.getData(): ID '%s': Transport error talking to host '%s' port %d, %s" % (self.ID, self.args.host, self.args.port, msg), 5 )
+		    self.errors = self.errors+1
+		    if self.errors >= self.args.maxretry:
+			# Too many failed snmp requests - cancel directive
+			raise directive.DirectiveError, "Too Many Retries: Failed %d times" % self.errors
+		    else:
+			data['failed'] = 1
+			return data
+		self.errors = 0
+
+		try:
+		    (obj,val) = s.decode_response(answer)
+		except self.pysnmperror.BadRequestID, msg:
+		    log.log( "<snmp>SNMP.getData(): ID '%s': BadRequestID exception, %s" % (self.ID, msg), 5 )
 		    data['failed'] = 1
 		    return data
-	    except self.pysnmperror.TransportError, msg:		# Problem establishing snmp connection
-		log.log( "<snmp>SNMP.getData(): ID '%s': Transport error talking to host '%s' port %d, %s" % (self.ID, self.args.host, self.args.port, msg), 5 )
-		self.errors = self.errors+1
-		if self.errors >= self.args.maxretry:
-		    # Too many failed snmp requests - cancel directive
-		    raise directive.DirectiveError, "Too Many Retries: Failed %d times" % self.errors
-		else:
-		    data['failed'] = 1
-		    return data
-	    self.errors = 0
 
-	    try:
-	        (obj,val) = s.decode_response(answer)
-	    except self.pysnmperror.BadRequestID, msg:
-	        log.log( "<snmp>SNMP.getData(): ID '%s': BadRequestID exception, %s" % (self.ID, msg), 5 )
-		data['failed'] = 1
-		return data
+		resp = map(s.decode_value,val)
 
-	    resp = map(s.decode_value,val)
+		if highlow:
+		    if highlow == 1:
+			largeoid = pow(2,32) * resp[0]
+			highlow = 2
+		    else:
+			largeoid = largeoid + resp[0]
+
+	    if highlow:
+		result = largeoid
+	    else:
+		result = resp[0]
 
 	    if len(self.oidlist) == 1:
 		# if only one oid, data variable is just 'response'
-		data['response'] = resp[0]
-		log.log( "<snmp>SNMP.getData(): host '%s' response=%s" % (self.args.host,resp[0]), 8 )
+		data['response'] = result
+		log.log( "<snmp>SNMP.getData(): host '%s' response=%s" % (self.args.host,result), 8 )
 	    else:
 		# if multiple oids, data variables are responsen, n=1,2,...,n
-		data['response%d'%i] = resp[0]
-		log.log( "<snmp>SNMP.getData(): host '%s' response%d=%s" % (self.args.host,i,resp[0]), 8 )
+		data['response%d'%i] = result
+		log.log( "<snmp>SNMP.getData(): host '%s' response%d=%s" % (self.args.host,i,result), 8 )
 	    i = i + 1
 
 
