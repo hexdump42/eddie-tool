@@ -80,7 +80,7 @@ def email(user,*arg):
 	tmp.write( 'To:'+u+'\n' )
 	tmp.write( 'From:otto@connect.com.au\n' )
 	tmp.write( 'Reply-To:systems@connect.com.au\n' )
-	tmp.write( 'Subject: [TESTING] '+subj+'\n' )
+	tmp.write( 'Subject: ['+log.hostname+'] '+subj+'\n' )
 	tmp.write( '\n' )
 	tmp.write( body+'\n' )
 	tmp.write( '.\n' )

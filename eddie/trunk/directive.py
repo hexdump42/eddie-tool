@@ -72,12 +72,7 @@ class Directive:
 
 	# Set up informational variables - these are common to all Directives
 	#  %h = hostname
-	#    TODO: Is there a simpler Python-way of getting hostname ??
-	#    TODO: Get the hostname at program startup, not here...
-	tmp = os.popen('uname -n', 'r')
-	hostname = tmp.readline()
-	self.varDict['h'] = hostname[:-1]	# strip \n off end
-	tmp.close()
+	self.varDict['h'] = log.hostname
 
 	#  %sys = command from a system() action
 	#     TODO

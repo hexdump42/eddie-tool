@@ -13,13 +13,17 @@
 ##
 
 
+import os
+import time
+import signal
+import sys
+
 import proc
 import df
 import parseConfig
 import directive
 import definition
 import config
-import time
 import action
 import log
 import history
@@ -28,26 +32,44 @@ import history
 config_file = 'config/otto.cf'
 
 
+# Exit Otto cleanly
+def ottoexit():
+    # email admin anything else...
+    log.sendadminlog()
+    sys.exit()
+
+
+# Signal Handler
+def SigHandler( sig, frame ):
+    if sig == signal.SIGHUP:
+	# SIGHUP (Hangup) - reload config
+	log.log( '<otto>SigHandler(), SIGHUP encountered - reloading config', 2 )
+	#
+	# read in config and rules
+	parseConfig.readFile(config_file, ourList, defDict, MDict, ADict)
+	directive.ADict = ADict		# make ADict viewable in directive module
+	action.MDict = MDict		# make MDict viewable in action module
+
+    elif sig == signal.SIGINT:
+	# SIGINT (CTRL-c) - quit now
+	log.log( '<otto>SigHandler(), SIGINT (KeyboardInterrupt) encountered - quitting', 2 )
+	print "\nOtto quitting ... bye bye"
+	ottoexit()
+
+    elif sig == signal.SIGTERM:
+	# SIGTERM (Terminate) - quit now
+	log.log( '<otto>SigHandler(), SIGTERM (Terminate) encountered - quitting', 2 )
+	print "\nOtto quitting ... bye bye"
+	ottoexit()
+
+    else:
+	# un-handled signal - log & ignore it
+	log.log( '<otto>SigHandler(), unknown signal received, %d - ignoring' % sig, 2 )
+
+
 # The guts of the Otto program - sets up the lists, reads config info, gets
 # system information, then performs the checking.
 def ottoguts(ottoHistory):
-    global ourList		# global list of all directives
-    global defDict		# global dictionary of DEFinitions
-    global MDict		# global dictionary of Messages
-    global ADict		# global dictionary of Actions
-
-
-    # initialise our global lists/dicts
-    ourList = directive.Rules()
-    defDict = {}
-    MDict = definition.MsgDict()
-    ADict = {}
-
-    # read in config and rules
-    parseConfig.readFile(config_file, ourList, defDict, MDict, ADict)
-
-    directive.ADict = ADict		# make ADict viewable in directive module
-    action.MDict = MDict		# make MDict viewable in action module
 
     #print "M: ",ourList['M']
     #print "D: ",ourList['D']
@@ -95,7 +117,37 @@ def ottoguts(ottoHistory):
 
 
 def main():
+    global ourList		# global list of all directives
+    global defDict		# global dictionary of DEFinitions
+    global MDict		# global dictionary of Messages
+    global ADict		# global dictionary of Actions
+
+    signal.signal( signal.SIGALRM, signal.SIG_IGN )
+    signal.signal( signal.SIGHUP, SigHandler )
+    signal.signal( signal.SIGINT, SigHandler )
+    signal.signal( signal.SIGTERM, SigHandler )
+
+    #    TODO: Is there a simpler Python-way of getting hostname ??
+    #    TODO: Get the hostname at program startup, not here...
+    tmp = os.popen('uname -n', 'r')
+    hostname = tmp.readline()
+    log.hostname = hostname[:-1]	# strip \n off end
+    tmp.close()
+
+    # New history object
     history.ottoHistory = history.history()
+
+    # initialise our global lists/dicts
+    ourList = directive.Rules()
+    defDict = {}
+    MDict = definition.MsgDict()
+    ADict = {}
+
+    # read in config and rules
+    parseConfig.readFile(config_file, ourList, defDict, MDict, ADict)
+
+    directive.ADict = ADict		# make ADict viewable in directive module
+    action.MDict = MDict		# make MDict viewable in action module
 
     # Main Loop
     while 1:
@@ -111,8 +163,12 @@ def main():
 
 	    # sleep for set period - only quits with CTRL-c
 	    log.log( '<otto>main(), sleeping for %d secs' % (config.scanperiod), 6 )
-	    print 'Press CTRL-C to quit'
-	    time.sleep( config.scanperiod )
+	    #print 'Press CTRL-C to quit'
+
+	    # Sleep by setting SIGALRM to go off in scanperiod seconds
+	    #time.sleep( config.scanperiod )
+	    signal.alarm( config.scanperiod )
+	    signal.pause()
 
 	except KeyboardInterrupt:
 	    # CTRL-c hit - quit now

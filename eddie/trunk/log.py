@@ -44,11 +44,16 @@ def log(text='', level=1):
 
     if level > 0 and level <= loglevel:
 	# log to logfile
-	logf = open( logfile, 'a' )
-	logf.write( logtext )
-	logf.close()
-	logged = logged + 1
-    
+	try:
+	    logf = open( logfile, 'a' )
+	    logf.write( logtext )
+	    logf.close()
+	    logged = logged + 1
+	except IOError:
+	    # Cannot open logfile for writing - save this problem in adminlog
+	    #print "<Log>log() - Fatal log error - cannot open logfile '%s'" % logfile
+	    adminlog.append( "<Log>log() - Fatal log error - cannot open logfile '%s'" % logfile )
+
     if adminlevel > 0 and level <= adminlevel:
 	# log to adminlog
 	adminlog.append(logtext)
@@ -64,7 +69,7 @@ def sendadminlog():
     tmp.write( 'To:'+adminemail+'\n' )
     tmp.write( 'From:otto@connect.com.au\n' )
     tmp.write( 'Reply-To:systems@connect.com.au\n' )
-    tmp.write( 'Subject: [TESTING] Otto Admin Messages\n' )
+    tmp.write( 'Subject: [%s] Otto Admin Messages\n' % hostname )
     tmp.write( '\n' )
     tmp.write( "Greetings Otto Admin '%s', the following log messages are\n" % adminemail )
     tmp.write( 'being delivered to you for your perusal.  Enjoy.\n' )
