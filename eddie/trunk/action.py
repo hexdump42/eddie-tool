@@ -117,7 +117,9 @@ def parseVars(text, vDict):
 		else:
 		    try:
 			varvalue = vDict[varname]
-			modtext = modtext + varvalue + c
+			# convert any type to a string!
+			valuestr = "%s" % varvalue
+			modtext = modtext + valuestr + c
 		    except KeyError:
 			# not a valid variable name - just print '%varname'
 			modtext = modtext + '%' + varname + c

@@ -339,6 +339,69 @@ class SP(Directive):
 	print "SP directive doing checking......"
 
 
+class COM(Directive):
+    def __init__(self, *arg):
+	apply( Directive.__init__, (self,) + arg )
+	self.regexp = 'COM[\t \n]+\([a-zA-Z0-9_$><=&\|%^/!-]+\|"[a-zA-Z0-9_$><=&\|%^/!{}()\' \t-]+"\|\'[a-zA-Z0-9_$><=&\|%^/!{}()" \t-]+\'\)[\t \n]+\([a-zA-Z0-9_$><=&\|%^!{}()-]+\|["\'][a-zA-Z0-9_$><=&\|%^!{}()"\' \t-]+["\']\)[\t \n]+\(.*\)'
+	fields = self.parseRaw()
+	self.command = utils.stripquote(fields[0])	# the command
+	self.rule = utils.stripquote(fields[1])	# the rule
+	self.action = fields[2]			# the action
+	print "<COM> command: '%s' rule: '%s' action: '%s'" % (self.command, self.rule, self.action)
+
+	# Set any PID-specific variables
+	#  %com = the command
+	#  %rule = the rule
+	self.varDict['com'] = self.command
+	self.varDict['rule'] = self.rule
+
+    def docheck(self):
+	tmpprefix = "/var/tmp/com%d" % os.getpid()
+	cmd = "%s >%s.out 2>%s.err" % (self.command, tmpprefix, tmpprefix )
+	log.log( "<directive>COM.docheck(), calling system('%s')" % (cmd), 8 )
+	retval = os.system( cmd )
+	print "<COM> pid=%d retval=%d" % (os.getpid(), retval)
+	try:
+	    outf = open( tmpprefix + ".out", 'r' )
+	except IOError:
+	    # stdout tmp file not found
+	    log.log( "<directive>COM.docheck(), Error, could not open '%s'" % (tmpprefix + ".out"), 2 )
+	else:
+	    out = outf.readline()
+	    outf.close()
+	    os.remove( tmpprefix + ".out" )
+	    out = string.strip(out)
+	    if out[-1:] == '\n':
+		out = out[:-1]
+
+	try:
+	    errf = open( tmpprefix + ".err", 'r' )
+	except IOError:
+	    # stderr tmp file not found
+	    log.log( "<directive>COM.docheck(), Error, could not open '%s'" % (tmpprefix + ".err"), 2 )
+	else:
+	    err = errf.readline()
+	    errf.close()
+	    os.remove( tmpprefix + ".err" )
+	    err = string.strip(err)
+	    if err[-1:] == '\n':
+		err = err[:-1]
+	
+	print "<COM> out='%s'  err='%s'" % (out,err)
+	# save values in variable dictionary
+	self.varDict['out'] = out
+	self.varDict['err'] = err
+	self.varDict['ret'] = retval
+
+        comenv = {}                      # environment for com rules execution
+        comenv['out'] = out
+        comenv['err'] = err
+        comenv['ret'] = retval
+	result = eval( self.rule, comenv )
+	print "<COM> result=%d" % (result)
+	if result != 0:
+	    self.doAction()
+
 
 ##
 ## END - directive.py

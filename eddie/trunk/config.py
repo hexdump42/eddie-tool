@@ -122,6 +122,7 @@ directives = {  "SCANPERIOD"	: SCANPERIOD,			\
 		"FS"		: directive.FS,			\
                 "SP"		: directive.SP,			\
 	  	"PID"		: directive.PID,		\
+	  	"COM"		: directive.COM,		\
 		"D"		: directive.D,			}
 
 

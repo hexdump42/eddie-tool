@@ -81,7 +81,7 @@ def ottoguts(ottoHistory):
 
     ## debugging - test with 'D' directive for now ##
     ## for d in ourList.keylist():
-    for d in ('FS',):
+    for d in ('COM',):
 	list = ourList[d]
 	if list != None:
 	    for i in list:
@@ -91,7 +91,6 @@ def ottoguts(ottoHistory):
 
     # Save history (debug.. FS only for now...)
     ottoHistory.save('FS',directive.dlist)
-    ottoHistory.save('PS',directive.plist)
 
 
 
