@@ -80,8 +80,8 @@ def eddieexit():
     sys.exit()
 
 
-# Signal Handler
 def SigHandler( sig, frame ):
+    """Handle all the signals we are interested in."""
 
     if sig == signal.SIGHUP:
 	# SIGHUP (Hangup) - reload config
@@ -131,8 +131,9 @@ def countFDs():
     return fdcnt
 
 
-## Perform checks
 def check(Config):
+    """Perform all the checks."""
+
     # perform checks in current config group
     for d in Config.ruleList.keys():
 	list = Config.ruleList[d]
@@ -212,8 +213,9 @@ def eddieguts(Config, eddieHistory):
 
 
 
-## Startup routine - setup then start main loop.
 def main():
+    """Startup routine - setup then start main loop."""
+
     # Catch most important signals
     signal.signal( signal.SIGALRM, SigHandler )
     signal.signal( signal.SIGHUP, SigHandler )
@@ -225,13 +227,8 @@ def main():
     # Parse command-line arguments
     doArgs(sys.argv[1:], argflags)	# parse arg-list (not program name)
 
-    #    TODO: Is there a simpler Python-way of getting hostname ??
-    tmp = os.popen('uname -n', 'r')
-    hostname = tmp.readline()
-    log.hostname = hostname[:-1]	# strip \n off end
-    tmp.close()
-
-    #print "[DEBUG] hostname:",log.hostname
+    # Get local hostname
+    log.hostname = os.uname()[1]
 
     # instantiate global Config object
     global Config
