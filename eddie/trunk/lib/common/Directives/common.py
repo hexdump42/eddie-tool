@@ -297,13 +297,17 @@ class SP(directive.Directive):
 
     def getData(self):
 
-	if self.args.protocol == 'tcp' or  self.args.protocol == 'UDP':
+	if self.args.protocol == 'tcp' or  self.args.protocol == 'TCP':
 	    connections = self.data_collectors['netstat.TCPtable'].getHash()
-	elif self.args.protocol == 'udp' or  self.args.protocol == 'TCP':
+	elif self.args.protocol == 'udp' or  self.args.protocol == 'UDP':
 	    connections = self.data_collectors['netstat.UDPtable'].getHash()
 	else:
 	    log.log( "<directive>SP.getData(): protocol '%s' illegal" % (self.args.protocol), 8 )
 	    raise directive.DirectiveError, "protocol '%s' illegal" % (self.args.protocol)
+
+	if len(connections)==0:
+	    log.log( "<directive>SP.getData(): Zero connections for protocol '%s'" % (self.args.protocol), 6 )
+	    return None
 
 	key = "%s:%s" % (self.args.bindaddr, self.port)
 
