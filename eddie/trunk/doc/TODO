@@ -1,5 +1,19 @@
 Things TODO for Eddie!
 
+y Multi-threaded checks
+
+- make os-dependent data collectors thread-safe, as Linux/proc.py
+
+- Add NUMTHREADS as a config variable
+
+- Fix doArgs to use standard Python args.
+
+- Fix history object.
+
+- Change directive syntax to be "DIRECTIVE 'name': etc etc"
+
+- Add scanperiod argument to directives
+
 - Double checking for Port directive
 - TEST with 'import elvin' (Elvin4)
 
@@ -17,8 +31,6 @@ Things TODO for Eddie!
 - store disk usage in eddiedb
 
 - check inode usage
-
-- Multi-threaded checks
 
 - Problem age/ack details variable for messages, eg: %(probage)s, etc.
 
