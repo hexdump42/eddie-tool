@@ -27,7 +27,7 @@
 ########################################################################
 
 global EDDIE_VER
-EDDIE_VER='0.29.1'
+EDDIE_VER='0.29.3'
 
 
 # Python modules
@@ -320,6 +320,8 @@ def main():
     """
     Startup routine - setup then start main loop.
     """
+
+    log.version = EDDIE_VER	# Make version string available to other modules
 
     # Catch most important signals
     signal.signal( signal.SIGALRM, SigHandler )
