@@ -1,8 +1,8 @@
 ## 
 ## File		: df.py 
 ## 
-## Author       : Rod Telford  <rtelford@psychofx.com>
-##                Chris Miles  <chris@psychofx.com>
+## Author       : Rod Telford  <rtelford@codefx.com.au>
+##                Chris Miles  <cmiles@codefx.com.au>
 ## 
 ## Date		: 971204 
 ## 
@@ -46,8 +46,11 @@ class dfList:
     def refresh(self):
 	"""Force df refresh."""
 
-	rawList = utils.safe_popen('df -kFufs', 'r')
-	self.dfheader = rawList.readline()
+	# List all UFS and VXFS filesystems
+	# Note: we don't bother with NFS filesystems at this point.
+	rawList = utils.safe_popen('/usr/bin/df -kFufs | grep -v Filesystem ; /usr/bin/df -kFvxfs | grep -v Filesystem', 'r')
+	#rawList = utils.safe_popen('df -kFufs', 'r')
+	#self.dfheader = rawList.readline()
  
 	for line in rawList.readlines():
 	    fields = string.split(line)
