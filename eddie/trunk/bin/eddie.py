@@ -276,7 +276,7 @@ def buildCheckQueue(q, Config):
     Build the queue of checks that the scheduler will start with.
     """
 
-    for i in Config.groupDirectives:
+    for i in Config.groupDirectives.keys():
 	# if directive template is 'self', do not schedule it
 	d = Config.groupDirectives[i]
 	if d.args.template != 'self':

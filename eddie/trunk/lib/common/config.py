@@ -150,7 +150,7 @@ class Config:
 	elif obj.type == 'CLASS':
 	    self.classDict[obj.name] = obj.hosts
 	elif obj.type in directives.keys():
-	    if obj.ID in self.groupDirectives:
+	    if obj.ID in self.groupDirectives.keys():
 	        raise ParseFailure, "Duplicate directive name: %s" % obj.ID
 	    # add directive
 	    self.groupDirectives[obj.ID] = obj
