@@ -13,15 +13,8 @@
 ##
 ##
 
-import os
-import string
-import re
-import sys
-import socket
-import action
-import definition
-import utils
-import log
+import os, string, re, sys, socket, time
+import action, definition, utils, log
 
 # Define exceptions
 ParseFailure = 'ParseFailure'
@@ -369,11 +362,16 @@ class PID(Directive):
 
 		# Search for pid from process list
 		if plist.pidExists( pid ) == 0:
-		    # there is no process with pid == pid
-    		    log.log( "<directive>PID(), PR, pid %s not in process list" % (pid), 6 )
-		    self.doAction(Config)
-		else:
-    		    log.log( "<directive>PID(), PR, pid %s is in process list" % (pid), 8 )
+		    # pid not found - to make sure, let's sleep a bit then check again
+		    log.log( "<directive>PID(), PR, pid %s not in process list - sleeping and checking again..." % (pid), 8 )
+		    time.sleep( 30 )
+		    plist.refresh()		# force refresh of proc list
+		    if plist.pidExists( pid ) == 0:
+			# there is no process with pid == pid
+			log.log( "<directive>PID(), PR, pid %s not in process list" % (pid), 6 )
+			self.doAction(Config)
+		    else:
+			log.log( "<directive>PID(), PR, pid %s is in process list" % (pid), 8 )
 
 
 	else:
@@ -382,6 +380,8 @@ class PID(Directive):
 
 
 class PROC(Directive):
+    """Process checks."""
+
     def __init__(self, toklist):
 	apply( Directive.__init__, (self, toklist) )
 	self.name = utils.stripquote(toklist[1])			# the daemon to check for
@@ -391,6 +391,7 @@ class PROC(Directive):
 
 
     def tokenparser(self, toklist, toktypes, indent):
+	"""Parse tokenized input."""
 
 	# Expect first token to be rule - one of self.ruleDict
 	if toklist[0] not in self.ruleDict.keys():
@@ -409,20 +410,34 @@ class PROC(Directive):
 
 
     def docheck(self, Config):
+	"""Perform specified check."""
+
 	log.log( "<directive>PROC(), docheck(), daemon '%s', rule '%s'" % (self.daemon,self.rule), 7 )
 	self.rule(Config)
 
+
     def NR(self,Config):
+	"""Call action if process is found to be NOT running."""
+
 	if plist.procExists( self.daemon ) == 0:
-	    log.log( "<directive>NR(PROC) daemon not running, '%s'" % (self.daemon), 6 )
-	    self.doAction(Config)
+	    # process not running - let's sleep a bit then check again to make sure
+	    log.log( "<directive>NR(PROC) daemon not running, '%s' - sleeping before recheck..." % (self.daemon), 8 )
+	    time.sleep( 30 )
+	    plist.refresh()		# force refresh of proc list
+	    if plist.procExists( self.daemon ) == 0:
+		log.log( "<directive>NR(PROC) daemon not running, '%s'" % (self.daemon), 6 )
+		self.doAction(Config)
+
 
     def R(self,Config):
+	"""Call action if process is found to BE running."""
+
 	if plist.procExists( self.daemon ) > 0:
 	    log.log( "<directive>R(PROC) daemon is running, '%s'" % (self.daemon), 6 )
 	    # Set %pid variable.
 	    self.Action.varDict['pid'] = plist[self.daemon].pid
 	    self.doAction(Config)
+
 
 
 class SP(Directive):
