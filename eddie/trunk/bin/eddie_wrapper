@@ -4,7 +4,7 @@
 ## 990302 Chris Miles <chris@codefx.com.au>
 
 # Address to receive restart messages
-EDDIE_ADMIN=chris@psychofx.com
+EDDIE_ADMIN=eddie-adm
 
 
 # Set path for mail/sleep/etc
