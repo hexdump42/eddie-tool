@@ -37,7 +37,9 @@ import log, directive
 
 
 class FILE(directive.Directive):
-    """FILE directive.  Examine a file statistics.
+    """FILE directive.  Examine a file statistics and perform checks on those statistics.
+       Stats from previous check are kept so comparisons can be made from one scanperiod
+       to the next (eg: rule='md5 != lastmd5').
 
        Sample rule:
        FILE passwd: file="/etc/passwd"
@@ -50,6 +52,8 @@ class FILE(directive.Directive):
 
     def __init__(self, toklist):
 	apply( directive.Directive.__init__, (self, toklist) )
+
+	self.lastmode = None	# keep copy of stats from last check
 
 
     def tokenparser(self, toklist, toktypes, indent):
@@ -117,6 +121,32 @@ class FILE(directive.Directive):
 		    log.log( "<file>FILE.docheck(): ID '%s' md5='%s'" % (self.ID, m), 8 )
 		    rulesenv['md5'] = m
 
+	    if self.lastmode == None:
+		# if no lastxxx variables set, set them to same as current
+		self.lastmode = rulesenv['mode']
+		self.lastino = rulesenv['ino']
+		self.lastdev = rulesenv['dev']
+		self.lastnlink = rulesenv['nlink']
+		self.lastuid = rulesenv['uid']
+		self.lastgid = rulesenv['gid']
+		self.lastsize = rulesenv['size']
+		self.lastatime = rulesenv['atime']
+		self.lastmtime = rulesenv['mtime']
+		self.lastctime = rulesenv['ctime']
+		self.lastmd5 = rulesenv['md5']
+
+	    rulesenv['lastmode'] = self.lastmode
+	    rulesenv['lastino'] = self.lastino
+	    rulesenv['lastdev'] = self.lastdev
+	    rulesenv['lastnlink'] = self.lastnlink
+	    rulesenv['lastuid'] = self.lastuid
+	    rulesenv['lastgid'] = self.lastgid
+	    rulesenv['lastsize'] = self.lastsize
+	    rulesenv['lastatime'] = self.lastatime
+	    rulesenv['lastmtime'] = self.lastmtime
+	    rulesenv['lastctime'] = self.lastctime
+	    rulesenv['lastmd5'] = self.lastmd5
+
 	    # Evaluate rule
 	    result = eval( self.args.rule, rulesenv )
 
@@ -132,6 +162,17 @@ class FILE(directive.Directive):
 	    self.Action.varDict['filemtime'] = rulesenv['mtime']
 	    self.Action.varDict['filectime'] = rulesenv['ctime']
 	    self.Action.varDict['filemd5'] = rulesenv['md5']
+	    self.Action.varDict['filelastmode'] = rulesenv['lastmode']
+	    self.Action.varDict['filelastino'] = rulesenv['lastino']
+	    self.Action.varDict['filelastdev'] = rulesenv['lastdev']
+	    self.Action.varDict['filelastnlink'] = rulesenv['lastnlink']
+	    self.Action.varDict['filelastuid'] = rulesenv['lastuid']
+	    self.Action.varDict['filelastgid'] = rulesenv['lastgid']
+	    self.Action.varDict['filelastsize'] = rulesenv['lastsize']
+	    self.Action.varDict['filelastatime'] = rulesenv['lastatime']
+	    self.Action.varDict['filelastmtime'] = rulesenv['lastmtime']
+	    self.Action.varDict['filelastctime'] = rulesenv['lastctime']
+	    self.Action.varDict['filelastmd5'] = rulesenv['lastmd5']
 
 	    log.log( "<logscanning>LOGSCAN.docheck(): ID '%s' rule result=%d" % (self.ID, result), 8 )
 
@@ -140,6 +181,19 @@ class FILE(directive.Directive):
 	    else:
 		self.state.statefail()	# set state to fail before calling doAction()
 		self.doAction(Config)
+
+	    # save variables for next time
+	    self.lastmode = rulesenv['mode']
+	    self.lastino = rulesenv['ino']
+	    self.lastdev = rulesenv['dev']
+	    self.lastnlink = rulesenv['nlink']
+	    self.lastuid = rulesenv['uid']
+	    self.lastgid = rulesenv['gid']
+	    self.lastsize = rulesenv['size']
+	    self.lastatime = rulesenv['atime']
+	    self.lastmtime = rulesenv['mtime']
+	    self.lastctime = rulesenv['ctime']
+	    self.lastmd5 = rulesenv['md5']
 
 	    self.putInQueue( Config.q )     # put self back in the Queue
 
