@@ -151,7 +151,7 @@ class Directive:
 		    afunc = Config.NDict[notif].levels[level]
 		except KeyError:
 		    #print "Eddie: Error in directive.py line 148: Config.NDict[notif].levels[level] - level=%d" % level
-		    log.log( "<directive>doAction(), Error in directive.py line 148: Config.NDict[notif].levels[level] - level=%d" % level, 1 )
+		    log.log( "<directive>doAction(), Error in directive.py line 148: Config.NDict[notif].levels[level] - level=%s" % level, 1 )
 		else:
 		    #print ">>>> afunc:",afunc
 
