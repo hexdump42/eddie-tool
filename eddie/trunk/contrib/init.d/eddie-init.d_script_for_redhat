@@ -1,6 +1,6 @@
 #!/bin/sh
 ##
-## Start/stop script for Eddie ... Chris Miles <cmiles@connect.com.au> 980406
+## Start/stop script for Eddie ... Chris Miles http://chrismiles.info/ 19980406
 ##
 ## $Id$
 ##
@@ -14,7 +14,7 @@ EDDIERUN=/opt/eddie/bin/eddie_wrapper
 start() {
     echo -n $"Starting Eddie: "
     if [ -x $EDDIERUN ]; then
-	    daemon --user root "$EDDIERUN &"
+	    daemon --user root --check $EDDIERUN "$EDDIERUN &"
 	    RETVAL=$?
 	    [ $RETVAL -eq 0 ] && touch /var/lock/subsys/eddie
 	    echo
