@@ -724,7 +724,7 @@
 	##   0,15,30,45 * * * * /bin/touch /var/run/eddie/cron.test
 	FILE cron_test:
 	    file='/var/run/eddie/cron.test'
-	    rule='exists and mtime &gt; (now-15*60)'  # file modified within last 15 minutes
+	    rule='exists and mtime &lt; (now-15*60)'  # file modified over 15 minutes ago
 	    action=email("alert", "Cron test failed.", "%(file)s mtime=%(mtime)s now=%(now)s")
 
         # Make sure this file isn't a symlink
