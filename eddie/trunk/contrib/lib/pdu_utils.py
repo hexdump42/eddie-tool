@@ -1,13 +1,13 @@
 #!/opt/local/bin/python
 ## 
-## File         : pdu_encode.py 
+## File         : pdu_utils.py 
 ## 
 ## Author       : Rod Telford  <rtelford@connect.com.au>
 ##                Chris Miles  <cmiles@connect.com.au>
 ## 
 ## Date         : 980518
 ## 
-## Description  : encodes to PDU format for SMS paging
+## Description  : bit manipulations for pdu format
 ##
 ## $Id$
 ##
@@ -15,15 +15,6 @@
 import sys, string
 from math import log
 
-def encodeSM(mess):
-
-    len_i = len(mess)
-    len_h = "%02x" % len_i
-
-    eb = sto8bit(mess)    
-    enc = to7bb(eb)
-    hex_s = enc2hex(enc)
-    return "%s%s" % (len_h, hex_s)
 
 # convert an ascii string to a 8bit ascii coded bit string
 def sto8bit(mess):
@@ -94,29 +85,4 @@ def binary(num):
 
     return(string.join(out, ""))
 
-def encPhone(phno):
-    
-    phno = "%s" % phno[:-1]
-    ret = '%02x91' % (len(phno) - 1)
 
-    for i in range(1, len(phno), 2):
-	try:
-            ret = ret + "%c%c" % (phno[i+1], phno[i])
-        except IndexError:
-            ret = ret + "F%c" % (phno[i])
-	
-    return(ret)
-
-if __name__ == "__main__":
-    print "Enter Message: ",
-    m = sys.stdin.readline()
-    string.strip(m)
-    e = encodeSM(m)
-
-    print "Enter Phone: ",
-    p = sys.stdin.readline()
-    string.strip(p)
-    ps = encPhone(p)
-    print "1100%s0000AA%s" % (ps, e)
-    sys.exit(0)
-    

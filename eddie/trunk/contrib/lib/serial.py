@@ -132,7 +132,7 @@ if __name__ == "__main__":
     pf = m.lookfor("> ", 1)
 
     if (pf == 1):
-        m.write("11000b911614746811F80000AA0f54747a0e4acf416110bd3ca72b00\r\n")
+        m.write("11000b911614746811F80000AA0f74747a0e4acf416110bd3ca72b00\r\n")
         of = m.lookfor("OK", 10)
 
     if ( of == 1):
