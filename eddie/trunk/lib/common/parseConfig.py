@@ -257,6 +257,8 @@ def readFile(file, state):
     # meaningful.
     tokenize.tokenize(conf.readline, state.tokeneater)
 
+    conf.close()
+
 
 # find any DEF's in line (ie: $SPAZ) and replace with definition
 #def parseDefs(line, defDict):
