@@ -22,21 +22,18 @@ ELVINPORT=5678
 import time, types, os, sys, thread, signal, getopt
 import log
 import snpp
-#sys.path = ['/import/src/bin/elvin/dstc/lib/python', '/import/src/bin/elvin/dstc/sparc-sun-solaris2.5/lib'] + sys.path
-#sys.path = ['/import/src/bin/elvin/elvin3.12/dstc/lib/python', '/import/src/bin/elvin/elvin3.12/dstc/sparc-sun-solaris2.5/lib'] + sys.path
 
 UseElvin = 1	# Switch Elvin usage on by default
 
-#import Elvin, ElvinMisc
-from Elvin import *
-#import Elvin
+try:
+    #import Elvin, ElvinMisc
+    from Elvin import *
+    #import Elvin
+except ImportError:
+    # no Elvin modules... disable Elvin
+    UseElvin = 0
+    log.log( "<eddieElvin>ImportError: Elvin not available - disabling Elvin functions", 3 );
 
-#try:
-#	import Elvin, ElvinMisc
-#except ImportError:
-#    UseElvin = 0	# Switch Elvin usage off
-#    print "Elvin not available..."
-#    log.log( "<eddieElvin>ImportError: Elvin, ElvinMisc - Elvin not available", 2 );
 
 ################################################################
 ## Exceptions:
