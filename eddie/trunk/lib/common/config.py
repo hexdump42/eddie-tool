@@ -16,7 +16,7 @@
 import sys, string, regex, os
 
 # Eddie specific modules
-import directive, definition, log, proc, utils
+import directive, definition, log, proc, utils, eddieElvin
 
 
 ## Define exceptions
@@ -357,6 +357,48 @@ class CLASS(ConfigOption):
 	log.log( "<Config>CLASS(), class created %s:%s." % (self.name,self.hosts), 8 )
 
 
+## ELVINHOST - hostname or address of Elvin server
+class ELVINHOST(ConfigOption):
+    def __init__( self, list ):
+	apply( ConfigOption.__init__, (self,list) )
+
+	# if the last token isn't a carriage-return then we don't have the
+	# whole line yet...
+	if list[-1] != '\012':
+	    raise ParseNotcomplete
+
+	# if we don't have 4 elements ['ELVINHOST', '=', <str>, '012'] then
+	# raise an error
+	if len(list) != 4:
+	    raise ParseFailure, "ELVINHOST definition has %d tokens when expecting 4" % len(list)
+
+	# ok, value is 3rd list element
+	eddieElvin.ELVINHOST = utils.stripquote(list[2])		# set the config option
+	log.log( "<Config>ELVINHOST(), elvin host set to '%s'." % (eddieElvin.ELVINHOST), 6 )
+
+
+## ELVINPORT - tcp port of Elvin server
+class ELVINPORT(ConfigOption):
+    def __init__( self, list ):
+	apply( ConfigOption.__init__, (self,list) )
+
+	# if the last token isn't a carriage-return then we don't have the
+	# whole line yet...
+	if list[-1] != '\012':
+	    raise ParseNotcomplete
+
+	# if we don't have 4 elements ['ELVINPORT', '=', <int>, '012'] then
+	# raise an error
+	if len(list) != 4:
+	    raise ParseFailure, "ELVINPORT definition has %d tokens when expecting 4" % len(list)
+
+	# ok, value is 3rd list element
+	eddieElvin.ELVINPORT = int(list[2])		# set the config option
+	log.log( "<Config>ELVINPORT(), elvin port set to '%d'." % (eddieElvin.ELVINPORT), 6 )
+
+
+
+
 ##
 ## This is a list of known keywords we accept in Eddie config/rules files
 ##
@@ -393,6 +435,8 @@ settings = {
 		"ADMIN_NOTIFY"	: ADMIN_NOTIFY,
 		"INTERPRETERS"	: INTERPRETERS,
 		"CLASS"		: CLASS,
+		"ELVINHOST"	: ELVINHOST,
+		"ELVINPORT"	: ELVINPORT,
            }
 
 ## Join all the above dictionaries to make the total keywords dictionary

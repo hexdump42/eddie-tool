@@ -14,6 +14,11 @@
 
 ################################################################
 
+## Default Elvin server hostname and port.  These are overridden by ELVINHOST
+##  and ELVINPORT config file options.
+ELVINHOST='elvin'
+ELVINPORT=5678
+
 import time, types, os, sys, thread, signal, getopt
 import log
 import snpp
@@ -41,8 +46,7 @@ ElvinError = 'ElvinError'
 class elvinConnection:
     """A shared object which maintains a single connection to the Elvin server."""
 
-    #def __init__(self, host='elvin.connect.com.au', port=5678):
-    def __init__(self, host='elvin.connect.com.au', port=50000):
+    def __init__(self, host=ELVINHOST, port=ELVINPORT):
 	self.host = host
 	self.port = port
 

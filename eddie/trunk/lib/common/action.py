@@ -383,7 +383,7 @@ class action:
 	    log.log( "<action>elvindb(), Error, eddieElvin.elvindb() could not connect", 2 )
 	    return
 
-	print "created elvindb() connection to elvin"
+	#print "created elvindb() connection to elvin"
 	retval = e.send(table, self.storedict)
 
 	# kill elvin connection (I hope?!)
