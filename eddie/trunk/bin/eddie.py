@@ -294,8 +294,11 @@ def buildCheckQueue(q, Config):
 		log.log( "<eddie>buildCheckQueue(): adding to Queue: %s" % (d), 8 )
 		q.put( (d,0) )
 
+    # chris 2004-09-20: throw away any domain parts of hostname; group names can't contain dots
+    shorthostname = log.hostname.split('.')[0]
+
     for c in Config.groups:
-	if c.name == log.hostname or (c.name in Config.classDict.keys() and log.hostname in Config.classDict[c.name]):
+	if c.name == shorthostname or (c.name in Config.classDict.keys() and shorthostname in Config.classDict[c.name]):
 	    log.log( "<eddie>buildCheckQueue(): Adding checks from group %s to queue" % (c.name), 7 )
 	    buildCheckQueue(q, c)
 	else:
