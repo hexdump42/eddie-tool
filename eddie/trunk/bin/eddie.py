@@ -22,10 +22,16 @@ ewd = os.path.split(sys.argv[0])[0]
 fullp = os.path.join(cwd, ewd)
 basedir = os.path.join(fullp, '..')
 
-commonlibdir = os.path.join(basedir, 'lib/common')
-oslibdir = os.path.join(basedir, 'lib/sparc-sun-solaris2.5')
+# Determine OS type dynamically...
+syscmd = os.popen( basedir + '/bin/systype', 'r' )
+systype = syscmd.readline()[:-1]
+syscmd.close()
+if systype == '':
+    os.stdout.write( 'Eddie: could not determine system type.\n' )
 
-# TODO : determine OS type dynamically...
+commonlibdir = os.path.join(basedir, 'lib/common')
+oslibdir = os.path.join(basedir, 'lib/' + systype)
+
 sys.path = [commonlibdir, oslibdir] + sys.path
 
 # Python common modules
