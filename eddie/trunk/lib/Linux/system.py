@@ -29,28 +29,28 @@
   a generic Linux system.
   The following statistics are currently collected and made available to the
   appropriate directives (e.g., SYS):
-  
-  loadavg1	- 1min load average
-  loadavg5	- 5min load average
-  loadavg15	- 15min load average
-  uptime	- uptime in seconds
-  uptimeidle	- idle uptime in seconds
-  cpu_user	- total cpu in user space
-  cpu_nice	- total cpu in user nice space
-  cpu_system	- total cpu in system space
-  cpu_idle	- total cpu in idle thread
-  cpu%d_user	- per cpu in user space (e.g., cpu0, cpu1, etc)
-  cpu%d_nice	- per cpu in user nice space (e.g., cpu0, cpu1, etc)
-  cpu%d_system	- per cpu in system space (e.g., cpu0, cpu1, etc)
-  cpu%d_idle	- per cpu in idle thread (e.g., cpu0, cpu1, etc)
-  pages_in	- pages read in
-  pages_out	- pages written out
-  pages_swapin	- swap pages read in
-  pages_swapout	- swap pages written out
-  interrupts	- number of interrupts received
-  contextswitches - number of context switches
-  boottime	- time of boot (epoch)
-  processes	- number of processes started (I think?)
+
+  loadavg1		- 1min load average (float)
+  loadavg5		- 5min load average (float)
+  loadavg15		- 15min load average (float)
+  ctr_uptime		- uptime in seconds (float)
+  ctr_uptimeidle	- idle uptime in seconds (float)
+  ctr_cpu_user		- total cpu in user space (int)
+  ctr_cpu_nice		- total cpu in user nice space (int)
+  ctr_cpu_system	- total cpu in system space (int)
+  ctr_cpu_idle		- total cpu in idle thread (int)
+  ctr_cpu%d_user	- per cpu in user space (e.g., cpu0, cpu1, etc) (int)
+  ctr_cpu%d_nice	- per cpu in user nice space (e.g., cpu0, cpu1, etc) (int)
+  ctr_cpu%d_system	- per cpu in system space (e.g., cpu0, cpu1, etc) (int)
+  ctr_cpu%d_idle	- per cpu in idle thread (e.g., cpu0, cpu1, etc) (int)
+  ctr_pages_in		- pages read in (int)
+  ctr_pages_out		- pages written out (int)
+  ctr_pages_swapin	- swap pages read in (int)
+  ctr_pages_swapout	- swap pages written out (int)
+  ctr_interrupts	- number of interrupts received (int)
+  ctr_contextswitches 	- number of context switches (int)
+  ctr_processes		- number of processes started (I think?) (int)
+  boottime		- time of boot (epoch) (int)
 """
 
 # Python modules
@@ -107,7 +107,7 @@ class system:
 	    self.hash['loadavg5'] = float(loadavg5)
 	    self.hash['loadavg15'] = float(loadavg15)
 
-	# Get uptime and idle-uptime from /proc
+	# Get uptime and idle-uptime counters from /proc
 	try:
 	    fp = open( '/proc/uptime', 'r' )
 	except IOError:
@@ -116,8 +116,8 @@ class system:
 	    line = fp.read()
 	    fp.close()
 	    ( uptime, uptimeidle ) = string.split( line )
-	    self.hash['uptime'] = float(uptime)
-	    self.hash['uptimeidle'] = float(uptimeidle)
+	    self.hash['ctr_uptime'] = float(uptime)
+	    self.hash['ctr_uptimeidle'] = float(uptimeidle)
 
 	# Get system statistics from /proc
 	try:
@@ -130,19 +130,19 @@ class system:
 		if line[:4] == "cpu ":
 		    # Total CPU stats
 		    ( foo, user, nice, system, idle ) = string.split(line)
-		    self.hash['cpu_user'] = int(user)
-		    self.hash['cpu_nice'] = int(nice)
-		    self.hash['cpu_system'] = int(system)
-		    self.hash['cpu_idle'] = int(idle)
+		    self.hash['ctr_cpu_user'] = int(user)
+		    self.hash['ctr_cpu_nice'] = int(nice)
+		    self.hash['ctr_cpu_system'] = int(system)
+		    self.hash['ctr_cpu_idle'] = int(idle)
 		elif re.match( '^cpu([0-9]+).*', line ):
 		    # Stats for each CPU
 		    m = re.match( '^cpu([0-9]+).*', line )
 		    cpunum = int(m.group(1))
 		    ( foo, user, nice, system, idle ) = string.split(line)
-		    self.hash['cpu%d_user'%cpunum] = int(user)
-		    self.hash['cpu%d_nice'%cpunum] = int(nice)
-		    self.hash['cpu%d_system'%cpunum] = int(system)
-		    self.hash['cpu%d_idle'%cpunum] = int(idle)
+		    self.hash['ctr_cpu%d_user'%cpunum] = int(user)
+		    self.hash['ctr_cpu%d_nice'%cpunum] = int(nice)
+		    self.hash['ctr_cpu%d_system'%cpunum] = int(system)
+		    self.hash['ctr_cpu%d_idle'%cpunum] = int(idle)
 		elif line[:5] == "disk ":
 		    # TODO - need info on meaning
 		    pass
@@ -161,21 +161,21 @@ class system:
 		elif line[:5] == "page ":
 		    # Pages in/out
 		    ( foo, pagein, pageout ) = string.split(line)
-		    self.hash['pages_in'] = int(pagein)
-		    self.hash['pages_out'] = int(pageout)
+		    self.hash['ctr_pages_in'] = int(pagein)
+		    self.hash['ctr_pages_out'] = int(pageout)
 		elif line[:5] == "swap ":
 		    # Swap Pages in/out
 		    ( foo, swapin, swapout ) = string.split(line)
-		    self.hash['pages_swapin'] = int(swapin)
-		    self.hash['pages_swapout'] = int(swapout)
+		    self.hash['ctr_pages_swapin'] = int(swapin)
+		    self.hash['ctr_pages_swapout'] = int(swapout)
 		elif line[:5] == "intr ":
 		    # Number of interrupts - only using first number
 		    ints = string.split(line)[1]
-		    self.hash['interrupts'] = int(ints)
+		    self.hash['ctr_interrupts'] = int(ints)
 		elif line[:5] == "ctxt ":
 		    # Number of context switches
 		    ( foo, ctxt ) = string.split(line)
-		    self.hash['contextswitches'] = int(ctxt)
+		    self.hash['ctr_contextswitches'] = int(ctxt)
 		elif line[:6] == "btime ":
 		    # boot time, in seconds since the epoch (January 1, 1970)
 		    ( foo, btime ) = string.split(line)
@@ -183,7 +183,7 @@ class system:
 		elif line[:10] == "processes ":
 		    # number of processes started (I presume?)
 		    ( foo, processes ) = string.split(line)
-		    self.hash['processes'] = int(processes)
+		    self.hash['ctr_processes'] = int(processes)
 		line = fp.readline()
 		# any other stats are ignored.
 
