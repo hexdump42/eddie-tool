@@ -807,5 +807,5 @@ class STORE(directive.Directive):
 
 
 ##
-## END - directive.py
+## END - common.py
 ##

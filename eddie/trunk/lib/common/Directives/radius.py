@@ -57,7 +57,7 @@ class RADIUS(directive.Directive):
 	       user='bob@domain.name'
 	       password='b0bm@t3'
 	       rule='not passed'
-	       action='email("alert", "radius FAILED to %(radiushost)s:%(radiusport)d")'
+	       action='email("alert", "radius FAILED to %(host)s:%(port)d")'
     """
 
     def __init__(self, toklist):

@@ -43,7 +43,7 @@ class LOGSCAN(directive.Directive):
     Sample rule:
        LOGSCAN messages: file="/var/log/messages"
                          regex=".*error.*"
-                         action="email('alert', 'Log match', '%(logscanmatch)s')"
+                         action="email('alert', 'Log match', '%(lines)s')"
 
     Optional arguments:
 	negate=true	# only lines NOT matching regex will cause action
