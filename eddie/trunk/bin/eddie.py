@@ -31,8 +31,11 @@ try:
     systype = syscmd.readline()[:-1]
     syscmd.close()
 except os.error:
+    systype = ''
+
+if systype == '':
     # New system type determination (preferred)
-    syscmd = os.popen( '/bin/uname -psr' )
+    syscmd = os.popen( '/bin/uname -msr' )
     systype = syscmd.readline()[:-1]
     syscmd.close()
     systype = re.sub( ' ', '', systype )	# strip spaces
