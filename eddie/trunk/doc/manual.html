@@ -510,13 +510,15 @@
     <li> <b><a href="#SP">SP</a></b> - define a local service port checking rule.
     <li> <b><a href="#STORE">STORE</a></b> - define a data storage rule.
     <li> <b><a href="#SYS">SYS</a></b> - perform system statistics checks.
+    <li> <b><a href="#DISK">DISK</a></b> - perform disk I/O statistics checks.
+    <li> <b><a href="#TAPE">TAPE</a></b> - perform tape I/O statistics checks.
    </ul>
 
    <i>Network Monitoring:</i>
    <ul>
     <li> <b><a href="#HTTP">HTTP</a></b> - perform remote HTTP/HTTPS tests.
     <li> <b><a href="#PING">PING</a></b> - network host ping testing.
-    <li> <b><a href="#POP3TIMING">POP3TIMING</a></b> - time & check POP3 connections.
+    <li> <b><a href="#POP3TIMING">POP3TIMING</a></b> - time &amp; check POP3 connections.
     <li> <b><a href="#PORT">PORT</a></b> - remote TCP port checking rule.
     <li> <b><a href="#RADIUS">RADIUS</a></b> - perform radius authentication tests.
     <li> <b><a href="#SNMP">SNMP</a></b> - retrieve and test SNMP data from remote hosts and devices.
@@ -1942,6 +1944,94 @@
    </p>
 
 
+   <p>
+    <b><a name="DISK">DISK</a></b><br>
+
+    The DISK directive provides an interface to the kernel's disk I/O statistics.
+    Simple or complex rules can be written using these statistics.
+    This requires the data collector diskdevice:DiskStatistics
+    <i>(which is only available on Solaris at time of writing)</i>.
+
+    <br><br>
+    Directive-specific arguments:
+    <ul>
+     <li> device: the disk device name (on Solaris this will be the name used by kstat, e.g. md20 or sd100)
+    </ul>
+
+    Rule Variables:
+    <ul>
+     <li> The variables available in this name-space will be many of the 
+     statistics provided by the kernel.  
+     <br>
+     On Solaris these are, at least: nread, nwritten, reads, writes.
+     For more details look at the output of: <code>/usr/bin/kstat -p -c disk</code>
+    </ul>
+
+    Action Variables:
+    <ul>
+     <li> All the rule variables as usual.
+     <li> <i>Examples:</i>
+     <pre>
+	 action=email("alert", "Disk %(device)s : rbytes=%(nread)s wbytes=%(nwritten)s")
+     </pre>
+    </ul>
+
+    Directive Examples:</i>
+    <pre>
+        # /dev/md/dsk/d20 == /var : send read/write counters to RRD
+        DISK md20_thruput:
+            device='md20'
+            scanperiod='5m'
+            rule='1'        # always perform action
+            action='elvinrrd("disk-%(h)s_%(device)s", "rbytes=%(nread)s", "wbytes=%(nwritten)s")'
+    </pre>
+   </p>
+
+
+
+   <p>
+    <b><a name="TAPE">TAPE</a></b><br>
+
+    The TAPE directive provides an interface to the kernel's tape I/O statistics.
+    Simple or complex rules can be written using these statistics.
+    This has almost exactly the same functionality as the DISK directive.
+    This requires the data collector diskdevice:TapeStatistics
+    <i>(which is only available on Solaris at time of writing)</i>.
+
+    <br><br>
+    Directive-specific arguments:
+    <ul>
+     <li> device: the tape device name (on Solaris this will be the name used by kstat, e.g. st65)
+    </ul>
+
+    Rule Variables:
+    <ul>
+     <li> The variables available in this name-space will be many of the 
+     statistics provided by the kernel.  
+     <br>
+     On Solaris these are, at least: nread, nwritten, reads, writes.
+     For more details look at the output of: <code>/usr/bin/kstat -p -c tape</code>
+    </ul>
+
+    Action Variables:
+    <ul>
+     <li> All the rule variables as usual.
+     <li> <i>Examples:</i>
+     <pre>
+	 action=email("alert", "Tape %(device)s : rbytes=%(nread)s wbytes=%(nwritten)s")
+     </pre>
+    </ul>
+
+    Directive Examples:</i>
+    <pre>
+        # st65 == TAPE : send tape read/write counters to RRD
+        TAPE st65_thruput:
+            device='st65'
+            scanperiod='5m'
+            rule='1'        # always perform action
+            action=elvinrrd("tape-%(h)s_%(device)s", "rbytes=%(nread)s", "wbytes=%(nwritten)s")
+    </pre>
+   </p>
 
 
 
@@ -2271,7 +2361,7 @@
 
   <hr>
   <p align=right><font size=-2 color=blue>
-   &copy; <a href="mailto:chris@psychofx.com">Chris Miles</a> 2002
+   &copy; <a href="http://chrismiles.info/">Chris Miles</a> 2002-2004
   </font></p>
 
   $Id$
