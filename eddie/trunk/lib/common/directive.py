@@ -238,6 +238,8 @@ class Directive:
 	self.history_size = 0	# keep no history by default
 	self.history = None	# keep historical data for checks, if required
 
+	self.excludehosts = []	# chris 2002-12-24: hosts to exclude from directive execution
+
 
     def request_collector(self):
 	"""
@@ -472,6 +474,16 @@ class Directive:
 		    self.checkdependson.append( directive )
 		else:
 		    raise ParseFailure, "Directive %s, referred to in checkdependson, not found"%(d)
+
+	# chris 2002-12-24: excludehosts parameter to exclude specific hosts;
+	#	Requires a comma-separated list of hostnames.
+	try:
+	    excludehosts = string.split(self.args.excludehosts, ',')
+	except AttributeError:
+	    pass	# no excludehosts given
+	else:
+	    for host in excludehosts:
+		self.excludehosts.append( string.strip(host) )
 
 	# Set any default action variables
 	if 'rule' in dir(self.args):

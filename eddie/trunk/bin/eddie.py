@@ -280,8 +280,12 @@ def buildCheckQueue(q, Config):
 	# if directive template is 'self', do not schedule it
 	d = Config.groupDirectives[i]
 	if d.args.template != 'self':
-	    log.log( "<eddie>buildCheckQueue(): adding to Queue: %s" % (d), 8 )
-	    q.put( (d,0) )
+	    # chris 2002-12-24: skip directives specifying this hostname in excludehosts parameter
+	    if log.hostname in d.excludehosts:
+		log.log( "<eddie>buildCheckQueue(): skipped by excludehosts: %s" % (d), 8 )
+	    else:
+		log.log( "<eddie>buildCheckQueue(): adding to Queue: %s" % (d), 8 )
+		q.put( (d,0) )
 
     for c in Config.groups:
 	if c.name == log.hostname or (c.name in Config.classDict.keys() and log.hostname in Config.classDict[c.name]):

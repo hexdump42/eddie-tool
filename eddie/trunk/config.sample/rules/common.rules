@@ -179,14 +179,17 @@ PING hostalive:
 
 
 # Alert if load-average exceeds 2.00
+# Exclude directive on hosts named 'crazy' and 'mental'
+# Customise the console message for this directive
 SYS loadavg5:
     rule="loadavg5 > 2.00"
     action=email('alert', '%(h)s loadavg: %(loadavg5).02f')
     scanperiod='5m'
+    excludehosts='crazy,mental'
     console="%(state)s loadavg5=%(loadavg5).02f"
 
 
-# Check out mail server is responding
+# Check our mail server is responding
 PORT smtpcheck:
     host='my.mail.server'
     port=25
