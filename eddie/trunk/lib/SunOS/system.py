@@ -361,6 +361,8 @@ class system:
 	    log.log( "<system>system._getuptime(), error calling '%s'"%(uptime_cmd), 5 )
 	    return None
 
+	uptime_dict = {}
+
 	uptime_re = ".+up (?P<uptime>.+),\s*(?P<users>[0-9]+) users?,\s+ load average:\s+(?P<loadavg1>[0-9.]+),\s*(?P<loadavg5>[0-9.]+),\s*(?P<loadavg15>[0-9.]+)"
 	inx = re.compile( uptime_re )
 	sre = inx.search( output )
