@@ -1,5 +1,7 @@
 Things TODO for Eddie!
 
+- PROC should check ALL named processes, not just first process it finds.
+
 - Remove dependence on bin/systype.  Determine system type internally.
 - Double checking for Port directive
 
