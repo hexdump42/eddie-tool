@@ -104,6 +104,22 @@ def SigHandler( sig, frame ):
 	log.log( '<eddie>SigHandler(), unknown signal received, %d - ignoring' % sig, 3 )
 
 
+def countFDs():
+    """Count number of file descriptors in use."""
+
+    import errno
+    fdcnt = 0
+    for fd in range( 0, 1024 ):
+	try:
+	    stat = os.fstat( fd )
+	    fdcnt = fdcnt + 1
+	except os.error, ( errnum, str ):
+	    if errnum != errno.EBADF:
+		raise os.error, ( errnum, str )
+
+    return fdcnt
+
+
 ## Perform checks
 def check(Config):
     # perform checks in current config group
@@ -224,6 +240,11 @@ def main():
     # Main Loop
     while 1:
 	try:
+
+	    # Count fds in use - for debugging
+	    numfds = countFDs()
+	    print "%d FDs in use." % (numfds)
+	    log.log( "main(): FDs in use = %d." % (numfds), 7 )
 
 	    # check if any config/rules files have been modified
 	    # if so, re-read config
