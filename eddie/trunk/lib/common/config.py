@@ -191,6 +191,15 @@ class Config:
 	return None
 
 
+    def set_elvin(self, elvin):
+	"""Store the Elvin connection object, and pass through to other
+	objects which need it (e.g., action module)."""
+
+	self.elvin = elvin
+	import action
+	action.elvin = elvin
+
+
 ##
 ## The base configoption class.  Derive all config options from this base class.
 ##

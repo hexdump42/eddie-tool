@@ -3,7 +3,7 @@
 ## 
 ## Author       : Chris Miles  <chris@psychofx.com>
 ## 
-## Date         : 20010527
+## Start Date   : 20010527
 ## 
 ## Description  : Elvin4 messaging interface
 ##
@@ -24,252 +24,220 @@
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 ########################################################################
 
-################################################################
-
-## Default Elvin server settings.  These are overridden by ELVINURL
-##  and ELVINSCOPE config file options.
-ELVINURL='elvin://elvin'
-ELVINSCOPE='elvin'
-
-
 ## Imports: Python
-import time, sys, traceback, threading
+import time, sys, traceback, threading, Queue
 ## Imports: Eddie
 import log
 
 
-UseElvin = 1	# Switch Elvin usage on by default
+## Default Elvin server settings.  These are overridden by ELVINURL
+##  and ELVINSCOPE config file options.
+##  Default to the public Elvin server at DSTC.
+ELVINURL='elvin://elvin.dstc.edu.au'
+ELVINSCOPE=''
 
+
+## Constants
+ANYTIME=-1
+BLOCK=1
+
+
+## Globals
+UseElvin = 1	# Switch Elvin usage on by default; disabled if modules not found
+
+
+## Import elvin python modules if possible
 try:
     import elvin
-    global ec			# single global Elvin4 connection object
-    ec = None
 except ImportError:
     # no Elvin modules... disable Elvin
     UseElvin = 0
-    log.log( "<eddieElvin4> ImportError: Elvin4 not available - disabling Elvin functions", 5 )
 
 
 ################################################################
 ## Exceptions:
 ElvinError = 'ElvinError'
+ElvinInitError = 'ElvinInitError'
 
 
-class elvinConnection:
-    """A shared object which maintains a single connection to the Elvin server."""
+################################################################
+## Message class
+class Message:
+    """Defines an Elvin message object which will be placed in the
+    message queue waiting to be sent. Normally it will be sent instantly
+    but it is possible (like when Elvin server is down or network is
+    unavailable) that the message could be sent some time after being
+    inserted into the queue.
+    Besides the notification message itself, this object contains a
+    time parameter defining how long after being inserted into the
+    queue the message is still valid for sending."""
 
-    def __init__(self, url, scope):
-	self.url = url
-	self.scope = scope
+    def __init__(self, emsg, validity_time):
+	self.emsg = emsg			# the notification message
+	self.validity_time = validity_time	# message validity time (minutes)
+	self.timestamp = time.time()		# store object creation time
 
-	if UseElvin == 0:
-	    raise ElvinError, "Elvin not available"
 
-	if self.url != "":
-	    constr = self.url		# use specific URL
-	elif self.scope != "":
-	    constr = self.scope		# use Elvin Scope
+    def __str__(self):
+	string = str(self.emsg)
+	return(string)
+
+
+    def time_valid(self):
+	"""Calculate if message is still valid to be sent based on when
+	it was created (self.timestamp) and the validity time
+	(self.validity_time) setting."""
+
+	if self.validity_time == ANYTIME:
+	    return 1		# don't care when message is sent
+
+	now = time.time()
+	if (now-self.timestamp) <= self.validity_time*60.0:
+	    return 1		# message still valid
 	else:
-	    constr = ""			# use server discovery
-
-	try:
-	    log.log("<eddieElvin4>elvinConnection, Attempting to connect to Elvin, '%s'" %(constr), 6)
-	    self.elvinc = elvin.connect(constr)
-
-	except:
-	    log.log("<eddieElvin4>elvinConnection, Connection to elvin failed. Tried to connect with '%s'. Error: %s, %s" %(constr, sys.exc_type, sys.exc_value), 3)
-	    raise ElvinError, "Connection failed to %s" % (constr)
+	    return 0		# no longer valid to send
 
 
-    def _exit(self):
-	elvinc.close()
 
-
-    def _destroy(self):
-	self._exit()
-
-
-elvin_connect_semaphore = threading.Semaphore()
-elvin_notify_semaphore = threading.Semaphore()
-
-class eddieElvin:
+################################################################
+## Elvin class
+class Elvin:
+    """Sets up Elvin connections if possible and starts dedicated Elvin
+    thread to handle all messaging."""
 
     def __init__(self):
-	if UseElvin:
-	    self.connect()		# make an Elvin connection
-	else:
-	    log.log( "<eddieElvin4>eddieElvin, Elvin functionality disabled - probably because modules do not exist", 5 )
+
+	if UseElvin == 0:
+	    raise ElvinInitError, "Elvin modules not found"
+
+	self.eq = Queue.Queue()		# Elvin message queue
+
+	#-- create Elvin client using ThreadedLoop
+	self.client = elvin.client(elvin.ThreadedLoop)
+
+
+    def startup(self):
+	"""Start the Elvin management thread."""
+
+	self.ethread = threading.Thread(group=None, target=self.main, name='Elvin', args=(), kwargs={})
+	self.ethread.setDaemon(1)	# die automatically when Main thread dies
+	self.ethread.start()		# start the thread running
+
+
+    def main(self):
+	"""The Elvin management thread."""
+
+	while 1:
+	    self.connect()		# open Elvin connection
+	    self.subscribe()		# setup any subscriptions
+
+	    # Loop to watch message queue for any Elvin notifications to be sent
+	    # from other Elvin functions or actions.
+	    # This means no other threads should block when sending Elvin notifications.
+	    while self.connection.is_open():
+		m = self.eq.get(BLOCK)	# get next message or wait for one
+		if m.time_valid():
+		    log.log("<eddieElvin4>Elvin.main(): Sending msg from queue, %s"%(m), 9)
+		    try:
+			self.connection.notify(m.emsg)
+		    except elvin.ElvinConnectNotReady, details:
+			log.log("<eddieElvin4>Elvin.main(): Elvin exception, %s, msg %s not sent"%(details, m), 3)
+			self.eq.put(m)	# put msg back in queue for re-try
+		else:
+		    log.log("<eddieElvin4>Elvin.main(): message no longer valid, discarding %s"%(m), 9)
+
+	    log.log("<eddieElvin4>Elvin.main(): Elvin connection closed...  reconnecting", 4)
 
 
     def connect(self):
-	"""Try to make an Elvin connection."""
+	"""Create an Elvin connection, using either a specified Elvin Scope
+	or an Elvin URL."""
 
-	log.log( "<eddieElvin4>eddieElvin.connect(), acquiring semaphore lock...", 6 )
-	elvin_connect_semaphore.acquire()	# semaphore lock around Elvin connect
-						# only 1 thread connects at a time
-	log.log( "<eddieElvin4>eddieElvin.connect(), got semaphore lock", 6 )
+	self.url = ELVINURL		# as set by eddie.cf config
+	self.scope = ELVINSCOPE
 
-	global ec
+	# Create Elvin connection
+	self.connection = self.client.connection()
+	self.connection.set_discovery(1)	# enable auto-discovery
 
-	maxtries = 3			# max number of attempts to connect
-
-	tries = 0
-	tryagain = 1
-	while tryagain:
-	    tryagain = 0
-	    tries = tries + 1
-	    if tries > maxtries:
-		break
-
-	    try:
-		if ec == None:		# if not set, try to connect
-		    ec = elvinConnection( url=ELVINURL, scope=ELVINSCOPE )
-		    log.log( "<eddieElvin4>eddieElvin.connect(), Connected to Elvin server, url='%s' scope='%s'" % (ELVINURL, ELVINSCOPE), 6 )
-	    except elvin.errors.ElvinConnectNotReady:
-		log.log( "<eddieElvin4>eddieElvin.connect(), received ElvinConnectNotReady - trying again", 5 )
-		tryagain = 1
-		time.sleep(5)
-	    except:
-		e = sys.exc_info()
-		tb = traceback.format_list( traceback.extract_tb( e[2] ) )
-		log.log( "<eddieElvin4>eddieElvin.connect(), connect failed: %s, %s, %s." % (e[0], e[1], tb), 5 )
-		elvin_connect_semaphore.release()	# release lock
-		return 1
-
-	if not ec:
-	    log.log( "<eddieElvin4>eddieElvin.connect(), Could not connect to Elvin server", 4 )
-
-	log.log( "<eddieElvin4>eddieElvin.connect(), releasing semaphore lock", 6 )
-	elvin_connect_semaphore.release()	# release lock
-
-
-    def reconnect(self):
-	global ec
-
-	log.log( "<eddieElvin4>eddieElvin.reconnect(), attempting to reconnect to server", 6 )
-	try:
-	    ec.elvinc.close()	# try to close connection, just in case
-	except:
-	    pass
-
-	ec = None
-	self.connect()
-
-
-    def notify(self, msg):
-        """Send an Elvin notification.  msg must be a dictionary."""
-
-	if UseElvin == 0:
-	    log.log( "<eddieElvin4>eddieElvin.notify(), Elvin is disabled - request ignored", 5 )
-	    return 2
-
-	elvin_connect_semaphore.acquire()	# semaphore lock around Elvin notify
-
-	global ec
-
-	if not ec:
-	    # if not connected to Elvin, try to connect again
-	    log.log( "<eddieElvin4>eddieElvin.notify(), not connected - calling connect()", 6 )
-	    self.connect()
-
-	if ec:
-	    maxtries = 3			# max number of attempts to try
-
-	    tries = 0
-	    tryagain = 1
-	    while tryagain:
-		tryagain = 0
-		tries = tries + 1
-		if tries > maxtries:
-		    break
-
-		try:
-		    ec.elvinc.notify( nfn=msg )
-		except elvin.errors.ElvinConnectNotReady:
-		    log.log( "<eddieElvin4>eddieElvin.notify(), received ElvinConnectNotReady - trying again", 5 )
-		    tryagain = 1
-		    time.sleep(5)
-		except:
-		    e = sys.exc_info()
-		    tb = traceback.format_list( traceback.extract_tb( e[2] ) )
-		    log.log( "<eddieElvin4>eddieElvin.notify(), notify failed: %s, %s, %s." % (e[0], e[1], tb), 4 )
-		    elvin_connect_semaphore.release()	# semaphore lock around Elvin notify
-		    return 1
-
-	    if tries > maxtries:
-		log.log( "<eddieElvin4>eddieElvin.notify(), too many retries - trying to reconnect", 5 )
-		self.reconnect()
-		elvin_connect_semaphore.release()	# semaphore lock around Elvin notify
-		return 1
-
+	# Create the connect string; if a URL is specified then use that
+	# otherwise use the Scope if available, otherwise use server
+	# discovery (see Elvin documentation for details).
+	if self.url != "":
+	    self.connection.insert_url(0, self.url)
+	    self.connect_str = self.url
+	elif self.scope != "":
+	    self.connection.set_scope(self.scope)
+	    self.connect_str = self.scope
 	else:
-	    log.log( "<eddieElvin4>eddieElvin.notify(), no connection - cannot send Elvin message", 5 )
-	    self.reconnect()
-	    elvin_connect_semaphore.release()	# semaphore lock around Elvin notify
-	    return 1
+	    self.connect_str = '*'
 
-	elvin_connect_semaphore.release()	# semaphore lock around Elvin notify
+	# Now open connection to server
+	log.log("<eddieElvin4>Elvin.connect(): Opening connection to Elvin, '%s'" %(self.connect_str), 8)
+	self.connection.open()
+	log.log("<eddieElvin4>Elvin.connect(): Connected to Elvin, '%s'" %(self.connect_str), 5)
+
+	return 1
+
+
+    def notify(self, emsg, validity_time=ANYTIME):
+	"""Add Elvin notification message to message queue to be sent by
+	main Elvin management thread as soon as possible."""
+
+	m = Message(emsg, validity_time)
+	self.eq.put(m)
 
 	return 0
 
 
-    def send(self, text='test'):
-	"""A template send() function.  Override this method to customise it."""
-
-	msg = { 'TICKERTAPE': 'Eddie',
-		'TICKERTEXT': text,
-		      'USER': log.hostname,
-		   'TIMEOUT': 10
-	      }
-
-	r = self.notify( msg )	# Send Elvin message
-
-	if r != 0:
-	    print "Elvin send failed..."
+    def subscribe(self):
+	# Not in use, yet
+	pass
+        #-- add subscription
+	#substr = 'require(TEST)'
+        #sub = self.connection.subscribe(substr, 1, None)
+        #sub.add_listener(self._sub_cb, self.connection)
+        #sub.register()
 
 
-
-class elvinTicker(eddieElvin):
-    """Send a standard Elvin tickertape message to the Tickertape group 'Eddie'.
-       The Tickertape user will be the hostname of the machine sending the message.
-    """
-
-    def __init__(self):
-        apply( eddieElvin.__init__, (self,) )
+    def _sub_cb(self, sub, nfn, insec, rock):
+	# Not in use, just a sample
+        test = nfn['TEST']
 
 
-    def sendmsg(self, msg):
-	"""Send an Elvin Tickertape message.  msg is the text string to send."""
+
+    ####################################################
+    ## Public methods for Eddie functions/actions to use
+
+    def Ticker(self, msg, timeout):
+	"""Send a standard Elvin tickertape message to the Tickertape group 'Eddie'.
+	The Tickertape user will be the hostname of the machine sending the message.
+	msg is the text string to send (TICKERTEXT).
+	"""
 
 	elvinmsg = { 'TICKERTAPE': 'Eddie',
 		     'TICKERTEXT': msg,
 			   'USER': log.hostname,
-			'TIMEOUT': 10, 
-		      'MIME_TYPE': 'x-elvin/slogin',
-		      'MIME_ARGS': log.hostname
+			'TIMEOUT': timeout
+#		      'MIME_TYPE': 'x-elvin/slogin',
+#		      'MIME_ARGS': log.hostname
 		   }
 
-	r = self.notify( elvinmsg )	# Send Elvin message
+	r = self.notify( elvinmsg, validity_time=10 )	# Send Elvin message, within 10 mins
 
 	if r != 0:
-	    log.log( "<eddieElvin4>elvinTicker.sendmsg(), notify failed, msg '%s'" % (msg), 5 )
-	    return r	# failed
-
+	    # failed
+	    log.log( "<eddieElvin4>Elvin.Ticker(), notify failed, msg: %s" % (msg), 5 )
 	else:
-	    log.log( "<eddieElvin4>elvinTicker.sendmsg(), notify successful, msg '%s'" % (msg), 6 )
-	    return r	# succeeded
+	    # succeeded
+	    log.log( "<eddieElvin4>Elvin.Ticker(), msg added to queue, msg: %s" % (msg), 6 )
+
+	return r
 
 
-class elvindb(eddieElvin):
-    """Send a dictionary through Elvin to a listener process which should store
-       the data into a database.  Supports Elvin4+ only."""
-
-    def __init__(self):
-        apply( eddieElvin.__init__, (self,) )
-
-
-    def send(self, table, data):
-	"""Send the dictionary, aimed for table 'table' in db.
+    def elvindb(self, table, data):
+	"""Send a dictionary through Elvin to a listener process which should store
+        the data into a database.
 	   - 'table' is a string specifying which table to insert the data into.
 	   - 'data' is a dictionary of data.
 	"""
@@ -305,24 +273,19 @@ class elvindb(eddieElvin):
 	r = self.notify( edict )	# Send Elvin message
 
 	if r != 0:
-	    log.log( "<eddieElvin4>elvinTicker.elvindb(), notify failed, table %s" % (table), 5 )
-	    return r	# failed
-
+	    # failed
+	    log.log( "<eddieElvin4>Elvin.elvindb(): notify failed, table:%s" % (table), 5 )
 	else:
-	    log.log( "<eddieElvin4>elvinTicker.elvindb(), notify successful table %s" % (table), 6 )
-	    return r	# succeeded
+	    log.log( "<eddieElvin4>Elvin.elvindb(): message added to queue, table:%s" % (table), 6 )
+
+	return r
 
 
-class elvinrrd(eddieElvin):
-    """Send a dictionary through Elvin to a listener process which should store
-       the data into an RRDtool database.  Supports Elvin4+ only."""
-
-    def __init__(self):
-        apply( eddieElvin.__init__, (self,) )
-
-
-    def send(self, key, data):
-	"""Send the message.
+    def elvinrrd(self, key, data):
+	"""Send a dictionary through Elvin to a listener process which should store
+        the data into an RRDtool database.
+	 - 'key' will be matched by the elvinrrd consumer
+	 - 'data' is a dictionary of data to be sent in the message
 	"""
 
 	# Create db entry creation 'command'
@@ -333,12 +296,13 @@ class elvinrrd(eddieElvin):
 	r = self.notify( edict )	# Send Elvin message
 
 	if r != 0:
-	    log.log( "<eddieElvin4>elvinTicker.elvinrrd(), notify failed, key %s" % (key), 5 )
-	    return r	# failed
-
+	    # failed
+	    log.log( "<eddieElvin4>Elvin.elvinrrd(): notify failed, key:%s" % (key), 5 )
 	else:
-	    log.log( "<eddieElvin4>elvinTicker.elvinrrd(), notify successful, key %s" % (key), 6 )
-	    return r	# succeeded
+	    log.log( "<eddieElvin4>Elvin.elvinrrd(): msg added to notify queue, key:%s" % (key), 6 )
+
+	return r
+
 
 ##
 ## END - eddieElvin4.py
