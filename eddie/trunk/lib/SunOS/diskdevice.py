@@ -26,10 +26,14 @@
 ########################################################################
 
 """
-  This is an Eddie data collector.  It collects disk-usage statistics
-  using calls to /usr/bin/kstat.
+  This is an Eddie data collector.  It collects disk & tape -usage
+  statistics using /usr/bin/kstat.
 
   See the stats available by looking at output of '/usr/bin/kstat -p -c disk'
+
+  The DataCollectors provided are:
+    DiskStatistics : collects statistics about disk devices
+    TapeStatistics : collects statistics about tape devices
 """
 
 
@@ -47,7 +51,7 @@ import utils
 ##
 
 KSTAT_CMD = '/usr/bin/kstat'
-KSTAT_ARG = '-p -c disk'
+KSTAT_ARG = '-p -c '	# needs a class after it, eg: "disk" or "/tape|disk/"
 
 
 ##
@@ -65,6 +69,8 @@ class DiskStatistics(datacollect.DataCollect):
 
     def __init__(self):
         apply( datacollect.DataCollect.__init__, (self,) )
+
+	self.kstat_class = "disk"	# default kstat class
 
 
     ##################################################################
@@ -85,7 +91,7 @@ class DiskStatistics(datacollect.DataCollect):
 	    raise DataFailure, "No kstat command '%s'" %(KSTAT_CMD)
 
 	# get the tcp stats
-	cmd = "%s %s" % (KSTAT_CMD, KSTAT_ARG)
+	cmd = "%s %s %s" % (KSTAT_CMD, KSTAT_ARG, self.kstat_class)
 	rawList = utils.safe_popen( cmd, 'r' )
 
 	for line in rawList.readlines():
@@ -120,11 +126,76 @@ class DiskStatistics(datacollect.DataCollect):
         log.log( "<diskdevice>DiskStatistics.collectData(): Collected stats for %d disks" %(self.data.numdisks), 6 )
 
 
+class TapeStatistics(datacollect.DataCollect):
+    """Collects tape statistics using: /usr/bin/kstat -p -c tape
+    It uses a Disk object for the tape devices, as they are really
+    the same data type.
+    """
+
+    def __init__(self):
+        apply( datacollect.DataCollect.__init__, (self,) )
+
+	self.kstat_class = "tape"	# default kstat class
+
+
+    ##################################################################
+    # Public methods
+
+
+    ##################################################################
+    # Private methods
+
+    def collectData(self):
+
+	self.data.datalist = []		# list of tape objects
+	self.data.datahash = {}		# hash of same objects keyed on device name (eg: sd100, md10)
+	self.data.numtapes = 0
+
+	if not os.path.isfile( KSTAT_CMD ):
+	    #log.log( "<diskdevice>TapeStatistics.collectData(): No kstat command '%s'" %(KSTAT_CMD), 4 )
+	    raise DataFailure, "No kstat command '%s'" %(KSTAT_CMD)
+
+	# get the tcp stats
+	cmd = "%s %s %s" % (KSTAT_CMD, KSTAT_ARG, self.kstat_class)
+	rawList = utils.safe_popen( cmd, 'r' )
+
+	for line in rawList.readlines():
+	    try:
+	        (keys,value) = string.split( line )
+	    except ValueError:
+		# should be 2 white-space separated fields per line
+		log.log( "<diskdevice>TapeStatistics.collectData(): cannot parse kstat line '%s'" %(lines), 5 )
+		continue
+
+	    try:
+		(type,index,name,key) = string.split( keys, ':' )
+	    except ValueError:
+		# should be 4 colon separated fields for keys
+		log.log( "<diskdevice>TapeStatistics.collectData(): cannot parse kstat keys '%s'" %(keys), 5 )
+		continue
+
+	    try:
+		# fetch already existing Disk object
+	        tape = self.data.datahash[name]
+	    except KeyError:
+		# create new Disk object if needed
+		tape = Disk( type, index, name )
+	        self.data.datahash[name] = tape
+	        self.data.datalist.append( tape )
+	        self.data.numtapes = self.data.numtapes + 1
+
+	    tape.setStat( key, value )
+
+	utils.safe_pclose( rawList )
+
+        log.log( "<diskdevice>TapeStatistics.collectData(): Collected stats for %d tapes" %(self.data.numtapes), 6 )
+
+
 
 class Disk:
     """Holds information about a raw disk.
     A raw disk could actually be an ODS metadevice or some other logical
-    volume or RAID array.
+    volume or RAID array (or even tape device).
     """
 
     def __init__( self, type, index, name ):
