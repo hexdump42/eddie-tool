@@ -10,7 +10,7 @@
 ## $Id$
 ##
 ########################################################################
-## (C) Chris Miles 2002
+## (C) Chris Miles 2002-2004
 ##
 ## The author accepts no responsibility for the use of this software and
 ## provides it on an ``as is'' basis without express or implied warranty.
@@ -25,14 +25,35 @@
 ########################################################################
 
 # Python modules
-import time, threading
+import time
+import threading
 # Eddie modules
 import log
 
 
-class DataModules:
+##
+## Exceptions
+##
+
+class IndexError(Exception):
+    """IndexError: a Data History index is out of range
     """
-    This class keeps track of which data collection modules are required
+    pass
+
+class DataFailure(Exception):
+    """DataError: a problem occured while trying to collect the data,
+    (ie, while calling module.collectData()) which prevents this
+    collector from continuing.
+    """
+    pass
+
+
+##
+## Data collection management classes
+##
+
+class DataModules:
+    """This class keeps track of which data collection modules are required
     (directives request data collection modules as they are created);
     makes sure appropriate modules are available;
     and creates data collection objects as required.
@@ -45,8 +66,7 @@ class DataModules:
 
 
     def request(self, module, collector):
-	"""
-	Directives request data collection objects and the modules they should
+	"""Directives request data collection objects and the modules they should
 	be defined in.
 
 	Return reference to collector object if successful;
@@ -79,8 +99,7 @@ class DataModules:
 
 
 class Data:
-    """
-    An empty class to hold any data to be stored.
+    """An empty class to hold any data to be stored.
     Do not access this data without first acquiring DataCollect.data_semaphore
     for thread-safety.
     """
@@ -89,8 +108,7 @@ class Data:
 
 
 class DataHistory:
-    """
-    Store previous data, with up to max_level levels of history.
+    """Store previous data, with up to max_level levels of history.
     Set max_level with setHistory() or else no data is kept.
     """
 
@@ -100,8 +118,7 @@ class DataHistory:
 
 
     def setHistory(self, level):
-	"""
-	Set how many levels of historical data to keep track of.
+	"""Set how many levels of historical data to keep track of.
 	By default no historical data will be kept.
 
 	The history level is only changed if the level is greater than
@@ -114,8 +131,7 @@ class DataHistory:
 
 
     def __getitem__(self, num):
-	"""
-	Overloaded [] to return the historical data, num is the age of the data.
+	"""Overloaded [] to return the historical data, num is the age of the data.
 	num can be 0 which is the current data; 1 is the previous data, etc.
 	e.g., d = history[5]
 	would assign d the Data object from 5 'collection periods' ago.
@@ -130,8 +146,7 @@ class DataHistory:
 
 
     def update(self, data):
-	"""
-	Update data history by adding new data object to history list
+	"""Update data history by adding new data object to history list
 	and removing oldest data from list.
 
 	If max_level is 0, no history is required, so nothing is done.
@@ -146,8 +161,7 @@ class DataHistory:
 
 
     def length(self):
-	"""
-	Returns the current length of the historical data list;
+	"""Returns the current length of the historical data list;
 	i.e., how many samples have been collected and are stored in the list.
 	"""
 
@@ -157,8 +171,7 @@ class DataHistory:
 
 
 class DataCollect:
-    """
-    Provides a data collection and store class with automatic
+    """Provides a data collection and store class with automatic
     caching and refreshing of data in the cache.  Public functions
     are fully thread-safe as they can be called from many directive
     threads simultaneously.
@@ -199,8 +212,7 @@ class DataCollect:
     # Public, thread-safe, methods
 
     def getHash(self, hash='datahash'):
-        """
-	Return a copy of the specified data hash, datahash by default.
+        """Return a copy of the specified data hash, datahash by default.
 	Specify an alternate variable name to fetch it instead.
 
 	TODO: it might be better to use the 'copy' module to make sure
@@ -217,7 +229,8 @@ class DataCollect:
 
 
     def hashKeys(self):
-        """Return the list of datahash keys."""
+        """Return the list of datahash keys.
+	"""
 
         self._checkCache()      	# refresh data if necessary
         self.data_semaphore.acquire()	# thread-safe access to self.data
@@ -228,8 +241,7 @@ class DataCollect:
 
 
     def getList(self, listname):
-        """
-	Return a copy of the specified data list.
+        """Return a copy of the specified data list.
 	The function is thread-safe and supports the built-in data caching.
 
 	TODO: it might be better to use the 'copy' module to make sure
@@ -245,8 +257,7 @@ class DataCollect:
 
 
     def __getitem__(self, key):
-        """
-        Overload '[]', eg: returns corresponding data object for given key.
+        """Overload '[]', eg: returns corresponding data object for given key.
 
 	TODO: it might be better to use the 'copy' module to make sure
 	 a full deep copy is made of the date...
@@ -266,8 +277,7 @@ class DataCollect:
 
 
     def refresh(self):
-	"""
-	Refresh data.
+	"""Refresh data.
 
 	This function can be called publically to force a refresh.
 	"""
@@ -279,8 +289,7 @@ class DataCollect:
 
 
     def setHistory(self, level):
-	"""
-	Set how many levels of historical data to keep track of.
+	"""Set how many levels of historical data to keep track of.
 	By default no historical data will be kept.
 
 	The history level is only changed if the level is greater than
@@ -296,7 +305,8 @@ class DataCollect:
     # Private methods.  Thread safety not guaranteed if not using public methods.
 
     def _checkCache(self):
-	"""Check if cached data is invalid, ie: refresh_time has been exceeded."""
+	"""Check if cached data is invalid, ie: refresh_time has been exceeded.
+	"""
 
 	self.data_semaphore.acquire()		# thread-safe access to self.refresh_time and self._refresh()
 	if time.time() > self.refresh_time:
@@ -308,8 +318,7 @@ class DataCollect:
 
 
     def _refresh(self):
-	"""
-	Refresh data by calling _fetchData() and increasing refresh_time.
+	"""Refresh data by calling _fetchData() and increasing refresh_time.
 
 	This function must be called between data_semaphore locks. It is
 	not thread-safe on its own.
@@ -322,8 +331,7 @@ class DataCollect:
 
 
     def _fetchData(self):
-	"""
-	Initialise a new data collection by first resetting the current data,
+	"""Initialise a new data collection by first resetting the current data,
 	then calling self.collectData() - a user-supplied function, see below -
 	then storing historical data if necessary.
 
@@ -335,10 +343,14 @@ class DataCollect:
 
 	self.data = Data()		# new, empty data-store
 
-	self.collectData()		## user-supplied function to collect some data
+	try:
+	    self.collectData()		## user-supplied function to collect some data
 					## and store in self.data
-
-	self.history.update(self.data)	# add collected data to history
+	except DataFailure, err:
+	    log.log( "<datacollect>DataCollect._fetchData(): DataFailure, %s" %(err), 5 )
+	    # TODO: need to tell the Directive that things have gone wrong?
+	else:
+	    self.history.update(self.data)	# add collected data to history
 
 
 
