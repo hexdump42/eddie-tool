@@ -49,7 +49,7 @@ class system(datacollect.DataCollect):
         /usr/bin/vmstat -s: standard with Solaris 2.5.1 and greater
 	/usr/bin/uptime: standard with Solaris 2.5.1 and greater
         /opt/local/bin/top: top version 3.5beta9 (compiled by user)
-	  (use of /opt/local/bin/top is being phased out)
+	  (use of /opt/local/bin/top is being phased out and should not be needed)
 
 	The names of all the stats collected by the system class are:
 
@@ -135,102 +135,6 @@ class system(datacollect.DataCollect):
 
 	self.data.datahash = {}		# dict of system data
 
-	# Use of /opt/local/bin/top to get system stats is being phased out...
-	rawList = utils.safe_popen('/opt/local/bin/top -nud2 -s1', 'r')
-
-	# the above 'top' command actually performs two 'tops', 1 second apart,
-	# so that we can get current cpu time allocation (idle/etc).
-	# We must skip through the output to the start of the second 'top'.
-
-	rawList.readline()	# skip start of first 'top'
-
-	while 1:
-	    line = rawList.readline()
-	    if len(line) == 0:
-		log.log( "<system>system._getSystemstate() error parsing 'top' output looking for 'load averages:'.", 5 )
-		utils.safe_pclose( rawList )
-		return
-
-	    #if line[:8] == 'last pid':
-	    if string.find(line, 'load averages:') != -1:
-		break
- 
-	# regexps for parsing top of 'top' output to get info we want
-	#reline1 = "last pid:\s*([0-9]+);\s*load averages:\s*([0-9]+\.[0-9]+),\s*([0-9]+\.[0-9]+),\s*([0-9]+\.[0-9]+)\s+([0-9]+:[0-9]+:[0-9]+)"
-	reline1 = ".*load averages:\s*([0-9]+\.[0-9]+),\s*([0-9]+\.[0-9]+),\s*([0-9]+\.[0-9]+)\s+([0-9]+:[0-9]+:[0-9]+)"
-	reline2 = "([0-9]+)\s+processes:(?:\s+(?P<sleeping>[0-9]+)\s+sleeping,)?(?:\s+(?P<zombie>[0-9]+)\s+zombie,)?(?:\s+(?P<running>[0-9]+)\s+running,)?(?:\s+(?P<stopped>[0-9]+)\s+stopped,)?(?:\s+(?P<oncpu>[0-9]+)\s+on cpu)?.*"
-	reline3 = "CPU states:\s*([0-9.]+)% idle,\s*([0-9.]+)% user,\s*([0-9.]+)% kernel,\s*([0-9.]+)% iowait,\s*([0-9.]+)% swap"
-	#reline4 = "Memory:\s*(?P<mem_real>\w+)\s*real,\s*(?P<mem_free>\w+)\s*free,(?:\s*(?P<mem_swapuse>\w+)\s*swap in use,)?\s*(?P<mem_swapfree>\w+)\s*swap free"
-
-	# line 1
-	inx = re.search( reline1, line )
-	if inx == None:
-	    log.log( "<system>system._getSystemstate() error parsing line1 'top' output.", 5 )
-	    utils.safe_pclose( rawList )
-	    return
-	## Handled by _getuptime() now
-	#self.lastpid = int(inx.group(1))
-	#self.loadavg1 = float(inx.group(1))
-	#self.loadavg5 = float(inx.group(2))
-	#self.loadavg15 = float(inx.group(3))
-	#self.time = inx.group(4)
-
-	# line 2
-	line = rawList.readline()
-	inx = re.search( reline2, line )
-	if inx == None:
-	    log.log( "<system>system._getSystemstate() error parsing line2 'top' output.", 5 )
-	    utils.safe_pclose( rawList )
-	    return
-	self.processes = int(inx.group(1))
-	try:
-	    self.sleeping = int(inx.group('sleeping'))
-	except:
-	    self.sleeping = 0
-	try:
-	    self.zombie = int(inx.group('zombie'))
-	except:
-	    self.zombie = 0
-	try:
-	    self.running = int(inx.group('running'))
-	except:
-	    self.running = 0
-	try:
-	    self.stopped = int(inx.group('stopped'))
-	except:
-	    self.stopped = 0
-	try:
-	    self.oncpu = int(inx.group('oncpu'))
-	except:
-	    self.oncpu = 0
-
-	# line 3
-	line = rawList.readline()
-	inx = re.search( reline3, line )
-	if inx == None:
-	    log.log( "<system>system._getSystemstate() error parsing line3 'top' output.", 5 )
-	    utils.safe_pclose( rawList )
-	    return
-	self.cpu_idle = float(inx.group(1))
-	self.cpu_user = float(inx.group(2))
-	self.cpu_kernel = float(inx.group(3))
-	self.cpu_iowait = float(inx.group(4))
-	self.cpu_swap = float(inx.group(5))
-
-	utils.safe_pclose( rawList )
-
-	self.data.datahash['processes'] = self.processes
-	self.data.datahash['sleeping'] = self.sleeping
-	self.data.datahash['zombie'] = self.zombie
-	self.data.datahash['running'] = self.running
-	self.data.datahash['stopped'] = self.stopped
-	self.data.datahash['oncpu'] = self.oncpu
-
-	self.data.datahash['cpu_idle'] = self.cpu_idle
-	self.data.datahash['cpu_user'] = self.cpu_user
-	self.data.datahash['cpu_kernel'] = self.cpu_kernel
-	self.data.datahash['cpu_iowait'] = self.cpu_iowait
-	self.data.datahash['cpu_swap'] = self.cpu_swap
 
 	vmstat_dict = self._getvmstat()
 	if vmstat_dict:
@@ -244,7 +148,13 @@ class system(datacollect.DataCollect):
 	if uptime_dict:
 	    self.data.datahash.update(uptime_dict)
 
-	log.log( "<system>system.collectData(): new system list created", 7 )
+	top_dict = self._getTop()
+	if top_dict:
+	    self.data.datahash.update(top_dict)
+
+
+        log.log( "<system>system.collectData(): collected data for %d system statistics" % (len(self.data.datahash.keys())), 6 )
+
 
 
     def _getvmstat(self):
@@ -256,7 +166,7 @@ class system(datacollect.DataCollect):
 	(retval, output) = utils.safe_getstatusoutput( vmstat_cmd )
 
 	if retval != 0:
-	    log.log( "<system>system._getvmstat(), error calling '%s'"%(vmstat_cmd), 5 )
+	    log.log( "<system>system._getvmstat(): error calling '%s'"%(vmstat_cmd), 5 )
 	    return None
 
 	vmstat_dict = {}
@@ -339,7 +249,7 @@ class system(datacollect.DataCollect):
 	(retval, output) = utils.safe_getstatusoutput( uptime_cmd )
 
 	if retval != 0:
-	    log.log( "<system>system._getuptime(), error calling '%s'"%(uptime_cmd), 5 )
+	    log.log( "<system>system._getuptime(): error calling '%s'"%(uptime_cmd), 5 )
 	    return None
 
 	uptime_dict = {}
@@ -350,7 +260,7 @@ class system(datacollect.DataCollect):
 	if sre:
 	    uptime_dict = sre.groupdict()
 	else:
-	    log.log( "<system>system._getuptime(), could not parse uptime output '%s'"%(output), 5 )
+	    log.log( "<system>system._getuptime(): could not parse uptime output '%s'"%(output), 5 )
 	    return None
 
 	# convert types
@@ -372,12 +282,12 @@ class system(datacollect.DataCollect):
 	(retval, output) = utils.safe_getstatusoutput( vmstat_cmd )
 
 	if retval != 0:
-	    log.log( "<system>system._getvmstat2(), error calling '%s'"%(vmstat_cmd), 5 )
+	    log.log( "<system>system._getvmstat2(): error calling '%s'"%(vmstat_cmd), 5 )
 	    return None
 
 	v_split = string.split( output )
 	if len(v_split) < 5:
-	    log.log( "<system>system._getvmstat2(), vmstat output invalid, '%s'"%(output), 5 )
+	    log.log( "<system>system._getvmstat2(): vmstat output invalid, '%s'"%(output), 5 )
 	    return None
 
 	vmstat_dict = {}
@@ -388,10 +298,121 @@ class system(datacollect.DataCollect):
 	    vmstat_dict['mem_swapfree'] = int(v_split[3])
 	    vmstat_dict['mem_free'] = int(v_split[4])
 	except ValueError:
-	    log.log( "<system>system._getvmstat2(), could not parse vmstat output '%s'"%(output), 5 )
+	    log.log( "<system>system._getvmstat2(): could not parse vmstat output '%s'"%(output), 5 )
 	    return None
 
 	return vmstat_dict
+
+
+    def _getTop(self):
+        """Get some stastics from the 'top' command.
+        This was the old way and is being replaced by the above calls.
+	This should be removed by the next release...
+	"""
+
+	datahash = {}
+
+	if not os.path.exists('/opt/local/bin/top'):
+	    return None
+
+	# Use of /opt/local/bin/top to get system stats is being phased out...
+	rawList = utils.safe_popen('/opt/local/bin/top -nud2 -s1', 'r')
+
+	# the above 'top' command actually performs two 'tops', 1 second apart,
+	# so that we can get current cpu time allocation (idle/etc).
+	# We must skip through the output to the start of the second 'top'.
+
+	rawList.readline()	# skip start of first 'top'
+
+	while 1:
+	    line = rawList.readline()
+	    if len(line) == 0:
+		log.log( "<system>system._getSystemstate(): error parsing 'top' output looking for 'load averages:'.", 5 )
+		utils.safe_pclose( rawList )
+		return None
+
+	    #if line[:8] == 'last pid':
+	    if string.find(line, 'load averages:') != -1:
+		break
+ 
+	# regexps for parsing top of 'top' output to get info we want
+	#reline1 = "last pid:\s*([0-9]+);\s*load averages:\s*([0-9]+\.[0-9]+),\s*([0-9]+\.[0-9]+),\s*([0-9]+\.[0-9]+)\s+([0-9]+:[0-9]+:[0-9]+)"
+	reline1 = ".*load averages:\s*([0-9]+\.[0-9]+),\s*([0-9]+\.[0-9]+),\s*([0-9]+\.[0-9]+)\s+([0-9]+:[0-9]+:[0-9]+)"
+	reline2 = "([0-9]+)\s+processes:(?:\s+(?P<sleeping>[0-9]+)\s+sleeping,)?(?:\s+(?P<zombie>[0-9]+)\s+zombie,)?(?:\s+(?P<running>[0-9]+)\s+running,)?(?:\s+(?P<stopped>[0-9]+)\s+stopped,)?(?:\s+(?P<oncpu>[0-9]+)\s+on cpu)?.*"
+	reline3 = "CPU states:\s*([0-9.]+)% idle,\s*([0-9.]+)% user,\s*([0-9.]+)% kernel,\s*([0-9.]+)% iowait,\s*([0-9.]+)% swap"
+	#reline4 = "Memory:\s*(?P<mem_real>\w+)\s*real,\s*(?P<mem_free>\w+)\s*free,(?:\s*(?P<mem_swapuse>\w+)\s*swap in use,)?\s*(?P<mem_swapfree>\w+)\s*swap free"
+
+	# line 1
+	inx = re.search( reline1, line )
+	if inx == None:
+	    log.log( "<system>system._getSystemstate() error parsing line1 'top' output.", 5 )
+	    utils.safe_pclose( rawList )
+	    return None
+	## Handled by _getuptime() now
+	#lastpid = int(inx.group(1))
+	#loadavg1 = float(inx.group(1))
+	#loadavg5 = float(inx.group(2))
+	#loadavg15 = float(inx.group(3))
+	#time = inx.group(4)
+
+	# line 2
+	line = rawList.readline()
+	inx = re.search( reline2, line )
+	if inx == None:
+	    log.log( "<system>system._getSystemstate(): error parsing line2 'top' output.", 5 )
+	    utils.safe_pclose( rawList )
+	    return None
+	processes = int(inx.group(1))
+	try:
+	    sleeping = int(inx.group('sleeping'))
+	except:
+	    sleeping = 0
+	try:
+	    zombie = int(inx.group('zombie'))
+	except:
+	    zombie = 0
+	try:
+	    running = int(inx.group('running'))
+	except:
+	    running = 0
+	try:
+	    stopped = int(inx.group('stopped'))
+	except:
+	    stopped = 0
+	try:
+	    oncpu = int(inx.group('oncpu'))
+	except:
+	    oncpu = 0
+
+	# line 3
+	line = rawList.readline()
+	inx = re.search( reline3, line )
+	if inx == None:
+	    log.log( "<system>system._getSystemstate(): error parsing line3 'top' output.", 5 )
+	    utils.safe_pclose( rawList )
+	    return None
+	cpu_idle = float(inx.group(1))
+	cpu_user = float(inx.group(2))
+	cpu_kernel = float(inx.group(3))
+	cpu_iowait = float(inx.group(4))
+	cpu_swap = float(inx.group(5))
+
+	utils.safe_pclose( rawList )
+
+	datahash['processes'] = processes
+	datahash['sleeping'] = sleeping
+	datahash['zombie'] = zombie
+	datahash['running'] = running
+	datahash['stopped'] = stopped
+	datahash['oncpu'] = oncpu
+
+	datahash['cpu_idle'] = cpu_idle
+	datahash['cpu_user'] = cpu_user
+	datahash['cpu_kernel'] = cpu_kernel
+	datahash['cpu_iowait'] = cpu_iowait
+	datahash['cpu_swap'] = cpu_swap
+
+        return datahash
 
 
 ##
