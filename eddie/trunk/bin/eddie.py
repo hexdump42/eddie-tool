@@ -187,8 +187,7 @@ def SigHandler( sig, frame ):
 
 
 def countFDs():
-    """
-    Count number of file descriptors in use.
+    """Count number of file descriptors in use.
     """
 
     import errno
@@ -199,14 +198,14 @@ def countFDs():
 	    fdcnt = fdcnt + 1
 	except os.error, ( errnum, str ):
 	    if errnum != errno.EBADF:
-		raise os.error, ( errnum, str )
+		#raise os.error, ( errnum, str )
+		log.log( '<eddie>countFDs(): exception os.error, %s, %s' %(errnum,str), 5 )
 
     return fdcnt
 
 
 def scheduler(q, Config, die_event):
-    """
-    The EDDIE scheduler thread.  This thread tracks the queue of waiting
+    """The EDDIE scheduler thread.  This thread tracks the queue of waiting
     checks and executes them in their own thread as required.  It attempts
     to limit the number of actual checking threads running to keep things
     sane.
