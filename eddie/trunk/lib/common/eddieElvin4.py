@@ -38,6 +38,8 @@ UseElvin = 1	# Switch Elvin usage on by default
 
 try:
     import elvin
+    global ec			# single global Elvin4 connection object
+    ec = None
 except ImportError:
     # no Elvin modules... disable Elvin
     UseElvin = 0
@@ -67,14 +69,12 @@ class elvinConnection:
 	    constr = ""			# use server discovery
 
 	try:
+	    log.log("<eddieElvin4>Attempting to connect to Elvin, '%s'" %(constr), 7)
 	    self.elvinc = elvin.connect(constr)
 
 	except:
 	    log.log("<eddieElvin4>Connection to elvin failed. Tried to connect with '%s'. Error: %s, %s" %(constr, sys.exc_type, sys.exc_value), 2)
-	    sys.stderr.write("Connection to elvin failed. Tried to connect with '%s'\n Error: %s, %s\n" %(constr, sys.exc_type, sys.exc_value))
 	    raise ElvinError, "Connection failed to %s" % (constr)
-	else:
-	    self.connected = 1
 
 
     def _exit(self):
@@ -85,51 +85,113 @@ class elvinConnection:
 	self._exit()
 
 
-#    def notify( *args ):
-#	print "args:",args
-#	self.elvinc.notify( args )
-
-
 class eddieElvin:
 
     def __init__(self):
 	if UseElvin:
-	    global ec			# single global Elvin4 connection object
+	    self.connect()		# make an Elvin connection
+	else:
+	    log.log( "<eddieElvin>eddieElvin.__init__(), Elvin functionality disabled - probably because modules do not exist", 3 )
+
+
+    def connect(self):
+	"""Try to make an Elvin connection."""
+
+	global ec
+
+	maxtries = 10			# max number of attempts to connect
+
+	tries = 0
+	tryagain = 1
+	while tryagain:
+	    tryagain = 0
+	    tries = tries + 1
+	    if tries > maxtries:
+		break
+
 	    try:
 		if ec == None:		# if not set, try to connect
 		    ec = elvinConnection()
-
-	    except NameError:		# if ec undefined, we haven't connected yet
-		ec = elvinConnection()
-
-	    self.connected = 1
-	    log.log( "<eddieElvin>eddieElvin.__init__(), Connected to Elvin server", 6 )
-
-	else:
-	    log.log( "<eddieElvin>eddieElvin.__init__(), not connecting because UseElvin=0", 3 )
-
-
-    # must override this method
-    def sendmsg(self,msg):
-	if self.connected:
-	    try:
-		ec.elvinc.notify( TICKERTAPE = 'Eddie',
-	                          TICKERTEXT = msg,
-				        USER = log.hostname,
-			             TIMEOUT = 10, 
-			           MIME_TYPE = 'x-elvin/slogin',
-			           MIME_ARGS = log.hostname )
+		    log.log( "<eddieElvin>eddieElvin.connect(), Connected to Elvin server", 6 )
+	    except elvin.errors.ElvinConnectNotReady:
+		log.log( "<eddieElvin>eddieElvin.connect(), received ElvinConnectNotReady -trying again", 8 )
+		tryagain = 1
+		time.sleep(5)
 	    except:
 		e = sys.exc_info()
-                tb = traceback.format_list( traceback.extract_tb( e[2] ) )
-		log.log( "<eddieElvin>eddieElvin.sendmsg(), notify failed: %s, %s, %s." % (e[0], e[1], tb), 3 )
+		tb = traceback.format_list( traceback.extract_tb( e[2] ) )
+		log.log( "<eddieElvin4>eddieElvin.connect(), connect failed: %s, %s, %s." % (e[0], e[1], tb), 3 )
 		return 1
 
-	    return 0
+	if not ec:
+	    log.log( "<eddieElvin>eddieElvin.connect(), Could not connect to Elvin server", 4 )
+
+
+    def notify(self, msg):
+        """Send an Elvin notification.  msg must be a dictionary."""
+
+	global ec
+
+	if UseElvin == 0:
+	    log.log( "<eddieElvin>eddieElvin.notify(), Elvin is disabled - request ignored", 7 )
+	    return 2
+
+	if not ec:
+	    # if not connected to Elvin, try to connect again
+	    log.log( "<eddieElvin>eddieElvin.notify(), not connected - calling connect()", 7 )
+	    self.connect()
+
+	if ec:
+	    maxtries = 10			# max number of attempts to try
+
+	    tries = 0
+	    tryagain = 1
+	    while tryagain:
+		tryagain = 0
+		tries = tries + 1
+		if tries > maxtries:
+		    break
+
+		try:
+		    ec.elvinc.notify( nfn=msg )
+		except elvin.errors.ElvinConnectNotReady:
+		    log.log( "<eddieElvin>eddieElvin.notify(), received ElvinConnectNotReady - trying again", 8 )
+		    tryagain = 1
+		    time.sleep(5)
+		except:
+		    e = sys.exc_info()
+		    tb = traceback.format_list( traceback.extract_tb( e[2] ) )
+		    log.log( "<eddieElvin>eddieElvin.notify(), notify failed: %s, %s, %s." % (e[0], e[1], tb), 3 )
+		    return 1
+
+	    if tries > maxtries:
+		log.log( "<eddieElvin>eddieElvin.notify(), too many retries - trying to reconnect", 4 )
+		ec = None
+		self.connect()
+		return 1
 
 	else:
+	    log.log( "<eddieElvin>eddieElvin.notify(), no connection - cannot send Elvin message", 7 )
+	    ec = None
+	    self.connect()
 	    return 1
 
+	return 0
+
+
+    def send(self, text='test'):
+	"""A template send() function.  Override this method to customise it."""
+
+	msg = { 'TICKERTAPE': 'Eddie',
+		'TICKERTEXT': text,
+		      'USER': log.hostname,
+		   'TIMEOUT': 10
+	      }
+
+	r = self.notify( msg )	# Send Elvin message
+
+	if r != 0:
+	    print "Elvin send failed..."
 
 
 
@@ -141,27 +203,27 @@ class elvinTicker(eddieElvin):
     def __init__(self):
         apply( eddieElvin.__init__, (self,) )
 
-    def sendmsg(self,msg):
-	if self.connected:
-	    try:
-		ec.elvinc.notify( TICKERTAPE = 'Eddie',
-			          TICKERTEXT = msg,
-				        USER = log.hostname,
-			             TIMEOUT = 10, 
-			           MIME_TYPE = 'x-elvin/slogin',
-			           MIME_ARGS = log.hostname )
-	    except:
-		e = sys.exc_info()
-                tb = traceback.format_list( traceback.extract_tb( e[2] ) )
-		log.log( "<eddieElvin>elvinTicker.sendmsg(), notify failed: %s, %s, %s." % (e[0], e[1], tb), 3 )
-		return 1
 
-	    log.log( "<eddieElvin>elvinTicker.sendmsg(), notify successful: '%s'" % (msg), 9 )
-	    return 0
+    def sendmsg(self, msg):
+	"""Send an Elvin Tickertape message.  msg is the text string to send."""
+
+	elvinmsg = { 'TICKERTAPE': 'Eddie',
+		     'TICKERTEXT': msg,
+			   'USER': log.hostname,
+			'TIMEOUT': 10, 
+		      'MIME_TYPE': 'x-elvin/slogin',
+		      'MIME_ARGS': log.hostname
+		   }
+
+	r = self.notify( elvinmsg )	# Send Elvin message
+
+	if r != 0:
+	    log.log( "<eddieElvin>elvinTicker.sendmsg(), notify failed, msg '%s'" % (msg), 4 )
+	    return r	# failed
 
 	else:
-	    return 1
-
+	    log.log( "<eddieElvin>elvinTicker.sendmsg(), notify successful, msg '%s'" % (msg), 8 )
+	    return r	# succeeded
 
 
 class elvindb(eddieElvin):
@@ -189,30 +251,32 @@ class elvindb(eddieElvin):
 
 	timestamp = time.strftime("%Y%m%d%H%M%S", time.localtime(time.time()))
 
-	if self.connected:
-	    # Create db entry creation 'command'
-	    edict = {      'ELVIN.TABLE' : table,
-		         'ELVIN.COMMAND' : 'CREATE',
-		            'ELVIN.HOST' : log.hostname,
-			       'ELVINDB' : 'ELVINDB',	# For consumers to subscribe for
-		       'ELVIN.TIMESTAMP' : timestamp
-		    }
+	# Create db entry creation 'command'
+	edict = {      'ELVIN.TABLE' : table,
+		     'ELVIN.COMMAND' : 'CREATE',
+			'ELVIN.HOST' : log.hostname,
+			   'ELVINDB' : 'ELVINDB',	# For consumers to subscribe for
+		   'ELVIN.TIMESTAMP' : timestamp
+		}
 
-	    if len(extrahashes) > 0:
-		for e in extrahashes.keys():
-		    edictcopy = {}
-		    edictcopy.update(edict)
-		    edictcopy.update(extrahashes[e])		# add all the system data
-
-	    else:
-		edict.update(data)		# add all the system data
-
-		ec.elvinc.notify( edict )
-
-	    return 0
+	if len(extrahashes) > 0:
+	    for e in extrahashes.keys():
+		edictcopy = {}
+		edictcopy.update(edict)
+		edictcopy.update(extrahashes[e])		# add all the system data
 
 	else:
-	    return 1
+	    edict.update(data)		# add all the system data
+
+	r = self.notify( edict )	# Send Elvin message
+
+	if r != 0:
+	    log.log( "<eddieElvin>elvinTicker.elvindb(), notify failed, table %s" % (table), 4 )
+	    return r	# failed
+
+	else:
+	    log.log( "<eddieElvin>elvinTicker.elvindb(), notify successful table %s" % (table), 8 )
+	    return r	# succeeded
 
 
 class elvinrrd(eddieElvin):
@@ -227,21 +291,20 @@ class elvinrrd(eddieElvin):
 	"""Send the message.
 	"""
 
-	#timestamp = time.strftime("%Y%m%d%H%M%S", time.localtime(time.time()))
+	# Create db entry creation 'command'
+	edict = {      'ELVINRRD' : key
+		}
+	edict.update(data)		# add data dictionary to edict
 
-	if self.connected:
-	    # Create db entry creation 'command'
-	    edict = {      'ELVINRRD' : key
-		    }
-	    edict.update(data)		# add data dictionary to edict
+	r = self.notify( edict )	# Send Elvin message
 
-	    ec.elvinc.notify( edict )
-
-	    return 0
+	if r != 0:
+	    log.log( "<eddieElvin>elvinTicker.elvinrrd(), notify failed, key %s" % (key), 4 )
+	    return r	# failed
 
 	else:
-	    return 1
-
+	    log.log( "<eddieElvin>elvinTicker.elvinrrd(), notify successful, key %s" % (key), 8 )
+	    return r	# succeeded
 
 ##
 ## END - eddieElvin4.py
