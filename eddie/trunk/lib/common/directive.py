@@ -341,7 +341,7 @@ class Directive:
 	if self.args.numchecks < 0:
 	    raise ParseFailure, "numchecks argument must be > 0 '%s'"%(self.args.numchecks)
 
-	# convert scanperiod to integer seconds if not already
+	# convert checkwait to integer seconds if not already
 	try:
 	    if type(self.args.checkwait) != type(1):
 		self.args.checkwait = utils.val2secs( self.args.checkwait )
@@ -548,6 +548,8 @@ class Directive:
 
 	log.log( "<directive>Directive.safeCheck(), ID '%s', calling self.docheck()" % (self.state.ID), 7 )
 
+	self.last_check_time = time.localtime(time.time())	# note time of last check
+
 	try:
 	    self.docheck( Config )
 	except:
@@ -565,10 +567,25 @@ class Directive:
 	if self.console_output == None:
 	    return None
 
-	# setup variables available to console_output string
+	## Setup variables available to console_output string
 	vars = {}
+	# add all the action variables
 	vars.update(self.Action.varDict)
+	# add the current state
 	vars['state'] = self.state.status
+	# add time of last check
+	t = self.last_check_time
+	vars['lastchecktime'] = "%04d/%02d/%02d %d:%02d:%02d" % (t[0], t[1], t[2], t[3], t[4], t[5])
+	# add the lastfailtime and faildetecttime
+	if self.state.status == "fail":
+	    t = self.state.faildetecttime
+	    vars['problemfirstdetect'] = "First detected: %04d/%02d/%02d %d:%02d:%02d" % (t[0], t[1], t[2], t[3], t[4], t[5])
+	    t = self.state.lastfailtime
+	    vars['problemlastfail'] = "Last detected: %04d/%02d/%02d %d:%02d:%02d" % (t[0], t[1], t[2], t[3], t[4], t[5])
+	else:
+	    vars['problemfirstdetect'] = ""
+	    vars['problemlastfail'] = ""
+
 
 	# create console string by substituting variables
 	cstr = self.console_output % vars
