@@ -325,9 +325,21 @@ class FS(Directive):
     def tokenparser(self, toklist, toktypes, indent):
 
 	tokdict=self.parseArgs(toklist)
-	self.filesystem = tokdict['fs']
-	self.rule = tokdict['rule']
-	self.actionList = self.parseAction( tokdict['action'] )
+
+	try:
+	    self.filesystem = tokdict['fs']
+	except KeyError:
+	    raise ParseFailure, "Filesystem not specified"
+
+	try:
+	    self.rule = tokdict['rule']
+	except KeyError:
+	    raise ParseFailure, "Rule not specified"
+
+	try:
+	    self.actionList = self.parseAction( tokdict['action'] )
+	except KeyError:
+	    raise ParseFailure, "Action not specified"
 
 	# Set any FS-specific variables
 	#  fsf = filesystem
@@ -447,9 +459,20 @@ class PID(Directive):
 
 	tokdict=self.parseArgs(toklist)
 
-	self.pidfile = tokdict['pid']
-	self.rule = tokdict['rule']
-	self.actionList = self.parseAction( tokdict['action'] )
+	try:
+	    self.pidfile = tokdict['pid']
+	except KeyError:
+	    raise ParseFailure, "Pid not specified"
+
+	try:
+	    self.rule = tokdict['rule']
+	except KeyError:
+	    raise ParseFailure, "Rule not specified"
+
+	try:
+	    self.actionList = self.parseAction( tokdict['action'] )
+	except KeyError:
+	    raise ParseFailure, "Action not specified"
 
 	# Expect first token to be rule - one of self.ruleDict
 	if self.rule not in self.ruleDict.keys():
@@ -541,8 +564,15 @@ class PROC(Directive):
 
 	tokdict=self.parseArgs(toklist)
 
-	self.daemon = tokdict['procname']
-	self.rule = tokdict['rule']
+	try:
+	    self.daemon = tokdict['procname']
+	except KeyError:
+	    raise ParseFailure, "Process name not specified"
+
+	try:
+	    self.rule = tokdict['rule']
+	except KeyError:
+	    raise ParseFailure, "Rule name not specified"
 
 	# Expect first token to be rule
 	if self.rule in self.ruleDict.keys():
