@@ -31,10 +31,10 @@ if [ ! -d /var/run/eddie/tmp ]; then
 fi
 
 # Find mail program
-if [ -x /bin/mail ]; then		# Linux
+if [ -x /bin/mailx ]; then		# Solaris
+    MAIL=/bin/mailx
+elif [ -x /bin/mail ]; then		# Linux
     MAIL=/bin/mail
-elif [ -x /usr/bin/mailx ]; then	# Solaris
-    MAIL=/usr/bin/mailx
 else
     MAIL=mail				# dunno...
 fi
