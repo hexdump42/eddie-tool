@@ -15,7 +15,7 @@
 EDDIE_VER='0.20'
 
 # Standard Python modules
-import sys, os, time, signal, thread
+import sys, os, time, signal
 
 # Work out the base Eddie directory which should contain bin/, lib/, etc...
 cwd = os.getcwd()
