@@ -341,13 +341,13 @@ def elvin(msg):
     elvinServer = 'elvin'
     elvinPort = 5678
 
+    # Substitute variables in string
+    msg = parseVars( msg, varDict )
+
     if len(msg) == 0:
 	# msg must contain something
 	log.log( "<action>elvin(), Error, msg is empty", 2 )
 	return
-
-    # Substitute variables in string
-    msg = parseVars( msg, varDict )
 
     try:
 	e = eddieElvin.elvinTicker( elvinServer, elvinPort )
@@ -370,13 +370,13 @@ def elvinPage(pager, msg):
     elvinServer = 'elvin'
     elvinPort = 5678
 
+    # Substitute variables in string
+    msg = parseVars( msg, varDict )
+
     if len(msg) == 0:
 	# msg must contain something
 	log.log( "<action>elvinPage(), Error, msg is empty", 2 )
 	return
-
-    # Substitute variables in string
-    msg = parseVars( msg, varDict )
 
     try:
 	e = eddieElvin.elvinPage( elvinServer, elvinPort )
@@ -398,13 +398,13 @@ def page(pager, msg):
     # send a page via SNPP
     pageServer = 'elvin'
 
+    # Substitute variables in string
+    msg = parseVars( msg, varDict )
+
     if len(msg) == 0:
 	# msg must contain something
 	log.log( "<action>page(), Error, msg is empty", 2 )
 	return
-
-    # Substitute variables in string
-    msg = parseVars( msg, varDict )
 
     p = snpp.level1(pageServer)
     p.pager(pager)
