@@ -29,7 +29,7 @@ group host1:
 	scanperiod='2m'
 	history = 3
 	rule='(pctused + history[1].pctused + history[2].pctused + history[3].pctused) / 3 > 5'
-	action=email(ALERT,'%(mountpt)s grew to %(pctused)s')
+	action=email(ALERT_EMAIL,'%(mountpt)s grew to %(pctused)s')
 
     PID namedex:
 	pidfile='/var/run/named.pid'

@@ -20,9 +20,14 @@ group linux:
 	name='crond'
 	template=proctpl
 	action=COMMONALERT(commonmsg.proc,2)
+    PROC xinetd:
+	name='xinetd'
+	template=proctpl
+	action=COMMONALERT(commonmsg.proc,2)
 
 
-    #### RRD store directives
+    #### Directives to store system stats in RRD (via Elvin messaging)
+
     # Store swap stats
     SYS swap_rrd:
         scanperiod='5m'
@@ -47,6 +52,8 @@ group linux:
         console=None
 
     # Send CPU data to RRD
+    # Newer kernels provide more detailed stats, so choose one of the
+    # two directives below by disabling the other.
     SYS cpu_rrd:
         rule="1"        # always true
         scanperiod='1m'
@@ -54,6 +61,20 @@ group linux:
                         'cpu_user=%(ctr_cpu_user)d',    \
                         'cpu_nice=%(ctr_cpu_nice)d',    \
                         'cpu_system=%(ctr_cpu_system)d',\
+                        'cpu_idle=%(ctr_cpu_idle)d' )
+        console=None
+
+    SYS cpu2_rrd:
+        disabled=1
+        rule="1"        # always true
+        scanperiod='1m'
+        action=elvinrrd('cpulinux2-%(h)s',                \
+                        'cpu_user=%(ctr_cpu_user)d',      \
+                        'cpu_nice=%(ctr_cpu_nice)d',      \
+                        'cpu_system=%(ctr_cpu_system)d',  \
+                        'cpu_iowait=%(ctr_cpu_iowait)d',  \
+                        'cpu_hardirq=%(ctr_cpu_hardirq)d',\
+                        'cpu_softirq=%(ctr_cpu_softirq)d',\
                         'cpu_idle=%(ctr_cpu_idle)d' )
         console=None
 

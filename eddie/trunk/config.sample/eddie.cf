@@ -43,7 +43,7 @@ ADMINLEVEL=3
 #  Specifies how often logs are emailed to ADMIN.
 #  Use: ADMIN_NOTIFY=<int>[smhdwcy]
 
-ADMIN_NOTIFY=1d         # Send Admin summaries only once a day
+ADMIN_NOTIFY=1h         # Send Admin summaries once per hour
 
 
 # NUMTHREADS
@@ -143,6 +143,9 @@ CLASS news=host1,host2
 CLASS dns=host3
 CLASS cache=host5,host6,host7
 
+CLASS linux=host3,host4
+CLASS solaris=host1,host2,host5
+
 
 # ALIAS
 #  Define some aliases which will be substituted during config parsing,
@@ -151,7 +154,7 @@ CLASS cache=host5,host6,host7
 #  Use: ALIAS <name>="<string>"
 
 ALIAS ALERT_EMAIL="alert@domain.name"
-ALIAS ONCALL_EMAIL="oncall-pager@domain.name"
+ALIAS PAGER_EMAIL="oncall-pager@domain.name"
 
 
 # INCLUDE
@@ -170,6 +173,9 @@ INCLUDE 'rules/host.rules'	# rule specific to certain hosts
 INCLUDE 'rules/cache.rules'	# rules specific to proxy caches
 INCLUDE 'rules/dns.rules'	# rules specific to DNS servers
 INCLUDE 'rules/news.rules'	# rules specific to news servers
+
+INCLUDE 'rules/sys_linux.rules'		# rules for Linux-specific checks
+INCLUDE 'rules/sys_solaris.rules'	# rules for Solaris-specific checks
 
 INCLUDE 'rules/rrd.rules'	# rules for storing data in RRD dbs via elvinrrd
 

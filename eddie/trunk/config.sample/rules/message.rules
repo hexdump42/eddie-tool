@@ -187,6 +187,16 @@ Please fix this immediately.
                     
 	MSG ALERT_P: "%(h)s ALERT: Port %(protocol)s/%(port)s not responding" ""
 
+        MSG FIXED: "Port %(protocol)s/%(port)s on %(h)s is now working"
+            """The service port %(protocol)s/%(port)s on %(h)s is now responding again.
+    
+--
+%(problemage)s
+%(problemfirstdetect)s
+"""
+              
+        MSG FIXED_P: "%(h)s: Port %(protocol)s/%(port)s is now responding" ""
+
     ##
     ## Common notification messages for PORT directives
     ##

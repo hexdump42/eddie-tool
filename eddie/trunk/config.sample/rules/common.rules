@@ -27,11 +27,11 @@ N COMMONALERT:
 
     # Alert
     Level 2:
-	email(ONCALL_EMAIL,ALERT_P),ticker(ALERT_P)
+	email(PAGER_EMAIL,ALERT_P),ticker(ALERT_P)
 
     # Serious Alert
     Level 3:
-	email(ALERT_EMAIL,ALERT),email(ONCALL_EMAIL,ALERT_P),ticker(ALERT_P)
+	email(ALERT_EMAIL,ALERT),email(PAGER_EMAIL,ALERT_P),ticker(ALERT_P)
 
 
 # COMMONFIXED definition
@@ -46,10 +46,10 @@ N COMMONFIXED:
         email(ALERT_EMAIL,FIXED),ticker(FIXED_P)
 
     Level 2:
-        email(ONCALL_EMAIL,FIXED_P),ticker(FIXED_P)
+        email(PAGER_EMAIL,FIXED_P),ticker(FIXED_P)
                                                                                 
     Level 3:
-        email(ALERT_EMAIL,FIXED),email(ONCALL_EMAIL,FIXED_P),ticker(FIXED_P)
+        email(ALERT_EMAIL,FIXED),email(PAGER_EMAIL,FIXED_P),ticker(FIXED_P)
 
 
 # COMMONRESTART definition
@@ -63,7 +63,7 @@ N COMMONRESTART:
 
     # Restart/page
     Level 1:
-	restart("%(name)s"),email(ONCALL_EMAIL,RE_WARN),ticker(RE_WARN_P)
+	restart("%(name)s"),email(PAGER_EMAIL,RE_WARN),ticker(RE_WARN_P)
 
 
 # NAMEDRESTART definition
@@ -78,7 +78,7 @@ N NAMEDRESTART:
 
     # Restart/page
     Level 1:
-	restart("bind"),email(ONCALL_EMAIL,RE_WARN),ticker(RE_WARN_P)
+	restart("bind"),email(PAGER_EMAIL,RE_WARN),ticker(RE_WARN_P)
 
 
 ###########################################################################
@@ -93,6 +93,7 @@ PROC proctpl:
     numchecks=3             # number of checks to make before alerting
     checkwait=10            # interval between re-checks
     rule='not exists'       # default rule to use
+    action=COMMONALERT(commonmsg.proc,0)
     act2ok=COMMONFIXED(commonmsg.proc,0)
 
 # a template for FS directives
@@ -115,7 +116,7 @@ PROC cron:
 PROC syslogd:
     name='syslogd'
     template=proctpl
-    action=SYSLOGRESTART(commonmsg.proc)
+    action=COMMONALERT(commonmsg.proc)
 PROC inetd:
     name='inetd'
     template=proctpl
@@ -131,12 +132,12 @@ FS root:
     fs='/'
     rule='pctused >= 90'
     action=COMMONALERT(commonmsg.fs,1)
-    act2ok=COMMONFIXED(commonmsg.fs,0)
+    act2ok=COMMONFIXED(commonmsg.fs,1)
 FS var:
     fs='/var'
     rule='pctused >= 90'
     action=COMMONALERT(commonmsg.fs,2)
-    act2ok=COMMONFIXED(commonmsg.fs,0)
+    act2ok=COMMONFIXED(commonmsg.fs,2)
 
 
 # PID directives use pidfiles to perform checks.
@@ -154,9 +155,9 @@ PID sshd2:
 #  active listening ports (eg: 'netstat -anv') and performing actions if the
 #  defined port/protocol/bind-address is not in the list.
 SP ssh:
-    port='ssh'		# port to check, as defined in /etc/services
+    port='ssh'			# port to check, as defined in /etc/services
     protocol='tcp'		# protocol, eg: tcp or udp
-    bindaddr='0.0.0.0'	# '*' on Solaris, or '0.0.0.0' on Linux
+    bindaddr='0.0.0.0'		# '*' on Solaris, or '0.0.0.0' on Linux
     rule='not exists'
     action=COMMONALERT(commonmsg.sp,1)
 
