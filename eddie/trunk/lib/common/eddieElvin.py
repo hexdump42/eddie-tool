@@ -18,11 +18,12 @@ import time, types, os, sys, thread, signal, getopt
 import log
 import snpp
 #sys.path = ['/import/src/bin/elvin/dstc/lib/python', '/import/src/bin/elvin/dstc/sparc-sun-solaris2.5/lib'] + sys.path
-sys.path = ['/import/src/bin/elvin/elvin3.12/dstc/lib/python', '/import/src/bin/elvin/elvin3.12/dstc/sparc-sun-solaris2.5/lib'] + sys.path
+#sys.path = ['/import/src/bin/elvin/elvin3.12/dstc/lib/python', '/import/src/bin/elvin/elvin3.12/dstc/sparc-sun-solaris2.5/lib'] + sys.path
 
 UseElvin = 1	# Switch Elvin usage on by default
 
-import Elvin, ElvinMisc
+#import Elvin, ElvinMisc
+from Elvin import *
 
 #try:
 #	import Elvin, ElvinMisc
@@ -46,23 +47,34 @@ class eddieElvin:
 	self.host = host
 	self.port = port
 
-	try:
-	    #print "Trying Elvin connection to %s:%d" % (self.host, self.port)
-	    self.elvin = Elvin.Elvin(Elvin.EC_NAMEDHOST, self.host, self.port,
+#	try:
+	print "Trying Elvin connection to %s:%d" % (self.host, self.port)
+	self.elvin = Elvin.Elvin(Elvin.EC_NAMEDHOST, self.host, self.port,
 				     None, self._error_cb)
-	    #print "Made Elvin connection..."
-	except:
-	    #sys.stderr.write("Connection to elvin failed\nIs there an elvin server running at %s:%d\n" %(self.host, self.port))
-	    #self._exit()
-	    raise ElvinError, "Connection failed to %s:%d" % (self.host,self.port)
-	else:
-	    self.connected = 1
+	print "Made Elvin connection..."
+#	except:
+#	    sys.stderr.write("Connection to elvin failed\nIs there an elvin server running at %s:%d\n" %(self.host, self.port))
+#	    #self._exit()
+#	    raise ElvinError, "Connection failed to %s:%d" % (self.host,self.port)
+#	else:
+	self.connected = 1
 
-	#print "Elvin connection succeeded."
+	print "Elvin connection succeeded."
 
     # must override this method
     def sendmsg(self,msg):
-	return 1
+	if self.connected:
+	    #self.elvin.notify( { 'TICKERTAPE' : 'Eddie',
+	    self.elvin.notify( { 'TICKERTAPE' : 'EddieTest',
+	                         'TICKERTEXT' : msg,
+				       'USER' : log.hostname,
+				    'TIMEOUT' : 10, 
+				  'MIME_TYPE' : 'x-elvin/slogin',
+				  'MIME_ARGS' : log.hostname } )
+	    return 0
+
+	else:
+	    return 1
 
 
     def _exit(self):
@@ -111,7 +123,7 @@ def _cleanup(sig, stackframe):
     """Performs any cleanup before exiting"""
 
     #print "_cleanup exiting on signal %d" %(sig,)
-    ElvinMisc.ElvinRemovePidFile(pidname)
+    Elvin.ElvinRemovePidFile(pidname)
     sys.exit(0)
 
 class elvinTicker(eddieElvin):

@@ -246,7 +246,6 @@ class action:
     def elvin(self, msg):
 	if eddieElvin.UseElvin == 0:
 	    log.log( "<action>elvin(), Elvin is not available - skipping.", 8 )
-	    print "<action>elvin(), Elvin is not available - skipping."
 	    return 0
 
 	# send a message via Elvin message system
@@ -272,7 +271,8 @@ class action:
 	msg = parseVars( msg, self.varDict )
 
 	try:
-	    e = eddieElvin.elvinTicker( elvinServer, elvinPort )
+	    #e = eddieElvin.elvinTicker( elvinServer, elvinPort )
+	    e = eddieElvin.eddieElvin( elvinServer, elvinPort )
 	except eddieElvin.ElvinError:
 	    log.log( "<action>elvin(), Error, eddieElvin(%s, %d) could not connect" % (elvinServer,elvinPort), 2 )
 	    return
