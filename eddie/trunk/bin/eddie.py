@@ -127,7 +127,7 @@ def SigHandler( sig, frame ):
 
 	please_die.clear()
 	global sthread
-	sthread = threading.Thread(group=None, target=scheduler, name=None, args=(q,Config,please_die), kwargs={})
+	sthread = threading.Thread(group=None, target=scheduler, name='Scheduler', args=(q,Config,please_die), kwargs={})
 	sthread.start()	# start it up
 
     elif sig == signal.SIGINT:
@@ -220,8 +220,11 @@ def scheduler(q, Config, die_event):
 
 	if c.args.numchecks > 0:
 	    # start check in a new thread
-	    log.log( "<eddie>scheduler(), Starting new thread for %s, %s" % (c,t), 8 )
-	    threading.Thread(group=None, target=c.safeCheck, name=None, args=(Config,), kwargs={}).start()
+	    thr = threading.Thread(group=None, target=c.safeCheck, name=None, args=(Config,), kwargs={})
+	    log.log( "<eddie>scheduler(), Starting new thread for %s, %s" % (c,thr), 8 )
+	    thr.setDaemon(1)	# mark thread as Daemon-thread so Eddie will not block when trying to terminate
+	    			# with still-running threads.
+	    thr.start()		# new thread starts running
 	else:
 	    # when numchecks == 0 we don't do any checks at all...
 	    log.log( "<eddie>scheduler(), Not scheduling checks for %s when numchecks=%d" % (c,c.args.numchecks), 7 )
@@ -372,7 +375,7 @@ def main():
     global please_die
     please_die = threading.Event()		# Event object to notify the scheduler to die
     global sthread
-    sthread = threading.Thread(group=None, target=scheduler, name=None, args=(q,Config,please_die), kwargs={})
+    sthread = threading.Thread(group=None, target=scheduler, name='Scheduler', args=(q,Config,please_die), kwargs={})
     sthread.start()	# start it up
 
     while 1:
@@ -382,6 +385,8 @@ def main():
 	    # Count fds in use - for debugging
 	    numfds = countFDs()
 	    log.log( "<eddie>main(), FDs in use = %d." % (numfds), 7 )
+	    log.log( "<eddie>main(), Threads in use = %d." % (threading.activeCount()), 7 )
+	    log.log( "<eddie>main(), Threads: %s" % (threading.enumerate()), 8 )
 
 	    # check if any config/rules files have been modified
 	    # if so, re-read config
@@ -408,7 +413,7 @@ def main():
 
 		please_die.clear()
 
-		sthread = threading.Thread(group=None, target=scheduler, name=None, args=(q,Config,please_die), kwargs={})
+		sthread = threading.Thread(group=None, target=scheduler, name='Scheduler', args=(q,Config,please_die), kwargs={})
 		sthread.start()	# start it up
 
 	    # email admin the adminlog if required
