@@ -57,6 +57,16 @@ class procList:
 
 	return count
 
+    # Searches the 'ps' dictionary and returns number of occurrences of pid
+    # [should be 0 or 1 for any sane system...]
+    def pidExists(self, pid):
+	count = 0		# count number of occurrences of 'procname'
+	for i in self.list:
+	    if i.pid == pid:
+		count = count + 1
+
+	return count
+
     # Overload '[]', eg: returns corresponding proc object for given process
     # name
     def __getitem__(self, name):

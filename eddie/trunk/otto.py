@@ -78,10 +78,13 @@ def ottoguts():
 
     ## debugging - test with 'D' directive for now ##
     ## for d in ourList.keylist():
-    for d in ('D'):
+    for d in ('D','PID'):
 	list = ourList[d]
-	for i in list:
-	    i.docheck()
+	if list != None:
+	    for i in list:
+		i.docheck()
+	else:
+	    log.log( "<otto>ottoguts(), ourList['%s'] is empty" % (d), 6 )
 
 def main():
 
@@ -93,7 +96,7 @@ def main():
 	    print 'Press CTRL-C to quit'
 	    time.sleep( config.scanperiod )
 	except KeyboardInterrupt:
-	    log.log( '<otto>main, KeyboardInterrupt encountered - quitting', 2 )
+	    log.log( '<otto>main(), KeyboardInterrupt encountered - quitting', 2 )
 	    print "\nOtto quitting ... bye bye"
 	    break
 

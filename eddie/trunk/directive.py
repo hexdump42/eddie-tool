@@ -73,6 +73,7 @@ class Directive:
 	# Set up informational variables - these are common to all Directives
 	#  %h = hostname
 	#    TODO: Is there a simpler Python-way of getting hostname ??
+	#    TODO: Get the hostname at program startup, not here...
 	tmp = os.popen('uname -n', 'r')
 	hostname = tmp.readline()
 	self.varDict['h'] = hostname[:-1]	# strip \n off end
@@ -164,7 +165,48 @@ class PID(Directive):
 	self.varDict['pidf'] = self.pidfile
 
     def docheck(self):
-	print "PID directive doing checking......"
+	if self.rule == "EX":
+	    # Check if pidfile exists
+	    try:
+		pidfile = open( self.pidfile, 'r' )
+	    except IOError:
+		# pidfile not found
+		log.log( "<directive>PID(), EX, pidfile '%s' not found" % (self.pidfile), 6 )
+		self.doAction()
+	    else:
+		log.log( "<directive>PID(), EX, pidfile '%s' found" % (self.pidfile), 6 )
+		pidfile.close()
+
+	elif self.rule == "PR":
+	    # check if process pid found in pidfile is running - no alert if pidfile not found
+	    try:
+		pidfile = open( self.pidfile, 'r' )
+	    except IOError:
+		# pidfile not found
+		log.log( "<directive>PID(), PR, pidfile '%s' not found" % (self.pidfile), 6 )
+	    else:
+		log.log( "<directive>PID(), PR, pidfile '%s' found" % (self.pidfile), 6 )
+		pid = pidfile.readline()
+		pidfile.close()
+		pid = string.strip(pid)
+		# strip '\n' from pid string if necessary
+		if pid[-1:] == '\n':
+		    pid = pid[:-1]
+
+		self.varDict['pid'] = pid
+
+		# Search for pid from process list
+		if plist.pidExists( pid ) == 0:
+		    # there is no process with pid == pid
+    		    log.log( "<directive>PID(), PR, pid %s not in process list" % (pid), 6 )
+		    self.doAction()
+		else:
+    		    log.log( "<directive>PID(), PR, pid %s is in process list" % (pid), 6 )
+
+
+	else:
+	    # invalid rule
+	    log.log( "<directive>PID(), Error, '%s' is not a valid PID rule, config line follows,\n%s\n" % (self.rule,self.raw), 2 )
 
 
 class D(Directive):

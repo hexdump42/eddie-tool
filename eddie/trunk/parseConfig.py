@@ -80,12 +80,14 @@ def readFile(file, ruleList, defDict, MDict, ADict):
 		else:
 		    try:
 			action = directives[d](line)
+			#print "<parseConfig>readFile(), created action '%s'" % (action.type)
 		    except (directive.ParseFailure, definition.ParseFailure):
 			log.log( "<parseConfig>readFile(), Alert, Parse failure in '%s' on line %d - skipping (line follows)\n%s" % (file, count, line), 3 )
 			continue
 		
 		if action.basetype == 'Directive':
 		    ruleList + action
+		    log.log( "<parseConfig>readFile(), added action '%s' to ruleList" % (action.type), 9 )
 		elif action.basetype == 'Definition':
 		    if action.type == 'DEF':
 			defDict[action.name] = action.text
