@@ -779,7 +779,11 @@ class Directive:
 	except SyntaxError, details:
 	    # Syntax error evaluating rule. Log and end thread without
 	    # submitting broken directive back into queue.
-    	    log.log( "<directive>Directive.docheck(): SyntaxError evaluating rule '%s' - not re-queued" % (self.args.rule), 4 )
+    	    log.log( "<directive>Directive.docheck(): SyntaxError evaluating rule '%s', data=%s - not re-queued" % (self.args.rule,data), 4 )
+	except NameError, details:
+	    # Name error evaluating rule. Log and end thread without
+	    # submitting broken directive back into queue.
+    	    log.log( "<directive>Directive.docheck(): NameError evaluating rule '%s', %s, data=%s - not re-queued" % (self.args.rule,details,data), 4 )
 	    return
 
 	# Create action string substitution variables.
