@@ -42,11 +42,13 @@ y Multi-threaded checks
 - Can store state between sessions (for FILE checks, history, etc).
   Store state to /var/run/eddie/.... which can be re-read if restarted.
 
-BUGS:
- - Solaris 8:
-     top: /dev/ksyms is not a 32-bit kernel namelist
-     kvm_open: Error 0
+- "cron" mode for directives: always tries to run jobs starting from specific
+  intervals, rather than pausing for interval between runs.
 
+
+BUGS:
  - Unknown directives are not handled properly.
+
+ - core dumps from iostat/kstat library sometimes...
 
 
