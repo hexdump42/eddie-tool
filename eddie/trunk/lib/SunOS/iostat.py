@@ -12,7 +12,7 @@
 ## $Id$
 ##
 
-import os, string, time, re
+import sys, os, string, time, re
 import log, datastore
 import solkstat
 
@@ -37,15 +37,19 @@ class iostat(datastore.DataStore):
 	k = khead
 	while k:
 	    if k.ks_type == 3:
-		name = k.ks_name
-		data = k.ks_data
-		snaptime = k.ks_snaptime
+		try:
+		    name = k.ks_name
+		    data = k.ks_data
+		    snaptime = k.ks_snaptime
 
-		data['name'] = name		# add name to data hash
-		data['snaptime'] = snaptime	# add snaptime to data hash
+		    data['name'] = name		# add name to data hash
+		    data['snaptime'] = snaptime	# add snaptime to data hash
 
-		self.hash[name] = data
-		self.snaptimes[name] = snaptime
+		    self.hash[name] = data
+		    self.snaptimes[name] = snaptime
+		except AttributeError:
+		    print "Error with kstat list: '%s'.  k.ks_name='%s'" % (sys.exc_value,k.ks_name)
+		    log.log( "<iostat>iostat(), Error with kstat list: '%s'. k.ks_name='%s'" % (sys.exc_value,ks.ks_name), 3 )
 
 	    k = k.getnext()
 

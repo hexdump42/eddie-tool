@@ -397,6 +397,28 @@ class ELVINPORT(ConfigOption):
 	log.log( "<Config>ELVINPORT(), elvin port set to '%d'." % (eddieElvin.ELVINPORT), 6 )
 
 
+def loadExtraDirectives( directivedir ):
+    """Load extra directives from given directory.  Each file
+    in this directory must be an importable (.py) Python module
+    which contain directives (one or more) as classes."""
+
+    oldsyspath = sys.path			# save sys.path
+    sys.path = [directivedir,] + sys.path	# restrict module path
+    extradirectives = os.listdir(directivedir)
+    for m in extradirectives:
+	if m[-3:] == ".py":			# only want ".py" files
+	    mname = m[:-3]			# get module name
+	    exec "import %s"%(mname)		# import module
+	    exec "mobjs = dir(%s)"%(mname)	# list of module's objects
+	    for o in mobjs:			# Cycle thru module's objects
+		d = "%s.%s"%(mname,o)
+		exec "dtype = type(%s)"%(d)	# Get object type
+		if dtype == type(Config):	# only want "class" objects
+		    exec "directives[o] = %s"%(d) # add to directives dict
+
+    sys.path = oldsyspath		# restore module path
+
+    print "directives:",directives
 
 
 ##
@@ -404,6 +426,7 @@ class ELVINPORT(ConfigOption):
 ##
 
 ## Just the directives
+global directives
 directives = {  
 		"N"		: definition.N,
 		"FS"		: directive.FS,
@@ -417,6 +440,7 @@ directives = {
                 "SYS"		: directive.SYS,
                 "STORE"		: directive.STORE,
              }
+
 
 ## Just the definitions
 definitions = {
