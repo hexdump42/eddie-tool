@@ -174,7 +174,7 @@ FILE file1:
     file='/tmp/file1.tmp'
     rule='not exists'
     action=email(ALERT_EMAIL, "%(file)s does not exist")
-    act2ok=email("ALERT_EMAIL, %(file)s now exists")
+    act2ok=email(ALERT_EMAIL, "%(file)s now exists")
 
 FILE file2:
     file='/tmp/file2.tmp'
