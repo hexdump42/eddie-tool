@@ -35,6 +35,8 @@ import log, history, utils
 ##
 class dfList:
     def __init__(self):
+	self.dfheader = ""
+
 	self.refresh()
 
 

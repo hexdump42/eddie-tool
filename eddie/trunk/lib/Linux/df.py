@@ -35,10 +35,12 @@ import log, history, utils
 
 
 ##
-## Class dfList - instantiates with a list of disk stats
+## Class dfList - instantiates with a list of disk usage stats
 ##
 class dfList:
     def __init__(self):
+	self.dfheader = ""
+
 	self.refresh()
 
 
@@ -46,7 +48,7 @@ class dfList:
 	"""Force df refresh."""
 
 	rawList = utils.safe_popen('df -text2', 'r')
-	rawList.readline()	# skip header
+	self.dfheader = rawList.readline()	# header
  
 	self.list = []
 	self.hash = {}

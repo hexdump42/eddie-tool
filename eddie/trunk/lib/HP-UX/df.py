@@ -30,10 +30,12 @@ import os, string
 import log, history, utils
 
 ##
-## Class dfList - instantiates with a list of disk stats
+## Class dfList - instantiates with a list of disk usage stats
 ##
 class dfList:
     def __init__(self):
+	self.dfheader = ""
+
 	self.refresh()
 
 
