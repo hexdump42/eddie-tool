@@ -168,16 +168,30 @@ class SNMP(directive.Directive):
 	    try:
 		answer = s.send_and_receive(question)
 	    except self.session.error.NoResponse:	# If timeout dont panic
+		log.log( "<snmp>SNMP.getData(): ID '%s': Timeout talking to host '%s' port %d" % (self.ID, self.args.host, self.args.port), 5 )
 		self.errors = self.errors+1
 		if self.errors >= self.args.maxretry:
 		    raise "Too Many Retries: Failed %d times" % self.errors
 		else:
-		    log.log( "<snmp>SNMP.getData(): ID '%s': Timeout talking to host '%s' port %d community '%s'" % (self.ID, self.args.host, self.args.port, self.args.community), 5 )
+		    data['failed'] = 1
+		    return data
+	    except pysnmp.error.TransportError, msg:		# Problem establishing snmp connection
+		log.log( "<snmp>SNMP.getData(): ID '%s': Transport error talking to host '%s' port %d, %s" % (self.ID, self.args.host, self.args.port, msg), 5 )
+		self.errors = self.errors+1
+		if self.errors >= self.args.maxretry:
+		    raise "Too Many Retries: Failed %d times" % self.errors
+		else:
 		    data['failed'] = 1
 		    return data
 	    self.errors = 0
 
-	    (obj,val) = s.decode_response(answer)
+	    try:
+	        (obj,val) = s.decode_response(answer)
+	    except pysnmp.error.BadRequestID, msg:
+	        log.log( "<snmp>SNMP.getData(): ID '%s': BadRequestID exception, %s" % (self.ID, msg), 5 )
+		data['failed'] = 1
+		return data
+
 	    resp = map(s.decode_value,val)
 
 	    if len(self.oidlist) == 1:
