@@ -57,6 +57,8 @@ class DataModules:
 	if collector in self.collectors.keys():
 	    return self.collectors[collector]
 
+        log.log( "<datacollect>DataModules.request(): importing module '%s' for collector '%s'" % (module,collector), 8 )
+
 	try:
 	    exec "import %s" % (module)
 	except ImportError:
