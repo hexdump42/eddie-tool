@@ -16,9 +16,9 @@
 
 import time, types, os, sys, thread, signal, getopt
 import log
-sys.path = ['/import/src/bin/elvin/dstc/lib/python', '/import/src/bin/elvin/dstc/sparc-sun-solaris2.5/lib'] + sys.path
+#sys.path = ['/import/src/bin/elvin/dstc/lib/python', '/import/src/bin/elvin/dstc/sparc-sun-solaris2.5/lib'] + sys.path
 try:
-    import Elvin, ElvinMisc
+	import Elvin, ElvinMisc
 except ImportError:
     print "Elvin not available..."
     log.log( "<eddieElvin>ImportError: Elvin, ElvinMisc - Elvin not available", 2 );
