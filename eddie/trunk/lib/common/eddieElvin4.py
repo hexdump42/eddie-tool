@@ -223,7 +223,7 @@ class elvinrrd(eddieElvin):
         apply( eddieElvin.__init__, (self,) )
 
 
-    def send(self, key, variable, data):
+    def send(self, key, data):
 	"""Send the message.
 	"""
 
@@ -231,9 +231,9 @@ class elvinrrd(eddieElvin):
 
 	if self.connected:
 	    # Create db entry creation 'command'
-	    edict = {      'ELVINRRD' : key,
-		             variable : data
+	    edict = {      'ELVINRRD' : key
 		    }
+	    edict.update(data)		# add data dictionary to edict
 
 	    ec.elvinc.notify( edict )
 

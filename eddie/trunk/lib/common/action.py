@@ -525,11 +525,18 @@ class action:
 
 
 
-    def elvinrrd(self, key, variable, data):
+    def elvinrrd(self, key, *data):
 	"""Send information to remote RRDtool database listener via Elvin.
+	   key is the RRD name configured in the Elvin consumer to store the data.
+           data is a variable length list of strings of the form 'var=data'
+	    where var is the RRD variable name and data is the data to store.
+           Example use in a directive:
+	    SYS loadavg1_rrd:   rule='1'        # always true
+				scanperiod='1m'
+				action="elvinrrd('loadavg1-%(h)s', 'loadavg1=%(sysloadavg1)f')"
 	"""
 
-	log.log( "<action.py>action.elvinrrd( key='%s' variable='%s' data='%s' )"%(key,variable,data), 8 )
+	log.log( "<action.py>action.elvinrrd( key='%s' data='%s' )"%(key,data), 8 )
 
 	if eddieElvin4.UseElvin == 0:
 	    log.log( "<action.py>action.elvinrrd(), Elvin is not available - skipping.", 8 )
@@ -541,24 +548,28 @@ class action:
 	    log.log( "<action.py>action.elvinrrd(), Error, eddieElvin4.elvinrrd() could not connect", 2 )
 	    return
 
-	#print "created elvinrrd() connection to elvin"
+	if len(data) == 0:
+	    raise "elvinrrd exception, no data supplied"
 
-	if variable == None or data == None:
-	    # error
-	    raise "elvinrrd exception, no variable or data defined"
-	else:
-	    key = parseVars( key, self.varDict )	# substitute variables
-	    variable = parseVars( variable, self.varDict )	# substitute variables
-	    data = parseVars( data, self.varDict )	# substitute variables
+	datadict = {}
+	for d in data:
+	    (var,val) = string.split(d, '=')
+	    if var == None or var == '' or val == None:
+		raise "elvinrrd exception, data error: var='%s' val='%s'" % (var,val)
+	    var = parseVars( var, self.varDict )	# substitute variables
+	    val = parseVars( val, self.varDict )	# substitute variables
+	    datadict[var] = val
 
-	    log.log( "<action.py>action.elvinrrd() sending: key='%s' variable='%s' data='%s'"%(key,variable,data), 8 )
-	    retval = e.send(key, variable, data)
+	key = parseVars( key, self.varDict )	# substitute variables
+
+	log.log( "<action.py>action.elvinrrd() sending: key='%s' data=%s"%(key,datadict), 8 )
+	retval = e.send(key, datadict)
 
 	# Alert if return value != 0
 	if retval != 0:
-	    log.log( "<action.py>action.elvinrrd(%s, %s, %s), Alert, return value for e.send() is %d" % (key,variable,data,retval), 3 )
+	    log.log( "<action.py>action.elvinrrd(%s, %s), Alert, return value for e.send() is %d" % (key,datadict,retval), 3 )
 	else:
-	    log.log( "<action.py>action.elvinrrd(%s, %s, %s): store ok" % (key,variable,data), 7 )
+	    log.log( "<action.py>action.elvinrrd(%s, %s): store ok" % (key,datadict), 7 )
 
 
 
