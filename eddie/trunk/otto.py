@@ -34,13 +34,18 @@ config_file = 'config/otto.cf'
 
 # Exit Otto cleanly
 def ottoexit():
-    # email admin anything else...
+    # email admin any remaining messages
     log.sendadminlog()
     sys.exit()
 
 
 # Signal Handler
 def SigHandler( sig, frame ):
+    global ourList		# global list of all directives
+    global defDict		# global dictionary of DEFinitions
+    global MDict		# global dictionary of Messages
+    global ADict		# global dictionary of Actions
+
     if sig == signal.SIGHUP:
 	# SIGHUP (Hangup) - reload config
 	log.log( '<otto>SigHandler(), SIGHUP encountered - reloading config', 2 )
@@ -106,8 +111,8 @@ def ottoguts(ottoHistory):
     log.log( "<otto>ottoguts(), beginning checks", 8 )
 
     ## debugging - test with 'D' directive for now ##
-    ## for d in ourList.keylist():
-    for d in ('COM',):
+    for d in ourList.keylist():
+    #for d in ('COM',):
 	list = ourList[d]
 	if list != None:
 	    for i in list:
