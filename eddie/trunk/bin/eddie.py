@@ -14,8 +14,10 @@
 
 EDDIE_VER='0.24'
 
+NUM_THREADS=10
+
 # Standard Python modules
-import sys, os, time, signal, re
+import sys, os, time, signal, re, threading
 
 # Work out the base Eddie directory which should contain bin/, lib/, etc...
 cwd = os.getcwd()
@@ -55,7 +57,7 @@ sys.path = oslibdirs + [commonlibdir,] + sys.path
 #print "sys.path:",sys.path
 
 # Python common Eddie modules
-import parseConfig, directive, definition, config, action, log, history
+import parseConfig, directive, definition, config, action, log, history, timeQueue
 
 # Python OS-specific Eddie modules
 import proc, df, netstat, system
@@ -86,13 +88,25 @@ def SigHandler( sig, frame ):
     if sig == signal.SIGHUP:
 	# SIGHUP (Hangup) - reload config
 	log.log( '<eddie>SigHandler(), SIGHUP encountered - reloading config', 3 )
-	#
+
 	# reset config and read in config and rules
 	global Config
 	Config = config.Config( '__main__' )
 
 	# read in config and rules
 	parseConfig.readConf(config_file, Config)
+
+	# Initialise check queue
+	q = timeQueue.timeQueue(0)			# new timeQueue object, size is infinite
+	buildCheckQueue(q, Config)
+	Config.q = q
+
+	#print "q:",q
+	#print "q.qsize=%d" % (q.qsize())
+
+	please_die.clear()
+	sthread = threading.Thread(group=None, target=scheduler, name=None, args=(q,Config,please_die), kwargs={})
+	sthread.start()	# start it up
 
     elif sig == signal.SIGINT:
 	# SIGINT (CTRL-c) - quit now
@@ -131,38 +145,89 @@ def countFDs():
     return fdcnt
 
 
-def check(Config):
-    """Perform all the checks."""
+def scheduler(q, Config, die_event):
+    """The Eddie scheduler thread.  This thread tracks the queue of waiting
+    checks and executes them in their own thread as required.  It attempts
+    to limit the number of actual checking threads running to keep things
+    sane."""
 
-    # perform checks in current config group
+    while not die_event.isSet():
+
+	while threading.activeCount() > NUM_THREADS:
+	    # do nothing while we have no active threads to play with
+	    # TODO: if we wait too long, something is probably wrong, so do something about it...
+	    log.log( "<eddie>scheduler(), active thread count is %d - waiting till < %d" % (threading.activeCount(),NUM_THREADS), 8 )
+	    time.sleep(1)
+
+	# we have spare threads so get next checking object
+	while 1:
+	    (c,t) = q.head(block=1)	# wait for next object from queue
+	    log.log( "<eddie>scheduler(), waiting object is %s at %s" % (c,t), 9 )
+	    if t <= time.time():
+		log.log( "<eddie>scheduler(), object %s,%s is ready to run" % (c,t), 9 )
+		break
+	    time.sleep(1)
+
+	(c,t) = q.get(block=1)	# retrieve next object from queue
+
+	# start check in a new thread
+	log.log( "<eddie>scheduler(), Starting new thread for %s, %s" % (c,t), 8 )
+	threading.Thread(group=None, target=c.docheck, name=None, args=(Config,), kwargs={}).start()
+
+
+
+def buildCheckQueue(q, Config):
+    """Build the queue of checks that the scheduler will start with."""
+
     for d in Config.ruleList.keys():
 	list = Config.ruleList[d]
 	if list != None:
 	    for i in list:
-		log.log( "<eddie>check(), checking %s" % (i), 8 )
-		i.docheck(Config)
+		log.log( "<eddie>buildCheckQueue(), adding to Queue: %s" % (i), 8 )
+		q.put( (i,0) )
 	else:
-	    log.log( "<eddie>check(), Config.ruleList['%s'] is empty" % (d), 4 )
+	    log.log( "<eddie>buildCheckQueue(), Config.ruleList['%s'] is empty" % (d), 4 )
 
-    # perform checks for appropriate groups/hostnames
     for c in Config.groups:
 	if c.name == log.hostname or (c.name in Config.classDict.keys() and log.hostname in Config.classDict[c.name]):
-	    if Config.display == 0:
-		log.log( "<eddie>check(), Calling check() with group %s" % (c.name), 5 )
-	    else:
-		log.log( "<eddie>check(), Calling check() with group %s" % (c.name), 8 )
-	    check(c)
+	    log.log( "<eddie>buildCheckQueue(), Adding checks from group %s to queue" % (c.name), 5 )
+	    buildCheckQueue(q, c)
 	else:
-	    log.log( "<eddie>check(), Not checking group %s" % (c.name), 8 )
-
-    # only display Config information once
-    if Config.display == 0:
-	Config.display = 1
+	    log.log( "<eddie>buildCheckQueue(), Not queueing group %s" % (c.name), 8 )
 
 
+#def check(Config):
+#    """Perform all the checks."""
+#
+#    # perform checks in current config group
+#    for d in Config.ruleList.keys():
+#	list = Config.ruleList[d]
+#	if list != None:
+#	    for i in list:
+#		log.log( "<eddie>check(), checking %s" % (i), 8 )
+#		i.docheck(Config)
+#	else:
+#	    log.log( "<eddie>check(), Config.ruleList['%s'] is empty" % (d), 4 )
+#
+#    # perform checks for appropriate groups/hostnames
+#    for c in Config.groups:
+#	if c.name == log.hostname or (c.name in Config.classDict.keys() and log.hostname in Config.classDict[c.name]):
+#	    if Config.display == 0:
+#		log.log( "<eddie>check(), Calling check() with group %s" % (c.name), 5 )
+#	    else:
+#		log.log( "<eddie>check(), Calling check() with group %s" % (c.name), 8 )
+#	    check(c)
+#	else:
+#	    log.log( "<eddie>check(), Not checking group %s" % (c.name), 8 )
+#
+#    # only display Config information once
+#    if Config.display == 0:
+#	Config.display = 1
 
-# Parse command-line arguments
+
+
 def doArgs(args, argflags):
+    """Parse command-line arguments."""
     for a in args:
 	if a == '-v' or a == '--version':
 	    print "Eddie (c) Chris Miles and Rod Telford 1998-2000"
@@ -235,8 +300,22 @@ def main():
 
 
     # Main Loop
+    # Initialise check queue
+    q = timeQueue.timeQueue(0)			# new timeQueue object, size is infinite
+    buildCheckQueue(q, Config)
+    Config.q = q
+
+    #print "q:",q
+    #print "q.qsize=%d" % (q.qsize())
+
+    global please_die
+    please_die = threading.Event()		# Event object to notify the scheduler to die
+    sthread = threading.Thread(group=None, target=scheduler, name=None, args=(q,Config,please_die), kwargs={})
+    sthread.start()	# start it up
+
     while 1:
 	try:
+	    ### Perform housecleaning duties
 
 	    # Count fds in use - for debugging
 	    numfds = countFDs()
@@ -245,7 +324,11 @@ def main():
 	    # check if any config/rules files have been modified
 	    # if so, re-read config
 	    if Config.checkfiles():
-		log.log( '<eddie>eddieguts(), config files modified - reloading config', 7 )
+		log.log( '<eddie>main(), config files modified - signalling scheduler to die', 7 )
+		please_die.set()
+		sthread.join()
+
+		log.log( '<eddie>main(), config files modified - reloading config', 7 )
 
 		# reset config and read in config and rules
 		global Config
@@ -254,30 +337,40 @@ def main():
 		# read in config and rules
 		parseConfig.readConf(config_file, Config)
 
-	    # Now do all the checking
-	    log.log( "<eddie>main(), beginning checks", 7 )
-	    check(Config)
+		# Initialise check queue
+		q = timeQueue.timeQueue(0)			# new timeQueue object, size is infinite
+		buildCheckQueue(q, Config)
+		Config.q = q
 
-	    # Save history (debug.. FS only for now...)
-	    history.eddieHistory.save('FS',directive.dlist)
+		#print "q:",q
+		#print "q.qsize=%d" % (q.qsize())
+
+		please_die.clear()
+		sthread = threading.Thread(group=None, target=scheduler, name=None, args=(q,Config,please_die), kwargs={})
+		sthread.start()	# start it up
 
 	    # email admin the adminlog if required
 	    log.sendadminlog()
 
-	    # sleep for set period - only quits with CTRL-c
-	    log.log( '<eddie>main(), sleeping for %d secs' % (config.scanperiod), 6 )
-	    #print '<eddie>main(), sleeping for %d secs' % (config.scanperiod)
-
-	    # Sleep by setting SIGALRM to go off in scanperiod seconds
-	    #time.sleep( config.scanperiod )
-	    signal.alarm( config.scanperiod )
-	    signal.pause()
+	    time.sleep(10*60)	# sleep for 10 minutes between housekeeping duties
 
 	except KeyboardInterrupt:
 	    # CTRL-c hit - quit now
 	    log.log( '<eddie>main(), KeyboardInterrupt encountered - quitting', 1 )
 	    print "\nEddie quitting ... bye bye"
 	    break
+
+
+    # Save history (debug.. FS only for now...)
+    #history.eddieHistory.save('FS',directive.dlist)
+
+    # sleep for set period - only quits with CTRL-c
+    #log.log( '<eddie>main(), sleeping for %d secs' % (config.scanperiod), 6 )
+
+    # Sleep by setting SIGALRM to go off in scanperiod seconds
+    #time.sleep( config.scanperiod )
+    #signal.alarm( config.scanperiod )
+    #signal.pause()
 
 
 
