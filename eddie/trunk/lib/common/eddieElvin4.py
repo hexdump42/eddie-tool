@@ -31,8 +31,12 @@
 ELVINURL='elvin://elvin'
 ELVINSCOPE='elvin'
 
-import time, sys, traceback
+
+## Imports: Python
+import time, sys, traceback, threading
+## Imports: Eddie
 import log
+
 
 UseElvin = 1	# Switch Elvin usage on by default
 
@@ -85,6 +89,8 @@ class elvinConnection:
 	self._exit()
 
 
+elvin_connect_semaphore = threading.Semaphore()
+
 class eddieElvin:
 
     def __init__(self):
@@ -96,6 +102,11 @@ class eddieElvin:
 
     def connect(self):
 	"""Try to make an Elvin connection."""
+
+	log.log( "<eddieElvin4>eddieElvin.connect(), acquiring semaphore lock...", 8 )
+	elvin_connect_semaphore.acquire()	# semaphore lock around Elvin connect
+						# only 1 thread connects at a time
+	log.log( "<eddieElvin4>eddieElvin.connect(), got semaphore lock", 8 )
 
 	global ec
 
@@ -121,10 +132,14 @@ class eddieElvin:
 		e = sys.exc_info()
 		tb = traceback.format_list( traceback.extract_tb( e[2] ) )
 		log.log( "<eddieElvin4>eddieElvin.connect(), connect failed: %s, %s, %s." % (e[0], e[1], tb), 3 )
+		elvin_connect_semaphore.release()	# release lock
 		return 1
 
 	if not ec:
 	    log.log( "<eddieElvin4>eddieElvin.connect(), Could not connect to Elvin server", 4 )
+
+	log.log( "<eddieElvin4>eddieElvin.connect(), releasing semaphore lock", 8 )
+	elvin_connect_semaphore.release()	# release lock
 
 
     def reconnect(self):
