@@ -38,7 +38,7 @@ class netstatList:
 	    self.proto = "tcp"
 	    p = netstat(self.proto, self.port, self.host)
 
-	    key = self.proto + self.port
+	    key = self.proto + self.port + self.host
 	    self.hash[key] = p
 	    self.list.append(p)
 
@@ -53,7 +53,7 @@ class netstatList:
 	    self.proto = "udp"
 	    p = netstat(self.proto, self.port, self.host)
 
-	    key = self.proto + self.port
+	    key = self.proto + self.port + self.host
 	    self.hash[key] = p
 	    self.list.append(p)
 
@@ -78,6 +78,11 @@ class netstatList:
 	    return self.hash[key]
 	except KeyError:
 	    return None
+
+    def portExists(self, proto, port, addr): 
+	key = proto + str(port) + addr
+	return self[key]
+	
 
     def parseLine(self, line):
   	re  = '\([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+\)\.\([0-9]+\)'
@@ -110,7 +115,7 @@ class netstat:
 	self.addr  = arg[2]		# The address this port is bound to
 
     def __str__(self):
-        str = "P: " + self.proto + " p: " + self.port + " a: " + self.addr + "\n"
+        str = self.proto + "/" + self.port + " bound to " + self.addr 
 	return(str)
 
 ##

@@ -17,6 +17,7 @@ import os
 import string
 import regex
 import sys
+import socket
 import action
 import definition
 import utils
@@ -336,14 +337,35 @@ class D(Directive):
 class SP(Directive):
     def __init__(self, *arg):
 	apply( Directive.__init__, (self,) + arg )
-	self.regexp = 'SP[\t \n]+\([a-zA-Z0-9_/]+\)[\t \n]+\(.*\)'
+	self.regexp = 'SP[\t \n]+\([a-zA-Z]+\)\/\([a-zA-Z0-9_]+\)[\t \n]+\([0-9.*]+\)[\t \n]+\(.*\)'
 	fields = self.parseRaw()
-	self.port = fields[0]			# the port to check
-	self.action = fields[1]			# the action
+	self.proto  = fields[0]			# the proto to check
+	self.port_n = fields[1]			# the port to check
+	self.addr   = fields[2]			# the addr to check
+	self.action = fields[3]			# the action
+
+	# lets try resolving this service port to a number
+	try:
+	    self.port = socket.getservbyname(self.port_n, self.proto)
+	    # print p
+	except socket.error:
+	    self.port = self.port_n
+
+	self.varDict['port'] = self.port_n
+	self.varDict['addr'] = self.addr
+	self.varDict['prot'] = self.proto
+
 	log.log( "<Directive>SP, port '%s', action '%s'" % (self.port, self.action), 8 )
 
+
     def docheck(self):
-	print "SP directive doing checking......"
+
+	ret = nlist.portExists(self.proto, self.port, self.addr) != None
+	if ret != 0:
+	    log.log( "<directive>SP(), port %s/%s listener found bound to %s" % (self.proto , self.port_n, self.addr), 6 )
+	else:
+	    self.doAction()
+	    log.log( "<directive>SP(), port %s/%s no listener found bound to %s" % (self.proto , self.port_n, self.addr), 6 )
 
 
 class COM(Directive):

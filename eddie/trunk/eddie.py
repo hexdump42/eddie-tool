@@ -20,6 +20,7 @@ import sys
 
 import proc
 import df
+import netstat
 import parseConfig
 import directive
 import definition
@@ -94,6 +95,10 @@ def eddieguts(eddieHistory):
     # instantiate a disk usage list
     log.log( "<eddie>eddieguts(), creating df list", 8 )
     directive.dlist = df.dfList()
+
+    # instantiate a netstat list
+    log.log( "<eddie>eddieguts(), creating netstat list", 8 )
+    directive.nlist = netstat.netstatList()
 
     ## debugging ##
     #print "-- The following DEFs are defined: --"
