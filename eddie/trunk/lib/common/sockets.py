@@ -12,7 +12,7 @@
 ## $Id$
 ##
 ########################################################################
-## (C) CodeFX 2001
+## (C) Rod Telford and Chris Miles 2001
 ##
 ## The author accepts no responsibility for the use of this software and
 ## provides it on an ``as is'' basis without express or implied warranty.
@@ -107,7 +107,7 @@ def listen(s, Config, die_event):
             ccsock, addr = s.accept()
 	    log.log( "<sockets>listen(), accepted connection from %s:%d"%addr, 7 )
 
-            ccsock.send('Eddie Console Gateway - eddie v%s CodeFX 2001\n' % "0.25")
+            ccsock.send('Eddie Console Gateway')
 
 	    printState( Config, ccsock )
 
