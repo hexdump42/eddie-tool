@@ -26,7 +26,7 @@
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 ########################################################################
 
-import re, string, threading, os, commands
+import re, string, threading, os, commands, sys
 
 
 ##
@@ -219,16 +219,32 @@ def safe_popen( cmd, mode ):
     """
 
     safe_popen_semaphore.acquire()
-    #print "<utils>safe_popen(), semaphore acquired for '%s', '%s'" % (cmd,mode)
-    r = os.popen(cmd, mode)
-    #print "<utils>safe_popen(), pipe open, fh='%s'" % (r)
+    try:
+	r = os.popen(cmd, mode)
+    except:
+	# if popen() raises an exception we must release the
+	# semaphore lock before continuing, otherwise all further calls block -
+	# which will lock up all the available threads...
+	safe_popen_semaphore.release()
+	e = sys.exc_info()
+	raise e[0], e[1]
+
     return r
+
 
 def safe_pclose( fh ):
     """Close the file handler and release the semaphore."""
 
-    fh.close()
-    #print "<utils>safe_popen(), releasing semaphore for '%s'" % (fh)
+    try:
+	fh.close()
+    except:
+	# if close() raises an exception we must release the
+	# semaphore lock before continuing, otherwise all further calls block -
+	# which will lock up all the available threads...
+	safe_popen_semaphore.release()
+	e = sys.exc_info()
+	raise e[0], e[1]
+
     safe_popen_semaphore.release()
 
 
@@ -247,7 +263,16 @@ def safe_getstatusoutput( cmd ):
     """
 
     safe_getstatusoutput_semaphore.acquire()
-    (r, output) = commands.getstatusoutput( cmd )
+    try:
+	(r, output) = commands.getstatusoutput( cmd )
+    except:
+	# if getstatusoutput() raises an exception we must release the
+	# semaphore lock before continuing, otherwise all further calls block -
+	# which will lock up all the available threads...
+	safe_getstatusoutput_semaphore.release()
+	e = sys.exc_info()
+	raise e[0], e[1]
+
     safe_getstatusoutput_semaphore.release()
 
     return (r, output)
