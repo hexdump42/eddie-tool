@@ -11,7 +11,7 @@
 ## $Id$
 ##
 ########################################################################
-## (C) Chris Miles 2001
+## (C) Chris Miles 2001-2004
 ##
 ## The author accepts no responsibility for the use of this software and
 ## provides it on an ``as is'' basis without express or implied warranty.
@@ -39,15 +39,17 @@
 # Python modules
 import string
 # Eddie modules
-import datacollect, log, utils
+import datacollect
+import log
+import utils
 
 
 # List of interpreters - default empty
 interpreters = []
 
+
 class procList(datacollect.DataCollect):
-    """
-    Class procList - holds a list of running processes and related information.
+    """Class procList - holds a list of running processes and related information.
     """
 
     def __init__(self):
@@ -58,8 +60,7 @@ class procList(datacollect.DataCollect):
     # Public, thread-safe, methods
 
     def procExists(self, procname):
-        """
-        Search the process list and return the number of occurrences
+        """Search the process list and return the number of occurrences
         of procname.
         """
 
@@ -75,8 +76,7 @@ class procList(datacollect.DataCollect):
 
 
     def pidExists(self, pid):
-        """
-        Return true (1) if a process with 'pid' exists,
+        """Return true (1) if a process with 'pid' exists,
         or false (0) otherwise.
         """
 
@@ -90,8 +90,7 @@ class procList(datacollect.DataCollect):
 
 
     def __getitem__(self, name):
-        """
-        Overload '[]' to return corresponding process object for given
+        """Overload '[]' to return corresponding process object for given
         process name.
         """
 
@@ -106,8 +105,7 @@ class procList(datacollect.DataCollect):
 
 
     def allprocs(self):
-        """
-        Return dictionary of all processes (which are dictionaries of each
+        """Return dictionary of all processes (which are dictionaries of each
         process' details).
         """
 
@@ -125,8 +123,7 @@ class procList(datacollect.DataCollect):
     # Private methods.  No thread safety if not using public methods.
 
     def collectData(self):
-        """
-        Collect process list.
+        """Collect process list.
         """
 
 	self.data.datahash = {}		# dict of processes keyed by pid
@@ -149,8 +146,7 @@ class procList(datacollect.DataCollect):
 
 
 class proc:
-    """
-    Class proc : holds information about a single process.
+    """Class proc : holds information about a single process.
     """
 
     def __init__(self, rawline):
@@ -220,27 +216,31 @@ class proc:
 			self.procname = ''
 
     def timeconv(self,str):
-    	""" 
-	Convert something vaguely in the format [dd-]hh:mm:ss into
+    	"""Convert something vaguely in the format [dd-]hh:mm:ss into
 	something usable - ie pure seconds.
 	"""
 
-	s=0
-	t=string.split(str,"-")
-	if len(t)>1:
-	    s=s+86400*int(t[0])	
-	    str=t[1]
-	else:
-	    str=t[0]
-	t=string.split(str,":")
-	s=s+int(t[-1])
-	s=s+60*int(t[-2])
-	if len(t)==3:
-	    s=s+3600*int(t[0])
+	s = 0
+	try:
+	    t = string.split(str,"-")
+	    if len(t) > 1:
+		s = s + 86400 * int(t[0])	
+		str = t[1]
+	    else:
+		str = t[0]
+	    t = string.split(str,":")
+	    s = s + int(t[-1])
+	    s = s + 60 * int(t[-2])
+	    if len(t) == 3:
+		s = s + 3600 * int(t[0])
+	except ValueError:
+	    log.log("<proc>procList.timeconv(): Problem converting %s" % str, 7)
+	    return 0
     	return s
 
     def __str__(self):
-	# display process details (OLD, doesn't show many details)
+	"""Display process details (OLD, doesn't show many details)."""
+
 	c = string.ljust(self.procname, 20)
 	u = string.ljust(self.comm, 20)
 	t = string.ljust(self.time, 10)
@@ -249,8 +249,7 @@ class proc:
 
 
     def procinfo(self):
-	"""
-        Return process details as a dictionary.
+	"""Return process details as a dictionary.
         """
 
 	info = {}
