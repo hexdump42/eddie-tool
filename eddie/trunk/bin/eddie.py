@@ -1,5 +1,5 @@
-#!/usr/local/bin/python
-## 
+#!/opt/python2/bin/python
+##
 ## File         : eddie.py 
 ## 
 ## Author       : Rod Telford  <rtelford@codefx.com.au>
@@ -97,29 +97,46 @@ global cthread
 # Load Directive
 config.loadExtraDirectives(os.path.join(commonlibdir, "Directives"))
 
-# Start Stop the Main threads
+
 def start_threads(sargs, cargs):
-    global sthread
-    global cthread
+    """Start any support threads that are required.
+    Currently these are:
+     - Scheduler thread: schedules directives to run
+     - Console Server thread: handles connections to console port
+    """
 
-    please_die.clear()
+    please_die.clear()		# reset thread signal
+
+    global sthread		# the Scheduler thread
     sthread = threading.Thread(group=None, target=scheduler, name='Scheduler', args=sargs, kwargs={})
-    sthread.start() # start it up
+    sthread.start() 		# start the thread running
 
-    cthread = threading.Thread(group=None, target=sockets.console_server_thread, name='Console', args=cargs, kwargs={})
-    cthread.start()
+    global cthread		# the Console Server thread
+    if config.consport > 0:	# don't start if CONSPORT=0
+	cthread = threading.Thread(group=None, target=sockets.console_server_thread, name='Console', args=cargs, kwargs={})
+	cthread.start()
 
     return()
+
 
 def stop_threads():
-    please_die.set()
-    sthread.join()
-    cthread.join()
+    """Stop any threads started by start_threads().
+    """
+
+    please_die.set()		# signal threads to die
+
+    sthread.join()		# wait for schedular thread to die
+
+    if config.consport > 0:	# console thread not running if CONSPORT=0
+	cthread.join()		# wait for console thread to die
 
     return()
+
  
-# Exit Eddie cleanly
 def eddieexit():
+    """Exit Eddie cleanly.
+    """
+
     log.log( '<eddie>eddieexit(), Eddie exiting cleanly.', 3 )
     # email admin any remaining messages
     log.sendadminlog(1)
@@ -403,7 +420,7 @@ def main():
     cargs = (Config, please_die, config.consport)
     start_threads(sargs,cargs)
 
-    while 1:
+    while not please_die.isSet():
 	try:
 	    ### Perform housecleaning duties
 
@@ -440,25 +457,20 @@ def main():
 	    # email admin the adminlog if required
 	    log.sendadminlog()
 
-	    time.sleep(10*60)	# sleep for 10 minutes between housekeeping duties
+	    #time.sleep(10*60)	# sleep for 10 minutes between housekeeping duties
+	    please_die.wait(10*60)	# sleep for 10 minutes between housekeeping duties
+					# or until all threads signalled to exit
 
 	except KeyboardInterrupt:
 	    # CTRL-c hit - quit now
 	    log.log( '<eddie>main(), KeyboardInterrupt encountered - quitting', 1 )
 	    print "\nEddie quitting ... bye bye"
-	    break
+	    eddieexit()
 
 
-    # Save history (debug.. FS only for now...)
-    #history.eddieHistory.save('FS',directive.dlist)
+    log.log( '<eddie>main(), main thread signalled to die - exiting', 1 )
+    eddieexit()
 
-    # sleep for set period - only quits with CTRL-c
-    #log.log( '<eddie>main(), sleeping for %d secs' % (config.scanperiod), 6 )
-
-    # Sleep by setting SIGALRM to go off in scanperiod seconds
-    #time.sleep( config.scanperiod )
-    #signal.alarm( config.scanperiod )
-    #signal.pause()
 
 
 
