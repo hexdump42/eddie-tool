@@ -41,6 +41,7 @@ cwd = os.getcwd()
 ewd = os.path.split(sys.argv[0])[0]
 fullp = os.path.join(cwd, ewd)
 basedir = os.path.join(fullp, '..')
+basedir = os.path.normpath(basedir)
 
 # Determine system type
 uname = os.uname()
