@@ -10,7 +10,7 @@
 ## $Id$
 ##
 ########################################################################
-## (C) Chris Miles 2001
+## (C) Chris Miles 2001-2005
 ##
 ## The author accepts no responsibility for the use of this software and
 ## provides it on an ``as is'' basis without express or implied warranty.
@@ -71,6 +71,7 @@
 # Python modules
 import string
 import re
+import os
 # Eddie modules
 import datacollect
 import log
@@ -99,7 +100,7 @@ class system(datacollect.DataCollect):
 	try:
 	    fp = open( '/proc/loadavg', 'r' )
 	except IOError:
-	    log.log( "<system>system.getSystemstate(): cannot read /proc/loadavg", 5 )
+	    log.log( "<system>system.collectData(): cannot read /proc/loadavg", 5 )
 	else:
 	    line = fp.read()
 	    fp.close()
@@ -112,7 +113,7 @@ class system(datacollect.DataCollect):
 	try:
 	    fp = open( '/proc/uptime', 'r' )
 	except IOError:
-	    log.log( "<system>system.getSystemstate(): cannot read /proc/uptime", 5 )
+	    log.log( "<system>system.collectData(): cannot read /proc/uptime", 5 )
 	else:
 	    line = fp.read()
 	    fp.close()
@@ -124,7 +125,7 @@ class system(datacollect.DataCollect):
 	try:
 	    fp = open( '/proc/stat', 'r' )
 	except IOError:
-	    log.log( "<system>system.getSystemstate(): cannot read /proc/stat", 5 )
+	    log.log( "<system>system.collectData(): cannot read /proc/stat", 5 )
 	else:
 	    line = fp.readline()
 	    while line != "":
@@ -226,36 +227,95 @@ class system(datacollect.DataCollect):
 
 	    fp.close()
 
+
+	# Get VM statistics from /proc/vmstat (on newer kernels)
+	vmstats = {}
+	if os.path.exists('/proc/vmstat'):
+	    try:
+		fp = open( '/proc/vmstat', 'r' )
+	    except IOError:
+		log.log( "<system>system.collectData(): cannot read /proc/vmstat", 5 )
+	    else:
+		lines = fp.readlines()
+		fp.close()
+
+		for line in lines:
+		    try:
+			(key,val) = line.split()
+		    except ValueError:
+			log.log( "<system>system.collectData(): cannot parse /proc/vmstat line: %s" % (line), 5 )
+		    else:
+			vmstats[key] = val
+
+		if vmstats.has_key( 'pgpgin' ):
+		    self.data.datahash['ctr_pages_in'] = int( vmstats['pgpgin'] )
+		if vmstats.has_key( 'pgpgout' ):
+		    self.data.datahash['ctr_pages_out'] = int( vmstats['pgpgout'] )
+		if vmstats.has_key( 'pswpin' ):
+		    self.data.datahash['ctr_pages_swapin'] = int( vmstats['pswpin'] )
+		if vmstats.has_key( 'pswpout' ):
+		    self.data.datahash['ctr_pages_swapout'] = int( vmstats['pswpout'] )
+
+
 	# Get memory statistics from /proc/meminfo
+	meminfo={}
 	try:
 	    fp = open( '/proc/meminfo', 'r' )
 	except IOError:
-	    log.log( "<system>system.getSystemstate(): cannot read /proc/meminfo", 5 )
+	    log.log( "<system>system.collectData(): cannot read /proc/meminfo", 5 )
 	else:
-	    foo = fp.readline()		# skip header
-	    memline = fp.readline()	# read Memory stats
-	    swapline = fp.readline()	# read Swap stats
+	    lines = fp.readlines()
 	    fp.close()
+#	    if len(lines) == 17 or len(lines) == 22:
+	    if len(lines[0].split()) != 6:
+		# Method of parsing for kernel 2.6.*
+		# Based on patch submitted by Emil 2005-01-17
+#		if len(lines) == 17:
+#		    lines = lines[3:]
+		for line in lines:
+		    fields = line.split(":")
+		    meminfo[fields[0].lower()] = int(fields[1].strip().split(" ")[0])*1024
 
-	    memline_list = string.split( memline )
-	    if memline_list[0] != "Mem:" or len(memline_list) != 7:
-		log.log( "<system>system.getSystemstate(): error parsing Memory information from /proc/meminfo", 5 )
+		self.data.datahash['mem_total'] = long(meminfo['memtotal'])
+		self.data.datahash['mem_free'] = long(meminfo['memfree'])
+		self.data.datahash['mem_used'] = long(meminfo['memtotal'] - meminfo['memfree'])
+		if meminfo.has_key('memshared'):
+		    self.data.datahash['mem_shared'] = long(meminfo['memshared'])
+		else:
+		    self.data.datahash['mem_shared'] = long(0) #meminfo['memshared'] doesn't seem to exist in 2.6 (22lines) but what I have seen 2.4.22
+		self.data.datahash['mem_buffers'] = long(meminfo['buffers'])
+		self.data.datahash['mem_cached'] = long(meminfo['cached'])
+		self.data.datahash['swap_total'] = long(meminfo['swaptotal'])
+		self.data.datahash['swap_used'] = long(meminfo['swaptotal']-meminfo['swapfree'])
+		self.data.datahash['swap_free'] = long(meminfo['swapfree'])
+
 	    else:
-		self.data.datahash['mem_total'] = long( memline_list[1] )
-		self.data.datahash['mem_used'] = long( memline_list[2] )
-		self.data.datahash['mem_free'] = long( memline_list[3] )
-		self.data.datahash['mem_shared'] = long( memline_list[4] )
-		self.data.datahash['mem_buffers'] = long( memline_list[5] )
-		self.data.datahash['mem_cached'] = long( memline_list[6] )
+		# Method of parsing /proc/meminfo for kernel 2.4.*
+#		fp.seek(0)
+#		foo = fp.readline()   # skip header
+#		memline = fp.readline() # read Memory stats
+#		swapline = fp.readline()  # read Swap stats
+		memline = lines[1]		# read Memory stats
+		swapline = lines[2]		# read Swap stats
 
-	    swapline_list = string.split( swapline )
-	    if swapline_list[0] != "Swap:" or len(swapline_list) != 4:
-		log.log( "<system>system.getSystemstate(): error parsing Swap information from /proc/meminfo", 5 )
-	    else:
-		self.data.datahash['swap_total'] = long( swapline_list[1] )
-		self.data.datahash['swap_used'] = long( swapline_list[2] )
-		self.data.datahash['swap_free'] = long( swapline_list[3] )
+		memline_list = string.split( memline )
+		if memline_list[0] != "Mem:" or len(memline_list) != 7:
+		    log.log( "<system>system.collectData(): error parsing Memory information from /proc/meminfo", 5 )
+		else:
+		    self.data.datahash['mem_total'] = long( memline_list[1] )
+		    self.data.datahash['mem_used'] = long( memline_list[2] )
+		    self.data.datahash['mem_free'] = long( memline_list[3] )
+		    self.data.datahash['mem_shared'] = long( memline_list[4] )
+		    self.data.datahash['mem_buffers'] = long( memline_list[5] )
+		    self.data.datahash['mem_cached'] = long( memline_list[6] )
 
+		swapline_list = string.split( swapline )
+		if swapline_list[0] != "Swap:" or len(swapline_list) != 4:
+		    log.log( "<system>system.collectData(): error parsing Swap information from /proc/meminfo", 5 )
+		else:
+		    self.data.datahash['swap_total'] = long( swapline_list[1] )
+		    self.data.datahash['swap_used'] = long( swapline_list[2] )
+		    self.data.datahash['swap_free'] = long( swapline_list[3] )
 
 	log.log( "<system>system.collectData(): system data collected", 7 )
 
