@@ -30,10 +30,9 @@ import time, sys, traceback, threading, Queue
 import log
 
 
-## Default Elvin server settings.  These are overridden by ELVINURL
-##  and ELVINSCOPE config file options.
-##  Default to the public Elvin server at DSTC.
-ELVINURL='elvin://elvin.dstc.edu.au'
+## Default Elvin server settings - empty means Elvin is disabled.
+## These are overridden by ELVINURL and ELVINSCOPE config file options.
+ELVINURL=''
 ELVINSCOPE=''
 
 
@@ -107,12 +106,18 @@ class Elvin:
 
     def __init__(self):
 
+	global UseElvin
 	if UseElvin == 0:
 	    raise ElvinInitError, "Elvin modules not found"
+
+	if not ELVINURL and not ELVINSCOPE:
+	    UseElvin = 0
+	    raise ElvinInitError, "Elvin administratively disabled"
 
 	self.eq = Queue.Queue()		# Elvin message queue
 
 	#-- create Elvin client using ThreadedLoop
+	log.log( "<eddieElvin4>Elvin.__init__(): Creating elvin client (ThreadedLoop)", 8 )
 	self.client = elvin.client(elvin.ThreadedLoop)
 
 
