@@ -531,9 +531,9 @@ class COM(Directive):
 	    if err[-1:] == '\n':
 		err = err[:-1]
 
-        log.log( "<directive>COM.docheck(), retval=%d" % retval, 9 )
-	log.log( "<directive>COM.docheck(), stdout='%s'" % out, 9 )
-	log.log( "<directive>COM.docheck(), stderr='%s'" % err, 9 )
+        log.log( "<directive>COM.docheck(), retval=%d" % retval, 8 )
+	log.log( "<directive>COM.docheck(), stdout='%s'" % out, 8 )
+	log.log( "<directive>COM.docheck(), stderr='%s'" % err, 8 )
 
 	# save values in variable dictionary
 	self.Action.varDict['comout'] = out
@@ -548,8 +548,9 @@ class COM(Directive):
 	try:
 	    result = eval( self.rule, comenv )
 	except:
-	    print "COM.docheck() : an error occured with rule '%s' - env was: %s"%(self.rule,comenv)
-	    log.log( "<directive>COM.docheck() : an error occured with rule '%s' - env was: %s"%(self.rule,comenv), 3 )
+	    #print "COM.docheck() : an error occured with rule '%s' - env was: %s"%(self.rule,comenv)
+	    log.log( "<directive>COM.docheck() : an error occured with rule '%s' exception type: '%s' exception value: '%s' - env was: %s"%(self.rule,sys.exc_type,sys.exc_value,comenv), 3 )
+	    return
 
         log.log( "<directive>COM.docheck(), eval:'%s', result='%s'" % (self.rule,result), 9 )
 	if result != 0:
