@@ -1,0 +1,82 @@
+Eddie - Quick Start Guide
+2001-06-18 Chris Miles <chris@codefx.com.au>
+
+For the impatient, here is a quickstart guide to getting Eddie up & running.
+Note that the 'Quickstart' method will only get you a running monitoring system
+but will not get you a monitoring system customized to your environment - that
+is up to you, and usually takes a reasonable amount of effort working out what
+you want to monitor before you can monitor it.
+
+
+1. Unpack Eddie somewhere like /opt or /usr/local, eg:
+       $ cd /opt
+       $ gtar xvzf /tmp/eddie.tgz
+   will create the eddie directory with all subdirectories like bin, lib, doc.
+
+2. Point Eddie to your Python installation.
+   [Eddie requires Python, and has been tested with most Python versions
+   between 1.5.2 and 2.1]
+   So edit the first line of eddie/bin/eddie.py to point to your python.
+   Eg:
+       $ which python
+       /usr/bin/python
+       $ vi /opt/eddie/bin/eddie.py
+       #!/usr/bin/python
+   ..etc..
+
+3. Create a configuration file in eddie/config/ called eddie.cf
+   The easiest way to do this is to copy eddie/config.sample/eddie.cf
+   and modify it to suit your needs.
+   Eg:
+       $ cd /opt/eddie
+       $ cp config.sample/eddie.cf config/eddie.cf
+       $ vi config/eddie.cf
+   the documentation in eddie.cf should explain enough to get you started.
+
+4. At the bottom of eddie.cf remove all INCLUDE lines and add a line like:
+       INCLUDE 'test.rules'
+
+5. Now create a file called test.rules in the same directory as eddie.cf
+   Eg:
+       $ cd /opt/eddie
+       $ vi config/test.rules
+
+6. Add the following lines, as they appear below between the '###'s:
+
+######################################################
+PROC init:	procname='init'
+		rule=NR
+                action='email("root", "%(procp)s on %(h)s is not running")'
+
+FS rootfs:	fs='/'
+		rule='capac>=90'
+		action='email("root", "%(fsf)s is at %(fscapac)s%% on %(h)s")'
+######################################################
+
+   These are two basic Eddie directives.  The first is a process check which
+   will alert if the init process is not running.  procname defines the
+   process name, rule defines the type of check (NR means "Not Running") and
+   action defines what to do if rule is true.
+
+   The second directive is a filesystem check which checks if the root
+   filesystem is 90% or more full.  fs defines the filesystem to check,
+   rule defines the type of rule, in this case a simple test is defined
+   which will be executed in a Python environment.  capac will contain the
+   current percentage full of the filesystem in question, and so the rule
+   will be true if capac is >= 90%.  The action, again, defines what action
+   to take if the rule is true.
+
+7. Start Eddie running by starting bin/eddie.py
+   Eg:
+       $ /opt/eddie/bin/eddie.py
+   You can watch the log file, at the location you defined in eddie.cf.
+   In this case, if init is running and / is less than 90% full, root
+   will get no alert emails.  You can force this by changing procname
+   to some non-existence process name (say 'foo') and changing the FS
+   rule to be a lot lower, like 'capac>=1'.  If you get emails from
+   these tests then the basic Eddie functionality is working.
+
+8. Customize the Eddie configuration by examining the files in config.sample
+   and reading the other documentation.
+
+

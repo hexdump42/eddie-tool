@@ -1,0 +1,46 @@
+# Eddie config file
+#  Rules specific to Primary/Secondary DNS servers.
+#  This is a sample configuration only.
+
+group dns:
+
+    PROC named:		procname='named'
+			rule=NR
+			action='COMMONALERT(commonmsg.proc,2)'
+    PROC ntpd:		procname='ntpd'
+			rule=NR
+			action='COMMONALERT(commonmsg.proc,1)'
+    PROC radiusd:	procname='radiusd'
+			rule=NR
+			action='COMMONRESTART(commonmsg.proc,0)'
+    PROC sendmail:	procname='sendmail'
+			rule=NR
+			action='COMMONALERT(commonmsg.proc,1)'
+
+    FS home:		fs='/home'
+			rule='capac>=98'
+			action='COMMONALERT(commonmsg.fs,0)'
+    FS opt:		fs='/opt'
+			rule='capac>=97'
+			action='COMMONALERT(commonmsg.fs,1)'
+    FS varlog:		fs='/var/log'
+			rule='capac>=95'
+			action='COMMONALERT(commonmsg.fs,2)'
+    FS varspool:	fs='/var/spool'
+			rule='capac>=90'
+			action='COMMONALERT(commonmsg.fs,2)'
+
+    PID named1:		pid='/var/run/named.pid'
+			rule=EX
+			action='COMMONALERT(commonmsg.pid,0)'
+    PID named2:		pid='/var/run/named.pid'
+			rule=PR
+			action='COMMONALERT(commonmsg.pidpr,1)'
+    PID sendmail1:	pid='/etc/mail/sendmail.pid'
+			rule=EX
+			action='COMMONALERT(commonmsg.pid,0)'
+    PID sendmail2:	pid='/etc/mail/sendmail.pid'
+			rule=PR
+			action='COMMONALERT(commonmsg.pidpr,1)'
+
+

@@ -1,0 +1,19 @@
+This is Eddie.
+
+It is still very much in development but is working in its current
+form and has been working for 4 years (it is the primary monitoring
+and alerting tool at the author's places of employment).
+
+Documentation is online at http://www.codefx.com.au/eddie/doc/
+
+You need to create a config directory where config.sample is located
+and create an eddie.cf config file and rules files.  See config.sample
+for examples.
+
+See QUICKSTART if you are impatient.
+
+See http://www.codefx.com.au/eddie/ for more information.
+Email eddie@codefx.com.au for information/help/tips/comments/etc.
+
+Chris & Rod.
+

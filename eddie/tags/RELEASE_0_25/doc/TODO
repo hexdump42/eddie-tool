@@ -1,0 +1,95 @@
+Things TODO for Eddie!
+
+y Multi-threaded checks
+y Add NUMTHREADS as a config variable
+y Change directive syntax to be "DIRECTIVE 'name': etc etc"
+y Add scanperiod argument to directives
+y Add ALIAS definition type for action argument aliases, etc
+y Double checking for directives: use arguments checks= and checkwait= eg:
+    crond': checks=2 checkwait=30 procname='crond' rule='NR' action="..."
+    means perform 2 checks total (only perform the second check if the
+    first one fails) and wait 30seconds between checks.
+    The directive is actually re-scheduled in the scheduler queue for 30seconds
+    time.
+y Directive template creation, eg:
+    PROC 'template1':	template=self	scanperiod='5m'	checks=2	checkwait=30
+    PROC 'cron':	template='template1'	procname='crond'	action="..."
+  special template=self means this directive is a template and not to
+  schedule it.
+  Can use other working directives as templates also.
+  Template should be same directive type as directive using it - but this is
+    not enforced because it shouldn't hurt.... directives ignore any arguments
+    they don't need.
+y Directives spanning multiple lines not parsed properly.
+y Problem age/ack details variable for messages, eg: %(probage)s, etc.
+y logfile checking
+
+- df.py: df list needs to cache properly like other data collectors...
+
+- See DEF problems/changes in BUGS
+
+- rule dependencies
+
+- make os-dependent data collectors thread-safe, as Linux/proc.py
+
+- Fix doArgs to use standard Python args.
+
+
+- Fix history object.
+
+- TEST with 'import elvin' (Elvin4)
+
+- escalation
+
+- ping checks
+
+- radius checks
+
+- msg objects in action calls, eg:
+    PORT  'hostname': 50006   ""  "ALIVE" email('alert', commonmsg.port.WARN)
+
+- store disk usage in eddiedb
+
+- check inode usage
+
+- FILE checks (like tripwire) - stat file, and md5 file.
+- Similarly, DIR checks, like "DIR /usr/bin" to notify of changes.
+
+- Can store state between sessions (for FILE checks, history, etc).
+  Store state to /var/run/eddie/.... which can be re-read if restarted.
+
+- "cron" mode for directives: always tries to run jobs starting from specific
+  intervals, rather than pausing for interval between runs.
+
+- group should handle multiple hostnames, eg: "group myeah,myponga:"
+
+- PROC rule NR/R, change to variable, ie: rule="!exists"
+
+- back off on warnings - something like 10m, 30m, 1hr, 2hr, 4hr, etc.
+
+- allow MSG strings to be included from separate files, so instead of a string
+  in the MSG def, it would have file:procwarn.
+
+- add excludehosts argument to directives, to provide a list of hostnames
+  to not execute this directive on.
+
+- extra args for PROC: matchre='.*': match on regular expression
+    user="username": match on user
+    notuser="username": match not owned by user, and allow multiple entries
+    allow userid matches in rule.
+
+BUGS:
+ - Unknown directives are not handled properly.
+
+ - Bus Error/core dump from iostat/kstat library sometimes when
+   collecting iostat data.
+
+ - parsing $DEFN sometimes not working when DEF defined inside group, or
+   sometimes also above group... not sure!
+   -> change defs to just parse DEFN instead of $DEFN - when a "NAME" type
+   token is found, see if in DEF dictionary...
+
+ - cannot have a commented line in the middle of a directive definition...
+
+ - needs a catch in SIGHUP to catch the interuppted system call - severity minor [RT]
+
