@@ -1,0 +1,264 @@
+# Eddie config file
+#  Common rules for all machines
+#
+
+
+###########################################################################
+# MESSAGES
+
+M commonmsg:
+    M proc:
+	MSG WARN: "Warning: %procp on %h not running"
+	    """The %procp process on %h is not running
+
+This is just a Warning.
+Eddie."""
+
+	MSG WARN_P: "Warn: The %procp daemon on %h is not running." ""
+
+	MSG ALERT: "Alert: %procp on %h not running"
+	    """ALERT: The %procp daemon on %h is not running.
+
+%actnm
+
+Eddie."""
+
+	MSG ALERT_P: "ALERT: The %procp daemon on %h is not running." ""
+
+	MSG RE_WARN: "Alert: %procp on %h not running and is being restarted"
+	    """ALERT: The %procp daemon on %h not running and is being restarted.
+
+%actnm
+
+Eddie."""
+
+	MSG RE_WARN_P: "ALERT: The %procp daemon on %h not running and is being restarted." ""
+
+	MSG RE_ERR: "Alert: %procp on %h not restarting"
+	    """ALERT: The %procp daemon on %h will not restart.
+
+%actnm
+
+Eddie."""
+
+	MSG RE_ERR_P: "ALERT: The %procp daemon on %h will not restart." ""
+
+    M pid:
+	MSG WARN: "Warning: pid file %pidf not found on %h"
+	    """Pid file %pidf not found on %h.
+
+Eddie."""
+
+	MSG WARN_P: "%h: pid file %pidf not found" ""
+
+	MSG ALERT: "ALERT: pid file %pidf not found on %h"
+	    """Pid file %pidf not found on %h.
+
+Eddie."""
+
+	MSG ALERT_P: "%h: pid file %pidf not found" ""
+
+    M pidpr:
+	MSG WARN: "Warning: process %pid (from %pidf) on %h not running"
+	    """Warning: The process with pid %pid (from pidfile '%pidf') on %h is not running.
+
+Eddie."""
+
+	MSG WARN_P: "%h warn: pid %pid from %pidf not running" ""
+
+	MSG ALERT: "Warning: process %pid (from %pidf) on %h not running"
+	    """ALERT: The process with pid %pid (from pidfile '%pidf') on %h is not running.
+
+%act
+Eddie."""
+
+	MSG ALERT_P: "%h alert: pid %pid from %pidf not running" ""
+
+    M fs:
+	MSG WARN: "Warning: %h:%fsf at %fscapac% - %fsavail of %fssize remain"
+	    """Filesystem %fsf on %h has failed this FS rule:
+    %fsrule
+
+----------------------------------------------------------------------
+%fsdf
+----------------------------------------------------------------------
+
+This is just a Warning.
+Eddie."""
+
+	MSG WARN_P: "Warn: %h:%fsf at %fscapac% - %fsavail of %fssize remain" ""
+
+	MSG ALERT: "Alert: %h:%fsf at %fscapac% - %fsavail of %fssize remain"
+	    """Filesystem %fsf on %h has failed this FS rule:
+    %fsrule
+
+----------------------------------------------------------------------
+%fsdf
+----------------------------------------------------------------------
+
+Please free up space immediately.
+Eddie."""
+
+	MSG ALERT_P: "Alert: %h:%fsf at %fscapac% - %fsavail of %fssize remain" ""
+
+    M sp:
+	MSG WARN: "Warning: Port %spprot/%spport on %h not responding"
+	    """The service port %spprot/%spport on %h is not responding.
+
+Eddie."""
+
+	MSG WARN_P: "%h warn: Port %spprot/%spport not responding" ""
+
+	MSG ALERT: "ALERT: Port %spprot/%spport on %h not responding"
+	    """The service port %spprot/%spport on %h is not responding.
+Please fix this immediately.
+
+Eddie."""
+                    
+	MSG ALERT_P: "%h ALERT: Port %spprot/%spport not responding" ""
+
+    M port:
+	MSG WARN: "Warning: Port %portport on %porthost not responding"
+	    """The service port %portport on %porthost is not responding.
+
+This is just a Warning.
+Eddie."""
+	MSG WARN_P: "Warn: Port %portport on %porthost not responding" ""
+	MSG ALERT: "Alert: Port %portport on %porthost not responding"
+	    """Alert: The service port %portport on %porthost is not responding.
+
+Send data: %portsend
+Expecting: %portexpect
+Actually received: %portrecv
+
+Please examine if appropriate.
+Eddie."""
+
+	MSG ALERT_P: "Alert: Port %portport on %porthost not responding" ""
+
+
+###########################################################################
+# Notification Definitions
+
+N COMMONALERT:
+    notifyperiod=10m
+    escalperiod=20m
+
+    # Notification
+    Level 0:
+	email($ALERT,WARN)
+
+    # Warning
+    Level 1:
+	email($ALERT,WARN),elvin(WARN_P)
+
+    # Alert
+    Level 2:
+	email($SYSSUP,ALERT_P),elvin(ALERT_P)
+	    email($ALERT,ALERT)
+
+    # Serious Alert
+    Level 3:
+	email($ALERT,ALERT),email($SYSSUP,ALERT_P),elvin(ALERT_P)
+
+
+
+N COMMONRESTART:
+    notifyperiod=10m
+    escalperiod=20m
+
+    # Restart and notify
+    Level 0:
+	restart("%procp"),email($ALERT,RE_WARN)
+	    email($ALERT,RE_ERR),elvin(RE_ERR_P)
+
+    # Restart/page
+    Level 1:
+	restart("%procp"),email($ALERT,RE_WARN),elvin(RE_WARN_P)
+	    email($ALERT,RE_ERR),elvin(RE_ERR_P),email($SYSSUP,RE_ERR_P)
+
+
+N SYSLOGRESTART:
+    notifyperiod=10m
+    escalperiod=20m
+
+    # Restart and notify
+    Level 0:
+	restart("syslog"),email($ALERT,RE_WARN)
+	    email($ALERT,RE_ERR),elvin(RE_ERR_P)
+
+    # Restart/page
+    Level 1:
+	restart("syslog"),email($ALERT,RE_WARN),elvin(RE_WARN_P)
+	    email($ALERT,RE_ERR),elvin(RE_ERR_P),email($SYSSUP,RE_ERR_P)
+
+
+N NAMEDRESTART:
+    notifyperiod=10m
+    escalperiod=20m
+
+    # Restart and notify
+    Level 0:
+	restart("bind"),email($ALERT,RE_WARN)
+	    email($ALERT,RE_ERR),elvin(RE_ERR_P)
+
+    # Restart/page
+    Level 1:
+	restart("bind"),email($ALERT,RE_WARN),elvin(RE_WARN_P)
+	    email($ALERT,RE_ERR),email($SYSSUP,RE_ERR_P),elvin(RE_ERR_P)
+
+
+###########################################################################
+# RULES
+
+# NR = process not running
+# R  = process is running
+
+#  Process	Rules	Action
+#  -------	-----	------
+PROC cron:	NR	COMMONRESTART(commonmsg.proc)
+PROC syslogd:	NR	SYSLOGRESTART(commonmsg.proc)
+PROC inetd:	NR	COMMONALERT(commonmsg.proc,1)
+PROC sshd:	NR	COMMONALERT(commonmsg.proc,1)
+
+# Defs for filesystem checks
+DEF OVER90= "capac>=90%"
+DEF OVER95= "capac>=95%"
+DEF OVER99= "capac>=99%"
+DEF OVER100="capac>=100%"
+DEF VAR=    "(capac>=95 & avail<=100MB) | (capac>=90 & capacdelta>=2)"
+DEF VARLOG1="(capac>=95 & avail<=100MB) | (capac>=90 & capacdelta>=2)"
+DEF VARLOG2="capac>=75 & capacdelta>=5"
+DEF EXPORT= "(capac>=97 & avail<=100MB) | (capac>=90 & capacdelta>=2)"
+DEF ARCHIVE="(capac>=98 & avail<=100MB)"
+
+
+#  Filesystem   	Thresholds      Action
+#  ----------   	----------      ----------
+FS /:			$OVER90         COMMONALERT(commonmsg.fs,1)
+FS /var:            	$VAR            COMMONALERT(commonmsg.fs,2)
+
+
+#    pidfile                    Rules   Action
+#    -------                    -----   ------
+PID  /var/run/sshd.pid:         EX      COMMONALERT(commonmsg.pid,0)
+PID  /var/run/sshd.pid:         PR      COMMONALERT(commonmsg.pidpr,1)
+
+#   Port        Bind Addr       Action
+#   ----        ---------       ------
+SP tcp/ssh:	*		COMMONALERT(commonmsg.sp,1)
+
+#    command			Rules		Action
+#    -------			-----		------
+#COM "uptime | cut -d, -f4 | awk '{print $3}'":
+#				"float(out) > 6.0"
+#						elvin("Load on %h is %comout")
+
+## PORT
+#     Host	Port	SendStr	Expect		Action
+#     ----	----	-------	------		-----
+
+#PORT  'daidyai.off.connect.com.au':
+#		50006   "\012"  "ALIVE"		COMMONALERT(commonmsg.port,0)
+#PORT  nara:	25	"\012"	"Sendmail"	COMMONALERT(commonmsg.port,1)
+
