@@ -436,11 +436,11 @@ class Directive:
     def doOkAct(self, Config):
     	"""Perform actions for a directive."""
 
-        print ">>>> ", self
-        print ">>>> ", self.args
+        #print ">>>> ", self
+        #print ">>>> ", self.args
 	actionList = self.args.actokList
-        print ">>>> actionList: ", self.args.actokList
-        print ">>>> actionList: ", actionList
+        #print ">>>> actionList: ", self.args.actokList
+        #print ">>>> actionList: ", actionList
 
 	# Set the 'action' variables with the expanded action list
 	self.Action.varDict['act'] = 'The following actions were attempted:\n'
@@ -1164,7 +1164,8 @@ class PORT(Directive):
         try:
 	    s = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
             try:
-                s.connect( (host,port) )
+		s.connect( (host,port) )
+
                 if expect == "":
                     s.close()
                     return 1    # port connection ok
@@ -1186,11 +1187,15 @@ class PORT(Directive):
                         return 1
                     else:
                         return 0
-            except:
-		s.close()
+            except socket.error:
 		e = sys.exc_info()
-		tb = traceback.format_list( traceback.extract_tb( e[2] ) )
-		log.log( "<Directive>PROC.isalive(), ID '%s', Uncaught exception: %s, %s, %s" % (self.state.ID, e[0], e[1], tb), 3 )
+		if e[1][0] == 146:		# Connection Refused
+		    log.log( "<Directive>PROC.isalive(), ID '%s', Connection refused" % (self.state.ID), 5 )
+		    return 0
+		else:
+		    s.close()
+		    tb = traceback.format_list( traceback.extract_tb( e[2] ) )
+		    log.log( "<Directive>PROC.isalive(), ID '%s', Uncaught exception: %s, %s, %s" % (self.state.ID, e[0], e[1], tb), 3 )
         except:
 	    e = sys.exc_info()
 	    tb = traceback.format_list( traceback.extract_tb( e[2] ) )
