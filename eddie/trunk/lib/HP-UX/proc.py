@@ -65,7 +65,6 @@ class procList:
 	for i in self.list:
 	    command = i.comdname
 	    if command == procname or i.procname == procname:
-		#print "command: '%s' i.procname: '%s'  procname: '%s'" % (command,i.comm,procname)
 		count = count + 1
 
 	self.semaphore.release()
@@ -209,18 +208,27 @@ class proc:
 	self.sz =	int(fields[ 9])	# memory size
 	self.wchan =	fields[10]
 	self.stime =	fields[11]	# start time
-	self.tty =	fields[12]	# terminal
-	self.time =	fields[13]	# cpu time
-	self.comdname =	fields[14]	# process name (no arguments)
-	self.comd =	string.join(fields[14:], " ")	# command with all its arguments as a string
+	if string.find(self.stime, ':') == -1:	# stime is "Month Day" format
+	    self.stime = self.stime + " " + fields[12]
+	    self.tty =	fields[13]	# terminal
+	    self.time =	fields[14]	# cpu time
+	    self.comdname =	fields[15]	# process name (no arguments)
+	    self.comd =	string.join(fields[15:], " ")	# command with all its arguments as a string
+	    lastfield = 15
+	else:
+	    self.tty =	fields[12]	# terminal
+	    self.time =	fields[13]	# cpu time
+	    self.comdname =	fields[14]	# process name (no arguments)
+	    self.comd =	string.join(fields[14:], " ")	# command with all its arguments as a string
+	    lastfield = 14
 
 	# Actual 'command' name with no path or interpreter - Eddie will mainly use this
 	self.procname = string.split(self.comdname, '/')[-1]
 	if self.procname in interpreters:
 	    # this command is an interpreter (eg: 'perl', 'python', etc)
 	    # let's set procname to the name of the script (if there is a script)
-	    if len(fields) > 15:
-	        i = 15
+	    if len(fields) > lastfield + 1:
+	        i = lastfield + 1
 	        self.procname = string.split(fields[i], '/')[-1]
 		# ignore arguments (strings starting with '-')
 		try:

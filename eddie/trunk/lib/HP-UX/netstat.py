@@ -122,7 +122,7 @@ class tcptable:
 	self.numsockets = 0
 
 	# get the tcp stats
-	rawList = utils.safe_popen('netstat -anf inet | grep ^tcp', 'r')
+	rawList = utils.safe_popen('netstat -anf inet | grep ^tcp | grep LISTEN', 'r')
 
 	for line in rawList.readlines():
 	    f = string.split(line)

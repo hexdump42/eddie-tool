@@ -45,15 +45,25 @@ class dfList:
     def refresh(self):
 	"""Force df refresh."""
 
+	dfre = "^([/0-9a-zA-Z]+)\s*\(([/0-9a-zA-Z])\s*\)\s*:\s*([0-9]+)\s*total allocated Kb\s*([0-9]+)\s*free allocated Kb\s*([0-9]+)\s*used allocated Kb\s*([0-9]+)\s*% allocation used"
+
 	rawList = utils.safe_popen('bdf', 'r')
-	self.dfheader = rawList.readline()
+	#self.dfheader = rawList.readline()
  
+	prevline = None
 	for line in rawList.readlines():
+	    if prevline:
+		line = prevline + " " + line	# join any previous line to current
+		prevline = None
 	    fields = string.split(line)
+	    if len(fields) == 1:		# if 1 field, assume rest on next line
+		prevline = line
+		continue
 	    p = df(fields)
 	    self.list.append(p)
 	    self.hash[fields[0]] = p		# dict of filesystem devices
 	    self.mounthash[fields[5]] = p	# dict of mount points
+ 	    prevline = None
 
 	utils.safe_pclose( rawList )
 
