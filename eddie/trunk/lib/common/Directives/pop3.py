@@ -238,7 +238,7 @@ class POP3TIMING(directive.Directive):
 
 
 
-	self.stateok()	# update state info for check passed
+	self.state.stateok()	# update state info for check passed
 
 	# assign variables
 	self.Action.varDict['pop3timingconnecttime'] = connecttime

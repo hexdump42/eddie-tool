@@ -24,10 +24,80 @@ import action, definition, utils, log, ack
 ParseFailure = 'ParseFailure'
 
 
+class State:
+    """Object to track the state of a directive."""
 
-# Rules holds all the directives in a hash where the value of each key is the
-# list of rules relating to that key.
+    def __init__(self):
+	self.ID = None			# each directive has a unique ID
+	self.lastfailtime = None	# last time a failure was detected
+	self.faildetecttime = None	# first time failure was detected for current problem
+	self.ack = ack.ack()		# ack object to track acknowledgements
+	self.status = "ok"		# status of most recent check: "ok" or "fail"
+
+    def ack(self, user=None, details=None):
+	"""Record a user acknowledgement for current problem."""
+
+	self.ack.set(user, details)		# set the acknowledgement
+
+
+    def statefail(self):
+	"""Update state info for check failure."""
+
+	timenow = time.localtime(time.time())
+
+	if self.status == "ok":
+	    # if this is not a repeated failure then record the time of this
+	    # first failure detection
+	    self.faildetecttime = timenow
+
+	self.status = "fail"
+	self.lastfailtime = timenow
+
+	log.log( "<directive.py>State.statefail(), ID '%s' status '%s' lastfailtime %s faildetecttime %s"%(self.ID, self.status, self.lastfailtime, self.faildetecttime), 6 )
+
+	#TODO: Post an EVENT about this failure...
+	#      EVENTS are either: new failure/problem detected
+	#                     or: repeating failure
+
+
+    def stateok(self):
+	"""Update state info for check succeeding."""
+
+	if self.status != "ok":
+	    log.log( "<directive.py>State.stateok(), State changed to OK.  ID '%s'."%(self.ID), 6 )
+	    #TODO: Post an EVENT about problem being resolved
+	    pass
+
+	self.status = "ok"
+
+	log.log( "<directive.py>State.stateok(), ID '%s' status '%s'"%(self.ID, self.status), 8 )
+
+
+    def age(self):
+	"""Length of time since problem first found and problem last detected.
+	   (ie: faildetecttime and lastfailtime).  Returned as time 9-tuple."""
+
+	t1 = time.mktime(self.faildetecttime)
+	t2 = time.mktime(self.lastfailtime)
+
+	td = t2 -t1
+
+	t0 = time.gmtime(0)			# time base (ie: 1/1/1970)
+	t9 = time.gmtime(td)			# time diff from time base as 9-tuple
+	tdiff = [0, 0, 0, 0, 0, 0, 0, 0, 0]	# 9-tuple for time diff from 0
+
+	for i in range(len(t0)):
+	    tdiff[i] = t9[i] - t0[i]
+
+	return tdiff
+
+
+
 class Rules:
+    """Rules holds all the directives in a hash where the value of each key is the
+       list of rules relating to that key.
+    """
+
     def __init__(self):
 	self.hash = {}
 
@@ -101,14 +171,8 @@ class Directive:
 	#         "The following actions were taken:" if any were taken
 	self.Action.varDict['actnm'] = '[actnm not yet defined]'
 
-	# each directive has a unique ID
-	self.ID = None
-
 	# directives keep state information about themselves
-	self.lastfailtime = None	# last time a failure was detected
-	self.faildetecttime = None	# first time failure was detected for current problem
-	self.ack = ack.ack()		# ack object to track acknowledgements
-	self.status = "ok"		# status of most recent check: "ok" or "fail"
+	self.state = State()
 
 
     def doAction(self, Config):
@@ -134,6 +198,8 @@ class Directive:
 	#    self.Action.varDict['act'] = self.Action.varDict['act'] + '\t' + a + '\n'
 	#    if a[:5] != 'email':
 	#	self.Action.varDict['actnm'] = self.Action.varDict['actnm'] + '\t' + a + '\n'
+	
+	self.Action.state = self.state
 
 	# Perform each action
 	ret = None
@@ -213,44 +279,6 @@ class Directive:
 	return actlist
 
 
-    def ack(self, user=None, details=None):
-	"""Record a user acknowledgement for current problem."""
-
-	self.ack.set(user, details)		# set the acknowledgement
-
-
-    def statefail(self):
-	"""Update state info for check failure."""
-
-	timenow = time.localtime(time.time())
-
-	if self.status == "ok":
-	    # if this is not a repeated failure then record the time of this
-	    # first failure detection
-	    self.faildetecttime = timenow
-
-	self.status = "fail"
-	self.lastfailtime = timenow
-
-	log.log( "<Directive>statefail, ID '%s' status '%s' lastfailtime %s faildetecttime %s"%(self.ID, self.status, self.lastfailtime, self.faildetecttime), 6 )
-
-	#TODO: Post an EVENT about this failure...
-	#      EVENTS are either: new failure/problem detected
-	#                     or: repeating failure
-
-
-    def stateok(self):
-	"""Update state info for check succeeding."""
-
-	if self.status != "ok":
-	    log.log( "<Directive>stateok, State changed to OK.  ID '%s'."%(self.ID), 6 )
-	    #TODO: Post an EVENT about problem being resolved
-	    pass
-
-	self.status = "ok"
-
-	log.log( "<Directive>stateok, ID '%s' status '%s'"%(self.ID, self.status), 8 )
-
 
 ##
 ## RULE-BASED COMMANDS
@@ -273,9 +301,9 @@ class FS(Directive):
 	self.Action.varDict['fsrule'] = self.rule
 
 	# define the unique ID
-	self.ID = '%s.FS.%s.%s' % (log.hostname,self.filesystem,self.rule)
+	self.state.ID = '%s.FS.%s.%s' % (log.hostname,self.filesystem,self.rule)
 
-	log.log( "<Directive>FS, ID '%s' filesystem '%s' rule '%s' action '%s'" % (self.ID, self.filesystem, self.rule, self.actionList), 8 )
+	log.log( "<Directive>FS, ID '%s' filesystem '%s' rule '%s' action '%s'" % (self.state.ID, self.filesystem, self.rule, self.actionList), 8 )
 
 
     def docheck(self, Config):
@@ -301,10 +329,10 @@ class FS(Directive):
 	result = eval( self.rule, dfenv )
 
 	if result == 0:
-	    self.stateok()	# update state info for check passed
+	    self.state.stateok()	# update state info for check passed
 
 	else:
-	    self.statefail()	# update state info for check failed
+	    self.state.statefail()	# update state info for check failed
 
 	    # assign variables
 	    self.Action.varDict['fsused'] = df.getUsed()
@@ -387,9 +415,9 @@ class PID(Directive):
 	self.Action.varDict['pidf'] = self.pidfile
 
 	# define the unique ID
-	self.ID = '%s.PID.%s.%s' % (log.hostname,self.pidfile,self.rule)
+	self.state.ID = '%s.PID.%s.%s' % (log.hostname,self.pidfile,self.rule)
 
-	log.log( "<Directive>PID, ID '%s' pidfile '%s' rule '%s' action '%s'" % (self.ID, self.pidfile, self.rule, self.actionList), 8 )
+	log.log( "<Directive>PID, ID '%s' pidfile '%s' rule '%s' action '%s'" % (self.state.ID, self.pidfile, self.rule, self.actionList), 8 )
 
 
     def docheck(self, Config):
@@ -401,11 +429,11 @@ class PID(Directive):
 	    except IOError:
 		# pidfile not found
 		log.log( "<directive>PID(), EX, pidfile '%s' not found" % (self.pidfile), 6 )
-		self.statefail()	# update state info for check failed
+		self.state.statefail()	# update state info for check failed
 		self.doAction(Config)
 	    else:
 		log.log( "<directive>PID(), EX, pidfile '%s' found" % (self.pidfile), 8 )
-		self.stateok()		# update state info for check passed
+		self.state.stateok()		# update state info for check passed
 		pidfile.close()
 
 	elif self.rule == "PR":
@@ -440,11 +468,11 @@ class PID(Directive):
 		    if plist.pidExists( pid ) == 0:
 			# there is no process with pid == pid
 			log.log( "<directive>PID(), PR, pid %s not in process list" % (pid), 6 )
-			self.statefail()	# update state info for check failed
+			self.state.statefail()	# update state info for check failed
 			self.doAction(Config)
 		    else:
 			log.log( "<directive>PID(), PR, pid %s is in process list" % (pid), 7 )
-			self.stateok()		# update state info for check passed
+			self.state.stateok()		# update state info for check passed
 
 	else:
 	    # invalid rule
@@ -486,9 +514,9 @@ class PROC(Directive):
 	self.Action.varDict['procpid'] = '[pid not yet defined]'
 
 	# define the unique ID
-	self.ID = '%s.PROC.%s.%s' % (log.hostname,self.name,toklist[0])
+	self.state.ID = '%s.PROC.%s.%s' % (log.hostname,self.name,toklist[0])
 
-	log.log( "<Directive>PROC, ID '%s' daemon '%s' rule '%s' action '%s'" % (self.ID, self.daemon, self.rule, self.actionList), 8 )
+	log.log( "<Directive>PROC, ID '%s' daemon '%s' rule '%s' action '%s'" % (self.state.ID, self.daemon, self.rule, self.actionList), 8 )
 
 
     def docheck(self, Config):
@@ -508,11 +536,11 @@ class PROC(Directive):
 	    plist.refresh()		# force refresh of proc list
 	    if plist.procExists( self.daemon ) == 0:
 		log.log( "<directive>NR(PROC) daemon not running, '%s'" % (self.daemon), 6 )
-		self.statefail()	# update state info for check failed
+		self.state.statefail()	# update state info for check failed
 		self.doAction(Config)
 		return
 
-	self.stateok()	# update state info for check passed
+	self.state.stateok()	# update state info for check passed
 
 
     def R(self,Config):
@@ -522,11 +550,11 @@ class PROC(Directive):
 	    log.log( "<directive>R(PROC) daemon is running, '%s'" % (self.daemon), 6 )
 	    # Set %procpid variable.
 	    self.Action.varDict['procpid'] = plist[self.daemon].pid
-	    self.statefail()	# update state info for check failed
+	    self.state.statefail()	# update state info for check failed
 	    self.doAction(Config)
 
 	else:
-	    self.stateok()	# update state info for check passed
+	    self.state.stateok()	# update state info for check passed
 
 
     def check(self,Config):
@@ -546,11 +574,11 @@ class PROC(Directive):
 		    # build varDict from procenv
 		    for i in procenv.keys():
 			self.Action.varDict['proc%s'%(i)] = procenv[i]
-		    self.statefail()	# update state info for check failed
+		    self.state.statefail()	# update state info for check failed
 		    self.doAction(Config)
 
 		else:
-		    self.stateok()	# update state info for check passed
+		    self.state.stateok()	# update state info for check passed
 
 
 
@@ -585,9 +613,9 @@ class SP(Directive):
 	self.Action.varDict['spprot'] = self.proto
 
 	# define the unique ID
-	self.ID = '%s.SP.%s/%s.%s' % (log.hostname,self.proto,self.port_n,self.addr)
+	self.state.ID = '%s.SP.%s/%s.%s' % (log.hostname,self.proto,self.port_n,self.addr)
 
-	log.log( "<Directive>SP, ID '%s' proto '%s', port '%s', bind addr '%s', action '%s'" % (self.ID, self.proto, self.port, self.addr, self.actionList), 8 )
+	log.log( "<Directive>SP, ID '%s' proto '%s', port '%s', bind addr '%s', action '%s'" % (self.state.ID, self.proto, self.port, self.addr, self.actionList), 8 )
 
 
     def docheck(self, Config):
@@ -596,7 +624,7 @@ class SP(Directive):
 	ret = nlist.portExists(self.proto, self.port, self.addr) != None
 	if ret != 0:
 	    log.log( "<directive>SP(), port %s/%s listener found bound to %s" % (self.proto , self.port_n, self.addr), 8 )
-	    self.stateok()	# update state info for check passed
+	    self.state.stateok()	# update state info for check passed
 	else:
 	    log.log( "<directive>SP(), port %s/%s no listener found bound to %s - sleeping before recheck..." % (self.proto , self.port_n, self.addr), 7 )
 	    time.sleep( 30 )
@@ -605,10 +633,10 @@ class SP(Directive):
 	    ret = nlist.portExists(self.proto, self.port, self.addr) != None
 	    if ret != 0:
 		log.log( "<directive>SP(), port %s/%s listener found bound to %s" % (self.proto , self.port_n, self.addr), 7 )
-		self.stateok()	# update state info for check passed
+		self.state.stateok()	# update state info for check passed
 	    else:
 		log.log( "<directive>SP(), port %s/%s no listener found bound to %s" % (self.proto , self.port_n, self.addr), 6 )
-		self.statefail()	# update state info for check failed
+		self.state.statefail()	# update state info for check failed
 		self.doAction(Config)
 
 
@@ -640,9 +668,9 @@ class COM(Directive):
 	self.Action.varDict['rule'] = self.rule
 
 	# define the unique ID
-	self.ID = '%s.COM.%s.%s' % (log.hostname,self.command,self.rule)
+	self.state.ID = '%s.COM.%s.%s' % (log.hostname,self.command,self.rule)
 
-	log.log( "<Directive>COM, ID '%s' command '%s' rule '%s' action '%s'" % (self.ID, self.command, self.rule, self.actionList), 8 )
+	log.log( "<Directive>COM, ID '%s' command '%s' rule '%s' action '%s'" % (self.state.ID, self.command, self.rule, self.actionList), 8 )
 
 
     def docheck(self, Config):
@@ -713,10 +741,10 @@ class COM(Directive):
 
         log.log( "<directive>COM.docheck(), eval:'%s', result='%s'" % (self.rule,result), 9 )
 	if result != 0:
-	    self.statefail()	# update state info for check failed
+	    self.state.statefail()	# update state info for check failed
 	    self.doAction(Config)
 	else:
-	    self.stateok()	# update state info for check passed
+	    self.state.stateok()	# update state info for check passed
 
 
 class PORT(Directive):
@@ -767,9 +795,9 @@ class PORT(Directive):
 	self.Action.varDict['portrecv'] = ''
 
 	# define the unique ID
-	self.ID = '%s.PORT.%s.%s' % (log.hostname,self.host,self.port)
+	self.state.ID = '%s.PORT.%s.%s' % (log.hostname,self.host,self.port)
 
-	log.log( "<Directive>PORT, ID '%s' host '%s' port '%d' sendstr '%s' expect '%s'" % (self.ID, self.host, self.port, self.sendstr, self.expect), 8 )
+	log.log( "<Directive>PORT, ID '%s' host '%s' port '%d' sendstr '%s' expect '%s'" % (self.state.ID, self.host, self.port, self.sendstr, self.expect), 8 )
 
 
     def docheck(self, Config):
@@ -779,10 +807,10 @@ class PORT(Directive):
 
         if not self.isalive(host=self.host,port=self.port,send=self.sendstr,expect=self.expect):
 	    log.log( "<directive>PORT.docheck(), isalive() failed.", 7 )
-	    self.statefail()	# update state info for check failed
+	    self.state.statefail()	# update state info for check failed
             self.doAction(Config)
 	else:
-	    self.stateok()	# update state info for check passed
+	    self.state.stateok()	# update state info for check passed
 
 
     def isalive(self,host,port,send="",expect=""):
@@ -870,9 +898,9 @@ class IF(Directive):
 	self.Action.varDict['ifcheckstring'] = self.checkstring
 
 	# define the unique ID
-	self.ID = '%s.IF.%s.%s' % (log.hostname,self.name,self.rule)
+	self.state.ID = '%s.IF.%s.%s' % (log.hostname,self.name,self.rule)
 
-	log.log( "<Directive>IF, ID '%s' name '%s', rule '%s', checkstring '%s', action '%s'" % (self.ID, self.name, self.rule, self.checkstring, self.actionList), 8 )
+	log.log( "<Directive>IF, ID '%s' name '%s', rule '%s', checkstring '%s', action '%s'" % (self.state.ID, self.name, self.rule, self.checkstring, self.actionList), 8 )
 
 
     def docheck(self, Config):
@@ -889,10 +917,10 @@ class IF(Directive):
 	if nlist.getInterface(self.name) == None:
 	    # interface doesn't exist
 	    log.log( "<directive>IF.NE() interface '%s' does not exist" % (self.name), 6 )
-	    self.statefail()	# update state info for check failed
+	    self.state.statefail()	# update state info for check failed
 	    self.doAction(Config)
 	else:
-	    self.stateok()	# update state info for check passed
+	    self.state.stateok()	# update state info for check passed
 
 
     def EX(self, Config):
@@ -901,10 +929,10 @@ class IF(Directive):
 	if nlist.getInterface(self.name) != None:
 	    # interface exists
 	    log.log( "<directive>IF.EX() interface '%s' exists" % (self.name), 6 )
-	    self.statefail()	# update state info for check failed
+	    self.state.statefail()	# update state info for check failed
 	    self.doAction(Config)
 	else:
-	    self.stateok()	# update state info for check passed
+	    self.state.stateok()	# update state info for check passed
 
 
     def check(self, Config):
@@ -923,10 +951,10 @@ class IF(Directive):
 	    # build varDict from ifenv
 	    for i in ifenv.keys():
 		self.Action.varDict['if%s'%(i)] = ifenv[i]
-	    self.statefail()	# update state info for check failed
+	    self.state.statefail()	# update state info for check failed
 	    self.doAction(Config)
 	else:
-	    self.stateok()	# update state info for check passed
+	    self.state.stateok()	# update state info for check passed
 
 
 class NET(Directive):
@@ -958,9 +986,9 @@ class NET(Directive):
 	self.Action.varDict['netrule'] = self.rulestring
 
 	# define the unique ID
-	self.ID = '%s.NET.%s' % (log.hostname,self.rulestring)
+	self.state.ID = '%s.NET.%s' % (log.hostname,self.rulestring)
 
-	log.log( "<Directive>NET, ID '%s' rule '%s', action '%s'" % (self.ID, self.rulestring, self.actionList), 8 )
+	log.log( "<Directive>NET, ID '%s' rule '%s', action '%s'" % (self.state.ID, self.rulestring, self.actionList), 8 )
 
 
     def docheck(self, Config):
@@ -976,10 +1004,10 @@ class NET(Directive):
 	    # build varDict from netenv
 	    for i in netenv.keys():
 		self.Action.varDict['net%s'%(i)] = netenv[i]
-	    self.statefail()	# update state info for check failed
+	    self.state.statefail()	# update state info for check failed
 	    self.doAction(Config)
 	else:
-	    self.stateok()	# update state info for check passed
+	    self.state.stateok()	# update state info for check passed
 
 
 
@@ -1012,9 +1040,9 @@ class SYS(Directive):
 	self.Action.varDict['sysrule'] = self.rulestring
 
 	# define the unique ID
-	self.ID = '%s.SYS.%s' % (log.hostname,self.rulestring)
+	self.state.ID = '%s.SYS.%s' % (log.hostname,self.rulestring)
 
-	log.log( "<Directive>SYS, ID '%s' rule '%s' action '%s'" % (self.ID, self.rulestring, self.actionList), 8 )
+	log.log( "<Directive>SYS, ID '%s' rule '%s' action '%s'" % (self.state.ID, self.rulestring, self.actionList), 8 )
 
 
     def docheck(self, Config):
@@ -1030,10 +1058,10 @@ class SYS(Directive):
 	    # build varDict from sysenv
 	    for i in sysenv.keys():
 		self.Action.varDict['sys%s'%(i)] = sysenv[i]
-	    self.statefail()	# update state info for check failed
+	    self.state.statefail()	# update state info for check failed
 	    self.doAction(Config)
 	else:
-	    self.stateok()	# update state info for check passed
+	    self.state.stateok()	# update state info for check passed
 
 
 
@@ -1066,15 +1094,15 @@ class STORE(Directive):
 	self.Action.varDict['storerule'] = self.rulestring
 
 	# define the unique ID
-	self.ID = '%s.FS.%s' % (log.hostname,self.rulestring)
+	self.state.ID = '%s.FS.%s' % (log.hostname,self.rulestring)
 
-	log.log( "<Directive>STORE, ID '%s' rule '%s' action '%s'" % (self.ID, self.rulestring, self.actionList), 8 )
+	log.log( "<Directive>STORE, ID '%s' rule '%s' action '%s'" % (self.state.ID, self.rulestring, self.actionList), 8 )
 
 
     def docheck(self, Config):
 	"""Perform the check.  In this case, the 'check' is automatically true (we always want to store)."""
 
-	self.stateok()	# update state info for check passed
+	self.state.stateok()	# update state info for check passed
 	log.log( "<directive>STORE(), docheck(), rulestring '%s'" % (self.rulestring), 7 )
 
 	datahash = None

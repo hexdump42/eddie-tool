@@ -58,7 +58,7 @@ class CRON(directive.Directive):
 	    # if file not touched within the last 15 minutes (safety factor
 	    # assuming checks and touches every 10 minutes) then fail check
 
-	    self.statefail()	# update state info for check failed
+	    self.state.statefail()	# update state info for check failed
 
 	    # assign variables
 	    self.Action.varDict['crontouchfile'] = self.touchfile
@@ -68,7 +68,7 @@ class CRON(directive.Directive):
     	    self.doAction(Config)
 
 	else:
-	    self.stateok()	# update state info for check passed
+	    self.state.stateok()	# update state info for check passed
 
 
 class METASTAT(directive.Directive):
@@ -112,7 +112,7 @@ class METASTAT(directive.Directive):
 	    if r > 0:
 		# something requires Maintenance
 
-		self.statefail()	# update state info for check failed
+		self.state.statefail()	# update state info for check failed
 
 		# assign variables
 		self.Action.varDict['metastatmaintcnt'] = int(result)
@@ -121,7 +121,7 @@ class METASTAT(directive.Directive):
 		self.doAction(Config)
 
 	    else:
-		self.stateok()	# update state info for check passed
+		self.state.stateok()	# update state info for check passed
 
 
 ##

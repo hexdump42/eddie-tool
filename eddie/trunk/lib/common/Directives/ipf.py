@@ -89,10 +89,10 @@ class IPF(directive.Directive):
 	result = eval( self.rule, rulesenv )
 
 	if result == 0:
-	    self.stateok()	# update state info for check passed
+	    self.state.stateok()	# update state info for check passed
 
 	else:
-	    self.statefail()	# update state info for check failed
+	    self.state.statefail()	# update state info for check failed
 
 	    # assign variables
 	    self.Action.varDict['ipfstat'] = str(ipfstat)

@@ -73,11 +73,49 @@ class action:
 	subj = parseVars( subj, self.varDict )
 	body = parseVars( body, self.varDict )
 
+	# Show problem age and other statistics if this is not the first time
+	# the problem was found.
+	t = self.state.faildetecttime
+	tl = self.state.lastfailtime
+	if tl != t:
+	    body = body + "\n\n------Problem Stats-----\n"
+	    tage = self.state.age()
+	    agestr = ""
+	    if tage[0] > 0:
+		agestr = agestr + " %d year" % tage[0]
+		if tage[0] > 1:
+		    agestr = agestr + "s"
+	    if tage[1] > 0:
+		agestr = agestr + " %d month" % tage[1]
+		if tage[1] > 1:
+		    agestr = agestr + "s"
+	    if tage[2] > 0:
+		agestr = agestr + " %d day" % tage[2]
+		if tage[2] > 1:
+		    agestr = agestr + "s"
+	    if tage[3] > 0:
+		agestr = agestr + " %d hour" % tage[3]
+		if tage[3] > 1:
+		    agestr = agestr + "s"
+	    if tage[4] > 0:
+		agestr = agestr + " %d minute" % tage[4]
+		if tage[4] > 1:
+		    agestr = agestr + "s"
+	    if tage[5] > 0:
+		agestr = agestr + " %d second" % tage[5]
+		if tage[5] > 1:
+		    agestr = agestr + "s"
+	    if agestr != "":
+		body = body + "Problem age:" + agestr
+	    body = body + "\nProblem first detected: %04d/%02d/%02d %d:%02d:%02d" % (t[0], t[1], t[2], t[3], t[4], t[5])
+
+
 	tmp = os.popen('/usr/lib/sendmail -t', 'w')
 	tmp.write( 'To: '+users+'\n' )
 	tmp.write( 'From: "Eddie" <eddie@connect.com.au>\n' )
 	tmp.write( 'Reply-To: systems@connect.com.au\n' )
 	tmp.write( 'Subject: ['+log.hostname+'] '+subj+'\n' )
+	tmp.write( 'X-Generated-By: %s:%s\n' % (os.uname()[1], sys.argv[0]) )
 	tmp.write( '\n' )
 	tmp.write( body+'\n' )
 	#tmp.write( '.\n' )
