@@ -456,10 +456,30 @@ class SENDMAIL(ConfigOption):
 	    raise ParseFailure, "SENDMAIL definition has %d tokens when expecting 3" % len(list)
 
 	utils.SENDMAIL = utils.stripquote(list[2])	# set for sendmail function to use
+	utils.SENDMAIL_FUNCTION="sendmail_bin"		# set sendmail binary as default method
 
 	log.log( "<config>SENDMAIL: set to '%s'" % (utils.SENDMAIL), 8 )
 
 
+
+class SMTP_SERVERS(ConfigOption):
+    """Set the names of the SMTP servers."""
+
+    def __init__( self, list, typelist ):
+	apply( ConfigOption.__init__, (self,list, typelist) )
+
+	# if we don't have at least 3 elements ['SMTP_SERVERS', '=', <str>, [',', <str>, ...] ]
+	# then raise an error
+	if len(list) < 3:
+	    raise ParseFailure, "SMTP_SERVERS definition has %d tokens when expecting at least 3" % len(list)
+
+	servers=",".join(list[2:])
+	servers = utils.stripquote(servers)
+	servlist = string.split(servers, ',')
+	utils.SMTP_SERVERS=servlist
+	utils.SENDMAIL_FUNCTION="sendmail_smtp"		# set smtp as default method
+
+	log.log( "<config>SMTP_SERVERS: set to %s" % (", ".join(servlist)), 8 )
 
 
 
@@ -524,6 +544,7 @@ settings = {
 		"EMAIL_FROM"	: EMAIL_FROM,
 		"EMAIL_REPLYTO"	: EMAIL_REPLYTO,
 		"SENDMAIL"	: SENDMAIL,
+		"SMTP_SERVERS"	: SMTP_SERVERS,
            }
 
 ## Join all the above dictionaries to make the total keywords dictionary

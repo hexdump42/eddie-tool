@@ -26,8 +26,8 @@
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 ########################################################################
 
-import re, string, threading, os, commands, sys
-
+import re, string, threading, os, commands, sys, smtplib
+import log
 
 class Stack:
     """General purpose stack object."""
@@ -291,13 +291,32 @@ def safe_getstatusoutput( cmd ):
     return (r, output)
 
 
+# Two facilities to send email are possible.  The default is
+# to use the Python smtplib to directly connect to an SMTP
+# server.  The second is to send mail via a sendmail binary.
+#  sendmail_smtp = use smtplib
+#  sendmail_bin  = use sendmail binary
+SENDMAIL_FUNCTION="sendmail_smtp"
+
 # default sendmail binary location
 # can be overriden from eddie.cf
 SENDMAIL = '/usr/lib/sendmail'
+
+# From: and Reply-To: headers will default to current user
+# if not set in config.
 EMAIL_FROM = None
 EMAIL_REPLYTO = None
 
 def sendmail( headers, body ):
+    """Function to standardize email sending for EDDIE functions.
+    Call the selected function to send email.
+    """
+
+    exec "r = %s( headers, body )" % (SENDMAIL_FUNCTION)
+    return r
+
+
+def sendmail_bin( headers, body ):
     """Function to standardize email sending for EDDIE functions.
 
     Calls sendmail (from the SENDMAIL setting) passing it the headers
@@ -306,7 +325,7 @@ def sendmail( headers, body ):
     """
 
     if not os.path.exists( SENDMAIL ):
-	raise "utils.sendmail exception", "sendmail not found, check SENDMAIL setting: '%s'"%(SENDMAIL)
+	raise "utils.sendmail_bin exception", "sendmail not found, check SENDMAIL setting: '%s'"%(SENDMAIL)
 
     # make sure headers ends in carriage-return
     if headers[-1] != '\n':
@@ -335,6 +354,58 @@ def sendmail( headers, body ):
     safe_pclose( tmp )
 
     return 1
+
+
+# Default SMTP servers for sendmail_smtp to use.  Overridden
+# by SMTP_SERVERS option in config.
+SMTP_SERVERS = ['localhost']
+
+def sendmail_smtp( headers, body ):
+    """Function to standardize email sending for EDDIE functions.
+
+    Connects to a list of SMTP servers until it succeeds in sending the mail. 
+    """
+
+    # make sure headers ends in carriage-return
+    if headers[-1] != '\n':
+	headers = headers + '\n'
+
+    # add default headers if not already specified
+    global EMAIL_FROM
+    if not re.search( "^From:", headers, re.M ):
+	if EMAIL_FROM == None:
+	    EMAIL_FROM = os.getenv("USER")
+	    if EMAIL_FROM == None:
+		EMAIL_FROM = 'root'
+	headers = headers + 'From: %s\n' % (EMAIL_FROM)
+
+    if not re.search( "^Reply-To:", headers, re.M ):
+	if EMAIL_REPLYTO != None:
+	    headers = headers + 'Reply-To: %s\n' % (EMAIL_REPLYTO)
+
+    m=re.search("^To: (.*)$",headers, re.M)
+    toaddr=m.group(1)	
+
+    headers = headers + 'X-Generated-By: %s:%s\n' % (os.uname()[1], sys.argv[0])
+
+    msg="%s\r\n%s" % (headers, body)
+
+    # Try and send to each server in turn until we succeed
+    for server in SMTP_SERVERS:
+    	try:
+	    smtpserv = smtplib.SMTP(server)
+	    smtpserv.sendmail(EMAIL_FROM, toaddr, msg)
+	    smtpserv.quit()
+	except:
+	    log.log("<utils>sendmail_smtp: Couldn't send mail via %s [%s]" % (server, sys.exc_info()[0]),5)
+	    continue
+	else:
+	    log.log("<utils>sendmail_smtp: Sent mail via %s" % server,6)
+	    return 0
+
+    log.log("<utils>sendmail_smtp: Could not send email via any servers %s" % (SMTP_SERVERS),4)
+    return 1
+
 
 ##
 ## END - utils.py
