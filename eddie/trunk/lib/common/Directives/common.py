@@ -413,6 +413,10 @@ class COM(directive.Directive):
 	for i in range(0, len(outsplit)):
 	    data['outfield%d'%(i+1)] = outsplit[i]
 
+	# If no output, set outfield1 anyway so rule strings don't break
+	if len(outsplit) == 0:
+	    data['outfield1'] = ""
+
 	return data
 
 
