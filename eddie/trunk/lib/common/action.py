@@ -269,6 +269,8 @@ class action:
 	try:
 	    MSG = self.getMessage(msg)
 	    msg = MSG.message
+	    if msg == "":
+		msg = MSG.subject
 	except (KeyError, GetMessageError):
 	    # Use msg string as the message
 	    pass
