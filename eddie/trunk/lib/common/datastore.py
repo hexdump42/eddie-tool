@@ -1,8 +1,8 @@
 ## 
 ## File		: datastore.py
 ## 
-## Author       : Chris Miles  <cmiles@connect.com.au>
-##                Rod Telford  <rtelford@connect.com.au>
+## Author       : Chris Miles  <cmiles@codefx.com.au>
+##                Rod Telford  <rtelford@codefx.com.au>
 ## 
 ## Date		: 20000520
 ## 
@@ -10,6 +10,20 @@
 ##
 ## $Id$
 ##
+########################################################################
+## (C) Chris Miles 2001
+##
+## The author accepts no responsibility for the use of this software and
+## provides it on an ``as is'' basis without express or implied warranty.
+##
+## Redistribution and use in source and binary forms are permitted
+## provided that this notice is preserved and due credit is given
+## to the original author and the contributors.
+##
+## This program is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+########################################################################
 
 # Python modules
 import time

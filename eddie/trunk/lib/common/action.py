@@ -1,8 +1,8 @@
 ## 
 ## File		: action.py 
 ## 
-## Author       : Rod Telford  <rtelford@connect.com.au>
-##                Chris Miles  <cmiles@connect.com.au>
+## Author       : Rod Telford  <rtelford@codefx.com.au>
+##                Chris Miles  <cmiles@codefx.com.au>
 ## 
 ## Date		: 971217 
 ## 
@@ -11,6 +11,20 @@
 ## $Id$
 ##
 ##
+########################################################################
+## (C) Chris Miles 2001
+##
+## The author accepts no responsibility for the use of this software and
+## provides it on an ``as is'' basis without express or implied warranty.
+##
+## Redistribution and use in source and binary forms are permitted
+## provided that this notice is preserved and due credit is given
+## to the original author and the contributors.
+##
+## This program is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+########################################################################
 
 import os, string, sys, log, utils
 
@@ -128,6 +142,7 @@ class action:
 	#tmp = os.popen('/usr/lib/sendmail -t', 'w')
 	tmp = utils.safe_popen('/usr/lib/sendmail -t', 'w')
 	tmp.write( 'To: '+users+'\n' )
+	##TODO: make headers changable !!
 	tmp.write( 'From: "Eddie" <eddie@connect.com.au>\n' )
 	tmp.write( 'Reply-To: systems\n' )
 	tmp.write( 'Subject: ['+log.hostname+'] '+subj+'\n' )
