@@ -22,16 +22,19 @@ LOGLEVEL <loglevel>
       -	the amount of detail Otto will log (to <logfile>).  The levels
        	are defined as follows:
 		0 - no logging at all
-		1 - ??
-		2 - ??
-		3 - ??
-		4 - ??
-		5 - ??
-		6 - ??
+		1 - log serious problems - problems which may crash program
+		2 - log important errors - which may cause incorrect operation
+		3 - log alerts - do not affect program operation, but aren't good
+		4 - log warnings - don't affect anything but should be noted
+		5 - log actions taken and above
+		6 - log informative messages and above
 		7 - ??
-		8 - ??
-		9 - log EVERYTHING!
-	Note: levels 1-8 have not yet been defined!
+		8 - log most things except multi-line crap - good for debugging
+		9 - log EVERYTHING! - use with caution!
+	Each set level will cause logging of itself and all log levels less
+	than it, eg: level 3 will cause everything described in levels
+	0, 1, 2 and 3 to be logged.
+	Note: some levels have not yet been defined!
 
 SCANPERIOD <time>[s|m|h|d|w|c|y]
       -	approximate minimum scan period.  <time> is in seconds unless
