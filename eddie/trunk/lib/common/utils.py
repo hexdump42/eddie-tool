@@ -310,6 +310,8 @@ EMAIL_REPLYTO = None
 def sendmail( headers, body ):
     """Function to standardize email sending for EDDIE functions.
     Call the selected function to send email.
+
+    Returns >=1 on success; 0 on failure.
     """
 
     exec "r = %s( headers, body )" % (SENDMAIL_FUNCTION)
@@ -322,6 +324,8 @@ def sendmail_bin( headers, body ):
     Calls sendmail (from the SENDMAIL setting) passing it the headers
     and body strings.  headers should contain all the relevent headers
     (at least "To:" and usually "Subject:").
+
+    Returns 1 on success; 0 on failure.
     """
 
     if not os.path.exists( SENDMAIL ):
@@ -364,6 +368,8 @@ def sendmail_smtp( headers, body ):
     """Function to standardize email sending for EDDIE functions.
 
     Connects to a list of SMTP servers until it succeeds in sending the mail. 
+
+    Returns 1 on success; 0 on failure.
     """
 
     # make sure headers ends in carriage-return
@@ -401,10 +407,10 @@ def sendmail_smtp( headers, body ):
 	    continue
 	else:
 	    log.log("<utils>sendmail_smtp: Sent mail via %s" % server,6)
-	    return 0
+	    return 1
 
     log.log("<utils>sendmail_smtp: Could not send email via any servers %s" % (SMTP_SERVERS),4)
-    return 1
+    return 0
 
 
 ##
