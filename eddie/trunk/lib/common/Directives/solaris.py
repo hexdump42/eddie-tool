@@ -234,6 +234,8 @@ class PRTDIAG(directive.Directive):
 	    prtdiag_dict = self.parse_prtdiag_u250()
 	elif output == "SUNW,Sun-Fire-280R":
 	    prtdiag_dict = self.parse_prtdiag_u280r()
+	elif output == "SUNW,Ultra-Enterprise":
+	    prtdiag_dict = self.parse_prtdiag_Enterprise()
 	else:
 	    log.log( "<solaris>PRTDIAG.docheck(): system type %s not supported yet, directive cancelled" % (output), 4 )
 
@@ -378,6 +380,59 @@ class PRTDIAG(directive.Directive):
 	    prtdiag_dict['temp_cpu%s'%(inx.group(2))] = int(inx.group(4))
 
 	return prtdiag_dict
+
+
+    def parse_prtdiag_Enterprise(self):
+	"""Parse prtdiag for an Enterprise class Sun server (E3500, E6500, etc)."""
+
+	prtdiag = "/usr/platform/sun4u/sbin/prtdiag"
+
+	try:
+	    os.stat( prtdiag )
+	except:
+	    log.log( "<solaris>PRTDIAG.parse_prtdiag_Enterprise(): %s not found, directive cancelled" % (prtdiag), 4 )
+	    return None
+
+	cmd = "%s -v" % (prtdiag)
+	(retval, output) = utils.safe_getstatusoutput( cmd )
+
+	# Initialise prtdiag dictionary of values
+	prtdiag_dict = {}
+	prtdiag_dict['temp_brd0'] = None
+	prtdiag_dict['temp_brd1'] = None
+	prtdiag_dict['temp_brd2'] = None
+	prtdiag_dict['temp_brd3'] = None
+	prtdiag_dict['temp_brd4'] = None
+	prtdiag_dict['temp_brd5'] = None
+	prtdiag_dict['temp_brd6'] = None
+	prtdiag_dict['temp_brd7'] = None
+	prtdiag_dict['temp_brd8'] = None
+	prtdiag_dict['temp_brd9'] = None
+	prtdiag_dict['temp_brd10'] = None
+	prtdiag_dict['temp_brd11'] = None
+	prtdiag_dict['temp_brd12'] = None
+	prtdiag_dict['temp_brd13'] = None
+	prtdiag_dict['temp_brd14'] = None
+	prtdiag_dict['temp_brd15'] = None
+	prtdiag_dict['temp_clk'] = None
+
+	outlist = output.split('\n')
+	for i in range(0, len(outlist)):
+	    if outlist[i][:19] == "System Temperatures":
+		i = i + 4
+		while 1:
+		    if len(outlist[i]) <= 1:
+			break			# finish temp parsing
+		    l = outlist[i].split()
+		    if l[0] == "CLK":
+			prtdiag_dict['temp_clk'] = int(l[2])
+		    else:
+			prtdiag_dict['temp_brd%s'%l[0]] = int(l[2])
+		    i = i + 1
+		break
+
+	return prtdiag_dict
+		
 
 
 ##
