@@ -547,10 +547,12 @@ class action:
 	#print "... self.MDict:",self.MDict	#DEBUG
 
 	msgtree = string.split( self.msg, '.' )
+	#print ".......msgtree:",msgtree		#DEBUG
 	M = self.MDict[msgtree[0]]
-	#print "............ M:",M		#DEBUG
+	#print "\n............ M:",M		#DEBUG
 	for m in msgtree[1:]:
 	    M = M[m]
+	    #print "\n............ M:",M		#DEBUG
 
 	# Get final MSG object
 	MSG = M[msg]

@@ -64,6 +64,8 @@ y Directive template creation, eg:
 
 - PROC rule NR/R, change to variable, ie: rule="!exists"
 
+- back off on warnings - something like 10m, 30m, 1hr, 2hr, 4hr, etc.
+
 
 BUGS:
  - Unknown directives are not handled properly.

@@ -21,7 +21,7 @@ import directive, definition, log, proc, utils, eddieElvin
 
 ## Define exceptions
 ParseFailure = 'ParseFailure'
-ParseNotcomplete = 'ParseNotcomplete'
+#ParseNotcomplete = 'ParseNotcomplete'
 
 ############### DEFAULT SETTINGS ###################
 ##
@@ -96,8 +96,8 @@ class Config:
 	"""Add new rules group."""
 
 	# Require 3 tokens, ('group', <str>, ':')
-	if len(toklist) < 3:
-	    raise ParseNotcomplete
+	#if len(toklist) < 3:
+	#    raise ParseNotcomplete
 	
 	# 3rd token must be a ':'
 	if toklist[2] != ':':
@@ -193,17 +193,16 @@ class SCANPERIOD(ConfigOption):
 	apply( ConfigOption.__init__, (self,list) )
 
 	# if the last token isn't a carriage-return then we don't have the
-	# whole line yet...
-	if list[-1] != '\012':
-	    raise ParseNotcomplete
+	# whole line yet...  DEFUNCT
+	#if list[-1] != '\012':
+	#    raise ParseNotcomplete
 
-	# if we don't have 4 or 5 elements ['SCANPERIOD', '=', <int>, [<char>,] '012'] then
-	# raise an error
-	if len(list) < 4 or len(list) > 5:
-	    raise ParseFailure, "SCANPERIOD definition has %d tokens when expecting 4 or 5" % len(list)
+	# if we don't have 3 or 4 elements ['SCANPERIOD', '=', <int>, [<char>,]] then raise an error
+	if len(list) < 3 or len(list) > 4:
+	    raise ParseFailure, "SCANPERIOD definition has %d tokens when expecting 3 or 4" % len(list)
 
 	# ok, value is 3rd[+4th] list element
-	if len(list) == 4:
+	if len(list) == 3:
 	    value = list[2]
 	else:
     	    value = list[2]+list[3]
@@ -223,14 +222,13 @@ class LOGFILE(ConfigOption):
 	apply( ConfigOption.__init__, (self,list) )
 
 	# if the last token isn't a carriage-return then we don't have the
-	# whole line yet...
-	if list[-1] != '\012':
-	    raise ParseNotcomplete
+	# whole line yet...  DEFUNCT
+	#if list[-1] != '\012':
+	#    raise ParseNotcomplete
 
-	# if we don't have 4 elements ['LOGFILE', '=', <val>, '012'] then
-	# raise an error
-	if len(list) != 4:
-	    raise ParseFailure, "LOGFILE definition has %d tokens when expecting 4" % len(list)
+	# if we don't have 3 elements ['LOGFILE', '=', <val>] then raise an error
+	if len(list) != 3:
+	    raise ParseFailure, "LOGFILE definition has %d tokens when expecting 3" % len(list)
 
 	# ok, value is 3rd list element
 	log.logfile = utils.stripquote(list[2])			# set the config option
@@ -244,14 +242,13 @@ class LOGLEVEL(ConfigOption):
 	apply( ConfigOption.__init__, (self,list) )
 
 	# if the last token isn't a carriage-return then we don't have the
-	# whole line yet...
-	if list[-1] != '\012':
-	    raise ParseNotcomplete
+	# whole line yet...  DEFUNCT
+	#if list[-1] != '\012':
+	#    raise ParseNotcomplete
 
-	# if we don't have 4 elements ['LOGLEVEL', '=', <val>, '012'] then
-	# raise an error
-	if len(list) != 4:
-	    raise ParseFailure, "LOGLEVEL definition has %d tokens when expecting 4" % len(list)
+	# if we don't have 3 elements ['LOGLEVEL', '=', <val>] then raise an error
+	if len(list) != 3:
+	    raise ParseFailure, "LOGLEVEL definition has %d tokens when expecting 3" % len(list)
 
 	# ok, value is 3rd list element
 	log.loglevel = string.atoi(list[2])		# set the config option
@@ -267,14 +264,14 @@ class ADMIN(ConfigOption):
 	apply( ConfigOption.__init__, (self,list) )
 
 	# if the last token isn't a carriage-return then we don't have the
-	# whole line yet...
-	if list[-1] != '\012':
-	    raise ParseNotcomplete
+	# whole line yet...  DEFUNCT
+	#if list[-1] != '\012':
+	#    raise ParseNotcomplete
 
-	# if we don't have 4 elements ['ADMIN', '=', <str>, '012'] then
+	# if we don't have 3 elements ['ADMIN', '=', <str>] then
 	# raise an error
-	if len(list) != 4:
-	    raise ParseFailure, "ADMIN definition has %d tokens when expecting 4" % len(list)
+	if len(list) != 3:
+	    raise ParseFailure, "ADMIN definition has %d tokens when expecting 3" % len(list)
 
 	# ok, value is 3rd list element
 	log.adminemail = utils.stripquote(list[2])		# set the config option
@@ -287,14 +284,14 @@ class ADMINLEVEL(ConfigOption):
 	apply( ConfigOption.__init__, (self,list) )
 
 	# if the last token isn't a carriage-return then we don't have the
-	# whole line yet...
-	if list[-1] != '\012':
-	    raise ParseNotcomplete
+	# whole line yet...  DEFUNCT
+	#if list[-1] != '\012':
+	#    raise ParseNotcomplete
 
-	# if we don't have 4 elements ['ADMINLEVEL', '=', <val>, '012'] then
+	# if we don't have 3 elements ['ADMINLEVEL', '=', <val>] then
 	# raise an error
-	if len(list) != 4:
-	    raise ParseFailure, "ADMINLEVEL definition has %d tokens when expecting 4" % len(list)
+	if len(list) != 3:
+	    raise ParseFailure, "ADMINLEVEL definition has %d tokens when expecting 3" % len(list)
 
 	# ok, value is 3rd list element
 	log.adminlevel = string.atoi(list[2])		# set the config option
@@ -307,17 +304,16 @@ class ADMIN_NOTIFY(ConfigOption):
 	apply( ConfigOption.__init__, (self,list) )
 
 	# if the last token isn't a carriage-return then we don't have the
-	# whole line yet...
-	if list[-1] != '\012':
-	    raise ParseNotcomplete
+	# whole line yet...  DEFUNCT
+	#if list[-1] != '\012':
+	#    raise ParseNotcomplete
 
-	# if we don't have 4 or 5 elements ['ADMIN_NOTIFY', '=', <int>, [<char>,] '012'] then
-	# raise an error
-	if len(list) < 4 or len(list) > 5:
-	    raise ParseFailure, "ADMIN_NOTIFY definition has %d tokens when expecting 4 or 5" % len(list)
+	# if we don't have 3 or 4 elements ['ADMIN_NOTIFY', '=', <int>, [<char>,]] then raise an error
+	if len(list) < 3 or len(list) > 4:
+	    raise ParseFailure, "ADMIN_NOTIFY definition has %d tokens when expecting 3 or 4" % len(list)
 
 	# ok, value is 3rd[+4th] list element
-	if len(list) == 4:
+	if len(list) == 3:
 	    rawval = list[2]
 	else:
 	    rawval = list[2]+list[3]
@@ -334,14 +330,13 @@ class INTERPRETERS(ConfigOption):
 	apply( ConfigOption.__init__, (self,list) )
 
 	# if the last token isn't a carriage-return then we don't have the
-	# whole line yet...
-	if list[-1] != '\012':
-	    raise ParseNotcomplete
+	# whole line yet...  DEFUNCT
+	#if list[-1] != '\012':
+	#    raise ParseNotcomplete
 
-	# if we don't have 4 elements ['INTERPRETERS', '=', <str>, '012'] then
-	# raise an error
-	if len(list) != 4:
-	    raise ParseFailure, "INTERPRETERS definition has %d tokens when expecting 4" % len(list)
+	# if we don't have 3 elements ['INTERPRETERS', '=', <str>] then raise an error
+	if len(list) != 3:
+	    raise ParseFailure, "INTERPRETERS definition has %d tokens when expecting 3" % len(list)
 
 	value = utils.stripquote(list[2])
 	proc.interpreters = string.split(value, ',')
@@ -354,17 +349,17 @@ class CLASS(ConfigOption):
 	apply( ConfigOption.__init__, (self,list) )
 
 	# if the last token isn't a carriage-return then we don't have the
-	# whole line yet...
-	if list[-1] != '\012':
-	    raise ParseNotcomplete
+	# whole line yet...  DEFUNCT
+	#if list[-1] != '\012':
+	#    raise ParseNotcomplete
 
-	# if we don't have at least 4 elements ['CLASS', '=', <str>, [',', <str>, ...] '\012']
+	# if we don't have at least 4 elements ['CLASS', '=', <str>, [',', <str>, ...] ]
 	# then raise an error
-	if len(list) < 4:
-	    raise ParseFailure, "INTERPRETERS definition has %d tokens when expecting 4" % len(list)
+	if len(list) < 3:
+	    raise ParseFailure, "INTERPRETERS definition has %d tokens when expecting 3" % len(list)
 
 	self.name = list[1]
-	hosts = list[3:-1]			# pull hosts out
+	hosts = list[3:]			# pull hosts out
 	hosts = string.join(hosts, '')		# join all arguments
 	hosts = utils.stripquote(hosts)	# in case the arguments are in quotes (optional)
 	self.hosts = string.split(hosts, ',')	# finally, split into list of hosts
@@ -378,14 +373,14 @@ class ELVINHOST(ConfigOption):
 	apply( ConfigOption.__init__, (self,list) )
 
 	# if the last token isn't a carriage-return then we don't have the
-	# whole line yet...
-	if list[-1] != '\012':
-	    raise ParseNotcomplete
+	# whole line yet...   DEFUNCT
+	#if list[-1] != '\012':
+	#    raise ParseNotcomplete
 
-	# if we don't have 4 elements ['ELVINHOST', '=', <str>, '012'] then
+	# if we don't have 3 elements ['ELVINHOST', '=', <str>] then
 	# raise an error
-	if len(list) != 4:
-	    raise ParseFailure, "ELVINHOST definition has %d tokens when expecting 4" % len(list)
+	if len(list) != 3:
+	    raise ParseFailure, "ELVINHOST definition has %d tokens when expecting 3" % len(list)
 
 	# ok, value is 3rd list element
 	eddieElvin.ELVINHOST = utils.stripquote(list[2])		# set the config option
@@ -399,13 +394,12 @@ class ELVINPORT(ConfigOption):
 
 	# if the last token isn't a carriage-return then we don't have the
 	# whole line yet...
-	if list[-1] != '\012':
-	    raise ParseNotcomplete
+	#if list[-1] != '\012':
+	#    raise ParseNotcomplete
 
-	# if we don't have 4 elements ['ELVINPORT', '=', <int>, '012'] then
-	# raise an error
-	if len(list) != 4:
-	    raise ParseFailure, "ELVINPORT definition has %d tokens when expecting 4" % len(list)
+	# if we don't have 3 elements ['ELVINPORT', '=', <int>] then raise an error
+	if len(list) != 3:
+	    raise ParseFailure, "ELVINPORT definition has %d tokens when expecting 3" % len(list)
 
 	# ok, value is 3rd list element
 	eddieElvin.ELVINPORT = int(list[2])		# set the config option
@@ -418,14 +412,13 @@ class NUMTHREADS(ConfigOption):
 	apply( ConfigOption.__init__, (self,list) )
 
 	# if the last token isn't a carriage-return then we don't have the
-	# whole line yet...
-	if list[-1] != '\012':
-	    raise ParseNotcomplete
+	# whole line yet...  DEFUNCT
+	#if list[-1] != '\012':
+	#    raise ParseNotcomplete
 
-	# if we don't have 4 elements ['NUMTHREADS', '=', <int>, '012'] then
-	# raise an error
-	if len(list) != 4:
-	    raise ParseFailure, "NUMTHREADS definition has %d tokens when expecting 4" % len(list)
+	# if we don't have 3 elements ['NUMTHREADS', '=', <int>] then raise an error
+	if len(list) != 3:
+	    raise ParseFailure, "NUMTHREADS definition has %d tokens when expecting 3" % len(list)
 
 	# ok, value is 3rd list element
 	global num_threads

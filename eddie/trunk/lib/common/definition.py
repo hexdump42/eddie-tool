@@ -22,7 +22,7 @@ import utils, log
 
 # Define exceptions
 ParseFailure = 'ParseFailure'
-ParseNotcomplete = 'ParseNotcomplete'
+#ParseNotcomplete = 'ParseNotcomplete'
 
 
 
@@ -83,6 +83,7 @@ class Definition:
     def __init__(self, list):
 	self.basetype = 'Definition'	# the object can know its own basetype
 	self.type = list[0]		# the definition type of this instance
+	self.hastokenparser = 0		# no tokenparser() function by default
 
 
 
@@ -96,13 +97,12 @@ class MSG(Definition):
 	self.name = toklist[1]
 	self.subject = None
 	self.message = None
-	self.indent = 0		# used during parsing only
-	log.log( "<Definition>MSG(), M created, name '%s'" % (self.name), 9 )
+	#self.indent = 0		# used during parsing only
+	self.hastokenparser = 1
+	log.log( "<Definition>MSG(), MSG created, name '%s'" % (self.name), 9 )
 
 
     def tokenparser(self, toklist, toktypes, indent):
-	toklist = toklist[:-1]		# lose CR
-	toktypes = toktypes[:-1]	# lose CR
 
 	for t in toklist:
 	    if self.subject == None:
@@ -112,6 +112,8 @@ class MSG(Definition):
 	    else:
 		# tokens left and subject/message already defined
 		raise ParseFailure, "Parse error during MSG definition"
+
+	log.log( "<Definition>tokenparser(), MSG parsed, subject:'%s' message:'%s'" % (self.subject,self.message), 9 )
 
 	#if self.indent == 0:
 	#    self.subject = utils.stripquote(toklist[0])
@@ -125,7 +127,8 @@ class MSG(Definition):
 
 
     def __str__(self):
-	str = "<MSG name='%s' subject='%s' message='%s'>" % (self.name, self.subject, self.message)
+	#str = "<MSG name='%s' subject='%s' message='%s'>" % (self.name, self.subject, self.message)
+	str = "<MSG %s>" % (self.name)
 	return str
 
 
@@ -141,7 +144,7 @@ class M(Definition):
 
 
     def __str__(self):
-	str = "<M name='%s'" % self.name
+	str = "<M %s:" % self.name
 	for i in self.MDict.keys():
 	    str = str + " %s" % self.MDict[i]
 	str = str + ">"
@@ -152,10 +155,10 @@ class M(Definition):
 	return self.MDict[item]
 
 
-    def tokenparser(self, toklist, toktypes, indent):
-	## M doesn't need to parse any tokens.
-	log.log( "<Definition>M(), Warning, M shouldn't see tokens, toklist: %s" % (toklist), 3 )
-	return
+#    def tokenparser(self, toklist, toktypes, indent):
+#	## M doesn't need to parse any tokens.
+#	log.log( "<Definition>M(), Warning, M shouldn't see tokens, toklist: %s" % (toklist), 3 )
+#	return
 
 
     def give(self, obj):
@@ -185,14 +188,15 @@ class DEF(Definition):
 
 	# if the last token isn't a carriage-return then we don't have the
 	# whole line yet...
-	if list[-1] != '\012':
-	    raise ParseNotcomplete
+#	if list[-1] != '\012':
+#	    #raise ParseNotcomplete
+#	    raise ParseFailure
 
-	# if we don't have 5 elements ['DEF', <str>, '=', <str>, '012'] then
+	# if we don't have 4 elements ['DEF', <str>, '=', <str>] then
 	# raise an error
-	if len(list) != 5:
+	if len(list) != 4:
 	    #print "..DEF list:",list
-	    raise ParseFailure, "DEF definition has %d tokens when expecting 5" % len(list)
+	    raise ParseFailure, "DEF definition has %d tokens when expecting 4" % len(list)
 
 	# OK, grab values
 	self.name = list[1]		# the name of this DEFinition
@@ -212,14 +216,14 @@ class ALIAS(Definition):
 	apply( Definition.__init__, (self,list) )
 
 	# if the last token isn't a carriage-return then we don't have the
-	# whole line yet...
-	if list[-1] != '\012':
-	    raise ParseNotcomplete
+	# whole line yet...  DEFUNCT
+	#if list[-1] != '\012':
+	#    raise ParseNotcomplete
 
-	# if we don't have 5 elements ['ALIAS', <str>, '=', <str>, '012'] then
+	# if we don't have 4 elements ['ALIAS', <str>, '=', <str>] then
 	# raise an error
-	if len(list) != 5:
-	    raise ParseFailure, "ALIAS definition has %d tokens when expecting 5" % len(list)
+	if len(list) != 4:
+	    raise ParseFailure, "ALIAS definition has %d tokens when expecting 4" % len(list)
 
 	# OK, grab values
 	self.name = list[1]			# the name of this ALIAS
@@ -255,6 +259,8 @@ class N(Definition):
 	self.configLevel = -1
 	self.configIndent = 0
 
+	self.hastokenparser = 1
+
 	log.log( "<Definition>N(), N created, name '%s'" % (self.name), 8 )
 
 
@@ -270,60 +276,64 @@ class N(Definition):
 
 	# no good if toklist empty
 	if len(toklist) < 1:
-	    raise ParseNotcomplete
+	    #raise ParseNotcomplete
+	    raise ParseFailure
 
-	# start again if toklist starts with CR
-	if toklist[0] == '\012':
-	    return
+	while len(toklist) > 0:
+	    #print "--->toklist:",toklist
 
-	if toklist[0] in ('Level', 'level', 'LEVEL'):
-	    # Haven't finished if we don't have a CR or ':'
-	    if toklist[-1] != '\012' and toklist[-1] != ':':
-		raise ParseNotcomplete
+	    # start again if toklist starts with CR
+	    if toklist[0] == '\012':
+		del toklist[0]
+		del toktypes[0]
 
-	    # Level definition
-	    if len(toklist) != 3:
-		# 3 tokens are required, ie: ['Level', <num>, ':']
-		raise ParseFailure, 'N: Expecting 3 tokens, found %d' % len(toklist)
+	    elif toklist[0] in ('Level', 'level', 'LEVEL'):
+		# Level must be a number.
+		if toktypes[1] != 'NUMBER':
+		    raise ParseFailure, 'N: Level definition expects a number, received a %s' % toktypes[1]
+		if toklist[2] != ':':
+		    raise ParseFailure
 
-	    # Level must be a number.
-	    if toktypes[1] != 'NUMBER':
-		raise ParseFailure, 'N: Level definition expects a number, received a %s' % toktypes[1]
+		level = toklist[1]
+		self.addLevel(toklist[1])	# Create level
+		self.configLevel = toklist[1]
+		del toklist[:3]
+		del toktypes[:3]
 
-	    level = toklist[1]
-	    self.addLevel(toklist[1])	# Create level
-	    self.configLevel = toklist[1]
-	    return
+	    elif toklist[0] in self.defs.keys():
+		# One of the defined assignments
 
-	# Haven't finished if we don't have a CR
-	if toklist[-1] != '\012':
-	    raise ParseNotcomplete
+		if toklist[1] != '=':
+		    raise ParseFailure, 'Expecting "=" after "%s", got "%s' % (toklist[0], toklist[1])
 
-	if toklist[0] in self.defs.keys():
-	    # One of the defined assignments
+		# assume number followed by letter at the moment...
+		value = string.join(toklist[2:3], "")
+		if self.defs[toklist[0]] == 'TIME':
+		    # Convert time to seconds if required
+		    value = utils.val2secs(value)
 
-	    if toklist[1] != '=':
-		raise ParseFailure, 'Expecting "=" after "%s", got "%s' % (toklist[0], toklist[1])
+		assignment = 'self.%s=%d' % (toklist[0],value)
+		exec assignment
 
-	    value = string.join(toklist[2:-1], "")
-	    if self.defs[toklist[0]] == 'TIME':
-		# Convert time to seconds if required
-		value = utils.val2secs(value)
+		del toklist[:4]
+		del toktypes[:4]
 
-	    assignment = 'self.%s=%d' % (toklist[0],value)
-	    exec assignment
+	    else:
+		# Must be a notification command (or list of commands)
+		notiflist = self.getNotifList( toklist )
+		if len(notiflist) == 0:
+		    raise ParseFailure, "Notification list is empty"
+		else:
+		    if self.configLevel == -1:
+			# Error if no levels defined yet
+			raise ParseFailure, "No notification levels have been defined yet"
+		    self.addNotif(self.configLevel,indent,notiflist)
+		    del toklist[:self.delcnt]
+		    del toktypes[:self.delcnt]
 
-	    return
-
-	# Must be a notification command (or list of commands)
-	notiflist = self.getNotifList( toklist[:-1] )
-	if len(notiflist) == 0:
-	    raise ParseNotcomplete
-	else:
-	    if self.configLevel == -1:
-		# Error if no levels defined yet
-		raise ParseFailure, "No notification levels have been defined yet"
-	    self.addNotif(self.configLevel,indent,notiflist)
+	# Finished parsing tokens
+	log.log( "<Definition>N.tokenparser(), '%s'" % (self), 9 )
+	
 
 
     # Create a notification level - error if level already exists
@@ -341,22 +351,23 @@ class N(Definition):
 	nlist = []		# list of notification commands
 	nstr = ''		# current notification command as string
 	brackets = 0		# track brackets depth
+	self.delcnt = 0		# temporary counter so main loop can delete objects from list
 
+	#print "getNotif(): list:",list
 	for t in list:
-#	    if t == ',' and brackets == 0:
-#		if len(nstr) > 0:
-#		    #nlist.append(nstr)
-#		    #nstr = ''
-#		    pass
-#	    else:
-		if t == '(':
-		    brackets = brackets + 1
-		if t == ')':
-		    brackets = brackets - 1
-		    if brackets < 0:
-			raise ParseFailure, "Too many close parentheses ')'"
+	    if t == 'Level':	# stop if new Level defn - poor code!
+		break
 
-		nstr = nstr + t
+	    if t == '(':
+		brackets = brackets + 1
+	    if t == ')':
+		brackets = brackets - 1
+		if brackets < 0:
+		    raise ParseFailure, "Too many close parentheses ')'"
+
+	    nstr = nstr + t
+
+	    self.delcnt = self.delcnt + 1
 
 	if brackets != 0:
 	    raise ParseFailure, "Parentheses not closed"

@@ -218,9 +218,9 @@ def buildCheckQueue(q, Config):
 	list = Config.ruleList[d]
 	if list != None:
 	    for i in list:
-		log.log( "<eddie>buildCheckQueue(), adding to Queue: %s" % (i), 8 )
 		# if directive template is 'self', do not schedule it
 		if i.args.template != 'self':
+		    log.log( "<eddie>buildCheckQueue(), adding to Queue: %s" % (i), 8 )
 		    q.put( (i,0) )
 	else:
 	    log.log( "<eddie>buildCheckQueue(), Config.ruleList['%s'] is empty" % (d), 4 )

@@ -171,6 +171,8 @@ class Directive:
 	self.basetype = 'Directive'	# the object can know its own basetype
 	self.type = toklist[0]		# the directive type of this instance
 
+	self.hastokenparser = 1		# tell parser this object has a separate tokenparser()
+
 	self.Action = action.action()	# create new action instance
 	self.Action.varDict = {}	# dictionary of variables used for emails etc
 
@@ -366,8 +368,7 @@ class Directive:
 		try:
 		    afunc = Config.NDict[notif].levels[level]
 		except KeyError:
-		    #print "Eddie: Error in directive.py line 148: Config.NDict[notif].levels[level] - level=%d" % level
-		    log.log( "<directive>doAction(), Error in directive.py line 148: Config.NDict[notif].levels[level] - level=%s" % level, 1 )
+		    log.log( "<directive>doAction(), Error in directive.py line 371: Config.NDict[notif].levels[level], level=%s" % level, 1 )
 		else:
 		    #print ">>>> afunc:",afunc
 
