@@ -27,7 +27,7 @@
 ########################################################################
 
 global EDDIE_VER
-EDDIE_VER='0.25'
+EDDIE_VER='0.26'
 
 
 # Standard Python modules
