@@ -99,7 +99,7 @@ def check(Config):
     # perform checks for appropriate groups/hostnames
     for c in Config.groups:
 	if c.name == log.hostname or (c.name in Config.classDict.keys() and log.hostname in Config.classDict[c.name]):
-	    log.log( "<eddie>check(), Calling check() with group %s" % (c.name), 8 )
+	    log.log( "<eddie>check(), Calling check() with group %s" % (c.name), 5 )
 	    check(c)
 	else:
 	    log.log( "<eddie>check(), Not checking group %s" % (c.name), 8 )
