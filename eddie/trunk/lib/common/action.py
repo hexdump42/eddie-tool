@@ -252,7 +252,7 @@ class action:
     # elvin()
     def elvin(self, msg):
 	if eddieElvin.UseElvin == 0:
-	    log.log( "<action>elvin(), Elvin is not available - skipping.", 8 )
+	    #log.log( "<action>elvin(), Elvin is not available - skipping.", 8 )
 	    return 0
 
 	# send a message via Elvin message system
@@ -299,6 +299,10 @@ class action:
 
     # elvinPage()
     def elvinPage(self, pager, msg):
+	if eddieElvin.UseElvin == 0:
+	    #log.log( "<action>elvin(), Elvin is not available - skipping.", 8 )
+	    return 0
+
 	# send a message via Elvin message system to Pager
 	elvinServer = 'chintoo'
 	elvinPort = 5678
@@ -376,6 +380,10 @@ class action:
 
     def elvindb(self, table):
 	"""Send information to remote database listener via Elvin."""
+
+	if eddieElvin.UseElvin == 0:
+	    #log.log( "<action>elvin(), Elvin is not available - skipping.", 8 )
+	    return 0
 
 	try:
 	    e = eddieElvin.elvindb()

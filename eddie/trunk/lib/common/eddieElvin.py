@@ -47,6 +47,9 @@ class elvinConnection:
 	self.host = host
 	self.port = port
 
+	if UseElvin == 0:
+	    raise ElvinError, "Elvin not available"
+
 	try:
 	    self.elvin = Elvin.Elvin(Elvin.EC_NAMEDHOST, self.host, self.port, None, None, self._error_cb)
 	except:
@@ -55,6 +58,7 @@ class elvinConnection:
 	    raise ElvinError, "Connection failed to %s:%d" % (self.host,self.port)
 	else:
 	    self.connected = 1
+
 
     def _error_cb(self, code, msg):
 	"""Elvin error callback. We reconnect"""
