@@ -1,35 +1,43 @@
 eddiebrowser.cgi
-http://eddie-tool.net/eddiebrowser/
-(c) Chris Miles 2003 http://chrismiles.info/
+http://www.psychofx.com/eddiebrowser/
+(c) Chris Miles 2002-2004 http://chrismiles.info/
 
 Requirements:
 
- - Python 2+
+ o Python 2+
    http://www.python.org/
+
+ o py-rrdtool - to generate graphical images from RRD files using Python
+   http://sourceforge.net/projects/py-rrdtool/
+   or http://www.nongnu.org/py-rrdtool/
+
+ o The above module requires RRDtool
+   http://people.ee.ethz.ch/~oetiker/webtools/rrdtool/
+
+ o A web server (eddiebrowser.cgi is a cgi program!)
 
 
 Optional Requirements:
 
- To use the built-in RRD graphing functionality (recommended)
- - RRDtool Python module
-   http://projects.gasperino.org/
-   or:
-   http://eddie-tool.net/eddiebrowser/python-RRDtool/
- - The above module requires RRDtool
-   http://people.ee.ethz.ch/~oetiker/webtools/rrdtool/
+ o ElvinRRD - for storing data in RRD databases over a network.
+   http://www.psychofx.com/elvinrrd/
 
- For collecting data and storing in RRD databases:
- - EDDIE-Tool
+ o Elvin - ElvinRRD uses the Elvin messaging software.
+   http://elvin.dstc.edu.au/
+
+ o The EDDIE Tool - can be used for gathering system/network stats and
+   sending these to RRD files using ElvinRRD & Elvin.
    http://eddie-tool.net/
- - Or any other data collector / RRD software.
+
+ o Any other data collector / RRD software.
 
 
 INSTALLATION
 
- eddiebrowser is used to browser and display data stored in
+ eddiebrowser is used to browse and display data stored in
  RRD database files.  It does not write or create RRD database
- files.  To do this use EDDIE-Tool or another data collection
- package.
+ files.  To do this use EDDIE Tool/Elvin/ElvinRRD or many of the
+ other data collection and RRD packages available.
 
  eddiebrowser expects a certain directory structure which is
  simple to create, and allows eddiebrowser to automatically
@@ -39,8 +47,8 @@ INSTALLATION
  it /export/rrd
     $ mkdir /export/rrd
  In this directory create subdirectories for each of the data
- types.  Your data collector/RRD write package may do this
- automatically for you.
+ types.  Your data collector/RRD writer package may do this
+ automatically for you (ElvinRRD does).
     $ mkdir /export/rrd/cpulinux
  Write the RRD files for this data type to this directory.
  Hostname details can be stored in the filename, allowing
@@ -50,56 +58,61 @@ INSTALLATION
  Example:
     $ ls -al /export/rrd/cpulinux/
     -rw-r--r--  1 cmiles  root      1972 Jun 21 18:22 .eddiebrowser.cfg
-    -rwxrwxrwx  1 cmiles  users   139188 Jun 22 16:36 cpulinux-crazy.rrd*
+    -rwxrwxrwx  1 cmiles  users   139188 Jun 22 16:36 cpulinux-crazy.rrd
+
  This shows the RRD database file, cpulinux-crazy.rrd, for
  'cpulinux' data for host 'crazy'.
  It also shows a .eddiebrowser.cfg file.  Each directory needs
  a .eddiebrowser.cfg file to tell eddiebrowser how to find and
- display RRD data in the directories.
+ display RRD data of that type.
 
- In this example the .eddiebrowser.cfg looks like:
-    NAME=CPU
-    GROUP=CPU
-    FILES=cpulinux-(?P<hostname>\w+).rrd
+ In this example the /export/rrd/cpulinux/.eddiebrowser.cfg file looks
+ like:
 
-    GRAPH_TITLE=
-    GRAPH_VERTICAL_LABEL=cpu use (%)
-    GRAPH_DEFS=A,B,C,D
+NAME=CPU Use
+GROUP=System
+FILES=cpulinux-(?P<hostname>[a-zA-Z0-9.-_]+).rrd
 
-    GRAPH_LABEL_A=%(hostname)s cpu_user
-    GRAPH_TYPE_A=AREA
-    GRAPH_COLOR_A=0000FF
-    GRAPH_SOURCE_A=cpu_user
-    GRAPH_SOURCETYPE_A=AVERAGE
-    GRAPH_GPRINT_A1=MIN:  (min=%.1lf
-    GRAPH_GPRINT_A2=AVERAGE:avg=%.1lf
-    GRAPH_GPRINT_A3=MAX:max=%.1lf)
+GRAPH_TITLE=%(hostname)s
+GRAPH_VERTICAL_LABEL=cpu use (%)
+GRAPH_DEFS=A,B,C,D
 
-    GRAPH_LABEL_B=%(hostname)s cpu_nice
-    GRAPH_TYPE_B=STACK
-    GRAPH_COLOR_B=00FFFF
-    GRAPH_SOURCE_B=cpu_nice
-    GRAPH_SOURCETYPE_B=AVERAGE
-    GRAPH_GPRINT_B1=MIN:  (min=%.1lf
-    GRAPH_GPRINT_B2=AVERAGE:avg=%.1lf
-    GRAPH_GPRINT_B3=MAX:max=%.1lf)
+GRAPH_LABEL_A=cpu_user
+GRAPH_TYPE_A=AREA
+GRAPH_COLOR_A=0000FF
+GRAPH_SOURCE_A=cpu_user
+GRAPH_SOURCETYPE_A=AVERAGE
+GRAPH_GPRINT_A1=MIN:  (min=%.1lf
+GRAPH_GPRINT_A2=AVERAGE:avg=%.1lf
+GRAPH_GPRINT_A3=MAX:max=%.1lf
+GRAPH_GPRINT_A4=LAST:last=%.1lf)
 
-    GRAPH_LABEL_C=%(hostname)s cpu_system
-    GRAPH_TYPE_C=STACK
-    GRAPH_COLOR_C=00FF00
-    GRAPH_SOURCE_C=cpu_system
-    GRAPH_SOURCETYPE_C=AVERAGE
-    GRAPH_GPRINT_C1=MIN:(min=%.1lf
-    GRAPH_GPRINT_C2=AVERAGE:avg=%.1lf
-    GRAPH_GPRINT_C3=MAX:max=%.1lf)
+GRAPH_LABEL_B=cpu_nice
+GRAPH_TYPE_B=STACK
+GRAPH_COLOR_B=00FFFF
+GRAPH_SOURCE_B=cpu_nice
+GRAPH_SOURCETYPE_B=AVERAGE
+GRAPH_GPRINT_B1=MIN:  (min=%.1lf
+GRAPH_GPRINT_B2=AVERAGE:avg=%.1lf
+GRAPH_GPRINT_B3=MAX:max=%.1lf
+GRAPH_GPRINT_B4=LAST:last=%.1lf)
 
-    GRAPH_LABEL_D=%(hostname)s cpu_idle
-    GRAPH_TYPE_D=LINE1
-    GRAPH_COLOR_D=A0522D
-    GRAPH_SOURCE_D=cpu_idle
-    GRAPH_SOURCETYPE_D=AVERAGE
-    GRAPH_GPRINT_D1=MIN:  (min=%.1lf
-    GRAPH_GPRINT_D2=AVERAGE:avg=%.1lf
-    GRAPH_GPRINT_D3=MAX:max=%.1lf)
+GRAPH_LABEL_C=cpu_system
+GRAPH_TYPE_C=STACK
+GRAPH_COLOR_C=00FF00
+GRAPH_SOURCE_C=cpu_system
+GRAPH_SOURCETYPE_C=AVERAGE
+GRAPH_GPRINT_C1=MIN:(min=%.1lf
+GRAPH_GPRINT_C2=AVERAGE:avg=%.1lf
+GRAPH_GPRINT_C3=MAX:max=%.1lf
+GRAPH_GPRINT_C4=LAST:last=%.1lf)
 
-
+GRAPH_LABEL_D=cpu_idle
+GRAPH_TYPE_D=LINE1
+GRAPH_COLOR_D=A0522D
+GRAPH_SOURCE_D=cpu_idle
+GRAPH_SOURCETYPE_D=AVERAGE
+GRAPH_GPRINT_D1=MIN:  (min=%.1lf
+GRAPH_GPRINT_D2=AVERAGE:avg=%.1lf
+GRAPH_GPRINT_D3=MAX:max=%.1lf
+GRAPH_GPRINT_D4=LAST:last=%.1lf)
