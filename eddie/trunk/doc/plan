@@ -48,7 +48,7 @@ PROJECT PLAN:
 		FS					Chris	90%
 		PID					Chris	100%
 		SP					Rod	0%
-		COM					Chris	0%
+		COM					Chris	100%
 	Actions:
 		email()					Chris	100%
 		system()				Chris	100%
