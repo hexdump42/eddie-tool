@@ -84,7 +84,7 @@ class Directive:
 	self.Action = action.action()	# create new action instance
 	self.Action.varDict = {}	# dictionary of variables used for emails etc
 
-	self.actionList = []		# each directive will have an action
+	self.actionList = []		# each directive will have a list of actions
 
 	# Set up informational variables - these are common to all Directives
 	#  %h = hostname
@@ -114,8 +114,8 @@ class Directive:
 	#actionList = utils.quoteArgs( actionList )
 
 	# Set the 'action' variables with the expanded action list
-	self.Action.varDict['act'] = 'The following actions are being taken:\n'
-	self.Action.varDict['actnm'] = 'The following (non-email) actions are being taken:\n'
+	self.Action.varDict['act'] = 'The following actions were attempted:\n'
+	self.Action.varDict['actnm'] = 'The following (non-email) actions were attempted:\n'
 	#TODO:
 	#for a in actionList:
 	#    self.Action.varDict['act'] = self.Action.varDict['act'] + '\t' + a + '\n'
@@ -123,6 +123,8 @@ class Directive:
 	#	self.Action.varDict['actnm'] = self.Action.varDict['actnm'] + '\t' + a + '\n'
 
 	# Perform each action
+	ret = None
+	self.Action.actionReports = {}		# dict of actions and their return status
 	for a in actionList:
 	    sre = re.compile( "([A-Za-z0-9_]+)\(([A-Za-z0-9_.]+),?([0-9]?)\)" )
 	    inx = sre.search( a )
@@ -132,7 +134,8 @@ class Directive:
 		# notification definition.
 		self.Action.msg = None
 		print "calling: self.Action."+a
-		eval( 'self.Action.'+a )
+		ret = eval( 'self.Action.'+a )
+		self.Action.actionReports[a] = ret
 	    else:
 		notif = inx.group(1)
 		msg = inx.group(2)
@@ -164,10 +167,19 @@ class Directive:
 			#try:
 			    # Call the action
 			    log.log( "<directive>Directive, calling action '%s'" % (aa), 9 )
-			    eval( 'self.Action.'+aa )
+			    ret = eval( 'self.Action.'+aa )
+			    self.Action.actionReports[aa] = ret
+			    if ret == None:
+				self.Action.varDict['actnm'] = self.Action.varDict['actnm'] + '    %s\n' % aa
+			    elif ret == 0:
+				self.Action.varDict['actnm'] = self.Action.varDict['actnm'] + '    %s - Successful\n' % aa
+			    else:
+				self.Action.varDict['actnm'] = self.Action.varDict['actnm'] + '    %s - FAILED, return code %d\n' % (aa, ret)
+
 			#except AttributeError:
 			    # Not an action function ... error...
 		    #	log.log( "<directive>Directive, Error, 'action.%s' is not a defined action, config line follows,\n%s\n" % (a,self.raw), 2 )
+	print "actionReports:",self.Action.actionReports
 
 
     ##

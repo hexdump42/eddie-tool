@@ -317,11 +317,11 @@ class N(Definition):
 
 		nstr = nstr + t
 
-	if len(nstr) > 0:
-    	    nlist.append(nstr)
-
 	if brackets != 0:
 	    raise ParseFailure, "Parentheses not closed"
+
+	if len(nstr) > 0:
+    	    nlist.append(nstr)
 
 	return nlist
 
