@@ -33,18 +33,27 @@ PROJECT PLAN:
 			- still defining log levels
 		Variables - %sys, %act, %actnm		Chris	66%
 			- %sys not done
+		netstat class				Rod
+		History...
 	Directives:
 		D					Chris	100%
-		FS
+		FS					Rod
 		PID
-		SP
+		SP					Rod
 	Actions:
 		email()					Chris	100%
 		system()				Chris	100%
 		restart()				Chris	100%
-		nice()
-		log()
+		nice()					Chris
+		log()					Chris
 		syslog()
+
+
+FUTURE TODO:
+-----------
+email() : want email actions to be performed last so that results of other
+actions can be summarized in the email.
+
 
 
 DIRECTIVES:
@@ -99,8 +108,8 @@ MISC
 	- ps, df: support standard and ucb
 
 
-RESPONSE FUNCTIONS
--------- ---------
+ACTIONS
+-------
 	- email( address, MSGNAME, ALERTLEVEL )
 		- ALERTLEVEL means ?
 	- page( MSGNAME )
@@ -109,7 +118,8 @@ RESPONSE FUNCTIONS
 	- system( SYSTEM_COMMAND )
 		- execute: system( "SYSTEM_COMMAND" )
 		- ...security issues ????
-	- nice( NICE_LEVEL )
+	- nice( NICE_LEVEL )		- sets absolute nice level
+	  nice( '+'|'-', NICE_OFFSET )	- sets relative nice level
 	- log( MSGNAME )
 		- logs extra message to OTTO logfile
 	- syslog( MSGNAME )
