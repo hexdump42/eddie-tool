@@ -110,6 +110,13 @@ class FILE(directive.Directive):
 	data['perm'] = None
 	data['sticky'] = None
 	data['type'] = None
+	data['issocket'] = None
+	data['issymlink'] = None
+	data['isfile'] = None
+	data['isblockdevice'] = None
+	data['isdir'] = None
+	data['ischardevice'] = None
+	data['isfifo'] = None
 	data['now'] = None
 
 	data['lastmode'] = None
@@ -126,6 +133,13 @@ class FILE(directive.Directive):
 	data['lastperm'] = None
 	data['laststicky'] = None
 	data['lasttype'] = None
+	data['lastissocket'] = None
+	data['lastissymlink'] = None
+	data['lastisfile'] = None
+	data['lastisblockdevice'] = None
+	data['lastisdir'] = None
+	data['lastischardevice'] = None
+	data['lastisfifo'] = None
 
 	data['now'] = time.time()	# get current time for comparing with file times
 
@@ -155,6 +169,14 @@ class FILE(directive.Directive):
 	    data['perm'] = s[0] & 0777		# extract permission bits only
 	    data['sticky'] = s[0] & 07000	# extract sticky/setuid/setgid bits only
 	    data['type'] = s[0] & 0170000	# extract file type bits only
+	    # shorthand isfile booleans
+	    data['issocket'] = data['type'] & 0140000 == 0140000
+	    data['issymlink'] = data['type'] & 0120000 == 0120000
+	    data['isfile'] = data['type'] & 0100000 == 0100000
+	    data['isblockdevice'] = data['type'] & 0060000 == 0060000
+	    data['isdir'] = data['type'] & 0040000 == 0040000
+	    data['ischardevice'] = data['type'] & 0020000 == 0020000
+	    data['isfifo'] = data['type'] & 0010000 == 0010000
 
 	    # md5 the file too if necessary and if md5 module available
 	    if string.find(self.args.rule, 'md5') != -1:
@@ -193,6 +215,13 @@ class FILE(directive.Directive):
 		self.lastperm = data['perm']
 		self.laststicky = data['sticky']
 		self.lasttype = data['type']
+		self.lastissocket = data['issocket']
+		self.lastissymlink = data['issymlink']
+		self.lastisfile = data['isfile']
+		self.lastisblockdevice = data['isblockdevice']
+		self.lastisdir = data['isdir']
+		self.lastischardevice = data['ischardevice']
+		self.lastisfifo = data['isfifo']
 
 	    data['lastmode'] = self.lastmode
 	    data['lastino'] = self.lastino
@@ -208,6 +237,13 @@ class FILE(directive.Directive):
 	    data['lastperm'] = self.lastperm
 	    data['laststicky'] = self.laststicky
 	    data['lasttype'] = self.lasttype
+	    data['lastissocket'] = self.lastissocket
+	    data['lastissymlink'] = self.lastissymlink
+	    data['lastisfile'] = self.lastisfile
+	    data['lastisblockdevice'] = self.lastisblockdevice
+	    data['lastisdir'] = self.lastisdir
+	    data['lastischardevice'] = self.lastischardevice
+	    data['lastisfifo'] = self.lastisfifo
 
 	    return data
 
@@ -233,6 +269,13 @@ class FILE(directive.Directive):
 	    self.lastperm = data['perm']
 	    self.laststicky = data['sticky']
 	    self.lasttype = data['type']
+	    self.lastissocket = data['issocket']
+	    self.lastissymlink = data['issymlink']
+	    self.lastisfile = data['isfile']
+	    self.lastisblockdevice = data['isblockdevice']
+	    self.lastisdir = data['isdir']
+	    self.lastischardevice = data['ischardevice']
+	    self.lastisfifo = data['isfifo']
 
 
 
