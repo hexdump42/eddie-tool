@@ -170,13 +170,13 @@ class FILE(directive.Directive):
 	    data['sticky'] = (s[0] & 07000) >>9	# extract sticky/setuid/setgid bits only
 	    data['type'] = (s[0] & 0170000) >>12 # extract file type bits only
 	    # shorthand isfile booleans
-	    data['issocket'] = data['type'] & 0140000 == 0140000
-	    data['issymlink'] = data['type'] & 0120000 == 0120000
-	    data['isfile'] = data['type'] & 0100000 == 0100000
-	    data['isblockdevice'] = data['type'] & 0060000 == 0060000
-	    data['isdir'] = data['type'] & 0040000 == 0040000
-	    data['ischardevice'] = data['type'] & 0020000 == 0020000
-	    data['isfifo'] = data['type'] & 0010000 == 0010000
+	    data['issocket'] = data['type'] & 014 == 014
+	    data['issymlink'] = data['type'] & 012 == 012
+	    data['isfile'] = data['type'] & 010 == 010
+	    data['isblockdevice'] = data['type'] & 006 == 006
+	    data['isdir'] = data['type'] & 004 == 004
+	    data['ischardevice'] = data['type'] & 002 == 002
+	    data['isfifo'] = data['type'] & 001 == 001
 
 	    # md5 the file too if necessary and if md5 module available
 	    if string.find(self.args.rule, 'md5') != -1:
