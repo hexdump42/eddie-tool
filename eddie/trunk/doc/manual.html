@@ -343,9 +343,10 @@
    what to do.
    They are of the form:
    <pre>
-   DIRECTIVE name: arg1=value1
-		   arg2=value2
-		   argn=valuen </pre>
+    DIRECTIVE name:
+        arg1=value1
+	arg2=value2
+	argn=valuen </pre>
    Where "DIRECTIVE" is the name of the directive itself (see
    <a href="#builtindirectives">Built-in Directives</a>);
    "name" is a user-defined name of the directive definition (the directive ID is usually
@@ -434,25 +435,26 @@
   <p>
    <i>System Monitoring:</i>
    <ul>
-    <li> <b><a href="#COM">COM</a></b> - define a custom command rule.
-    <li> <b><a href="#FS">FS</a></b> - define a filesystem checking rule.
-    <li> <b><a href="#IF">IF</a></b> - define a network interface checking rule.
+    <li> <b><a href="#COM">COM</a></b> - define custom rules.
+    <li> <b><a href="#FS">FS</a></b> - perform filesystem checks.
+    <li> <b><a href="#IF">IF</a></b> - perform checks on local network interfaces.
     <li> <b><a href="#METASTAT">METASTAT</a></b> - some tests for Solaris Disksuite.
     <li> <b><a href="#NET">NET</a></b> - define a network statistics rule.
-    <li> <b><a href="#PID">PID</a></b> - define a PID-file checking rule.
-    <li> <b><a href="#PROC">PROC</a></b> - define a process checking rule.
+    <li> <b><a href="#PID">PID</a></b> - perform checks on PID-files.
+    <li> <b><a href="#PROC">PROC</a></b> - perform checks on active processes.
     <li> <b><a href="#SP">SP</a></b> - define a local service port checking rule.
     <li> <b><a href="#STORE">STORE</a></b> - define a data storage rule.
-    <li> <b><a href="#SYS">SYS</a></b> - define a system statistics rule.
+    <li> <b><a href="#SYS">SYS</a></b> - perform system statistics checks.
    </ul>
 
    <i>Network Monitoring:</i>
    <ul>
     <li> <b><a href="#HTTP">HTTP</a></b> - perform remote HTTP/HTTPS tests.
     <li> <b><a href="#PING">PING</a></b> - network host ping testing.
-    <li> <b><a href="#POP3TIMING">POP3TIMING</a></b> - time & check on POP3 connections.
+    <li> <b><a href="#POP3TIMING">POP3TIMING</a></b> - time & check POP3 connections.
     <li> <b><a href="#PORT">PORT</a></b> - remote TCP port checking rule.
     <li> <b><a href="#RADIUS">RADIUS</a></b> - perform radius authentication tests.
+    <li> <b><a href="#SNMP">SNMP</a></b> - retrieve and test SNMP data from remote hosts and devices.
    </ul>
 
    <i>Security Monitoring:</i>
@@ -1685,6 +1687,99 @@
 	    action=email('alert', '%(protocol)s port %(bindaddr)s:%(port)s not listening')
     </pre>
    </p>
+
+
+
+   <p>
+    <b><a name="SNMP">SNMP</a></b><br>
+
+    This directive provides an SNMP client to retrieve data from remote
+    hosts and devices via the SNMP protocol.  Multiple values can be
+    retrieved in one call.  Standard EDDIE rules can then perform tests
+    on the retrieved data, or the data could be stored in RRD files using
+    the elvinrrd action (for instance).
+
+    <br><br>
+    SNMP-specific Arguments:
+    <ul>
+     <li> <b>host=&lt;hostname:port&gt;</b> <i>(required)</i>:
+	  <br>
+	  - the remote host to poll.  Specifying the port is optional, and defaults
+	  to 161.
+     <li> <b>oid=&lt;OIDs&gt;</b> <i>(required)</i>:
+	  <br>
+	  - one or more OIDs to fetch from host.  Multiple OIDs should be separated
+	  by commas (,).  Currently these must be the full OID in numeric format
+	  only.
+     <li> <b>community=&lt;community string&gt;</b> <i>(optional)</i>:
+	  <br>
+	  - the community string of the remote SNMP server.  Defaults to 'public' if
+	  not supplied.
+     <li> <b>maxretry=&lt;integer&gt;</b> <i>(optional)</i>:
+	  <br>
+	  - the maximum number of retries before failing an SNMP connection.  Defaults
+	  to 5.
+    </ul><br>
+
+    Rule Variables:
+    <ul>
+     <li> <b>failed</b> (boolean)
+	  <br>
+	  - contains 1 (true) if the SNMP connection failed; 0 (false) if ok.
+     <li> <b>response</b> (type dependent on type of OID)
+	  <br>
+	  - contains the result of the OID, if only 1 OID was specified.
+     <li> <b>response<i>n</i></b> (type dependent on type of OID)
+	  <br>
+	  - contains the results of the OIDs, if 2 or more were specified.  E.g.,
+	  response1, response2, response3, etc, matching the specified OIDs in
+	  order.
+    </ul>
+
+    Action Variables:
+    <ul>
+     <li> <b>host</b> (string)
+	  <br>
+	  - the hostname part of the host argument.
+     <li> <b>port</b> (integer)
+	  <br>
+	  - the port part of the host argument.
+     <li> <b>community</b> (string)
+	  <br>
+	  - the value of the community argument.
+     <li> <b>oid</b> (string)
+	  <br>
+	  - the value of the oid argument.
+     <li> <b>maxretry</b> (integer)
+	  <br>
+	  - the value of the maxretry argument.
+     <li> <b>rule</b> (string)
+	  <br>
+	  - the value of the rule argument.
+     <li> Plus all the rule variables as usual.
+    </ul>
+
+    <i>Directive Examples:</i>
+    <pre>
+    # Fetch a counter from a device
+    SNMP foo:
+        host='alt1.domain.name'
+	oid='1.3.6.1.4.1.1872.2.1.1.6.0'
+	community='private'
+	rule='response > 0'
+	maxretry=10
+	action=email('alert', 'Head for the lifeboats: %(snmpresponse)s')
+
+    SNMP router_traffic:
+	scanperiod='5m'
+	host='10.0.0.1'
+	oid='1.3.6.1.2.1.2.2.1.10.2, 1.3.6.1.2.1.2.2.1.16.2'
+	community='special'
+	rule='not failed'
+	maxretry=10
+	action=elvinrrd("net-router_BRI01", "ibytes=%(response1)s", "obytes=%(response2)s")
+    </pre>
+    </p>
 
 
 
