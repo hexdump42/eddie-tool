@@ -10,7 +10,7 @@
 ## $Id$
 ##
 ########################################################################
-## (C) Chris Miles 2001
+## (C) Chris Miles 2001-2005
 ##
 ## The author accepts no responsibility for the use of this software and
 ## provides it on an ``as is'' basis without express or implied warranty.
@@ -37,7 +37,9 @@
 # Python modules
 import string
 # Eddie modules
-import datacollect, log, utils
+import datacollect
+import log
+import utils
 
 
 # This fetches data by parsing system calls of common commands.  This was done because
@@ -69,7 +71,7 @@ class TCPtable(datacollect.DataCollect):
 	self.data.numconnections = 0
 
 	# get list of current TCP connections
-	rawList = utils.safe_popen('netstat -anA inet -t', 'r')
+	rawList = utils.safe_popen('netstat -an -t', 'r')
 
 	# skip header line
 	rawList.readline()
@@ -112,10 +114,26 @@ class tcp:
 	self.send_q = int(fields[2])
 
 	# local address
-	(self.local_addr_ip, self.local_addr_port) = string.split(fields[3], ':')
+	local_addr = string.split(fields[3], ':')
+	if len(local_addr) == 2:
+	    (self.local_addr_ip, self.local_addr_port) = local_addr
+	elif len(local_addr) == 4:
+	    (self.local_addr_ip, self.local_addr_port) = ('0.0.0.0', local_addr[3])
+	elif len(local_addr) == 5:
+	    (self.local_addr_ip, self.local_addr_port) = (local_addr[3], local_addr[4])
+	else:
+	    log.log( "<netstat>tcp: Could not parse local address: %s" % (fields), 5 )
 
 	# foreign address
-	(self.foreign_addr_ip, self.foreign_addr_port) = string.split(fields[4], ':')
+	foreign_addr = string.split(fields[4], ':')
+	if len(foreign_addr) == 2:
+	    (self.foreign_addr_ip, self.foreign_addr_port) = foreign_addr
+	elif len(foreign_addr) == 4:
+	    (self.foreign_addr_ip, self.foreign_addr_port) = ('0.0.0.0', foreign_addr[3])
+	elif len(foreign_addr) == 5:
+	    (self.foreign_addr_ip, self.foreign_addr_port) = (foreign_addr[3], foreign_addr[4])
+	else:
+	    log.log( "<netstat>tcp: Could not parse foreign address: %s" % (fields), 5 )
 
 	# state
 	self.state = fields[5]
