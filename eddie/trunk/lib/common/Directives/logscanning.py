@@ -27,9 +27,13 @@
 
 
 # Imports: Python
-import re, string, os, sys
+import sys
+import os
+import string
+import re
 # Imports: Eddie
-import log, directive
+import directive
+import log
 
 
 ##
@@ -37,16 +41,17 @@ import log, directive
 ##
 
 class LOGSCAN(directive.Directive):
-    """
-    LOGSCAN directive.  Scan a file looking for regex matches.
+    """LOGSCAN directive.  Scan a file looking for regex matches.
 
     Sample rule:
        LOGSCAN messages: file="/var/log/messages"
                          regex=".*error.*"
-                         action="email('alert', 'Log match', '%(lines)s')"
+			 rule='linecount > 0'
+                         action="email('alert', 'Log matched %(linecount)d lines', '%(lines)s')"
 
     Optional arguments:
-	negate=true	# only lines NOT matching regex will cause action
+	negate=true		# only lines NOT matching regex will cause action
+	rule=<rule string>	# defaults to 'linecount > 0' if not specified
     """
 
     def __init__(self, toklist):
@@ -57,8 +62,7 @@ class LOGSCAN(directive.Directive):
 
 
     def tokenparser(self, toklist, toktypes, indent):
-	"""
-	Parse directive arguments.
+	"""Parse directive arguments.
 	"""
 
 	apply( directive.Directive.tokenparser, (self, toklist, toktypes, indent) )
@@ -85,12 +89,16 @@ class LOGSCAN(directive.Directive):
             self.args.negate=0
 
 	# Default rule for this directive
-	self.args.rule = "linecount > 0"
+	try:
+	    self.args.rule
+	except AttributeError:
+	    self.args.rule = "linecount > 0"		# default rule
 
 	# Set variables for Actions to use
 	self.defaultVarDict['file'] = self.args.file
 	self.defaultVarDict['regex'] = self.args.regex
 	self.defaultVarDict['negate'] = self.args.negate
+	self.defaultVarDict['rule'] = self.args.rule
 
 	# define the unique ID
         if self.ID == None:
@@ -101,8 +109,7 @@ class LOGSCAN(directive.Directive):
 
 
     def getData(self):
-	"""
-	Called by Directive docheck() method to fetch the data required for
+	"""Called by Directive docheck() method to fetch the data required for
 	evaluating the directive rule.
 
 	The check is to read the specified file and save any lines
