@@ -192,7 +192,7 @@ class action:
     def nice(self, *arg):
 	# Can be called with absolute or relative priority as follows:
 	# nice( val ) - val is new absolute priority,
-	# nice( íncr, val ) - incr is incrementor which should be one of '-' or '+'
+	# nice( incr, val ) - incr is incrementor which should be one of '-' or '+'
 	# and val is relative offset.
 	# %pid should contain the pid of the process who's priority is being
 	# modified.
