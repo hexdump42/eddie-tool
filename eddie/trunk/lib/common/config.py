@@ -49,6 +49,12 @@ scanperiodraw = '10m'
 ##
 num_threads = 10
 
+
+##
+## Default port to listen to console connections
+##
+consport=33343
+
 ####################################################
 
 
@@ -384,6 +390,19 @@ class NUMTHREADS(ConfigOption):
 	num_threads = int(list[2])		# set the config option
 	log.log( "<config>NUMTHREADS, num_threads set to '%d'." % (num_threads), 6 )
 
+## CONSPORT - which port to listed for console connections
+class CONSPORT(ConfigOption):
+    def __init__( self, list ):
+	apply( ConfigOption.__init__, (self,list) )
+
+	# if we don't have 3 elements ['CONSPORT', '=', <int>] then raise an error
+	if len(list) != 3:
+	    raise ParseFailure, "CONSPORT definition has %d tokens when expecting 3" % len(list)
+
+	# ok, value is 3rd list element
+	global consport
+	consport = int(list[2])		# set the config option
+	log.log( "<config>CONSPORT, consport set to '%d'." % (consport), 6 )
 
 def loadExtraDirectives( directivedir ):
     """Load extra directives from given directory.  Each file
@@ -451,6 +470,7 @@ settings = {
 		"ELVINURL"	: ELVINURL,
 		"ELVINSCOPE"	: ELVINSCOPE,
 		"NUMTHREADS"	: NUMTHREADS,
+		"CONSPORT"	: CONSPORT,
            }
 
 ## Join all the above dictionaries to make the total keywords dictionary

@@ -1,4 +1,4 @@
-#!/opt/python2/bin/python
+#!/usr/local/bin/python
 ## 
 ## File         : eddie.py 
 ## 
@@ -26,6 +26,7 @@
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 ########################################################################
 
+global EDDIE_VER
 EDDIE_VER='0.25'
 
 
@@ -73,7 +74,7 @@ sys.path = oslibdirs + [commonlibdir,] + sys.path
 #print "sys.path:",sys.path
 
 # Python common Eddie modules
-import parseConfig, directive, definition, config, action, log, history, timeQueue
+import parseConfig, directive, definition, config, action, log, history, timeQueue, sockets
 
 # Python OS-specific Eddie modules
 import proc, df, netstat, system
@@ -91,10 +92,32 @@ config_file = configdir + '/eddie.cf'
 # Globals
 global Config
 global sthread
+global cthread
 
 # Load Directive
 config.loadExtraDirectives(os.path.join(commonlibdir, "Directives"))
 
+# Start Stop the Main threads
+def start_threads(sargs, cargs):
+    global sthread
+    global cthread
+
+    please_die.clear()
+    sthread = threading.Thread(group=None, target=scheduler, name='Scheduler', args=sargs, kwargs={})
+    sthread.start() # start it up
+
+    cthread = threading.Thread(group=None, target=sockets.console_server_thread, name='Console', args=cargs, kwargs={})
+    cthread.start()
+
+    return()
+
+def stop_threads():
+    please_die.set()
+    sthread.join()
+    cthread.join()
+
+    return()
+ 
 # Exit Eddie cleanly
 def eddieexit():
     log.log( '<eddie>eddieexit(), Eddie exiting cleanly.', 3 )
@@ -109,6 +132,8 @@ def SigHandler( sig, frame ):
     if sig == signal.SIGHUP:
 	# SIGHUP (Hangup) - reload config
 	log.log( '<eddie>SigHandler(), SIGHUP encountered - reloading config', 3 )
+
+        stop_threads()
 
 	# reset config and read in config and rules
 	global Config
@@ -125,18 +150,17 @@ def SigHandler( sig, frame ):
 	#print "q:",q
 	#print "q.qsize=%d" % (q.qsize())
 
-	please_die.clear()
-	global sthread
-	sthread = threading.Thread(group=None, target=scheduler, name='Scheduler', args=(q,Config,please_die), kwargs={})
-	sthread.start()	# start it up
+        sargs = (q,Config,please_die)
+        cargs = (Config, please_die, config.consport)
+
+        start_threads(sargs, cargs)
 
     elif sig == signal.SIGINT:
 	# SIGINT (CTRL-c) - quit now
 	log.log( '<eddie>SigHandler(), SIGINT (KeyboardInterrupt) encountered - quitting', 1 )
 
 	log.log( '<eddie>SigHandler(), signalling scheduler thread to die', 5 )
-	please_die.set()
-	sthread.join()
+        stop_threads()
 
 	print "\nEddie quitting ... bye bye"
 	eddieexit()
@@ -146,8 +170,7 @@ def SigHandler( sig, frame ):
 	log.log( '<eddie>SigHandler(), SIGTERM (Terminate) encountered - quitting', 1 )
 
 	log.log( '<eddie>SigHandler(), signalling scheduler thread to die', 5 )
-	please_die.set()
-	sthread.join()
+        stop_threads()
 
 	print "\nEddie quitting ... bye bye"
 	eddieexit()
@@ -375,8 +398,10 @@ def main():
     global please_die
     please_die = threading.Event()		# Event object to notify the scheduler to die
     global sthread
-    sthread = threading.Thread(group=None, target=scheduler, name='Scheduler', args=(q,Config,please_die), kwargs={})
-    sthread.start()	# start it up
+
+    sargs = (q,Config,please_die)
+    cargs = (Config, please_die, config.consport)
+    start_threads(sargs,cargs)
 
     while 1:
 	try:
@@ -392,8 +417,7 @@ def main():
 	    # if so, re-read config
 	    if Config.checkfiles():
 		log.log( '<eddie>main(), config files modified - signalling scheduler to die', 7 )
-		please_die.set()
-		sthread.join()
+                stop_threads()
 
 		log.log( '<eddie>main(), config files modified - reloading config', 5 )
 
@@ -408,13 +432,10 @@ def main():
 		buildCheckQueue(q, Config)
 		Config.q = q
 
-		#print "q:",q
-		#print "q.qsize=%d" % (q.qsize())
+                sargs = (q,Config,please_die)
+                cargs = (Config, please_die, config.consport)
+                start_threads(sargs,cargs)
 
-		please_die.clear()
-
-		sthread = threading.Thread(group=None, target=scheduler, name='Scheduler', args=(q,Config,please_die), kwargs={})
-		sthread.start()	# start it up
 
 	    # email admin the adminlog if required
 	    log.sendadminlog()
