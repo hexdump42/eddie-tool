@@ -145,7 +145,7 @@ def eddieguts(Config, eddieHistory):
 
     # instantiate a netstat list
     log.log( "<eddie>eddieguts(), creating netstat list", 8 )
-    directive.nlist = netstat.netstatList()
+    directive.nlist = netstat.netstat()
 
     # Now do all the checking
     log.log( "<eddie>eddieguts(), beginning checks", 7 )
