@@ -471,21 +471,21 @@ class action:
 
     def elvindb(self, table, data=None):
 	"""Send information to remote database listener via Elvin.
-	Data to insert in db can be specified in the data argument as
-	'col1=data1, col2=data2, col3=data3' or if data is None it will
-	use self.storedict
+	   Data to insert in db can be specified in the data argument as
+	   'col1=data1, col2=data2, col3=data3' or if data is None it will
+	   use self.storedict
 	"""
 
 	log.log( "<action.py>action.elvindb( table='%s' data='%s' )"%(table,data), 8 )
 
-	if eddieElvin.UseElvin == 0:
+	if eddieElvin4.UseElvin == 0:
 	    log.log( "<action.py>action.elvindb(), Elvin is not available - skipping.", 8 )
 	    return 0
 
 	try:
-	    e = eddieElvin.elvindb()
-	except eddieElvin.ElvinError:
-	    log.log( "<action.py>action.elvindb(), Error, eddieElvin.elvindb() could not connect", 2 )
+	    e = eddieElvin4.elvindb()
+	except eddieElvin4.ElvinError:
+	    log.log( "<action.py>action.elvindb(), Error, eddieElvin4.elvindb() could not connect", 2 )
 	    return
 
 	#print "created elvindb() connection to elvin"
@@ -517,42 +517,12 @@ class action:
 
 	    retval = e.send(table, storedict)
 
-	# kill elvin connection (I hope?!)
-	#e._destroy()			# close connection
-	#del e
-
 	# Alert if return value != 0
 	if retval != 0:
 	    log.log( "<action.py>action.elvindb('%s', dict), Alert, return value for e.send() is %d" % (table,retval), 3 )
 	else:
 	    log.log( "<action.py>action.elvindb('%s', dict): store ok" % (table), 7 )
 
-
-    #
-    # Utilities for action functions
-    #
-
-#    # Get a MSG object from the M-tree specified by self.msg and msg
-#    def getMessage(self, msg):
-#	if self.msg == None:
-#	    raise GetMessageError
-#
-#	#print ".......... msg:",msg		#DEBUG
-#	#print "..... self.msg:",self.msg	#DEBUG
-#	#print "... self.MDict:",self.MDict	#DEBUG
-#
-#	msgtree = string.split( self.msg, '.' )
-#	#print ".......msgtree:",msgtree		#DEBUG
-#	M = self.MDict[msgtree[0]]
-#	#print "\n............ M:",M		#DEBUG
-#	for m in msgtree[1:]:
-#	    M = M[m]
-#	    #print "\n............ M:",M		#DEBUG
-#
-#	# Get final MSG object
-#	MSG = M[msg]
-#
-#	return MSG
 
 
 ##

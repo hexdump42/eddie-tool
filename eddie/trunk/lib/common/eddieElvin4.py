@@ -93,15 +93,20 @@ class elvinConnection:
 class eddieElvin:
 
     def __init__(self):
-	global ec			# single global Elvin4 connection object
-	try:
-	    if ec == None:		# if not set, try to connect
+	if UseElvin:
+	    global ec			# single global Elvin4 connection object
+	    try:
+		if ec == None:		# if not set, try to connect
+		    ec = elvinConnection()
+
+	    except NameError:		# if ec undefined, we haven't connected yet
 		ec = elvinConnection()
 
-	except NameError:		# if ec undefined, we haven't connected yet
-	    ec = elvinConnection()
+	    self.connected = 1
+	    log.log( "<eddieElvin>eddieElvin.__init__(), Connected to Elvin server", 6 )
 
-	self.connected = 1
+	else:
+	    log.log( "<eddieElvin>eddieElvin.__init__(), not connecting because UseElvin=0", 3 )
 
 
     # must override this method
@@ -129,6 +134,9 @@ class eddieElvin:
 
 
 class elvinTicker(eddieElvin):
+    """Send a standard Elvin tickertape message to the Tickertape group 'Eddie'.
+       The Tickertape user will be the hostname of the machine sending the message.
+    """
 
     def __init__(self):
         apply( eddieElvin.__init__, (self,) )
@@ -156,40 +164,28 @@ class elvinTicker(eddieElvin):
 
 
 
-##TODO: update for Elvin4.......
 class elvindb(eddieElvin):
-    """Send a dictionary through Elvin to a database listener process."""
+    """Send a dictionary through Elvin to a listener process which should store
+       the data into a database.  Supports Elvin4+ only."""
+
+    def __init__(self):
+        apply( eddieElvin.__init__, (self,) )
+
 
     def send(self, table, data):
 	"""Send the dictionary, aimed for table 'table' in db.
-	- 'table' is a string specifying which table to insert the data into.
-	- 'data' is a dictionary of data.
+	   - 'table' is a string specifying which table to insert the data into.
+	   - 'data' is a dictionary of data.
 	"""
 
 	# If any of the data in 'data' is a dictionary, save these off
 	# separately and send each one over Elvin.
 	extrahashes = {}
 
-	# Elvin can't send longs :(
-	# Let's get around this for now by converting them to strings!  The
-	# consumer at the other end must look for strings containing all digits
-	# and ending with a 'L' and convert them back to longs... a hack I know...
-
 	for i in data.keys():
-	    if type(data[i]) == type(0L):
-		data[i] = "%s" % (data[i])
-
 	    if type(data[i]) == type({}):
 		extrahashes[i] = data[i]
 		del data[i]
-
-		# and check this sub-dictionary for longs... :(
-		for s in extrahashes[i].keys():
-		    if type(extrahashes[i][s]) == type(0L):
-			extrahashes[i][s] = "%s" % (extrahashes[i][s])
-
-	#print "data:",data
-	#print "extrahashes:",extrahashes
 
 	timestamp = time.strftime("%Y%m%d%H%M%S", time.localtime(time.time()))
 
@@ -198,7 +194,7 @@ class elvindb(eddieElvin):
 	    edict = {      'ELVIN.TABLE' : table,
 		         'ELVIN.COMMAND' : 'CREATE',
 		            'ELVIN.HOST' : log.hostname,
-			       'ELVINDB' : 'ELVINDB',		# put in for the exists() to work - shouldn't be needed but is...
+			       'ELVINDB' : 'ELVINDB',	# For consumers to subscribe for
 		       'ELVIN.TIMESTAMP' : timestamp
 		    }
 
@@ -208,22 +204,10 @@ class elvindb(eddieElvin):
 		    edictcopy.update(edict)
 		    edictcopy.update(extrahashes[e])		# add all the system data
 
-		    #self.elvin.notify( edictcopy )
-		    try:
-			ec.elvin.notify( edictcopy )
-		    except Elvin.LostConnectionException:
-			log.log( "<eddieElvin>elvindb.send(), notify failed, LostConnectionException.", 3 )
-			return 1
-
 	    else:
 		edict.update(data)		# add all the system data
 
-		#self.elvin.notify( edict )
-		try:
-		    ec.elvin.notify( edict )
-		except Elvin.LostConnectionException:
-		    log.log( "<eddieElvin>elvindb.send(), notify failed, LostConnectionException.", 3 )
-		    return 1
+		ec.elvinc.notify( edict )
 
 	    return 0
 
@@ -231,4 +215,6 @@ class elvindb(eddieElvin):
 	    return 1
 
 
-
+##
+## END - eddieElvin4.py
+##
