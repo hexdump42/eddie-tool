@@ -1190,16 +1190,16 @@ class PORT(Directive):
             except socket.error:
 		e = sys.exc_info()
 		if e[1][0] == 146:		# Connection Refused
-		    log.log( "<Directive>PROC.isalive(), ID '%s', Connection refused" % (self.state.ID), 5 )
+		    log.log( "<Directive>PORT.isalive(), ID '%s', Connection refused" % (self.state.ID), 5 )
 		    return 0
 		else:
 		    s.close()
 		    tb = traceback.format_list( traceback.extract_tb( e[2] ) )
-		    log.log( "<Directive>PROC.isalive(), ID '%s', Uncaught exception: %s, %s, %s" % (self.state.ID, e[0], e[1], tb), 3 )
+		    log.log( "<Directive>PORT.isalive(), ID '%s', Uncaught exception: %s, %s, %s" % (self.state.ID, e[0], e[1], tb), 3 )
         except:
 	    e = sys.exc_info()
 	    tb = traceback.format_list( traceback.extract_tb( e[2] ) )
-	    log.log( "<Directive>PROC.isalive(), ID '%s', Uncaught exception: %s, %s, %s" % (self.state.ID, e[0], e[1], tb), 3 )
+	    log.log( "<Directive>PORT.isalive(), ID '%s', Uncaught exception: %s, %s, %s" % (self.state.ID, e[0], e[1], tb), 3 )
 
 	return 0
 
