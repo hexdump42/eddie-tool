@@ -61,7 +61,8 @@ class action:
 	    body = MSG.message
 	except (KeyError, GetMessageError):
 	    # Use msg string as the body
-	    subj = "Eddie Alert"
+	    #subj = "Eddie Alert"
+	    subj = msg
 	    body = msg
 
 	# run thru parseVars() to substitute variables from varDict
@@ -76,7 +77,7 @@ class action:
 	tmp.write( 'Subject: ['+log.hostname+'] '+subj+'\n' )
 	tmp.write( '\n' )
 	tmp.write( body+'\n' )
-	tmp.write( '.\n' )
+	#tmp.write( '.\n' )
 	tmp.close()
 
 	if not log.log( "<action>email(), email sent to '%s', subject '%s', body '%s'" % (u,subj,body), 9 ):
