@@ -4,6 +4,7 @@ y Multi-threaded checks
 y Add NUMTHREADS as a config variable
 y Change directive syntax to be "DIRECTIVE 'name': etc etc"
 y Add scanperiod argument to directives
+y Add ALIAS definition type for action argument aliases, etc
 
 - Double checking for Port directive - or ALL directives with keyword
 
@@ -42,6 +43,10 @@ y Add scanperiod argument to directives
 
 - "cron" mode for directives: always tries to run jobs starting from specific
   intervals, rather than pausing for interval between runs.
+
+- group should handle multiple hostnames, eg: "group myeah,myponga:"
+
+- PROC rule NR/R, change to variable, ie: rule="!exists"
 
 
 BUGS:
