@@ -42,7 +42,6 @@
 #            is a problem
 # host - Host running the SNMP server. Localhost by default.
 
-from pysnmp import session
 import string
 import log, directive
 
@@ -63,6 +62,13 @@ class SNMP(directive.Directive):
 	apply( directive.Directive.__init__, (self, toklist) )
 	self.lastresponse=None
 	self.errors=0
+
+	try:
+	    from pysnmp import session
+	    self.session = session	# save pointer to module if import ok
+	except ImportError:
+	    raise directive.ParseFailure, "Cannot import pysnmp module - SNMP directive not available."
+
 
     ############################################################################
     def tokenparser(self, toklist, toktypes, indent):
@@ -141,7 +147,7 @@ class SNMP(directive.Directive):
 	data['failed'] = 0
 
 	# Perform the snmp
-	s = session.session(self.args.host, self.args.community)
+	s = self.session.session(self.args.host, self.args.community)
 	s.port = self.args.port
 
 	i = 1
@@ -150,7 +156,7 @@ class SNMP(directive.Directive):
 	    question = s.encode_request('GETREQUEST', [oid], [])
 	    try:
 		answer = s.send_and_receive(question)
-	    except session.error.NoResponse:	# If timeout dont panic
+	    except self.session.error.NoResponse:	# If timeout dont panic
 		self.errors = self.errors+1
 		if self.errors >= self.args.maxretry:
 		    raise "Too Many Retries: Failed %d times" % self.errors
