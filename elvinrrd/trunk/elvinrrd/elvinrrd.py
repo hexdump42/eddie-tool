@@ -1,4 +1,4 @@
-#!/opt/python2/bin/python
+#! /usr/bin/env python
 ## 
 ## File         : elvinrrd.py
 ## Author       : Chris Miles <chris@psychofx.com>
@@ -10,16 +10,27 @@
 
 ################################################################
 
-__version__ = """2.1b"""
+__version__ = """2.2"""
 
 ################################################################
 
-import sys, traceback, re, string, os, getopt, time
-import RRDtool	# requires PyRRDtool from http://freshmeat.net/projects/pyrrdtool/
+# Python modules
+import sys
+import traceback
+import re
+import string
+import os
+import getopt
+import time
+
+# Other modules
+#import RRDtool	# requires PyRRDtool from http://freshmeat.net/projects/pyrrdtool/
+import rrdtool	# requires py-rrdtool from http://sourceforge.net/projects/py-rrdtool/
+		#                       or http://www.nongnu.org/py-rrdtool/
 import elvin	# requires Elvin4 modules from http://elvin.dstc.edu.au/projects/pe4/index.html
 
 # Default Elvin URL and SCOPE
-ELVIN_URL='elvin://elvin'
+ELVIN_URL='elvin://localhost'
 ELVIN_SCOPE='elvin'
 
 ################################################################
@@ -184,10 +195,14 @@ class storeconsumer(BaseElvin):
 
 	if debug:
 	    log( 'rrd.update( %s )' % (u,) )
+	    #log( 'rrd.update( %s, %s, %s )' % (rrdfile, ds, n) )
 
 	try:
-	    self.rrd.update( u )
-	except IOError, err:
+	    #self.rrd.update( u )
+	    self.rrd.update( *u )
+	    #self.rrd.update( rrdfile, ds, n )
+	#except IOError, err:
+	except rrdtool.error, err:
 	    if str(err).find('No such file or directory') != -1:
 		if os.path.exists( rrdfile ):
 		    # file exists, despite the error...
@@ -205,8 +220,8 @@ class storeconsumer(BaseElvin):
 		    createargs = (rrdfile,) + tuple(create.split())
 		    if verbose:
 			log( "Creating rrd: %s" % (createargs,) )
-		    self.rrd.create( createargs )
-		    self.rrd.update( u )
+		    self.rrd.create( *createargs )
+		    self.rrd.update( *u )
 	    else:
 		sys.stderr.write( "IOError: %s, message %s\n" % (err, msg) )
 		if logfile:
@@ -379,7 +394,9 @@ def main():
 	sys.exit(1)
 
     # Create RRDtool object
-    rrd = RRDtool.RRDtool()
+    #rrd = RRDtool.RRDtool()
+    # Create pointer to rrdtool module
+    rrd = rrdtool
 
     e = storeconsumer(elvin_url, elvin_scope)
     e.rrd = rrd
