@@ -1,6 +1,75 @@
 Eddie CHANGES
 (reverse chronological order)
 
+Eddie-0.31 (11-Dec-2002)
+ - Increased Linux system counters from int to long.
+ - Fixed bug with isfile/isdir/etc shorthands not working properly.
+ - Console displays "<directive not ready>" for directives which have not
+   yet been initialised, rather than throwing KeyError exception.
+ - Added option to send emails via SMTP servers, rather than relying on
+   a local sendmail binary.  Either option can now be used.
+   Set SMTP_SERVERS in config to use SMTP server option.  This option
+   is now the default, and server defaults to 'localhost'.
+   Based on a submission by Dougal Scott <dwagon@connect.com.au>
+ - Fixed FILE example rule when performing cron test.
+   Noted by Dougal Scott <dwagon@connect.com.au>.
+ - Convert the weird time format that Solaris ps returns for etime and time
+   into plain seconds, which is a lot more useful for rules rather than
+   checking lengths or doing a integer conversion of a subslice of the
+   result and then a comparison based on that.
+   Patched by Dougal Scott <dwagon@connect.com.au>.
+ - Improved error output when parsing rules.
+ - Fixed bug when using Python pre-2.2 versions.
+ - Added some more sample directives.
+ - Added support for remembering historical data in directives.  Rules can
+   reference data from previous samples.
+ - Changed actionperiod slightly, so first actionperiod defaults to scanperiod,
+   then actionperiod expression is used thereafter.
+ - Shift sticky and type bits of mode across, right justified.
+ - Improved handling of tokenization errors.
+ - Directive is cancelled (not re-queued) if there are too many
+   SNMP query failures (usually host not responding or some other
+   network or transport failure).
+ - Added shorthand booleans to FILE directive for checking file types in rules:
+     issocket
+     issymlink
+     isfile
+     isblockdevice
+     isdir
+     ischardevice
+     isfifo
+ - Updated docs with version 0.30 changes (forgot to do this at release time,
+   oops).
+ - Improved handling of sockets errors for console.
+ - Fixed issue with templates not being handled before rest of directive arguments.
+ - Added perm, sticky and type rule variables to the FILE directive.  They are
+   shorthands for the permissions, sticky/setuid/setgid and file type bits
+   of a file's mode.
+ - Improved config syntax error handling of bad directive names.
+ - Implemented check and action dependency definitions.  Two new directive
+   options are: actiondependson and checkdependson.  These can be set to a
+   string containing a list of directives (comma-separated) that this directive
+   is dependent on.  If any of the dependent directives has failed when this
+   directive comes to perform its check or action (depending on which option
+   was used) then that check or action will be skipped.
+ - Added new directive option actionperiod.  This is a string containing an
+   expression which, when evaluated, sets the current period between actions
+   being performed.  This allows for periods between actions to different to
+   the period between checks.  It also allows for the period to be defined by
+   a mathematical expression, so the action period could exponentially increase
+   for example (for actions called during a single failure - the action period
+   will be reset when the failure is fixed).
+ - Enforced unique group and directive names at same group level.
+ - Improved error handling of console connections from bad clients.
+ - Fixed syntax error in sample config.
+ - Changed Linux ctr_interrupts system counter from int to long.
+ - Improved error handling of snmp directive.
+ - Improved handling of group configuration errors.
+ - Finally removed dependency on user-compiled 'top' command for collecting
+   some system stats on Solaris.  All current stats are collected from uptime
+   and vmstat commands now, which should be standard on any Solaris system.
+ - Fetch Linux memory statistics from /proc/meminfo.
+
 Eddie-0.30 (31-May-2002)
  - Prevented failed calls to 'top' (which will soon be made redundant anyway)
    from causing system stats collection to fail on Solaris.
