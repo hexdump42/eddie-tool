@@ -31,9 +31,9 @@ ADMIN="eddie-adm@domain.name"
 
 
 # ADMINLEVEL
-#  The value for ADMINLEVEL means the same as for LOGLEVEL, however
-#  this settings specifies how much detail is logged and emailed to
-#  the administrator (defined by ADMIN).
+#  ADMINLEVEL is similar to LOGLEVEL, it defines how much log detail
+#  is stored to be emailed periodically (see ADMIN_NOTIFY) to the
+#  EDDIE administrator (defined by ADMIN).  Set to 0 to disable.
 #  Use: ADMINLEVEL=<int 0-9>
 
 ADMINLEVEL=3
