@@ -1,8 +1,8 @@
 ## 
 ## File		: df.py 
 ## 
-## Author       : Rod Telford  <rtelford@codefx.com.au>
-##                Chris Miles  <cmiles@codefx.com.au>
+## Author       : Rod Telford  <rtelford@eddie-tool.net>
+##                Chris Miles  <chris@psychofx.com>
 ## 
 ## Start Date	: 19971204 
 ## 
