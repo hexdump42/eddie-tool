@@ -37,6 +37,7 @@
 
 # Python modules
 import string
+import sys
 # Eddie modules
 import datacollect
 import log
