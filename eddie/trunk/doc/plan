@@ -33,7 +33,7 @@ PROJECT PLAN:
 			- still defining log levels
 		Variables - %sys, %act, %actnm		Chris	98%
 			- all done I think...
-		netstat class				Rod	1%
+		netstat class				Rod	50%
 		DEF substition				Chris	100%
 		History:
 			fs				Chris	90%
@@ -45,7 +45,7 @@ PROJECT PLAN:
 			- admin emailing		Chris	100%
 	Directives:
 		D					Chris	100%
-		FS					Chris	90%
+		FS					Chris	100%
 		PID					Chris	100%
 		SP					Rod	0%
 		COM					Chris	100%
@@ -66,8 +66,6 @@ actions can be summarized in the email.
 fs : '%fsls' - want a list directories under the examined fs 'ls -ld $fs'.
 
 SIG : quit nicely on appropriate signals
-
-config : only read config at startup - re-read if sent a signal...
 
 
 
