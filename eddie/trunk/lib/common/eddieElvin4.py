@@ -140,6 +140,7 @@ class Elvin:
 		    log.log("<eddieElvin4>Elvin.main(): Sending msg from queue, %s"%(m), 9)
 		    try:
 			self.connection.notify(m.emsg)
+			log.log("<eddieElvin4>Elvin.main(): msg sent, %s"%(m), 6)
 		    except elvin.ElvinConnectNotReady, details:
 			log.log("<eddieElvin4>Elvin.main(): Elvin exception, %s, msg %s not sent"%(details, m), 3)
 			self.eq.put(m)	# put msg back in queue for re-try
