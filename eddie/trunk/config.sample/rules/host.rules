@@ -7,11 +7,11 @@
 group host1:
 
     PROC radiusd:
-	procname='radiusd'
+	name='radiusd'
 	rule='not exists'
 	action=COMMONALERT(commonmsg.proc,1)
     PROC named:
-	procname='named'
+	name='named'
 	rule='not exists'
 	action=COMMONALERT(commonmsg.proc,2)
 

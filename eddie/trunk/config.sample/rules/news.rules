@@ -34,11 +34,11 @@ group news:
     # RULES
 
     PROC innd:
-	procname='innd'
+	name='innd'
 	rule=NR
 	action=COMMONALERT(commonmsg.proc,2)
     PROC actived:
-	procname='actived'
+	name='actived'
 	rule=NR
 	action=email(ALERT_EMAIL,"Alert: %(procp)s on %(h)s not running - restarting..."),system("su news -c /opt/local/news/bin/actived")
 
