@@ -34,7 +34,6 @@ import directive, definition, log, proc, utils, eddieElvin4
 
 ## Define exceptions
 ParseFailure = 'ParseFailure'
-#ParseNotcomplete = 'ParseNotcomplete'
 
 ############### DEFAULT SETTINGS ###################
 ##
@@ -477,37 +476,28 @@ def loadExtraDirectives( directivedir ):
 
     #print "directives:",directives
 
-    keywords.update(directives)		# add new directives to keywords table
+    directives.update(directives)		# add new directives to directives table
 
 
 ##
 ## This is a list of known keywords we accept in Eddie config/rules files
 ##
 
-## Just the directives
+## Just the directives:
+## These are added dynamically when the program begins.
 directives = {  
-		"N"		: definition.N,
-		"FS"		: directive.FS,
-                "SP"		: directive.SP,
-	  	"PID"		: directive.PID,
-	  	"COM"		: directive.COM,
-		"PROC"		: directive.PROC,
-		"PORT"		: directive.PORT,
-                "IF"		: directive.IF,
-                "NET"		: directive.NET,
-                "SYS"		: directive.SYS,
-                "STORE"		: directive.STORE,
              }
 
 
-## Just the definitions
+## Just the definitions:
 definitions = {
+		"N"		: definition.N,
 		"M"		: definition.M,
 		"MSG"		: definition.MSG,
 		"ALIAS"		: definition.ALIAS,
               }
 
-## Just the settings
+## Just the settings:
 settings = {
 		"SCANPERIOD"	: SCANPERIOD,
 		"LOGFILE"	: LOGFILE,
@@ -527,7 +517,7 @@ settings = {
 
 ## Join all the above dictionaries to make the total keywords dictionary
 keywords = {}
-keywords.update(directives)
+#keywords.update(directives)
 keywords.update(definitions)
 keywords.update(settings)
 
