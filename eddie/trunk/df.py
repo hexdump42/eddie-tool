@@ -87,9 +87,15 @@ class df:
 	    self.availDelta = "0"
 	    self.pctusedDelta = "0"
 	else:
-	    self.usedDelta = "%d" % (string.atoi(self.used) - string.atoi(prevdf[self.fs].getUsed()))
-	    self.availDelta = "%d" % (string.atoi(self.avail) - string.atoi(prevdf[self.fs].getAvail()))
-	    self.pctusedDelta = "%d" % (string.atoi(self.pctused) - string.atoi(prevdf[self.fs].getPctused()))
+	    try:
+		self.usedDelta = "%d" % (string.atoi(self.used) - string.atoi(prevdf[self.fs].getUsed()))
+		self.availDelta = "%d" % (string.atoi(self.avail) - string.atoi(prevdf[self.fs].getAvail()))
+		self.pctusedDelta = "%d" % (string.atoi(self.pctused) - string.atoi(prevdf[self.fs].getPctused()))
+	    except AttributeError:
+		# problem getting previous df
+		self.usedDelta = "0"
+		self.availDelta = "0"
+		self.pctusedDelta = "0"
 
 
     def __str__(self):
