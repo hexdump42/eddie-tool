@@ -1,0 +1,10 @@
+#!/bin/sh
+#
+## Eddie wrapper script to make sure it keeps running!
+## 990302 Chris Miles <cmiles@connect.com.au>
+
+while [ 1 ]; do
+	cd /opt/eddie/bin
+	./eddie.py 2>&1 | /usr/bin/mailx -s "Eddie output on `hostname`" cmiles@connect.com.au
+	echo "eddie_wrapper: restarting Eddie."
+done
