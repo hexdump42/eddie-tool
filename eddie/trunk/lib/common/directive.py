@@ -345,7 +345,12 @@ class Directive:
 		# notification definition.
 		self.Action.msg = None
 		#print "calling: self.Action."+a
-		ret = eval( 'self.Action.'+a )
+		try:
+		    ret = eval( 'self.Action.'+a )
+		except:
+		    e = sys.exc_info()
+		    log.log( "<directive>doAction(), Error evaluating self.Action.%s: %s, %s, %s" % (a, e[0], e[1], e[2]), 1 )
+		    return
 		self.Action.actionReports[a] = ret
 		if ret == None:
 		    self.Action.varDict['actnm'] = self.Action.varDict['actnm'] + '    %s\n' % a
@@ -384,7 +389,12 @@ class Directive:
 			#try:
 			    # Call the action
 			    log.log( "<directive>Directive, calling action '%s'" % (aa), 9 )
-			    ret = eval( 'self.Action.'+aa )
+			    try:
+				ret = eval( 'self.Action.'+aa )
+			    except:
+				e = sys.exc_info()
+				log.log( "<directive>doAction(), Error evaluating self.Action.%s: %s, %s, %s" % (aa, e[0], e[1], e[2]), 1 )
+				return
 			    self.Action.actionReports[aa] = ret
 			    if ret == None:
 				self.Action.varDict['actnm'] = self.Action.varDict['actnm'] + '    %s\n' % aa
@@ -451,6 +461,23 @@ class Directive:
 	    q.put( (self,time.time()+self.scanperiod) )
 	    log.log( "<directive>putInQueue(), %s re-queued by scanperiod (%d secs)" % (self,self.scanperiod), 8)
 
+
+    def safeCheck( self, Config ):
+	"""This function is called to start a new checking thread for a directive.
+	   It wraps the directive's self.docheck() in try/except so any un-caught
+	   exceptions can be captured and the thread exited nicely.
+	"""
+
+	log.log( "<Directive>safeCheck(), ID '%s', calling self.docheck()" % (self.state.ID), 9 )
+
+	try:
+	    self.docheck( Config )
+	except:
+	    e = sys.exc_info()
+	    log.log( "<Directive>safeCheck(), ID '%s', Uncaught exception: %s, %s, %s" % (self.state.ID, e[0], e[1], e[2]), 3 )
+	    return
+
+	log.log( "<Directive>safeCheck(), ID '%s', self.docheck() returned successfully" % (self.state.ID), 9 )
 
 
 ##

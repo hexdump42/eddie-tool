@@ -202,7 +202,7 @@ def scheduler(q, Config, die_event):
 	if c.args.numchecks > 0:
 	    # start check in a new thread
 	    log.log( "<eddie>scheduler(), Starting new thread for %s, %s" % (c,t), 8 )
-	    threading.Thread(group=None, target=c.docheck, name=None, args=(Config,), kwargs={}).start()
+	    threading.Thread(group=None, target=c.safeCheck, name=None, args=(Config,), kwargs={}).start()
 	else:
 	    # when numchecks == 0 we don't do any checks at all...
 	    log.log( "<eddie>scheduler(), Not scheduling checks for %s when numchecks=%d" % (c,c.args.numchecks), 7 )
