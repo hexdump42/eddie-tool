@@ -113,7 +113,7 @@ class Config:
 	# Require 3 tokens, ('group', <str>, ':')
 	if len(toklist) < 3:
 	    raise ParseFailure, "Syntax error at group statement"
-	
+
 	# 3rd token must be a ':'
 	if toklist[2] != ':':
 	    raise ParseFailure, "Expected ':', found '%s'" % toklist[2]
@@ -121,15 +121,15 @@ class Config:
 	# group name (2nd token) should be text (ie: token type 'NAME')
 	if toktypes[1] != 'NAME':
 	    raise ParseFailure, "Unexpected group type, should be text"
+	groupname = toklist[1]
+
+	# duplicate group names not allowed at same level
+	for i in parent.groups:
+	    if groupname == i.name:
+	        raise ParseFailure, "Duplicate group name: %s" % (groupname)
 
 	# Create new group
-	newgroup = Config(toklist[1], parent)
-
-	# If current host is a part of this group then add the group to the
-	# list, otherwise don't bother - so the group will be parsed but will
-	# not be kept.
-	#if useGroup( log.hostname, toklist[1] ):
-	# Add to group list
+	newgroup = Config(groupname, parent)
 
 	# Add to parent's group list
 	if parent != None:
