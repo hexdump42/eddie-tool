@@ -11,7 +11,7 @@
 LOGLEVEL=8		# log levels: see doc/config
 ADMINLEVEL=5		# Admin inform level
 LOGFILE="/var/log/eddie.log"	# logging details go into this folder
-ADMIN="cmiles@connect.com.au"	# The Eddie Admin
+ADMIN="eddie-adm@domain.name"	# The Eddie Admin
 ADMIN_NOTIFY=1d		# Send Admin summaries only once a day
 
 			# approximate minimum scan period - Eddie will sleep for SCANPERIOD
@@ -26,27 +26,16 @@ SCANPERIOD=10m		# scan every 10 minutes
 
 INTERPRETERS='sh,bash,perl,perl5.001,perl5.003,perl5.004,python,python1.4,python1.5'
 
-CLASS officesvr=koro,nara,shara,munta,kuji,wawura
 CLASS news=perki,merki
-CLASS newsold=gnamma,pinah,yeppa,auwa
-CLASS fep=bungul,bunyal,bungi,buffi,bundi
-CLASS real=bunyal
-CLASS vwsserver=bunyip
-CLASS meter=marka,nakko,thard,thomp,thum,womba
 CLASS dns=yarrina,warrane
 CLASS dnscache=yalumba,yulp
-CLASS newsold=auwa,pinah,yeppa,gnamma
-CLASS news=perki,merki
 CLASS cache=myeah,myponga,myangup,myalla,myoon
 
-DEF ALERT="alert@connect.com.au"
-DEF SYSSUP="syssup@connect.com.au"
+DEF ALERT="alert@domain.name"
+DEF SYSSUP="syssup@domain.name"
 
 INCLUDE 'rules/common.rules'
-INCLUDE 'rules/officesvr.rules'
 INCLUDE 'rules/host.rules'
-INCLUDE 'rules/hosting.rules'
-INCLUDE 'rules/meter.rules'
 INCLUDE 'rules/dns.rules'
 INCLUDE 'rules/news.rules'
 INCLUDE 'rules/cache.rules'

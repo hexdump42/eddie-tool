@@ -258,7 +258,3 @@ SP tcp/ssh:	*		COMMONALERT(commonmsg.sp,1)
 #     Host	Port	SendStr	Expect		Action
 #     ----	----	-------	------		-----
 
-#PORT  'daidyai.off.connect.com.au':
-#		50006   "\012"  "ALIVE"		COMMONALERT(commonmsg.port,0)
-#PORT  nara:	25	"\012"	"Sendmail"	COMMONALERT(commonmsg.port,1)
-
