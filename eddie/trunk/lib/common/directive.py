@@ -477,13 +477,13 @@ class SP(Directive):
 	if toklist[2] != '/':
 	    raise ParseError, "SP proto/port not specified correctly"
 
-	self.proto = toklist[1]		# the proto to check
-	self.port_n = toklist[3]	# the port to check
+	self.proto = utils.stripquote(toklist[1])	# the proto to check
+	self.port_n = utils.stripquote(toklist[3])	# the port to check
 
 
     def tokenparser(self, toklist, toktypes, indent):
 
-	self.addr   = toklist[0]			# the addr to check
+	self.addr = utils.stripquote(toklist[0])	# the addr to check
 	self.actionList = self.parseAction(toklist[1:])
 
 	# lets try resolving this service port to a number
