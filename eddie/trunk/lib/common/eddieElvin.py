@@ -73,14 +73,15 @@ class elvinConnection:
 	"""Do the reconnection"""
 
 	try:
-	    sys.stderr.write(" Reconnecting at %s\n"%(time.ctime(time.time()),))
-	    self.elvin = Elvin.Elvin(Elvin.EC_NAMEDHOST, self.host, self.port,
-				None, self._error_cb)
+	    #sys.stderr.write(" Reconnecting at %s\n"%(time.ctime(time.time()),))
+	    log.log( "<eddieElvin>_reconnect(), Reconnecting to Elvin: %s:%d" % (self.host,self.port), 4 )
+	    self.elvin = Elvin.Elvin(Elvin.EC_NAMEDHOST, self.host, self.port, None, self._error_cb)
 	except:
 	    sys.exc_traceback = None
 	    return 0
 
-	sys.stderr.write("New Elvin connection established\n")
+	#sys.stderr.write("New Elvin connection established\n")
+	log.log( "<eddieElvin>_reconnect(), New Elvin connection established: %s:%d" % (self.host,self.port), 4 )
 	self.connected = 1
 	return 1
 
