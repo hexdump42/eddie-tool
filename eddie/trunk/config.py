@@ -27,6 +27,12 @@ ParseFailure = 'ParseFailure'
 scanperiod = 10*60
 
 ##
+## Logfile & Log level (defaults)
+##
+logfile = "/var/log/otto.log"
+loglevel = 9
+
+##
 ## The base configoption class.  Derive all config options from this base class.
 ##
 class ConfigOption:
@@ -49,6 +55,8 @@ class ConfigOption:
 ##
 ## CONFIGURATION OPTIONS
 ##
+
+## SCANPERIOD - the time (in seconds) to pause between checks
 class SCANPERIOD(ConfigOption):
     def __init__( self, *arg ):
 	apply( ConfigOption.__init__, (self,) + arg )
@@ -83,11 +91,34 @@ class SCANPERIOD(ConfigOption):
 	    mult = 0
 	return string.atoi(value)*mult
 
+## LOGFILE - where to store log messages
+class LOGFILE(ConfigOption):
+    def __init__( self, *arg ):
+	apply( ConfigOption.__init__, (self,) + arg )
+	self.regexp = 'LOGFILE[\t ]+["\']\([a-zA-Z0-9/._=-]+\)["\'][\t \n]*'
+	value = self.parseRaw()
+	global scanperiod 		# how do I access global scanperiod that already exists?
+	logfile = value			# set the config option
+	print "<LOGFILE> logfile set to '%s'." % (logfile)
+
+
+## LOGLEVEL - how much logging to do
+class LOGLEVEL(ConfigOption):
+    def __init__( self, *arg ):
+	apply( ConfigOption.__init__, (self,) + arg )
+	self.regexp = 'LOGLEVEL[\t ]+\([0-9]+\)[\t \n]*'
+	value = self.parseRaw()
+	global loglevel 		# how do I access global scanperiod that already exists?
+	loglevel = string.atoi(value)		# set the config option
+	print "<LOGLEVEL> loglevel set to %d." % (loglevel)
+
 ##
 ## This is a list of known directives we accept in otto config/rules files
 ##
 
 directives = {  "SCANPERIOD"	: SCANPERIOD,			\
+		"LOGFILE"	: LOGFILE,			\
+		"LOGLEVEL"	: LOGLEVEL,			\
 		"M"		: definition.M,			\
 		"DEF"		: definition.DEF,		\
 		"A"		: definition.A,			\
