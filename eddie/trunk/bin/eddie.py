@@ -5,14 +5,14 @@
 ## Author       : Rod Telford  <rtelford@codefx.com.au>
 ##                Chris Miles  <cmiles@codefx.com.au>
 ## 
-## Date         : 971204 
+## Start Date   : 971204 
 ## 
 ## Description  : Eddie main program
 ##
 ## $Id$
 ##
 
-EDDIE_VER='0.22'
+EDDIE_VER='0.24'
 
 # Standard Python modules
 import sys, os, time, signal, re
@@ -164,7 +164,7 @@ def check(Config):
 def doArgs(args, argflags):
     for a in args:
 	if a == '-v' or a == '--version':
-	    print "Eddie (c) Chris Miles and Rod Telford 1998"
+	    print "Eddie (c) Chris Miles and Rod Telford 1998-2000"
 	    print "  cmiles@codefx.com.au / rtelford@codefx.com.au"
 	    print "  Version: %s" % EDDIE_VER
 	    eddieexit()
