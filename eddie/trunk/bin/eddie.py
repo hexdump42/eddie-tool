@@ -1,4 +1,4 @@
-#!/opt/python152/bin/python
+#!/opt/python2/bin/python
 ## 
 ## File         : eddie.py 
 ## 
@@ -72,6 +72,10 @@ except:
 # Main config file - this file INCLUDEs all other config files
 configdir = os.path.join(basedir, 'config')
 config_file = configdir + '/eddie.cf'
+
+# Globals
+global Config
+global sthread
 
 # Load Directive
 config.loadExtraDirectives(os.path.join(commonlibdir, "Directives"))
@@ -366,10 +370,9 @@ def main():
 		please_die.set()
 		sthread.join()
 
-		log.log( '<eddie>main(), config files modified - reloading config', 7 )
+		log.log( '<eddie>main(), config files modified - reloading config', 5 )
 
 		# reset config and read in config and rules
-		global Config
 		Config = config.Config( '__main__' )
 
 		# read in config and rules
@@ -385,7 +388,6 @@ def main():
 
 		please_die.clear()
 
-		global sthread
 		sthread = threading.Thread(group=None, target=scheduler, name=None, args=(q,Config,please_die), kwargs={})
 		sthread.start()	# start it up
 
