@@ -4,7 +4,7 @@
 ## Author       : Rod Telford  <rtelford@psychofx.com>
 ##                Chris Miles  <chris@psychofx.com>
 ## 
-## Date		: 980107 
+## Start Date	: 19980107 
 ## 
 ## Description	: Eddie Software Logfile stuff
 ##
@@ -26,7 +26,7 @@
 ########################################################################
 
 # Python imports
-import time, os
+import time, os, threading
 
 # Eddie imports
 import utils
@@ -46,17 +46,19 @@ admin_notify_time = 0	# track time till next notify
 loglevel_min = 0
 loglevel_max = 9
 
-# log() - if (level <= loglevel), text is appended to logfile
-#         with date/time prepended (nothing is ever logged when
-#         loglevel is 0).
-#         If (level <= adminlevel) then store log in adminlog list (never store
-#         anything if adminlevel is 0).
 def log(text='', level=1):
+    """log() - if (level <= loglevel), text is appended to logfile
+          with date/time prepended (nothing is ever logged when loglevel is 0).
+          If (level <= adminlevel) then store log in adminlog list (never store
+          anything if adminlevel is 0).
+    """
+
     if loglevel == 0 and adminlevel == 0:
 	return 0		# not logged
 
     datetime = time.asctime(time.localtime(time.time()))
-    logtext = "%s [%d]:%s\n" % (datetime,level,text)
+    threadname = threading.currentThread().getName()
+    logtext = "%s (%s)[%d]:%s\n" % (datetime,threadname,level,text)
 
     logged = 0			# flag if anything is logged
 
@@ -83,10 +85,12 @@ def log(text='', level=1):
     return logged		# 0=not logged, >0=logged
 
 
-# sendadminlog() - send adminlog list to adminemail only if there is something in
-#   this list.
-#   If override==1 then admin_notify times are ignored.
 def sendadminlog( override=0 ):
+    """sendadminlog() - send adminlog list to adminemail only if there
+        is something in this list.
+	If override==1 then admin_notify times are ignored.
+    """
+
     global admin_notify_time
     global adminlog
 
