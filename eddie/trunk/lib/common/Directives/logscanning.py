@@ -110,6 +110,10 @@ class LOGSCAN(directive.Directive):
         are new to the file since the last check are examined.
 	"""
 
+	data = {}
+	data['lines'] = ""
+	data['linecount'] = 0
+
 	try:
 	    s = os.stat( self.args.file )
 	except OSError, err:
@@ -122,8 +126,6 @@ class LOGSCAN(directive.Directive):
 		# for next check
 		self.filestat = s
 		self.filepos = s[6]
-
-		return None
 
 	    else:
 		if s[6] < self.filestat[6]:
@@ -150,7 +152,7 @@ class LOGSCAN(directive.Directive):
 			line = fp.readline()
 
 		    while len(line) > 0:
-			inx = sre.match( line )
+			inx = sre.search( line )
 			if (inx and not self.args.negate) or (not inx and self.args.negate):
 			    matchedlines.append( line )
 			line = fp.readline()
@@ -162,7 +164,6 @@ class LOGSCAN(directive.Directive):
 		    matchedcount = len(matchedlines)
 
 		    # assign variables
-		    data = {}
 		    data['lines'] = string.join(matchedlines, "")
 		    data['linecount'] = matchedcount
 
