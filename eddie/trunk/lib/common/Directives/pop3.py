@@ -270,6 +270,7 @@ class POP3TIMING(directive.Directive):
 
 	self.doAction(Config)
 
+	Config.q.put( (self,time.time()+self.scanperiod) )	# put self back in the Queue
 
 
 ##

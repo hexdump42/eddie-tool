@@ -13,7 +13,7 @@
 
 
 # Imports: Python
-import sys, os, commands
+import sys, os, commands, time
 # Imports: Eddie
 import log, directive, utils
 
@@ -70,6 +70,9 @@ class CRON(directive.Directive):
 	else:
 	    self.state.stateok()	# update state info for check passed
 
+	Config.q.put( (self,time.time()+self.scanperiod) )	# put self back in the Queue
+
+
 
 class METASTAT(directive.Directive):
     """Solaris Disksuite checks for bad metadevices/disks."""
@@ -123,6 +126,7 @@ class METASTAT(directive.Directive):
 	    else:
 		self.state.stateok()	# update state info for check passed
 
+	Config.q.put( (self,time.time()+self.scanperiod) )	# put self back in the Queue
 
 ##
 ## END - solaris.py

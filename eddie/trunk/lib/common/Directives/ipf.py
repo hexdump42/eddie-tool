@@ -13,7 +13,7 @@
 
 
 # Imports: Python
-import sys, os, commands
+import sys, os, commands, time
 # Imports: Eddie
 import log, directive, utils
 
@@ -102,6 +102,7 @@ class IPF(directive.Directive):
     	    log.log( "<ipf.py>IPF.docheck(): rule '%s' was false, calling doAction()" % (self.rule), 6 )
     	    self.doAction(Config)
 
+	Config.q.put( (self,time.time()+self.scanperiod) )	# put self back in the Queue
 
     # Parse the rule line and replace/remove certain characters
     def parseRule(self):
