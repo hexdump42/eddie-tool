@@ -66,10 +66,17 @@ store=cpu1_busy,cpu2_busy,cpu3_busy,cpu4_busy
 create=-s 60 DS:cpu1_busy:GAUGE:120:U:120 DS:cpu2_busy:GAUGE:120:U:120 DS:cpu3_busy:GAUGE:120:U:120 DS:cpu4_busy:GAUGE:120:U:120 RRA:AVERAGE:0.5:1:1440 RRA:AVERAGE:0.5:10:1008 RRA:AVERAGE:0.5:60:720 RRA:AVERAGE:0.5:480:1095
 
 #### Filesystems [5min]
+# Filesystem space used
 elvinrrd=fs-*
 rrdfile=/export/rrd/fs/fs-*.rrd
 store=used,size
 create=-s 300 DS:used:GAUGE:600:0:U DS:size:GAUGE:600:0:U RRA:AVERAGE:0.5:1:600 RRA:AVERAGE:0.5:6:600 RRA:AVERAGE:0.5:24:600 RRA:AVERAGE:0.5:288:600 RRA:MAX:0.5:24:600 RRA:MAX:0.5:288:600
+
+# Filesystem inodes used
+elvinrrd=inodes-*
+rrdfile=/export/rrd/inodes/inodes-*.rrd
+store=used,total
+create=-s 300 DS:used:GAUGE:600:0:U DS:total:GAUGE:600:0:U RRA:AVERAGE:0.5:1:600 RRA:AVERAGE:0.5:6:600 RRA:AVERAGE:0.5:24:600 RRA:AVERAGE:0.5:288:600 RRA:MAX:0.5:24:600 RRA:MAX:0.5:288:600
 
 #### CPU Context Switches [5min]
 elvinrrd=cs-*
