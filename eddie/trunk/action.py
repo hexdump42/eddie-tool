@@ -66,6 +66,10 @@ def mail(user,*arg):
 
 	subj = parseVars( subj, varDict )
 	body = parseVars( body, varDict )
+	body = parseVars( body, varDict )
+	# body is run thru parseVars() twice to substitute variables that were
+	# inserted into body from the first call to parseVars() ... bit silly
+	# but it works...
 
 	#print "    ACTION: email - recip:"+u+", subj:'"+subj+"', body:'"+body+"'"
 	#print " varDict is ",varDict
@@ -151,8 +155,34 @@ def chrange(first,last):
 
 # system()
 def system(cmd):
-    pass
-    log.log( "<action>system(), cmd '%s'" % (cmd), 5 )
+    # cmd contains the cmd to execute
+    # TODO: can we check this cmd for security problems ??
+
+    # Substitute variables in string
+    cmd = parseVars( cmd, varDict )
+
+    if len(cmd) == 0:
+        log.log( "<action>system(), Error, no command given", 2)
+    	return
+
+    # Can't use execvp() coz it replaces the Python process !!
+    #fields = string.split( cmd )
+    #if len(fields) == 0:
+    #    log.log( "<action>system(), Error, no command given", 2)
+    #	return
+    #if len(fields) == 1:
+    #	path = fields[0]
+    #	args = ''
+    #else:
+    #	path = fields[0]
+    #	args = fields[1:]
+    #print "SYSTEM(): path='",path,"' args=",args
+    #os.execvp( path, args )
+
+    # Call system() to execute the command
+    log.log( "<action>system(), calling os.system() with cmd '%s'" % (cmd), 8 )
+    retval = os.system( cmd )
+    log.log( "<action>system(), cmd '%s', return value %d" % (cmd,retval), 5 )
 
 # restart()
 def restart(cmd):

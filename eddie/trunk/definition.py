@@ -93,7 +93,7 @@ class M(Definition):
 	self.name = fields[0]
 	self.subject = fields[1]
 	self.message = fields[2]
-	log.log( "<Definition>M(), M created, name '%s', subject '%s', message '%s'" % (self.name,self.subject,self.message), 8 )
+	log.log( "<Definition>M(), M created, name '%s', subject '%s', message '%s'" % (self.name,self.subject,self.message), 9 )
 
 
 ##
