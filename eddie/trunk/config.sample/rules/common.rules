@@ -13,7 +13,11 @@ M commonmsg:
 	    """The %(procp)s process on %(h)s is not running
 
 This is just a Warning.
-Eddie."""
+Eddie.
+
+%(problemage)s
+%(problemfirstdetect)s
+"""
 
 	MSG WARN_P: "Warn: The %(procp)s daemon on %(h)s is not running." ""
 
@@ -22,7 +26,11 @@ Eddie."""
 
 %(actnm)s
 
-Eddie."""
+Eddie.
+
+%(problemage)s
+%(problemfirstdetect)s
+"""
 
 	MSG ALERT_P: "ALERT: The %(procp)s daemon on %(h)s is not running." ""
 
@@ -31,7 +39,11 @@ Eddie."""
 
 %(actnm)s
 
-Eddie."""
+Eddie.
+
+%(problemage)s
+%(problemfirstdetect)s
+"""
 
 	MSG RE_WARN_P: "ALERT: The %(procp)s daemon on %(h)s not running and is being restarted." ""
 
@@ -40,7 +52,11 @@ Eddie."""
 
 %(actnm)s
 
-Eddie."""
+Eddie.
+
+%(problemage)s
+%(problemfirstdetect)s
+"""
 
 	MSG RE_ERR_P: "ALERT: The %(procp)s daemon on %(h)s will not restart." ""
 
@@ -48,14 +64,22 @@ Eddie."""
 	MSG WARN: "Warning: pid file %(pidf)s not found on %(h)s"
 	    """Pid file %(pidf)s not found on %(h)s.
 
-Eddie."""
+Eddie.
+
+%(problemage)s
+%(problemfirstdetect)s
+"""
 
 	MSG WARN_P: "%(h)s: pid file %(pidf)s not found" ""
 
 	MSG ALERT: "ALERT: pid file %(pidf)s not found on %(h)s"
 	    """Pid file %(pidf)s not found on %(h)s.
 
-Eddie."""
+Eddie.
+
+%(problemage)s
+%(problemfirstdetect)s
+"""
 
 	MSG ALERT_P: "%(h)s: pid file %(pidf)s not found" ""
 
@@ -63,7 +87,11 @@ Eddie."""
 	MSG WARN: "Warning: process %(pid)s (from %(pidf)s) on %(h)s not running"
 	    """Warning: The process with pid %(pid)s (from pidfile '%(pidf)s') on %(h)s is not running.
 
-Eddie."""
+Eddie.
+
+%(problemage)s
+%(problemfirstdetect)s
+"""
 
 	MSG WARN_P: "%(h)s warn: pid %(pid)s from %(pidf)s not running" ""
 
@@ -71,7 +99,11 @@ Eddie."""
 	    """ALERT: The process with pid %(pid)s (from pidfile '%(pidf)s') on %(h)s is not running.
 
 %(act)s
-Eddie."""
+Eddie.
+
+%(problemage)s
+%(problemfirstdetect)s
+"""
 
 	MSG ALERT_P: "%(h)s alert: pid %(pid)s from %(pidf)s not running" ""
 
@@ -85,7 +117,11 @@ Eddie."""
 ----------------------------------------------------------------------
 
 This is just a Warning.
-Eddie."""
+Eddie.
+
+%(problemage)s
+%(problemfirstdetect)s
+"""
 
 	MSG WARN_P: "Warn: %(h)s:%(fsf)s at %(fscapac)s%% - %(fsavail)s of %(fssize)s remain" ""
 
@@ -98,7 +134,11 @@ Eddie."""
 ----------------------------------------------------------------------
 
 Please free up space immediately.
-Eddie."""
+Eddie.
+
+%(problemage)s
+%(problemfirstdetect)s
+"""
 
 	MSG ALERT_P: "Alert: %(h)s:%(fsf)s at %(fscapac)s%% - %(fsavail)s of %(fssize)s remain" ""
 
@@ -106,7 +146,11 @@ Eddie."""
 	MSG WARN: "Warning: Port %(spprot)s/%(spport)s on %(h)s not responding"
 	    """The service port %(spprot)s/%(spport)s on %(h)s is not responding.
 
-Eddie."""
+Eddie.
+
+%(problemage)s
+%(problemfirstdetect)s
+"""
 
 	MSG WARN_P: "%(h)s warn: Port %(spprot)s/%(spport)s not responding" ""
 
@@ -114,7 +158,11 @@ Eddie."""
 	    """The service port %(spprot)s/%(spport)s on %(h)s is not responding.
 Please fix this immediately.
 
-Eddie."""
+Eddie.
+
+%(problemage)s
+%(problemfirstdetect)s
+"""
                     
 	MSG ALERT_P: "%(h)s ALERT: Port %(spprot)s/%(spport)s not responding" ""
 
@@ -123,7 +171,11 @@ Eddie."""
 	    """The service port %(portport)s on %(porthost)s is not responding.
 
 This is just a Warning.
-Eddie."""
+Eddie.
+
+%(problemage)s
+%(problemfirstdetect)s
+"""
 	MSG WARN_P: "Warn: Port %(portport)s on %(porthost)s not responding" ""
 	MSG ALERT: "Alert: Port %(portport)s on %(porthost)s not responding"
 	    """Alert: The service port %(portport)s on %(porthost)s is not responding.
@@ -133,7 +185,11 @@ Expecting: %(portexpect)s
 Actually received: %(portrecv)s
 
 Please examine if appropriate.
-Eddie."""
+Eddie.
+
+%(problemage)s
+%(problemfirstdetect)s
+"""
 
 	MSG ALERT_P: "Alert: Port %(portport)s on %(porthost)s not responding" ""
 
