@@ -40,10 +40,22 @@ import radcm
 
 class RADIUS(directive.Directive):
     """RADIUS directive.  Perform a Radius authentication and return
-       results.
+       results.  Rules can be specified to test the results.
 
-       Sample rule:
-       RADIUS: server='hostname[:port]' secret='secret' user='username' password='password' action='<actions>'
+       Rule format:
+       RADIUS: server='hostname[:port]'
+               secret='secret'
+	       user='username'
+	       password='password'
+	       rule='rule'
+	       action='<actions>'
+       Example:
+       RADIUS: server='radius.domain.name:1645'
+               secret='s3cr3t'
+	       user='bob@domain.name'
+	       password='b0bm@t3'
+	       rule='not passed'
+	       action='email("alert", "radius FAILED to %(radiushost)s:%(radiusport)d")'
     """
 
     def __init__(self, toklist):
@@ -67,9 +79,15 @@ class RADIUS(directive.Directive):
 	except AttributeError:
 	    raise directive.ParseFailure, "Username not specified"
 	try:
-	    self.args.password	# password
+	    self.args.password		# password
 	except AttributeError:
 	    raise directive.ParseFailure, "Password not specified"
+
+	# rule argument is optional...
+	try:
+	    self.args.rule		# rule
+	except AttributeError:
+	    self.args.rule = None
 
 	if ':' in self.args.server:
 	    (self.host, self.port) = string.split( self.args.server, ':' )
@@ -85,6 +103,8 @@ class RADIUS(directive.Directive):
 	self.Action.varDict['radiussecret'] = self.args.secret
 	self.Action.varDict['radiususername'] = self.args.user
 	self.Action.varDict['radiuspassword'] = self.args.password
+	if self.args.rule:
+	    self.Action.varDict['radiusrule'] = self.args.rule
 
 	# define the unique ID
         if self.ID == None:
@@ -105,9 +125,9 @@ class RADIUS(directive.Directive):
 	r = radcm.Radius( self.host, self.args.secret, self.port  )
 	tstart = time.time()
 	try:
-	    z = r.authenticate(self.args.user,self.args.password)
+	    passed = r.authenticate(self.args.user,self.args.password)
 	except radcm.NoResponse:
-	    z = None
+	    passed = 0
 	tend = time.time()
 	timing = tend - tstart
 
@@ -119,15 +139,32 @@ class RADIUS(directive.Directive):
 
 	# assign variables
 	self.Action.varDict['radiustiming'] = timing
+	self.Action.varDict['radiuspassed'] = passed
 
-	log.log( "<radius>RADIUS.docheck(): timing=%s z=%s" % (timing,z), 8 )
+	log.log( "<radius>RADIUS.docheck(): timing=%s passed=%s" % (timing,passed), 8 )
 
+	if self.args.rule:
+	    # setup for rule
+	    rulesenv = {}                   # environment for rules execution
+	    rulesenv['timing'] = time
+	    rulesenv['passed'] = passed
 
-	self.state.statefail()	# set to fail before calling doAction()
-	self.doAction(Config)
+	    result = eval( self.args.rule, rulesenv )
 
-	if z:
-	    self.state.stateok(self, Config)	# update state info for check passed
+	    if result == 0:
+		self.state.stateok(self, Config)	# update state info for check passed
+	    else:
+		self.state.statefail()      		# set state to fail before calling doAction()
+		self.doAction(Config)
+
+	else:
+	    # no rule, call action automatically
+
+	    self.state.statefail()	# set to fail before calling doAction()
+	    self.doAction(Config)
+
+	    if passed:
+		self.state.stateok(self, Config)	# update state info for check passed
 
         self.putInQueue( Config.q )     # put self back in the Queue
 
