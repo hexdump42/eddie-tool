@@ -78,7 +78,7 @@ def ottoguts():
 
     ## debugging - test with 'D' directive for now ##
     ## for d in ourList.keylist():
-    for d in ('D','PID'):
+    for d in ('FS',):
 	list = ourList[d]
 	if list != None:
 	    for i in list:

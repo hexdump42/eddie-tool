@@ -109,6 +109,22 @@ def charpresent( s, chars ):
 	    return 1
     return 0
 
+
+##
+## stripquote( s ) - strips start & end of string s of whitespace then
+##   strips " or ' from start & end of string if found
+##
+def stripquote( s ):
+    s = string.strip( s )
+
+    if s[0] == "'" or s[0] == '"':
+	s = s[1:]
+    if s[-1] == "'" or s[-1] == '"':
+	s = s[:-1]
+
+    return s
+
+
 ##
 ## END - utils.py
 ##

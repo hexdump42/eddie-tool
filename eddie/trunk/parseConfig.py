@@ -28,7 +28,7 @@ def readFile(file, ruleList, defDict, MDict, ADict):
 
     # List the known directives we accept from the config
     directives = config.directives
-    
+
     #TODO: Check if file can't be opened...
     conf = open(file, 'r')
     count = 0
@@ -49,6 +49,9 @@ def readFile(file, ruleList, defDict, MDict, ADict):
 	    hashpos = regex.search( '#.*', line )
 	    if hashpos != -1:
 		line = line[:hashpos]
+
+	    line = parseDefs(line, defDict)
+
 	    line = string.strip(line)
 
 	    elements = string.split(line)
@@ -105,6 +108,27 @@ def readFile(file, ruleList, defDict, MDict, ADict):
 
 	    else:
 	       log.log( "<parseConfig>readFile(), Alert, ignoring unknown directive '%s' in '%s' on line %d" % (d,file,count), 3 )
+
+
+# find any DEF's in line (ie: $SPAZ) and replace with definition
+def parseDefs(line, defDict):
+    defsrch = regex.compile( "\$\([A-Za-z0-9_]+\)" )
+
+    pos = defsrch.search( line, 0 )
+    while pos != -1 and pos < len(line):
+	var = defsrch.group(0)[1:]		# get var name and strip '$'
+
+	try:
+	    replace = defDict[var]
+	except KeyError:
+	    replace = None
+	
+	if replace != None:
+	    line = line[:pos] + replace + line[pos+len(var)+1:]
+
+	pos = defsrch.search( line, pos+1 )
+
+    return line
 
 ###
 ### END parseConfig.py

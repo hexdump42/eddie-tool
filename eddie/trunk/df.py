@@ -22,6 +22,7 @@ import log
 class dfList:
     def __init__(self):
 	self.hash = {}
+	self.mounthash = {}
 	self.list = []
 	 
 	rawList = os.popen('df -kFufs', 'r')
@@ -31,7 +32,8 @@ class dfList:
 	    fields = string.split(line)
 	    p = df(fields)
 	    self.list.append(p)
-	    self.hash[fields[0]] = p
+	    self.hash[fields[0]] = p		# dict of filesystem devices
+	    self.mounthash[fields[5]] = p	# dict of mount points
 
 	rawList.close()
 
@@ -46,6 +48,21 @@ class dfList:
 
     def keys(self):
         return(self.hash.keys())
+
+    # Overload '[]', eg: returns corresponding df object for given filesystem
+    # device - if there isn't one, will try to find a df object based on the
+    # mount point.  If both fail, returns None.
+    def __getitem__(self, name):
+        try:
+            return self.hash[name]		# try to find filesystem device
+        except KeyError:
+	    try:
+		return self.mounthash[name]	# try to find mount point
+	    except KeyError:
+		return None
+
+	return None		# just in case...
+
 
 ##
 ## Class df : holds stats on disk usage
@@ -73,6 +90,25 @@ class df:
 	log.log( '%s\t%s\t%s\t%s\t%s\t%s' % (f, s, u, a, p, m), 9 )
 	
 	return( '%s\t%s\t%s\t%s\t%s\t%s' % (f, s, u, a, p, m) )
+
+    def getFs(self):
+	return self.fs
+
+    def getSize(self):
+	return self.size
+
+    def getUsed(self):
+	return self.used
+
+    def getAvail(self):
+	return self.avail
+
+    def getPctused(self):
+	return self.pctused[:-1]	# strip '%' off end
+
+    def getMountpt(self):
+	return self.mountpt
+
 
 ##
 ## END - df.py

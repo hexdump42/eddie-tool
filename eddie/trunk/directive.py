@@ -145,8 +145,98 @@ class Directive:
 ## RULE-BASED COMMANDS
 ##
 class FS(Directive):
-    def docheck():
+    def __init__(self, *arg):
+	apply( Directive.__init__, (self,) + arg )
+	#self.regexp = 'FS[\t \n]+\([a-zA-Z0-9_/\.-]+\)[\t \n]+\([a-zA-Z0-9_><=&\|%^!-]+|[\"\'][a-zA-Z0-9_><=&\|%^!\t -]+[\"\']\)[\t \n]+\(.*\)'
+	self.regexp = 'FS[\t \n]+\([a-zA-Z0-9_/\.-]+\)[\t \n]+\([a-zA-Z0-9_$><=&\|%^!-]+\|["\'][a-zA-Z0-9_$><=&\|%^! \t-]+["\']\)[\t \n]+\(.*\)'
+	fields = self.parseRaw()
+	self.filesystem = fields[0]		# the filesystyem to check
+	self.rule = utils.stripquote(fields[1])	# the rules
+	self.action = fields[2]			# the action
+	print "<FS> filesystem: '%s' rule: '%s' action: '%s'" % (self.filesystem, self.rule, self.action)
+
+	# Set any FS-specific variables
+	#  fsf = filesystem
+	#  fsrule = rule
+	self.varDict['fsf'] = self.filesystem
+	self.varDict['fsrule'] = self.rule
+
+    def docheck(self):
 	print "FS directive doing checking......"
+	df = dlist[self.filesystem]
+	if df == None:
+	    log.log( "<directive>FS(), Error, no df with filesystem '%s'" % (self.filesystem), 2 )
+	    return
+
+	print "df = ",df
+
+	dfenv = {}			# environment for df rules execution
+	dfenv['used'] = string.atoi(df.getUsed())
+	dfenv['avail'] = string.atoi(df.getAvail())
+	dfenv['capac'] = string.atoi(df.getPctused())
+	# TODO : calculate deltas from history...
+	dfenv['useddelta'] = 0
+	dfenv['availdelta'] = 0
+	dfenv['capacdelta'] = 0
+
+	self.parseRule()
+
+	print "used='%d', avail='%d', capac='%d'" % (dfenv['used'],dfenv['avail'],dfenv['capac'])
+
+	result = eval( self.rule, dfenv )
+
+	print "DEBUG FS: result of eval( %s ) = %d" % ( self.rule, result )
+
+	if result != 0:
+	    # assign variables
+	    self.varDict['fsused'] = df.getUsed()
+	    self.varDict['fsavail'] = df.getAvail()
+	    self.varDict['fscapac'] = df.getPctused()
+	    self.varDict['fssize'] = df.getSize()
+	    self.varDict['fsdf'] = "%s" % df
+
+    	    log.log( "<directive>FS(), rule '%s' was false, calling doAction()" % (self.rule), 6 )
+    	    self.doAction()
+
+    # Parse the rule line and replace/remove certain characters
+    def parseRule(self):
+	parsed = ""
+
+	print "DEBUG: self.rule = '%s'" % self.rule
+
+	skipnext = 0			# flag to skip next character/s
+
+	for i in range(len(self.rule)):
+	    if skipnext > 0:
+		skipnext = skipnext - 1
+		continue
+
+	    c = self.rule[i]
+
+	    if c == '%':	# throw away '%'s - don't need em
+		continue
+	    elif c == '|':	# replace '|'s with 'or'
+		parsed = parsed + ' or '
+		continue
+	    elif c == '&':	# replace '&'s with 'and'
+		parsed = parsed + ' and '
+		continue
+	    elif i == len(self.rule)-1:	# break out of 'switch' if c is last character
+		pass
+	    elif ( string.lower(c) + string.lower(self.rule[i+1]) ) == 'mb':
+		parsed = parsed + '000'
+		skipnext = 1
+		continue
+	    elif ( string.lower(c) + string.lower(self.rule[i+1]) ) == 'gb':
+		parsed = parsed + '000000'
+		skipnext = 1
+		continue
+	    
+	    parsed = parsed + c
+
+	print "DEBUG: parsed   = '%s'" % parsed
+
+	self.rule = parsed
 
 
 
