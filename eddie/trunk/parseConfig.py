@@ -15,20 +15,15 @@ import os
 import string
 import regex
 import directive
+import config
 
 
 def main():
 
     # List the known directives we accept from the config
-    directives = {  "FS" : directive.FS,   \
-		    "SP" : directive.SP,   \
-		    "PID": directive.PID,  \
-		    "M"  : directive.M,    \
-		    "R"  : directive.R,    \
-		    "D"  : directive.D,    \
-		    "A"  : directive.A  }	
+    directives = config.directives
+    file = config.rules
 
-    file = 'config/fs.rules'
     conf = open(file, 'r')
     count = 0
 
