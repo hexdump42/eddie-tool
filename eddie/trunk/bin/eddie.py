@@ -26,15 +26,15 @@
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 ########################################################################
 
-global EDDIE_VER
-EDDIE_VER='0.29.3'
+#global __version__
+__version__='0.29.4'
 
 
 # Python modules
 import sys, os, time, signal, re, threading
 
 
-print "Eddie v%s" % (EDDIE_VER)
+print "Eddie v%s" % (__version__)
 
 # Work out the base Eddie directory which should contain bin/, lib/, etc...
 cwd = os.getcwd()
@@ -304,7 +304,7 @@ def doArgs(args, argflags):
 	if a == '-v' or a == '--version':
 	    print "Eddie (c) Chris Miles and Rod Telford 1998-2001"
 	    print "  chris@psychofx.com / rtelford@psychofx.com"
-	    print "  Version: %s" % EDDIE_VER
+	    print "  Version: %s" % __version__
 	    eddieexit()
 	elif a == '-h' or a == '--help' or a == '-?':
 	    print "Eddie: help not yet available..."
@@ -321,7 +321,7 @@ def main():
     Startup routine - setup then start main loop.
     """
 
-    log.version = EDDIE_VER	# Make version string available to other modules
+    log.version = __version__	# Make version string available to other modules
 
     # Catch most important signals
     signal.signal( signal.SIGALRM, SigHandler )
@@ -350,7 +350,7 @@ def main():
 
     # don't log till now because log file location is defined in configuration
     log.log( "<eddie>main(): Configuration complete from '%s'" % (config_file), 6 )
-    log.log( "<eddie>main(): Eddie %s, systype: %s" % (EDDIE_VER, systype), 5 )
+    log.log( "<eddie>main(): Eddie %s, systype: %s" % (__version__, systype), 5 )
     log.log( "<eddie>main(): oslibdirs: %s" % (oslibdirs), 8 )
 
     if 'showconfig' in argflags.keys() and argflags['showconfig'] == 1:
