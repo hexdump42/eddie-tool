@@ -1,6 +1,135 @@
 Eddie CHANGES
 (reverse chronological order)
 
+Eddie-0.30 (31-May-2002)
+ - Prevented failed calls to 'top' (which will soon be made redundant anyway)
+   from causing system stats collection to fail on Solaris.
+ - Removed fetching WCHAN field from process information on Linux, as this
+   sometimes caused kernel warnings to output or logged.  The field doesn't
+   appear particularly useful.
+ - Changed Linux Context switch counter from an int to a long.
+ - Fixed bug when an error parsing top output locks the system call semaphore
+   on Solaris.
+ - Fixed small bug when parsing string variables and catching exceptions in
+   actions.
+ - Added SENDMAIL config option to specify location of the sendmail binary
+   which EDDIE uses to send all email.
+ - Fixed bug when templates not in same group as directive referencing them.
+ - Changes PID directive argument 'pid' to 'pidfile'.
+ - Better handling of missing pysnmp module in snmp.py.
+ - Added basic SNMP directive based on a module by Dougal Scott
+   <dwagon@connect.com.au>. Requires pysnmp.
+ - Changed Linux 'df' call to 'df -l' which lists all local filesystems.
+   Much friendlier now that there are many alternative filesystems available
+   for Linux.
+ - Added patch by Kees Bakker <kees.bakker@altium.nl> to handle Linux df
+   when it sometimes outputs filesystem information over multiple lines.
+ - Added outfield variables to the COM directive.  The out variable is split
+   by whitespace and the fields are stored in outfieldn variables, e.g.,
+   outfield1, outfield2, etc.  This is to assist rule creation.
+ - Added netsaint action and Elvin notification method, submitted by
+   Dougal Scott <dwagon@connect.com.au>.
+ - Added minor bug-fixes, thanks to pre-release testing by Dougal Scott
+   <dwagon@connect.com.au>.
+ - Linux ctr_cpu_idle variables need to be longs (instead of ints) as the
+   counters are larger than expected.
+ - Created a HTTP directive for performing HTTP (and HTTPS) tests.
+ - Fixed minor bug when displaying config lines that have parsing errors.
+ - Fixed bug in METASTAT directive.
+ - Removed the CRON directive.  It is redundant now that the FILE directive
+   can perform the same test.
+ - Added a new data variable to FILE directive: now, which contains the
+   current time for use in tests with atime/mtime/ctime.
+ - LOGSCAN directive now initalizes data variables on first check, which is
+   only for finding the end of the logfile in question.  This prevents an
+   exception when variables are needed for console strings before second
+   check has run.
+ - Removed optional actionList from being logged by directives also.
+ - Fixed bug with directives trying to log the action list, which is optional
+   now and may not exist.
+ - Moved sample M/MSG definitions to message.rules file.
+ - Added some more sample rules.
+ - Cleaned up sample rules and updated for the latest directive changes.
+   Added some elvinrrd sample rules.
+ - Minor cleanup of base directory path; just found os.path.norm() :)
+ - Fixed small problem with arg parsing handling None values.
+ - Fixed small bug in PORT directive: when a check fails due to a connection
+   timeout, the recv string that wasn't set was still being searched.
+ - Cleaned up config formatting some more so that actions do not need to be
+   inside strings, they can be entered directly in a function call-like
+   format, e.g.,
+     action=ticker("Load on %(h)s is %(out)s", timeout=1)
+   or for a notification object,
+     action=COMMONALERT(commonmsg.fs,1)
+ - Changed PROC argument 'procname' to 'name' and action variable
+   'proc_check_name' to 'name' also, for consistency.
+ - Fixed minor bug with lack of expect argument for PORT directive.
+ - Removed data collection modules which are not required.
+ - Cleaned up all data collection modules and classes to simplify their
+   definitions.  Data collectors should be derived from the DataCollect
+   base class which handles all the data caching and thread-locking.
+ - Changes to parseConfig to simply directive definitions.
+ - Removed old datastore module.
+ - Fixed up console code to handle errors better.
+ - Changed Directive base-class to simplify directive definitions.
+ - New datacollect module which defines DataModules class to handle dynamic
+   importing of architecture-dependent data collection modules, and
+   DataCollect class to provide a base-class for data collectors.
+ - Fixed PING directive to handle un-resolvable addresses.  Also returns ping
+   round-trip-times in seconds as a floating-point number.
+ - Simplified directive definitions by moving most of the common code to
+   Directive base-class.  New directives only need to define __init__,
+   tokenparser and getData methods.
+ - Removed requirement for action variables to be prefixed by directive name.
+   Action variables now have the same name as the rule variables, for
+   consistency.  Changed a few more variable names so they make more sense.
+ - Moved common directive definitions from directive.py to
+   Directives/common.py.
+ - OS-dependent modules are now imported dynamically when needed, not in the
+   main eddie.py anymore.  All data collection modules are handled by the
+   new datacollect module.
+ - Removed old method of determining systype with external script (wasn't used
+   anymore anyway).
+ - Fixed bug with Pinger where it would throw an exception when pinging
+   addresses that did not resolve.
+ - Added extra console argument variables:
+   . lastchecktime - date/time of last directive execution
+   . problemfirstdetect - date/time of current failure first detected (only if
+   state is failed)
+   . problemlastfail - date/time of current failure last detected (only if state
+   is failed)
+ - Cleaned up description of ADMINLEVEL in sample config so it makes more sense.
+ - Added console argument to directives to specify how the console output should
+   look for that directive.  console=None can be specified to hide that directive
+   from console output.
+ - Added support for EXT3 filesystems in Linux filesystem checking code.
+   Patch submitted by Kees Bakker <kees.bakker@altium.nl>
+ - Fixed a minor bug where directives using the eval() function and catching
+   an exception would log a very ugly looking message. This was due to the Python
+   eval() function modifying the user-supplied environment dictionary by adding
+   the __builtin__ dictionary.  When this is printed it looks horrible.
+ - Added 'actelse' directive argument to perform actions if directive state is
+   ok and has not changed with last check.
+   Based on patches submitted by Dougal Scott <dwagon@connect.com.au>
+ - Changed Linux counter variables to have 'ctr_' at start of name, to be
+   consistent with Solaris and HP-UX variables.
+ - Fixed minor bug in HP-UX and Solaris system data collection.
+ - Fixed bug in uptime parsing in HP-UX system.py.
+ - Added a timeout argument to the ticker action.
+ - Re-implemented Elvin connection and notification code using the Elvin
+   ThreadedLoop client and a dedicated Elvin thread which should prevent
+   other threads from blocking on Elvin problems.
+ - Specify full path for solaris 'ps' command to prevent calling wrong version of
+   'ps'.
+ - Started work on a basic Developer's Guide: doc/dev_guide.txt.
+ - Standardised logging levels and tidied up all logging.
+ - Added system performance data collecting from 'uptime' and 'vmstat -s' 
+   commands on Solaris.
+ - Improved network interface statistics on Linux by retrieving data from
+   /proc/net/dev.
+
+Eddie-0.29 (non-public release)
+
 Eddie-0.28 (9-Mar-2002)
  - Cleaned up df code, added data caching and made thread-safe, like other
    data collectors.
