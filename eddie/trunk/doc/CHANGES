@@ -1,6 +1,69 @@
 Eddie CHANGES
 (reverse chronological order)
 
+Eddie-0.33 (15-Jul-2004)
+ - Handle socket timeout exceptions properly when HTTP response read() fails.
+ - Handle socket.settimeout() not being available on Python pre-2.3 versions.
+ - A new HTTP rule/action variable 'timedout' has been added which will be set
+   to 1 if a socket timeout exception has occurred, otherwise it will be 0.
+ - Added HTTP directive option 'request_timeout' which specifies how long a
+   HTTP(S) connection should wait for a response before timing out with an
+   error.  This makes use of a new Python 2.3 feature where socket timeouts
+   can be configured, hence this option is only available when Eddie is
+   running on Python 2.3+.
+ - Better defaults for SENDMAIL and ELVIN settings in sample eddie.cf.
+ - Added better logging of HTTP directive actions.
+ - Enhancements to HTTP directive:
+   Supports URLs with non-standard ports, eg: http://localhost:8080/
+   Added finer grained timing of four parts of the HTTP connection:
+     time_resolve  - elapsed time to resolve hostname to IP
+     time_connect  - elapsed time to connect to server
+     time_request  - elapsed time to send HTTP/S request to server
+     time_response - elapsed time to retrieve the server response (and close connection)
+     time          - elapsed total time (sum of above)
+ - Added system-specific sample rules for Linux & Solaris.
+ - Added testing ruleset for OpenBSD in development/testing/.
+ - Added initial OpenBSD support, thanks to John McInnes.
+ - DataCollect now logs what module is being requested for import.
+ - Fixed act2ok bug in FILE test.
+ - Remove accidental accented character from nice() comments.
+   It was causing a DeprecationWarning in Python 2.3.3+.
+ - Created a full directive test suite for Darwin (OS X) to provide standard
+   testing of all possible directives (or as many as possible).
+   These live in development/testing/.
+ _ PING: PING directive was logging pktloss as decimal when it should have been
+   a percentage.
+ - SP: Local address IP for SP directives (using netstat data-collector) can now
+   be specified as '*' or '0.0.0.0' for Solaris.  '*' is automatically
+   converted to '0.0.0.0' for consistency.
+ - First version of OS-specific modules ported to Mac OS X (Darwin).
+   Tested on OS X 10.3.3 (Darwin 7.3.0).  Needs plenty more testing.
+ - HTTP: Initialize HTTP directive exception data so variable substitution in 
+   messages doesn't fail.
+ - Added new directive argument: checktime
+   Used to restrict directive execution to specified times.  The value
+   is a Python expression which can use various variables representing
+   the current time and day:
+       day ('mon', 'tue', etc); time (HHMM); hour (0-23); minute (0-59); second (0-59).
+   And for shorthands, the fixed lists:
+       weekdays ('mon' - 'fri'), weekend ('sat', 'sun').
+   Examples:
+       checktime='day=="mon" or day=="tue"'
+       checktime='day in weekdays and hour>18'
+ - Only perform act2ok action(s) if some actions were already called.
+   In cases where the check fails but actiondependson causes actions to
+   be skipped, we don't need the act2ok actions to be called.
+ - Added MYSQL directive submitted by Dougal Scott.
+ - PING: Fixed a socket exception for gethostbyname failures.
+ - Added option to disable a directive.  Specify 'disabled=1' in a directive
+   to force it to be disabled.
+ - SNMP directive now supports 64-bit counters split into high/low OIDs.  Specify
+   these as "OIDhigh:OIDlow".
+   Example:
+     oid='1.3.6.1.2.1.2.2.1.10.2:1.3.6.1.2.1.2.2.1.10.3'
+   Where the first OID is the High 32 bits and the second OID is the lower 32 bits.
+ - Added an FS template, fstpl, to sample common.rules.
+
 Eddie-0.32 (21-Apr-2003)
  - Added an exception handler for httplib read() where it can fail in
    some circumstances.
