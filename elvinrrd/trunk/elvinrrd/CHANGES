@@ -1,6 +1,18 @@
 ElvinRRD CHANGES
 (reverse chronological order)
 
+ElvinRRD-2.2 (30-Nov-2004)
+ - Added many more config entries to elvinrrd.cf.
+ - Changed the Python RRDtool module it uses.  The old one, PyRRDtool, seems
+   to have disappeared off the face of the earth.
+ - Now uses py-rrdtool from http://sourceforge.net/projects/py-rrdtool/
+   or http://www.nongnu.org/py-rrdtool/
+ - Added uncaught exception handler to log any critical exceptions before
+   exiting.
+ - Cleaned up some of the docstrings/comments.
+ - Cleaned up a few log() calls (removed extra '\n').
+
+
 ElvinRRD-2.1a (1-Nov-2001)
  - Fixed support for multiple store keys.  Multiple store keys must be
    separated by ',' (no spaces).  All keys must be found in the Elvin message,

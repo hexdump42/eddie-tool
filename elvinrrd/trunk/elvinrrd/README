@@ -1,6 +1,6 @@
 #### ElvinRRD ####
 
-Author: Chris Miles <chris@psychofx.com>
+Author: Chris Miles / chris at chrismiles dot info
 Home: http://www.psychofx.com/elvinrrd/
 
 
@@ -12,7 +12,7 @@ Elvin (http://elvin.dstc.edu.au/) and
 RRDtool (http://people.ee.ethz.ch/~oetiker/webtools/rrdtool/).
 
 Any Elvin producer (client) can send data for ElvinRRD to store (e.g.,
-E.D.D.I.E. http://eddie-tool.net/); and any RRD-aware software can process the
+EDDIE-Tool http://eddie-tool.net/); and any RRD-aware software can process the
 resulting RRD databases (e.g., Cricket http://cricket.sourceforge.net/).
 
 ElvinRRD is an Elvin consumer, meaning it subscribes for messages on an Elvin
@@ -32,6 +32,10 @@ RRDtool: http://people.ee.ethz.ch/~oetiker/webtools/rrdtool/
 Elvin: http://elvin.dstc.edu.au/
  - ElvinRRD is an Elvin consumer, and needs an Elvin network to connect to and
    the Python Elvin module package (http://elvin.dstc.edu.au/projects/pe4/).
+
+py-rrdtool: http://sourceforge.net/projects/py-rrdtool/
+ - A Python rrdtool module.
+   Alternative URL http://www.nongnu.org/py-rrdtool/
 
 
 ## Installation ##
