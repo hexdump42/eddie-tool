@@ -312,6 +312,10 @@ def main():
     # read in config and rules
     parseConfig.readConf(config_file, Config)
 
+    # don't log till now because log file location is defined in configuration
+    log.log( "<eddie>main(), Configuration complete from '%s'" % (config_file), 7 )
+    log.log( "<eddie>main(), Eddie %s, systype: %s" % (EDDIE_VER, systype), 3 )
+
     if 'showconfig' in argflags.keys() and argflags['showconfig'] == 1:
 	# Just display the configuration and exit
 	print "---Displaying Eddie Configuration---"
@@ -319,7 +323,7 @@ def main():
 	eddieexit()
 
     # instantiate a process list
-    log.log( "<eddie>eddieguts(), creating process object", 7 )
+    log.log( "<eddie>main(), creating process object", 7 )
     directive.plist = proc.procList()
 
     # instantiate a disk usage list
