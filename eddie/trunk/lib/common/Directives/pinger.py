@@ -61,7 +61,13 @@ class PingSocket:
 	self.socket.setblocking(1)
 
     def sendto(self, packet):
-	self.socket.sendto(packet, self.dest)
+	try:
+	    self.socket.sendto(packet, self.dest)
+	except socket.error, msg:
+	    # chris 2004-12-07: FreeBSD raises an exception, 'Host is down'
+	    #	for unreachable hosts.  We can ignore it.
+	    if msg == 'Host is down':
+		pass
 
     def recvfrom(self, maxbytes):
 	return self.socket.recvfrom(maxbytes)
