@@ -1,0 +1,37 @@
+The EDDIE Tool Developer's Guide
+(c) Chris Miles 2002
+
+The information contained in this guide is for persons managing, maintaining,
+or modifying EDDIE code, including developers of directives, data collectors or
+actions.
+
+
+Logging
+
+EDDIE logs to the logfile specified by LOGFILE in the config.  It uses the
+log() function in the log.py module, and calls are of the form:
+    log.log( log_string, log_level )
+
+log_string should be formatted like:
+    "<module_name>method_name(): log_text"
+where module_name is the name of the current module, excluding ".py", e.g.,
+"directive" for a logged message in the directive.py module;
+method_name is the name of the current method or function.
+For example, a logged message in the directive module by the docheck() method
+of the FS class would look like:
+    log.log( "<directive>FS.docheck(): rule '%s' was false, calling doAction()" % (self.args.rul e), 6 )
+
+log_level defines the severity level of the log message, so the verbosity of
+logs can be set by the user with the LOGLEVEL config setting, and where the
+levels are defined as:
+    1 - critical errors where the software cannot continue
+    2 - serious errors where the software can attempt to recover or continue
+    3 - errors forcing the current thread to die prematurely
+    4 - errors where the current directive cannot continue and will not be re-scheduled
+    5 - warnings/info or errors not serious enough for the above levels
+    6 - action output
+    7 - directive output (for debugging directive checks etc)
+    8 - config parsing output (generally for debugging config problems)
+    9 - extra verbose debugging messages
+
+
