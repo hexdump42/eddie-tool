@@ -385,6 +385,8 @@ class COM(Directive):
 
     def docheck(self):
 	log.log( "<directive>COM(), docheck(), command '%s', rule '%s'" % (self.command,self.rule), 7 )
+	out = None
+	err = None
 	tmpprefix = "/var/tmp/com%d" % os.getpid()
 	cmd = "%s >%s.out 2>%s.err" % (self.command, tmpprefix, tmpprefix )
 	log.log( "<directive>COM.docheck(), calling system('%s')" % (cmd), 8 )
