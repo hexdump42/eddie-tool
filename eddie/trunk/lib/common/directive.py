@@ -672,8 +672,14 @@ class PORT(Directive):
                     return 1    # port connection ok
                 else:
                     exec( "send='%s'" % send )
-                    s.send(send)
-                    data=s.recv(111024)
+		    sendlist = string.split(send, '\n')		# split each line
+		    # send each line - only compare last output received
+		    for line in sendlist:
+			log.log( "<directive>PORT.isalive(): sending '%s'" % (line), 8 )
+			s.send(line+'\n')
+			data=s.recv(1024)
+			log.log( "<directive>PORT.isalive(): received '%s'" % (data), 8 )
+
                     self.Action.varDict['portrecv'] = data
 
                     if data==expect or re.search( '.*' + expect + '.*', data, ) != None:
