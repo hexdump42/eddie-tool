@@ -129,18 +129,18 @@ class system(datacollect.DataCollect):
 		if line[:4] == "cpu ":
 		    # Total CPU stats
 		    ( foo, user, nice, system, idle ) = string.split(line)
-		    self.data.datahash['ctr_cpu_user'] = int(user)
-		    self.data.datahash['ctr_cpu_nice'] = int(nice)
-		    self.data.datahash['ctr_cpu_system'] = int(system)
+		    self.data.datahash['ctr_cpu_user'] = long(user)
+		    self.data.datahash['ctr_cpu_nice'] = long(nice)
+		    self.data.datahash['ctr_cpu_system'] = long(system)
 		    self.data.datahash['ctr_cpu_idle'] = long(idle)
 		elif re.match( '^cpu([0-9]+).*', line ):
 		    # Stats for each CPU
 		    m = re.match( '^cpu([0-9]+).*', line )
 		    cpunum = int(m.group(1))
 		    ( foo, user, nice, system, idle ) = string.split(line)
-		    self.data.datahash['ctr_cpu%d_user'%cpunum] = int(user)
-		    self.data.datahash['ctr_cpu%d_nice'%cpunum] = int(nice)
-		    self.data.datahash['ctr_cpu%d_system'%cpunum] = int(system)
+		    self.data.datahash['ctr_cpu%d_user'%cpunum] = long(user)
+		    self.data.datahash['ctr_cpu%d_nice'%cpunum] = long(nice)
+		    self.data.datahash['ctr_cpu%d_system'%cpunum] = long(system)
 		    self.data.datahash['ctr_cpu%d_idle'%cpunum] = long(idle)
 		elif line[:5] == "disk ":
 		    # TODO - need info on meaning
@@ -203,20 +203,20 @@ class system(datacollect.DataCollect):
 	    if memline_list[0] != "Mem:" or len(memline_list) != 7:
 		log.log( "<system>system.getSystemstate(): error parsing Memory information from /proc/meminfo", 5 )
 	    else:
-		self.data.datahash['mem_total'] = int( memline_list[1] )
-		self.data.datahash['mem_used'] = int( memline_list[2] )
-		self.data.datahash['mem_free'] = int( memline_list[3] )
-		self.data.datahash['mem_shared'] = int( memline_list[4] )
-		self.data.datahash['mem_buffers'] = int( memline_list[5] )
-		self.data.datahash['mem_cached'] = int( memline_list[6] )
+		self.data.datahash['mem_total'] = long( memline_list[1] )
+		self.data.datahash['mem_used'] = long( memline_list[2] )
+		self.data.datahash['mem_free'] = long( memline_list[3] )
+		self.data.datahash['mem_shared'] = long( memline_list[4] )
+		self.data.datahash['mem_buffers'] = long( memline_list[5] )
+		self.data.datahash['mem_cached'] = long( memline_list[6] )
 
 	    swapline_list = string.split( swapline )
 	    if swapline_list[0] != "Swap:" or len(swapline_list) != 4:
 		log.log( "<system>system.getSystemstate(): error parsing Swap information from /proc/meminfo", 5 )
 	    else:
-		self.data.datahash['swap_total'] = int( swapline_list[1] )
-		self.data.datahash['swap_used'] = int( swapline_list[2] )
-		self.data.datahash['swap_free'] = int( swapline_list[3] )
+		self.data.datahash['swap_total'] = long( swapline_list[1] )
+		self.data.datahash['swap_used'] = long( swapline_list[2] )
+		self.data.datahash['swap_free'] = long( swapline_list[3] )
 
 
 	log.log( "<system>system.collectData(): system data collected", 7 )
