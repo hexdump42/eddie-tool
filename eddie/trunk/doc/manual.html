@@ -617,39 +617,41 @@
 	  <br>
 	  - md5 hex digest of file contents.
 
-     <li> <b>lastmode</b> (integer)
+     <li> <b>perm</b> (integer) [0.31+]
 	  <br>
-	  - mode from previous check.
-     <li> <b>lastino</b> (long integer)
+	  - the permissions bits only of the file mode.
+     <li> <b>sticky</b> (integer) [0.31+]
 	  <br>
-	  - ino from previous check.
-     <li> <b>lastdev</b> (long integer)
+	  - the sticky bits only of the file mode.
+     <li> <b>type</b> (integer) [0.31+]
 	  <br>
-	  - dev from previous check.
-     <li> <b>lastnlink</b> (integer)
+	  - the file type bits only of the file mode.
+
+     <li> <b>issocket</b> (boolean) [0.31+]
 	  <br>
-	  - nlink from previous check.
-     <li> <b>lastuid</b> (integer)
+	  - true if the file is a socket.
+     <li> <b>issymlink</b> (boolean) [0.31+]
 	  <br>
-	  - uid from previous check.
-     <li> <b>lastgid</b> (integer)
+	  - true if the file is a symbolic link.
+     <li> <b>isfile</b> (boolean) [0.31+]
 	  <br>
-	  - gid from previous check.
-     <li> <b>lastsize</b> (long integer)
+	  - true if the file is a standard file.
+     <li> <b>isblockdevice</b> (boolean) [0.31+]
 	  <br>
-	  - size from previous check.
-     <li> <b>lastatime</b> (long integer)
+	  - true if the file is a block device.
+     <li> <b>isdir</b> (boolean) [0.31+]
 	  <br>
-	  - atime from previous check.
-     <li> <b>lastmtime</b> (long integer)
+	  - true if the file is a directory.
+     <li> <b>ischardevice</b> (boolean) [0.31+]
 	  <br>
-	  - mtime from previous check.
-     <li> <b>lastctime</b> (long integer)
+	  - true if the file is a character device.
+     <li> <b>isfifo</b> (boolean) [0.31+]
 	  <br>
-	  - ctime from previous check.
-     <li> <b>lastmd5</b> (string)
+	  - true if the file is a FIFO.
+
+     <li> <b>last<i>var</i></b>
 	  <br>
-	  - md5 from previous check.
+	  - the previous value of any above variable (e.g., lastmode).
 
      <li> <b>now</b> (long integer)
 	  <br>
@@ -691,6 +693,12 @@
 	    file='/var/run/eddie/cron.test'
 	    rule='exists and mtime &gt; (now-15*60)'  # file modified within last 15 minutes
 	    action=email("alert", "Cron test failed.", "%(file)s mtime=%(mtime)s now=%(now)s")
+
+        # Make sure this file isn't a symlink
+	FILE check_file:
+	    file='/etc/passwd'
+	    rule='issymlink'
+	    action=email('alert','%(file)s should not be a symlink !!')
     </pre>
     </p>
 
