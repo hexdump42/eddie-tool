@@ -16,13 +16,15 @@ import os
 import string
 import regex
 import directive
+import definition
 import config
 
 # Define exceptions
 #ParseFailure = 'ParseFailure'
 
-def readFile(file, ruleList):
+def readFile(file, ruleList, defDict, MDict):
 
+    # Get the directory name of the base config file
     dir = file[:string.rfind(file, '/')]+'/'
 
     # List the known directives we accept from the config
@@ -44,6 +46,12 @@ def readFile(file, ruleList):
 	    elements = string.split(line)
 
 	    d = elements[0]
+	    
+	    if d == 'INCLUDE':
+	    	# recursively read the INCLUDEd file
+	    	readFile(dir+elements[1][1:-1], ruleList, defDict, MDict)
+		continue
+
 	    if directives.has_key(d):
 
 		#
@@ -59,20 +67,26 @@ def readFile(file, ruleList):
 			mess = mess + l
 
 		    action = directives[d](mess)
-	    
-		elif d == 'INCLUDE':
-		    # recursively read the INCLUDEd file
-		    readFile(dir+elements[1][1:-1], ruleList)
-		    continue
 
 		else:
 		    try:
 			action = directives[d](line)
-		    except directive.ParseFailure, errr:
-			print "Parse failure on line '"+line+"' - skipping."
+		    except (directive.ParseFailure, definition.ParseFailure):
+			print "Parse failure in %s on line %d - skipping (line follows)\n%s" % (file, count, line)
 			continue
 		
-		ruleList + action
+		if action.basetype == 'Directive':
+		    ruleList + action
+		elif action.basetype == 'Definition':
+		    if action.type == 'DEF':
+			defDict[action.name] = action.text
+		    elif action.type == 'M':
+			MDict + action
+		    else:
+			print "Do wot with action : ",action," ??"
+		else:
+		    print "Unknown type '"+action.basetype+"' for action: "+action
+
 	    else:
 	       print "Ignoring Unknown Directive %s on line %s of %s" % (d, count, file)
 

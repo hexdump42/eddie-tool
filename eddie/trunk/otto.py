@@ -9,7 +9,7 @@
 ## 
 ## Description  : Otto main program
 ##
-## $Id
+## $Id$
 ##
 
 
@@ -17,6 +17,7 @@ import proc
 import df
 import parseConfig
 import directive
+import definition
 import config
 
 # main config file - this file INCLUDEs all other config files
@@ -24,13 +25,19 @@ config_file = 'config/otto.cf'
 
 def main():
 
-    # global list of all directives
-    global ourList
+
+    global ourList		# global list of all directives
+    global defDict		# global dictionary of DEFinitions
+    global MDict		# global dictionary of Messages
+
+    # initialise our global lists/dicts
     ourList = directive.Rules()
- 
+    defDict = {}
+    MDict = definition.MsgDict()
+
     # read in config and rules
-    parseConfig.readFile(config_file, ourList)
- 
+    parseConfig.readFile(config_file, ourList, defDict, MDict)
+
     #print "M: ",ourList['M']
     #print "D: ",ourList['D']
     #print "FS: ",ourList['FS']
@@ -46,15 +53,12 @@ def main():
     d = df.dfList()
     #print d
 
-    # Parse all configuration options
-    # (... and remove them from the Rules List ...)
-    # !! TODO !!
-    #config.parseConfig( ourList );
-
-    # Define Messages (M-directives)
-    # (... and remove them from the Rules List ...)
-    # !! TODO !!
-    #ourList.delete( 'M' )
+    print "-- The following DEFs are defined: --"
+    for i in defDict.keys():
+	print "%s=%s" % (i, defDict[i])
+    print "-- The following Ms are defined: --"
+    for i in MDict.keys():
+	print "%s: Subject \"%s\"\n---BODY---\n%s\n----------" % (i, MDict.subj(i), MDict[i])
 
     # Now do all the checking
     # note ... directive order is not defined (we don't currently care do we?)

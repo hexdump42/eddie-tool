@@ -13,17 +13,20 @@
 ##
 
 import directive
+import definition
 
 ##
 ## This is a list of known directives we accept in otto config/rules files
 ##
-directives = {  "INCLUDE"	: directive.INCLUDE,		\
-		"SCANPERIOD"	: directive.SCANPERIOD,		\
+
+# TODO - SCANPERIOD should be sumthin like 'config.SCANPERIOD'
+
+directives = {  "SCANPERIOD"	: directive.SCANPERIOD,		\
+		"M"		: definition.M,			\
+		"DEF"		: definition.DEF,		\
 		"FS"		: directive.FS,			\
                 "SP"		: directive.SP,			\
 	  	"PID"		: directive.PID,		\
-		"M"		: directive.M,			\
-		"R"		: directive.R,			\
 		"D"		: directive.D,			\
 		"A"		: directive.A			}
 

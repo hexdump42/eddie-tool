@@ -60,12 +60,10 @@ class Rules:
 class Directive:
     def __init__(self, *arg):
 	self.raw = arg[0]			# the raw line as read from config file
+	self.basetype = 'Directive'		# the object can know its own basetype
 	self.type = string.split(self.raw)[0]	# the directive type of this instance
 	self.regexp = ''			# the regexp to split the raw line into fields
 	self.action = ''			# each directive will have an action
-
-    def getRaw(self):
-	return self.raw
 
     def parseRaw(self):
 	# TODO - remove comments (ie: everything after #)
@@ -82,7 +80,7 @@ class Directive:
 	return fieldlist
 
 ##
-## COMMANDS
+## COMMANDS - TODO : move this somewhere else!!
 ##
 class SCANPERIOD(Directive):
     # remove docheck()
@@ -91,27 +89,6 @@ class SCANPERIOD(Directive):
     
     def setConfig( self, line ):
 	print "SCANPERIOD:setConfig( "+line+" )"
-
-class INCLUDE(Directive):
-    pass
-
-##
-## MESSAGE DIRECTIVE
-##
-class M(Directive):
-    def __init__(self, *arg):
-	apply( Directive.__init__, (self,) + arg )
-	self.regexp = 'M[\t ]+\([a-zA-Z0-9_/\.]+\)[\t ]+\"\(.*\)\"[\t \n]+\([^\005]*\)'
-	fields = self.parseRaw()
-	self.name = fields[0]
-	self.subject = fields[1]
-	self.message = fields[2]
-
-    def docheck(self):
-	print "M directive doing checking......"
-
-    def send(self, email):
-	print "sending message to", email
 
 
 
@@ -168,10 +145,6 @@ class SP(Directive):
     def docheck(self):
 	print "SP directive doing checking......"
 
-
-class R(Directive):
-    def docheck(self):
-	print "R directive doing checking......"
 
 
 ##
