@@ -80,4 +80,6 @@ BUGS:
    -> change defs to just parse DEFN instead of $DEFN - when a "NAME" type
    token is found, see if in DEF dictionary...
 
+ - cannot have a commented line in the middle of a directive definition...
+
 
