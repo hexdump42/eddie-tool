@@ -27,8 +27,8 @@ UseElvin = 1	# Switch Elvin usage on by default
 
 try:
     #import Elvin, ElvinMisc
-    from Elvin import *
-    #import Elvin
+    #from Elvin import *
+    import Elvin
 except ImportError:
     # no Elvin modules... disable Elvin
     UseElvin = 0
