@@ -81,13 +81,13 @@ class Directive:
 	#  %sys = command from a system() action
 	#     TODO
 	self.varDict['sys'] = '[sys not yet defined]'
+
 	#  %act = show list of actions taken preceded by "The following actions
 	#         were taken:" if any were taken
-	#     TODO
 	self.varDict['act'] = '[act not yet defined]'
+
 	#  %actnm = show list of actions taken (excluding mail()'s) preceded by
 	#         "The following actions were taken:" if any were taken
-	#     TODO
 	self.varDict['actnm'] = '[actnm not yet defined]'
 
 
