@@ -1,9 +1,9 @@
-#!/opt/python2/bin/python
+#!/usr/bin/python
 ##
 ## File         : eddie.py 
 ## 
 ## Author       : Rod Telford  <rtelford@psychofx.com>
-##                Chris Miles  <cmiles@psychofx.com>
+##                Chris Miles  <chris@psychofx.com>
 ## 
 ## Start Date   : 19971204 
 ## 
