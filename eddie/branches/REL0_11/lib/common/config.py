@@ -147,21 +147,23 @@ class INTERPRETERS(ConfigOption):
 ## This is a list of known directives we accept in Eddie config/rules files
 ##
 
-directives = {  "SCANPERIOD"	: SCANPERIOD,			\
-		"LOGFILE"	: LOGFILE,			\
-		"LOGLEVEL"	: LOGLEVEL,			\
-		"ADMIN"		: ADMIN,			\
-		"ADMINLEVEL"	: ADMINLEVEL,			\
-		"ADMIN_NOTIFY"	: ADMIN_NOTIFY,			\
-		"INTERPRETERS"	: INTERPRETERS,			\
-		"M"		: definition.M,			\
-		"DEF"		: definition.DEF,		\
-		"A"		: definition.A,			\
-		"FS"		: directive.FS,			\
-                "SP"		: directive.SP,			\
-	  	"PID"		: directive.PID,		\
-	  	"COM"		: directive.COM,		\
-		"D"		: directive.D,			}
+directives = {  "SCANPERIOD"	: SCANPERIOD,
+		"LOGFILE"	: LOGFILE,
+		"LOGLEVEL"	: LOGLEVEL,
+		"ADMIN"		: ADMIN,
+		"ADMINLEVEL"	: ADMINLEVEL,
+		"ADMIN_NOTIFY"	: ADMIN_NOTIFY,
+		"INTERPRETERS"	: INTERPRETERS,
+		"M"		: definition.M,
+		"DEF"		: definition.DEF,
+		"A"		: definition.A,
+		"FS"		: directive.FS,
+                "SP"		: directive.SP,
+	  	"PID"		: directive.PID,
+	  	"COM"		: directive.COM,
+		"D"		: directive.D,
+		"PORT"		: directive.PORT
+}
 
 
 

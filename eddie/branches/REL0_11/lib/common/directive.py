@@ -13,15 +13,8 @@
 ##
 ##
 
-import os
-import string
-import regex
-import sys
-import socket
-import action
-import definition
-import utils
-import log
+import os, string, regex, sys, socket
+import action, definition, utils, log
 
 # Define exceptions
 ParseFailure = 'ParseFailure'
@@ -440,6 +433,74 @@ class COM(Directive):
 	if result != 0:
 	    self.doAction()
 
+
+class PORT(Directive):
+    def __init__(self, *arg):
+	apply( Directive.__init__, (self,) + arg )
+	# regex for PORT:             host                       port             "FeedStr"                    "Expect"                      Action
+	self.regexp = 'PORT[\t \n]+\([a-zA-Z0-9_\.]+\)[\t \n]+\([0-9]+\)[\t \n]+"\(.*\)"[\t \n]+"\(.*\)"[\t \n]+\(.*\)'
+	fields = self.parseRaw()
+	self.host = fields[0]			# the host to check on
+	self.port = string.atoi(fields[1])	# the TCP port to check
+	self.sendstr = fields[2]		# the send string
+	self.expect = fields[3]			# the expect string/regex
+	self.action = fields[4]			# the action
+	print "<PORT> host: '%s' port: '%d' sendstr: '%s' expect: '%s' action: '%s'" % (self.host, self.port, self.sendstr, self.expect, self.action)
+
+	# Set any PID-specific variables
+	#  %pidf = the PID-file
+	self.varDict['porth'] = self.host
+	self.varDict['portp'] = self.port
+	self.varDict['portsend'] = self.sendstr
+	self.varDict['portexp'] = self.expect
+	self.varDict['portrecv'] = ''
+
+    def docheck(self):
+	log.log( "<directive>PROC(), docheck(), host '%s', port '%s', sendstr '%s', expect '%s'" % (self.host,self.port,self.sendstr,self.expect), 7 )
+	if not self.isalive(host=self.host,port=self.port,send=self.sendstr,recv=self.expect):
+	    print "PORT Check Failed"
+	    self.doAction()
+
+
+
+    def isalive(self,host,port,send="",recv=""):
+	""" Connects to host:port, sends send,
+	    receives input, compares it to recv
+	    and returns TRUE or FALSE accordingly """
+	print "Trying to connect to %s:%d send:'%s' exp:'%s'" % (host,port,send,recv)	#DEBUG
+	try:
+	    try:
+		s = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+		print "s:",s	#DEBUG
+		s.connect(host,port)
+		if recv == "":
+		    s.close()
+		    return 1	# port connection ok
+		else:
+		    exec( "send='%s'" % send )
+		    print "Sending:",send	#DEBUG
+		    s.send(send)
+		    print "Receiving data..."	#DEBUG
+		    data=s.recv(111024)
+		    print "Received:",data	#DEBUG
+		    self.varDict['portrecv'] = data
+
+		    print "searching recv:",recv	#DEBUG
+		    print "          data:",data	#DEBUG
+		    if data==recv or regex.search( recv, data, 'g' ) != -1:
+			s.close()
+			return 1
+		    else:
+			return 0
+	    finally:
+		try:
+		    s.close()
+		except:	
+		    pass
+	except:
+	    return 0
+
+	# print isalive(host='daidyai.off.connect.com.au',port=50006,send='blah',recv='ALIVE')
 
 ##
 ## END - directive.py
