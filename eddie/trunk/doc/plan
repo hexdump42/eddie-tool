@@ -2,8 +2,48 @@
     OTTO - The Automated Administrator or "My name is ... Otto,
     ====   ===========================     and I like to get ... blotto!"
 
-COMMANDS:
---------
+PROJECT PLAN:
+------------
+
+    Milestones:
+    ----------
+	mid-Jan-98: Drop-in replacement for Patrol.
+	    Directives required:
+		FS [F in Patrol]
+		D
+		PC
+		DP
+		SP
+		M
+	    Actions required:
+		mail()
+		page() [replaced by mail()]
+		restart() [replaced by system() ??]
+	01-Mar-98 ? : System Monitoring functionality complete.
+	01-Jun-98 ? : Performance measurement functionality complete.
+	01-Aug-98 ? : Web/GUI front-end complete.
+
+
+    ToDos:
+    -----
+	Group	Task					By	Complete
+	-----	----					--	--------
+	Core code:
+		Logging - log all actions, etc.
+		Variables - %sys, %act, %actnm
+	Directives:
+		D					Chris	80%
+		FS
+		PID
+		SP
+	Actions:
+		mail()					Chris	90%
+		system()
+
+
+
+DIRECTIVES:
+----------
 
   D	Daemons running.  Check that process $NAME is currently running.
   	IFNOT( <action> ) - perform action if process not running,
