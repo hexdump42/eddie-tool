@@ -196,6 +196,19 @@ def main():
     # Main Loop
     while 1:
 	try:
+
+	    # check if any config/rules files have been modified
+	    # if so, re-read config
+	    if Config.checkfiles():
+		log.log( '<eddie>eddieguts(), config files modified - reloading config', 3 )
+		#
+		# reset config and read in config and rules
+		global Config
+		Config = config.Config( '__main__' )
+
+		# read in config and rules
+		parseConfig.readConf(config_file, Config)
+
 	    # perform guts of Eddie
 	    eddieguts(Config, history.eddieHistory)
 
