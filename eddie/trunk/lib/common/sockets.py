@@ -93,7 +93,7 @@ def console_server_thread(Config, die_event, consport):
             # set up socket if required
             if s == None:
                 s=socketstate(socket.AF_INET,socket.SOCK_STREAM)
-                s.bind('', consport)
+                s.bind( ('', consport) )
 
             s.listen(50)
 
