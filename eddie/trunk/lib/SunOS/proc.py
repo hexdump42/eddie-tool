@@ -179,7 +179,7 @@ class procList:
 	self.list = []		# list of processes
 	self.nameHash = {}	# dict of processes keyed by process name
 	 
-	rawList = utils.safe_popen('ps -e -o "s user ruser group rgroup uid ruid gid rgid pid ppid pgid sid pri opri pcpu pmem vsz rss osz time etime stime f c tty addr nice class wchan fname comm args"', 'r')
+	rawList = utils.safe_popen('/usr/bin/ps -e -o "s user ruser group rgroup uid ruid gid rgid pid ppid pgid sid pri opri pcpu pmem vsz rss osz time etime stime f c tty addr nice class wchan fname comm args"', 'r')
 	rawList.readline()
  
 	for line in rawList.readlines():
