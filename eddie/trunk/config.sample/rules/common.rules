@@ -75,7 +75,7 @@ N NAMEDRESTART:
 
 
 ###########################################################################
-# RULES
+# TEMPLATES
 
 # define a PROC template to make the other PROC definitions much simpler
 #  PROCs using this template will inherit all the settings, but the settings
@@ -87,6 +87,19 @@ PROC proctpl:
     checkwait=10            # interval between re-checks
     rule='not exists'       # default rule to use
     act2ok=COMMONFIXED(commonmsg.proc,0)
+
+# a template for FS directives
+PROC fstpl:
+    template=self           # indicates this is a template definition
+    scanperiod='10m'        # check filesystems every 10 mins
+    actionperiod='t*1.5'    # exponential delay for subsequent alerts
+    rule='pctused >= 90'    # default rule to use
+    action=COMMONALERT(commonmsg.fs,1)
+    act2ok=COMMONFIXED(commonmsg.fs,0)
+
+###########################################################################
+# COMMON DIRECTIVES
+# All hosts will use these directives.
 
 PROC cron:
     name='cron'
