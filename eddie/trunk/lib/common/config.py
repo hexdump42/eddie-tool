@@ -126,7 +126,10 @@ class Config:
 	# duplicate group names not allowed at same level
 	for i in parent.groups:
 	    if groupname == i.name:
-	        raise ParseFailure, "Duplicate group name: %s" % (groupname)
+	        #raise ParseFailure, "Duplicate group name: %s" % (groupname)
+		# chris 2002-12-24: if duplicate group names used, merge groups together
+		log.log( "<config>newgroup(): merging group %s with previous definition" % (groupname), 8 )
+		return i
 
 	# Create new group
 	newgroup = Config(groupname, parent)
