@@ -14,8 +14,8 @@ you want to monitor before you can monitor it.
    will create the eddie directory with all subdirectories like bin, lib, doc.
 
 2. Point EDDIE to your Python installation.
-   [EDDIE requires Python, and has been tested with most Python versions
-   between 1.5.2 and 2.1]
+   [EDDIE requires Python 1.6+, and has been tested with most Python versions
+   between 1.6.1 and 2.1]
    So edit the first line of eddie/bin/eddie.py to point to your python.
    Eg:
        $ which python
