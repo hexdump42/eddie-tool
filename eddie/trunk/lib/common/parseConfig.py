@@ -366,7 +366,10 @@ def readFile(file, state):
     # Let tokenize.tokenize() parse the file into tokens which it will pass to
     # state.tokeneater() which will parse the tokens and create something
     # meaningful.
-    tokenize.tokenize(conf.readline, state.tokeneater)
+    try:
+	tokenize.tokenize(conf.readline, state.tokeneater)
+    except tokenize.TokenError, msg:
+	raise config.ParseFailure, "Syntax error, %s"%(msg)
 
     conf.close()
 

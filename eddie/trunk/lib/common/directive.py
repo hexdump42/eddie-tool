@@ -446,9 +446,15 @@ class Directive:
 #		self.data_collectors[i].history.setHistory(self.history_size)
 
 	# Assign Notification object actions if any
-	for n in self.parent.NDict.keys():
-	    execstr = "self.Action.%s = self.parent.NDict[n].doAction" % (n)
-	    exec( execstr )
+#	print self.parent.NDict
+#	for n in self.parent.NDict.keys():
+#	    print "self.Action.%s = self.parent.NDict[n].doAction" % (n)
+#	    execstr = "self.Action.%s = self.parent.NDict[n].doAction" % (n)
+#	    try:
+#		exec( execstr )
+#	    except:
+#		e = sys.exc_info()
+#		raise ParseFailure, "%s, %s"%(e[0],e[1])
 
 	# Set action dependents if given
 	try:

@@ -222,7 +222,7 @@ class N(Definition):
 	    raise ParseFailure, "N definition missing ':'"
 
 	# tokens are ok
-	self.name = list[1]		# the name of this Action
+	self.name = list[1]		# the name of this object
 	self.lastNotify = 0		# time of last notify
 	self.escalLevel = 0		# current level of escalation
 	self.levels={}			# dict of notification levels
