@@ -6,7 +6,7 @@
 ## 
 ## Start Date   : 19980209 
 ## 
-## Description  : Eddie history handler
+## Description  : Eddie historical data handler
 ##
 ## $Id$
 ##
@@ -25,45 +25,57 @@
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 ########################################################################
 
+# rule="pctused - history[1].pctused > 10"	# pctused increased by over 10%
 
-import log
-
-# Define History Variables
-# set history length - TODO: this could possibly be dynamic later...
-historySize = 5	# keep 5 levels of history max
+import log,threading
 
 
-# Store a list of previous items
-class history:
-    def __init__(self):
-	self.histdict = {}
+# Container of data
+class Hist:
+    pass
 
 
-    def save(self,name,item):
-	try:
-	    histlist = self.histdict[name]
-	    Len = len(histlist)		# current history length
-    	    histlist = [item] + histlist[0:min( Len, historySize-1 )]
-	except KeyError:
-    	    histlist = [item]
-
-	self.histdict[name] = histlist
-	log.log( "<history>save(), saved '%s' of '%s'" % (name,item), 9 )
-
-	#debug
-	#Len = len(histlist)		# current history length
-       	#print "Len=",len(histlist)," histlist:", histlist
-	#for i in range( 0, Len ):
-	#    print i, ":", histlist[i]
-	
-    def list(self,name,num=0):
-	try:
-	    histlist = self.histdict[name]
-	    return histlist[num]
-	except:
-	    return []
+# Store a list of historical data
+class History:
+    def __init__(self, size):
+	self.size = size
+	self.history = []
+	self.history_semaphore = threading.Semaphore()
 
 
+    def push(self, data):
+	self.history_semaphore.acquire()	# Thread safety
+
+	h = Hist()
+	for d in data.keys():
+	    exec "h.%s = data[d]" % (d)
+	self.history.insert(0, h)	# add new data to front of list
+	if len(self.history) > self.size:
+	    self.history.pop()		# remove oldest data
+
+	self.history_semaphore.release()
+
+	log.log( "<history>History.push(): Added data %s"%(data), 8 )
+
+
+    def getsize(self):
+	return len(self.history)
+
+
+    def __getitem__(self, index):
+	if index < 1 or index > self.size:
+	    log.log( "<history>History.__getitem__(): index out of range %d"%(index), 4 )
+	    return None
+
+	self.history_semaphore.acquire()	# Thread safety
+	data = self.history[index-1]
+	self.history_semaphore.release()
+	log.log( "<history>History.__getitem__(): fetched history[%d]=%s"%(index,data), 8 )
+	return data
+
+
+    def __repr__(self):
+	return "%s" % self.history
 
 ###
 ### END history.py

@@ -30,7 +30,7 @@
 # Imports: Python
 import os, string, re, sys, socket, time, threading, traceback, errno
 # Imports: Eddie
-import action, definition, utils, log, ack, datacollect
+import action, definition, utils, log, ack, datacollect, history
 
 
 ##
@@ -87,17 +87,17 @@ class State:
 	    # if this is not a repeated failure then record the time of this
 	    # first failure detection
 	    self.faildetecttime = timenow
-	    self.failcount = 1
+	    self.failcount = 0		# re-initialize count of consecutive failures
 
 	    self.status = "failinitial"
 
 	self.checkcount = self.checkcount + 1
-	self.failcount = self.failcount + 1
 
 	if self.checkcount >= self.thisdirective.args.numchecks:
 	    # Only put in "fail" state when all rechecks have failed
 	    # otherwise the state is left in "failinitial" state
 	    self.status = "fail"
+	    self.failcount = self.failcount + 1
 
 	self.lastfailtime = timenow
 
@@ -234,6 +234,9 @@ class Directive:
 	self.args.template = None	# no template by default
 	self.current_actionperiod = 0	# reset the current actionperiod
 	self.lastactiontime = 0		# time previous actions were called
+
+	self.history_size = 0	# keep no history by default
+	self.history = None	# keep historical data for checks, if required
 
 
     def request_collector(self):
@@ -432,29 +435,15 @@ class Directive:
 	except AttributeError:
 	    pass	# console argument not set, so leave as default
 
-	# Set history if possible
+	# Set history if required
 	try:
 	    self.history_size = int(self.args.history)
 	except AttributeError:
 	    pass	# history argument not set, so leave as default
 	except ValueError:
-	    raise ParseFailure, "history must be an integer: '%s'"%(self.args.history)
+	    raise ParseFailure, "history must be an integer: '%s'"%(self.history_size)
 	else:
-	    # TODO
-	    pass
-#	    for i in self.data_collectors.keys():
-#		self.data_collectors[i].history.setHistory(self.history_size)
-
-	# Assign Notification object actions if any
-#	print self.parent.NDict
-#	for n in self.parent.NDict.keys():
-#	    print "self.Action.%s = self.parent.NDict[n].doAction" % (n)
-#	    execstr = "self.Action.%s = self.parent.NDict[n].doAction" % (n)
-#	    try:
-#		exec( execstr )
-#	    except:
-#		e = sys.exc_info()
-#		raise ParseFailure, "%s, %s"%(e[0],e[1])
+	    self.history = history.History( self.history_size )
 
 	# Set action dependents if given
 	try:
@@ -626,10 +615,18 @@ class Directive:
 	# record action information
 	self.lastactiontime = time.time()
 
-	# Setup environment to evaluate new actionperiod
-	evalenv = { 'scanperiod' : self.scanperiod,
-	            't' : self.current_actionperiod }
-	self.current_actionperiod = eval( self.actionperiod, {"__builtins__": {}}, evalenv )
+	# Calculate action period
+	log.log( "<directive>doAction(): self.state.failcount=%d" % self.state.failcount, 8 )
+	if self.state.failcount == 1:
+	    # After first action call, action period defaults to scanperiod
+	    self.current_actionperiod = self.scanperiod
+	else:
+	    # For subsequent action calls, evaluate actionperiod expression
+	    log.log( "<directive>doAction(): evaluate actionperiod '%s'" % self.actionperiod, 8 )
+	    evalenv = { 'scanperiod' : self.scanperiod,
+			't' : self.current_actionperiod }
+	    self.current_actionperiod = eval( self.actionperiod, {"__builtins__": {}}, evalenv )
+	log.log( "<directive>doAction(): current_actionperiod=%d" % self.current_actionperiod, 8 )
 
 	# Make sure there are some actions to perform
 	# (they are not always necessary)
@@ -757,8 +754,18 @@ class Directive:
     	    log.log( "<directive>Directive.docheck(): directive %s error, %s, not re-scheduled" % (self.ID,err), 4 )
 	    return
 
-	# TODO save historical data
-	# TODO add historical data to data dict....
+	# If historical data is required
+	if self.history:
+	    if self.history.getsize() < self.history_size:
+		# If historical data is required for check, the directive
+		# must wait until enough data is collected
+		log.log( "<directive>Directive.docheck(): waiting for %d runs to collect enough data for history" % (self.history_size), 7 )
+		self.history.push( data )
+		self.putInQueue( Config.q )	# put self back in the Queue
+		return
+
+	    # Add historical data to data dictionary
+	    data['history'] = self.history
 
 	# If data returned as None, do not perform a check but still
 	# re-schedule directive.
@@ -798,6 +805,11 @@ class Directive:
     	        log.log( "<directive>Directive.docheck(): dependencies %s failed, %s not calling actions" % (failed_deps, self.ID), 7 )
 	    else:
     	        self.doAction(Config)
+
+	# Save historical data
+	if self.history:
+	    del data['history']			# Remove old history data
+	    self.history.push( data )
 
 	self.postAction( data )		# perform any post-action processing
 
