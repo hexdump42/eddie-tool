@@ -115,6 +115,10 @@ class system(datacollect.DataCollect):
         if uptime_dict:
             self.data.datahash.update(uptime_dict)
 
+        swapinfo_dict = self._getswapinfo()
+        if swapinfo_dict:
+            self.data.datahash.update(swapinfo_dict)
+
 	log.log( "<system>system.collectData(): new system list created", 7 )
 
 
@@ -217,6 +221,47 @@ class system(datacollect.DataCollect):
         uptime_dict['loadavg15'] = float(uptime_dict['loadavg15'])
 
         return uptime_dict
+
+
+    def _getswapinfo(self):
+        """Get swap usage statistics from the output of 'pstat -sk'.
+	"""
+
+        swapinfo_cmd = "/usr/sbin/pstat -sk"
+
+        (retval, output) = utils.safe_getstatusoutput( swapinfo_cmd )
+
+        if retval != 0:
+            log.log( "<system>system._getswapinfo(): error calling '%s'"%(swapinfo_cmd), 5 )
+            return None
+
+	swapinfo_dict = {}
+
+	# Parse the output and record the swap usage info of the last
+	# line.  If there's only a single swap device, this will be the
+	# total usage.  If there are 2 or more swap devices, the last
+	# line will be a grand total.
+	# TODO: record stats for all swap devices individually
+        l = string.split( output, '\n' )[-1]
+
+	if l[:5] == 'Total':	# how many fields to expect
+	    fieldnum = 5
+	else:
+	    fieldnum = 6
+
+	fields = l.split()
+	if len(fields) != fieldnum:
+	    log.log( "<system>system._getswapinfo(): could not parse '%s' output line '%s'"%(swapinfo_cmd,l), 5 )
+	    return None
+
+	swapinfo_dict['swap_device'] = fields[0]	# either the swap device or "Total"
+	swapinfo_dict['swap_size'] = fields[1]
+	swapinfo_dict['swap_used'] = fields[2]
+	swapinfo_dict['swap_available'] = fields[3]
+	# ignore fields[4] (capacity %)
+	# ignore fields[5] (Type, but only for a device line)
+
+	return swapinfo_dict
 
 
 ##
