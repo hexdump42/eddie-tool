@@ -23,7 +23,8 @@ import snpp
 UseElvin = 1	# Switch Elvin usage on by default
 
 #import Elvin, ElvinMisc
-from Elvin import *
+#from Elvin import *
+import Elvin
 
 #try:
 #	import Elvin, ElvinMisc
@@ -40,7 +41,7 @@ ElvinError = 'ElvinError'
 class elvinConnection:
     """A shared object which maintains a single connection to the Elvin server."""
 
-    def __init__(self, host='elvin.connect.com.au', port=5678):
+    def __init__(self, host='crazy.psychofx.com', port=5678):
 	self.host = host
 	self.port = port
 
@@ -48,7 +49,7 @@ class elvinConnection:
 	    self.elvin = Elvin.Elvin(Elvin.EC_NAMEDHOST, self.host, self.port,
 				     None, self._error_cb)
 	except:
-	    sys.stderr.write("Connection to elvin failed\nIs there an elvin server running at %s:%d\n" %(self.host, self.port))
+	    sys.stderr.write("Connection to elvin failed\nIs there an elvin server running at %s:%d %s/%s\n" %(self.host, self.port, sys.exc_type, sys.exc_value))
 	    #self._exit()
 	    raise ElvinError, "Connection failed to %s:%d" % (self.host,self.port)
 	else:
