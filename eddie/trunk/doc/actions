@@ -35,12 +35,17 @@ restart( "<name>" )
 
 
 nice( <val> )
+nice( <incr>, <val> )
     Changes the nice value of the process.
+    If one argument supplied, it is the new absolute priority level.
+    If two arguments supplied, the first is the positive or negative
+    incrementor (ie: '+' or '-') and the second is the relative offset to be
+    added to (or subtracted from) the priority level.
     Relevant Directives: D, PC, PID
 
 
-log( "<text>" )
-log( "<text>", <loglevel> )
+ottolog( "<text>" )
+ottolog( "<text>", <loglevel> )
     Logs <text> to Otto logfile.  If <loglevel> is supplied then <text> is
     only logged if <loglevel> <= Otto-loglevel.
     Relevant Directives: ALL

@@ -44,8 +44,8 @@ PROJECT PLAN:
 		email()					Chris	100%
 		system()				Chris	100%
 		restart()				Chris	100%
-		nice()					Chris
-		log()					Chris
+		nice()					Chris	100%
+		ottolog()				Chris	100%
 		syslog()
 
 
@@ -112,7 +112,6 @@ ACTIONS
 -------
 	- email( address, MSGNAME, ALERTLEVEL )
 		- ALERTLEVEL means ?
-	- page( MSGNAME )
 	- restart( COMMAND_TO_RESTART )
 		- will execute: "/etc/init.d/COMMAND_TO_RESTART start"
 	- system( SYSTEM_COMMAND )
@@ -120,8 +119,10 @@ ACTIONS
 		- ...security issues ????
 	- nice( NICE_LEVEL )		- sets absolute nice level
 	  nice( '+'|'-', NICE_OFFSET )	- sets relative nice level
-	- log( MSGNAME )
-		- logs extra message to OTTO logfile
+	- ottolog( LOGTEXT )
+	  ottolog( LOGTEXT, LOGLEVEL )
+		- logs LOGTEXT to OTTO logfile (with optional LOGLEVEL
+		  specifying what loglevel to log at).
 	- syslog( MSGNAME )
 		- logs message to syslog
 
