@@ -466,6 +466,10 @@
 	  <br>
 	  - the out variable contains the standard output (stdout) of the executed
 	  command string.
+     <li> <b>outfield<i>n</i></b> (string)
+	  <br>
+	  - the standard output is also split (by whitespace) and stored in variables
+	  outfield1, outfield2, etc, to simplify rule creation.
      <li> <b>err</b> (string)
 	  <br>
 	  - the err variable contains the standard error (stderr) of the executed
@@ -480,6 +484,7 @@
           rule='out.find("test")'       # true if stdout contains "test"
           rule='int(out) &gt; 5'           # true if out (converted to an integer) is &gt; 5
 	  rule='int(ret) != 0'          # true if return value of the cmd is not 0
+	  rule='int(outfield1) != 0'    # true if stdout field 3 is not 0
     </ul>
 
     Action Variables:
@@ -504,8 +509,14 @@
         # Check number of netscapes running
         COM count_ns:
             cmd="ps -ef | grep netscape | wc -l"
-            rule="int(out) > 6.0"
+	    rule="int(out) &gt; 3.0"
             action=email("alert", "There are %(out)s netscapes running on %(h)s")
+
+	# A variation on checking load average, using 'outfield' variables
+	COM loadavg:
+	    cmd="uptime | cut -d, -f4"
+	    rule="float(outfield3) &gt; 6.0"
+	    action=ticker("Load on %(h)s is %(outfield3)s", timeout=1)
     </pre>
    </p>
 

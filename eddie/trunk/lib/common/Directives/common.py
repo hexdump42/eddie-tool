@@ -407,6 +407,11 @@ class COM(directive.Directive):
         data['ret'] = retval
         data['signum'] = signum
 
+	# Split output to assist rules
+	outsplit = string.split(out)
+	for i in range(0, len(outsplit)):
+	    data['outfield%d'%(i+1)] = outsplit[i]
+
 	return data
 
 
