@@ -101,7 +101,7 @@ class PID(Directive):
 	self.pidfile = fields[0]		# the pid file to check for
 	self.rule = fields[1]			# the rule (EX or PR)
 	self.action = fields[2]			# the action
-	print "<PID> pidfile: '%s' rule: '%s' action: '%s'" % (self.pidfile, self.rule, self.action)
+	#print "<PID> pidfile: '%s' rule: '%s' action: '%s'" % (self.pidfile, self.rule, self.action)
 
     def docheck(self):
 	print "PID directive doing checking......"
@@ -115,10 +115,14 @@ class D(Directive):
 	self.daemon = fields[0]			# the daemon to check for
 	self.rule = fields[1]			# the rule (NR or R)
 	self.action = fields[2]			# the action
-	print "<D> daemon: '%s' rule: '%s' action: '%s'" % (self.daemon, self.rule, self.action)
+	#print "<D> daemon: '%s' rule: '%s' action: '%s'" % (self.daemon, self.rule, self.action)
 
     def docheck(self):
-	print "D directive doing checking......"
+	print "D directive doing checking...... daemon: %s rule: '%s' action: '%s'" % (self.daemon,self.rule,self.action)
+	if plist.procExists > 0:
+	    print " ...",self.daemon,"is running."
+	else:
+	    print " ...",self.daemon,"is NOT running."
 
 
 class SP(Directive):
@@ -128,7 +132,7 @@ class SP(Directive):
 	fields = self.parseRaw()
 	self.port = fields[0]			# the port to check
 	self.action = fields[1]			# the action
-	print "<SP> port: '%s' action: '%s'" % (self.port, self.action)
+	#print "<SP> port: '%s' action: '%s'" % (self.port, self.action)
 
     def docheck(self):
 	print "SP directive doing checking......"

@@ -21,9 +21,11 @@ import definition
 import config
 import time
 
-# main config file - this file INCLUDEs all other config files
+# Main config file - this file INCLUDEs all other config files
 config_file = 'config/otto.cf'
 
+# The guts of the Otto program - sets up the lists, reads config info, gets
+# system information, then performs the checking.
 def ottoguts():
     global ourList		# global list of all directives
     global defDict		# global dictionary of DEFinitions
@@ -45,25 +47,29 @@ def ottoguts():
 
 
     # instantiate a process list
-    p = proc.procList()
+    directive.plist = proc.procList()
     #print p
 
     # instantiate a disk usage list
-    d = df.dfList()
+    directive.dlist = df.dfList()
     #print d
 
-    print "-- The following DEFs are defined: --"
-    for i in defDict.keys():
-	print "%s=%s" % (i, defDict[i])
-    print "-- The following Ms are defined: --"
-    for i in MDict.keys():
-	print "%s: Subject \"%s\"\n---BODY---\n%s\n----------" % (i, MDict.subj(i), MDict[i])
+    ## debugging ##
+    #print "-- The following DEFs are defined: --"
+    #for i in defDict.keys():
+    #	print "%s=%s" % (i, defDict[i])
+    #print "-- The following Ms are defined: --"
+    #for i in MDict.keys():
+    #	print "%s: Subject \"%s\"\n---BODY---\n%s\n----------" % (i, MDict.subj(i), MDict[i])
 
     # Now do all the checking
     # note ... directive order is not defined (we don't currently care do we?)
-    #for d in ourList.keylist():
-    #    print "d = ",d
-    #    #eval('directive.'+d+'.docheck()')
+    ## debugging - test with 'D' directive for now ##
+    ## for d in ourList.keylist():
+    for d in ('D'):
+	list = ourList[d]
+	for i in list:
+	    i.docheck()
 
 def main():
 

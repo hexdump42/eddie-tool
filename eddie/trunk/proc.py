@@ -20,8 +20,9 @@ import string
 ##
 class procList:
     def __init__(self):
-	self.hash = {}
-	self.list = []
+	self.hash = {}		# dict of processes keyed by pid
+	self.list = []		# list of processes
+	self.nameHash = {}	# dict of processes keyed by process name
 	 
 	rawList = os.popen(' ps -e -o "pid user comm time pcpu s" ', 'r')
 	rawList.readline()
@@ -44,6 +45,14 @@ class procList:
     def keys(self):
         return(self.hash.keys())
 
+    def procExists(self, procname):
+	count = 0		# count number of occurrences of 'procname'
+	for i in self.list:
+	    if i.command == procname:
+		count = count + 1
+
+	return count
+
 ##
 ## Class proc : holds a process record
 ##
@@ -53,7 +62,7 @@ class proc:
 
 	path = string.split(self.raw[2], "/")
 	comm = path[ len(path) - 1 ]
-	     
+
 	self.pid = self.raw[0]		# pid
 	self.user = self.raw[1]		# user
 	self.command = comm		# command	
