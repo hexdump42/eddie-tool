@@ -173,7 +173,8 @@ class SNMP(directive.Directive):
 		log.log( "<snmp>SNMP.getData(): ID '%s': Timeout talking to host '%s' port %d" % (self.ID, self.args.host, self.args.port), 5 )
 		self.errors = self.errors+1
 		if self.errors >= self.args.maxretry:
-		    raise "Too Many Retries: Failed %d times" % self.errors
+		    # Too many failed snmp requests - cancel directive
+		    raise directive.DirectiveError, "Too Many Retries: Failed %d times" % self.errors
 		else:
 		    data['failed'] = 1
 		    return data
@@ -181,7 +182,8 @@ class SNMP(directive.Directive):
 		log.log( "<snmp>SNMP.getData(): ID '%s': Transport error talking to host '%s' port %d, %s" % (self.ID, self.args.host, self.args.port, msg), 5 )
 		self.errors = self.errors+1
 		if self.errors >= self.args.maxretry:
-		    raise "Too Many Retries: Failed %d times" % self.errors
+		    # Too many failed snmp requests - cancel directive
+		    raise directive.DirectiveError, "Too Many Retries: Failed %d times" % self.errors
 		else:
 		    data['failed'] = 1
 		    return data
