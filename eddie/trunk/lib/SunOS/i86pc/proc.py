@@ -26,7 +26,7 @@
 ########################################################################
 
 import os, string, time
-import log
+import log, utils
 
 # List of interpreters - default empty
 interpreters = []
@@ -69,8 +69,8 @@ class procList:
 	self.list = []		# list of processes
 	self.nameHash = {}	# dict of processes keyed by process name
 	 
-	rawList = os.popen('ps -e -o "s user ruser group rgroup uid ruid gid rgid pid ppid pgid sid pri opri pcpu pmem vsz rss osz time etime stime f c tty addr nice class wchan fname comm args"', 'r')
-	#rawList = os.popen(' ps -e -o "pid user time pcpu s args" ', 'r')
+	rawList = utils.safe_popen('ps -e -o "s user ruser group rgroup uid ruid gid rgid pid ppid pgid sid pri opri pcpu pmem vsz rss osz time etime stime f c tty addr nice class wchan fname comm args"', 'r')
+	#rawList = utils.safe_popen(' ps -e -o "pid user time pcpu s args" ', 'r')
 	rawList.readline()
  
 	for line in rawList.readlines():

@@ -26,7 +26,7 @@
 ########################################################################
 
 import os, string, re, time
-import log
+import log, utils
 
 ##
 ## Class netstat - holds all information about current network information
@@ -123,7 +123,7 @@ class tcptable:
 	self.numsockets = 0
 
 	# get the tcp stats
-	rawList = os.popen('netstat -anf inet -P tcp', 'r')
+	rawList = utils.safe_popen('netstat -anf inet -P tcp', 'r')
 
 	# skip to start of TCP (solves bug in Solaris 2.5.1)
 	line = rawList.readline()
@@ -206,7 +206,7 @@ class udptable:
 	self.numsockets = 0
 
 	# get the udp stats
-	rawList = os.popen('netstat -anf inet -P udp', 'r')
+	rawList = utils.safe_popen('netstat -anf inet -P udp', 'r')
 
 	# skip header lines (4)
 	rawList.readline()
@@ -267,7 +267,7 @@ class iftable:
 	self.numinterfaces = 0
 
 	# get the interface stats
-	rawList = os.popen('netstat -in', 'r')
+	rawList = utils.safe_popen('netstat -in', 'r')
 
 	# skip header line
 	rawList.readline()
@@ -366,7 +366,7 @@ class statstable:
 	self.hash = {}			# hash of stats
 
 	# get the network stats
-	rawList = os.popen('netstat -s', 'r')
+	rawList = utils.safe_popen('netstat -s', 'r')
 
 	# regexp for pulling out stats
 	udpre = "\s*(\w+)\s*=\s*([-0-9]+)(.*)"

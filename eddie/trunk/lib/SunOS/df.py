@@ -25,10 +25,10 @@
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 ########################################################################
 
-import os
-import string
-import log
-import history
+# Python Modules
+import os, string
+# Eddie Modules
+import log, history, utils
 
 ##
 ## Class dfList - instantiates with a list of disk stats
@@ -46,7 +46,7 @@ class dfList:
     def refresh(self):
 	"""Force df refresh."""
 
-	rawList = os.popen('df -kFufs', 'r')
+	rawList = utils.safe_popen('df -kFufs', 'r')
 	self.dfheader = rawList.readline()
  
 	for line in rawList.readlines():

@@ -26,7 +26,7 @@
 ########################################################################
 
 import os, string, time, re
-import log
+import log, utils
 
 
 ##
@@ -64,7 +64,7 @@ class system:
     def getSystemstate(self):
 	self.hash = {}		# dict of system data
 
-	rawList = os.popen('/opt/local/bin/top -nud2 -s1', 'r')
+	rawList = utils.safe_popen('/opt/local/bin/top -nud2 -s1', 'r')
 
 	# the above 'top' command actually performs two 'tops', 1 second apart,
 	# so that we can get current cpu time allocation (idle/etc).

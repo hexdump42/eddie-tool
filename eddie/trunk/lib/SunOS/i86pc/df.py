@@ -25,10 +25,8 @@
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 ########################################################################
 
-import os
-import string
-import log
-import history
+import os, string
+import log, history, utils
 
 ##
 ## Class dfList - instantiates with a list of disk stats
@@ -40,7 +38,7 @@ class dfList:
 	self.list = []
 	self.dfheader = ""
 	 
-	rawList = os.popen('df -kFufs', 'r')
+	rawList = utils.safe_popen('df -kFufs', 'r')
 	self.dfheader = rawList.readline()
  
 	for line in rawList.readlines():
