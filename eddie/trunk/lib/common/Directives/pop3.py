@@ -13,9 +13,9 @@
 
 
 # Imports: Python
-import sys, os, commands, socket, time
+import socket, time
 # Imports: Eddie
-import log, directive, utils
+import log, directive
 
 
 # Define exceptions
@@ -209,8 +209,7 @@ class POP3TIMING(directive.Directive):
 	    self.port = 110
 
 
-	# Set any FS-specific variables
-	#  rule = rule
+	# Set variables for Actions to use
 	self.Action.varDict['pop3timinghost'] = self.host
 	self.Action.varDict['pop3timingport'] = self.port
 	self.Action.varDict['pop3timingusername'] = self.args.user
