@@ -92,7 +92,7 @@ SCANPERIOD=10m          # by default scan every 10 minutes
 #  as the method to send email.
 #  Use: SENDMAIL='/path/to/sendmail'
 
-#SENDMAIL='/usr/lib/sendmail'
+#SENDMAIL='/usr/sbin/sendmail'
 
 
 # SMTP_SERVERS
@@ -115,8 +115,8 @@ SCANPERIOD=10m          # by default scan every 10 minutes
 #  Use: ELVINURL='<elvin server url>'
 #       ELVINSCOPE='<elvin server scope>'
 
-ELVINURL='elvin://elvin.dstc.edu.au'
-ELVINSCOPE='Elvin'
+#ELVINURL='elvin://elvin.dstc.edu.au'
+#ELVINSCOPE='Elvin'
 
 
 # INTERPRETERS
