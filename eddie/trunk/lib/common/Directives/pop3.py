@@ -184,7 +184,7 @@ class POP3TIMING(directive.Directive):
 
 
     def tokenparser(self, toklist, toktypes, indent):
-	apply( Directive.tokenparser, (self, toklist, toktypes, indent) )
+	apply( directive.Directive.tokenparser, (self, toklist, toktypes, indent) )
 
 	# test required arguments
 	try:
@@ -192,7 +192,7 @@ class POP3TIMING(directive.Directive):
         except AttributeError:
             raise ParseFailure, "POP3 Server not specified"
 	try:
-	    self.username	# username
+	    self.user		# username
         except AttributeError:
             raise ParseFailure, "Username not specified"
 
@@ -213,13 +213,13 @@ class POP3TIMING(directive.Directive):
 	#  rule = rule
 	self.Action.varDict['pop3timinghost'] = self.host
 	self.Action.varDict['pop3timingport'] = self.port
-	self.Action.varDict['pop3timingusername'] = self.username
+	self.Action.varDict['pop3timingusername'] = self.user
 	self.Action.varDict['pop3timingpassword'] = self.password
 
 	# define the unique ID
-	self.ID = '%s.POP3TIMING.%s.%d.%s' % (log.hostname,self.host,self.port,self.username)
+	self.ID = '%s.POP3TIMING.%s.%d.%s' % (log.hostname,self.host,self.port,self.user)
 
-	log.log( "<pop3>POP3TIMING.tokenparser(): ID '%s' host '%s' port %d username '%s'" % (self.ID, self.host, self.port, self.username), 8 )
+	log.log( "<pop3>POP3TIMING.tokenparser(): ID '%s' host '%s' port %d user '%s'" % (self.ID, self.host, self.port, self.user), 8 )
 
 
     def docheck(self, Config):
@@ -228,7 +228,7 @@ class POP3TIMING(directive.Directive):
 	The directive actions are always called.  Usually these will
 	record the timing details in some way."""
 
-	log.log( "<pop3>POP3TIMING.docheck(): host '%s' port %d username '%s'" % (self.host, self.port, self.username), 7 )
+	log.log( "<pop3>POP3TIMING.docheck(): host '%s' port %d user '%s'" % (self.host, self.port, self.user), 7 )
 
 	connecttime = None
 	authtime = None
@@ -240,7 +240,7 @@ class POP3TIMING(directive.Directive):
 	if p.connect():			# login to pop3 server
 	    connecttime = p.timing	# get timing for connection to return banner
 
-	    if p.auth( self.username, self.password ):	# authenticate user
+	    if p.auth( self.user, self.password ):	# authenticate user
 		authtime = p.timing	# get timing for authentication
 
 		l = p.list()		# list email headers

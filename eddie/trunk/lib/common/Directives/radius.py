@@ -37,7 +37,7 @@ class RADIUS(directive.Directive):
 
 
     def tokenparser(self, toklist, toktypes, indent):
-	apply( Directive.tokenparser, (self, toklist, toktypes, indent) )
+	apply( directive.Directive.tokenparser, (self, toklist, toktypes, indent) )
 
 	# test required arguments
 	try:
@@ -49,7 +49,7 @@ class RADIUS(directive.Directive):
 	except AttributeError:
 	    raise ParseFailure, "Secret not specified"
 	try:
-	    self.username	# username
+	    self.user		# username
 	except AttributeError:
 	    raise ParseFailure, "Username not specified"
 	try:
@@ -69,19 +69,19 @@ class RADIUS(directive.Directive):
 	self.Action.varDict['radiushost'] = self.host
 	self.Action.varDict['radiusport'] = self.port
 	self.Action.varDict['radiussecret'] = self.secret
-	self.Action.varDict['radiususername'] = self.username
+	self.Action.varDict['radiususername'] = self.user
 	self.Action.varDict['radiuspassword'] = self.password
 
 	# define the unique ID
-	self.ID = '%s.RADIUS.%s.%d.%s' % (log.hostname,self.host,self.port,self.username)
+	self.ID = '%s.RADIUS.%s.%d.%s' % (log.hostname,self.host,self.port,self.user)
 
-	log.log( "<radius>RADIUS.tokenparser(): ID '%s' host '%s' port %d secret '%s' username '%s'" % (self.ID, self.host, self.port, self.secret, self.username), 8 )
+	log.log( "<radius>RADIUS.tokenparser(): ID '%s' host '%s' port %d secret '%s' user '%s'" % (self.ID, self.host, self.port, self.secret, self.user), 8 )
 
 
     def docheck(self, Config):
 	"""Perform a Radius authentication and return results."""
 
-	log.log( "<radius>RADIUS.docheck(): host '%s' port %d username '%s'" % (self.host, self.port, self.username), 7 )
+	log.log( "<radius>RADIUS.docheck(): host '%s' port %d user '%s'" % (self.host, self.port, self.user), 7 )
 
 	timing = None
 
@@ -89,7 +89,7 @@ class RADIUS(directive.Directive):
 	r = radcm.Radius( self.host, self.secret, self.port  )
 	tstart = time.time()
 	try:
-	    z = r.authenticate(self.username,self.password)
+	    z = r.authenticate(self.user,self.password)
 	except radcm.NoResponse:
 	    z = None
 	tend = time.time()

@@ -37,7 +37,7 @@ class IPF(directive.Directive):
 
 
     def tokenparser(self, toklist, toktypes, indent):
-	apply( Directive.tokenparser, (self, toklist, toktypes, indent) )
+	apply( directive.Directive.tokenparser, (self, toklist, toktypes, indent) )
 
 	# test required arguments
 	try:

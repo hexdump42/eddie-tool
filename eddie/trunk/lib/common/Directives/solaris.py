@@ -36,7 +36,7 @@ class CRON(directive.Directive):
 
 
     def tokenparser(self, toklist, toktypes, indent):
-	apply( Directive.tokenparser, (self, toklist, toktypes, indent) )
+	apply( directive.Directive.tokenparser, (self, toklist, toktypes, indent) )
 
 	# test required arguments
 	try:
@@ -107,7 +107,7 @@ class METASTAT(directive.Directive):
 
 
     def tokenparser(self, toklist, toktypes, indent):
-	apply( Directive.tokenparser, (self, toklist, toktypes, indent) )
+	apply( directive.Directive.tokenparser, (self, toklist, toktypes, indent) )
 
 	# test required arguments
 	## nothing but action so far! (Already tested in Directive.tokenparser())
