@@ -388,7 +388,7 @@ def main():
 	    numfds = countFDs()
 	    log.log( "<eddie>main(): FDs in use = %d." % (numfds), 8 )
 	    log.log( "<eddie>main(): Threads in use = %d." % (threading.activeCount()), 8 )
-	    log.log( "<eddie>main(): Threads: %s" % (threading.enumerate()), 9 )
+	    log.log( "<eddie>main(): Threads: %s" % (threading.enumerate()), 8 )
 
 	    # check if any config/rules files have been modified
 	    # if so, re-read config

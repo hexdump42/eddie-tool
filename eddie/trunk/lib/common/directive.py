@@ -585,7 +585,10 @@ class Directive:
 		log.log( "<directive>Directive.parseArgs(): invalid directive argument '%s'" % (string.join(argline)), 1)
 		raise ParseFailure, "invalid directive argument '%s'" %(string.join(argline))
 
-	    argdict[argline[0]] = utils.stripquote(string.join(argline[2:],""))
+            if len(argline) > 3:
+		argdict[argline[0]] = utils.stripquote(string.join(argline[2:],""))
+            else:
+		argdict[argline[0]] = utils.stripquote(argline[2])
 
 	return argdict
 
