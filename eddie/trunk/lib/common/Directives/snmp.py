@@ -77,6 +77,8 @@ class SNMP(directive.Directive):
 	try:
 	    from pysnmp import session
 	    self.session = session	# save pointer to module if import ok
+	    from pysnmp import error
+	    self.pysnmperror = error
 	except ImportError:
 	    raise directive.ParseFailure, "Cannot import pysnmp module - SNMP directive not available."
 
@@ -175,7 +177,7 @@ class SNMP(directive.Directive):
 		else:
 		    data['failed'] = 1
 		    return data
-	    except pysnmp.error.TransportError, msg:		# Problem establishing snmp connection
+	    except self.pysnmperror.TransportError, msg:		# Problem establishing snmp connection
 		log.log( "<snmp>SNMP.getData(): ID '%s': Transport error talking to host '%s' port %d, %s" % (self.ID, self.args.host, self.args.port, msg), 5 )
 		self.errors = self.errors+1
 		if self.errors >= self.args.maxretry:
@@ -187,7 +189,7 @@ class SNMP(directive.Directive):
 
 	    try:
 	        (obj,val) = s.decode_response(answer)
-	    except pysnmp.error.BadRequestID, msg:
+	    except self.pysnmperror.BadRequestID, msg:
 	        log.log( "<snmp>SNMP.getData(): ID '%s': BadRequestID exception, %s" % (self.ID, msg), 5 )
 		data['failed'] = 1
 		return data
