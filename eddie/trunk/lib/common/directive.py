@@ -244,9 +244,9 @@ class Directive:
 			for t in dir(tpldirective.args):
 			    if t != 'template':
 				exec( 'self.args.%s = tpldirective.args.%s' % (t,t) )
-				print 'self.args.%s = tpldirective.args.%s' % (t,t)
-				print 'self.args.%s'%t,
-				exec( "print self.args.%s" % (t) )
+				#print 'self.args.%s = tpldirective.args.%s' % (t,t)
+				#print 'self.args.%s'%t,
+				#exec( "print self.args.%s" % (t) )
 
 	    elif t == 'action':	# special handler for actions
 		self.args.actionList = self.parseAction( tokdict[t] )
