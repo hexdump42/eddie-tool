@@ -98,7 +98,12 @@ class FS(directive.Directive):
 	evaluating the directive rule.
 	"""
 
-	df = self.data_collectors['df.dfList'][self.args.fs]
+	try:
+	    df = self.data_collectors['df.dfList'][self.args.fs]
+	except KeyError:
+	    log.log( "<directive>FS.docheck(): Error, filesystem not found '%s'" % (self.args.fs), 4 )
+	    return None
+
 	if df == None:
 	    log.log( "<directive>FS.docheck(): Error, filesystem not found '%s'" % (self.args.fs), 4 )
 	    return None
