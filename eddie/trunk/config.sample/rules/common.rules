@@ -142,24 +142,48 @@ COM loadavg:	cmd="uptime | cut -d, -f4 | awk '{print $3}'"
 
 # LOGSCAN directive scans logfiles, looking for lines which match the given
 # regex and performs the given actions.
-LOGSCAN daemonlog:	file='/var/log/daemonlog'	# logfile to scan
-			regex='.*'			# regex to match
-			scanperiod='12h'		# how often to scan
-			action=email("alert", "daemonlog %(h)s:%(file)s", "-- Logscan matched %(linecount)d lines: --\n%(lines)s")
+LOGSCAN daemonlog:
+		file='/var/log/daemonlog'	# logfile to scan
+		regex='.*'			# regex to match
+		scanperiod='12h'		# how often to scan
+		action=email("alert", "daemonlog %(h)s:%(file)s", "-- Logscan matched %(linecount)d lines: --\n%(lines)s")
 
-LOGSCAN priv:		file='/var/log/messages'	# logfile to scan
-			regex='.*priv.*'		# regex to match
-			scanperiod='2h'			# how often to scan
-			action=email("alert", "priv scan %(h)s:%(file)s", "-- Logscan matched %(linecount)d lines: --\n%(lines)s")
+LOGSCAN priv:	file='/var/log/messages'	# logfile to scan
+		regex='.*priv.*'		# regex to match
+		scanperiod='2h'			# how often to scan
+		action=email("alert", "priv scan %(h)s:%(file)s", "-- Logscan matched %(linecount)d lines: --\n%(lines)s")
 
 
 # PING directive pings hosts and allows checks to be made on the results.  The
 # simplest test is "not alive" meaning no pings returned.
-PING hostalive:     host='10.1.1.1'
-                    rule='not alive'
-                    scanperiod='15m'
-                    numchecks=2
-                    checkwait='1m'
-                    action=COMMONALERT(commonmsg.ping,2)
-                    act2ok=COMMONFIXED(commonmsg.ping,1)
+PING hostalive: host='10.1.1.1'
+                rule='not alive'
+                scanperiod='15m'
+                numchecks=2
+                checkwait='1m'
+                action=COMMONALERT(commonmsg.ping,2)
+                act2ok=COMMONFIXED(commonmsg.ping,1)
+
+
+# Alert if load-average exceeds 2.00
+SYS loadavg5:   rule="loadavg5 > 2.00"
+                action=email('alert', '%(h)s loadavg: %(loadavg5).02f')
+		scanperiod='5m'
+		console="%(state)s loadavg5=%(loadavg5).02f"
+
+
+# Check out mail server is responding
+PORT helium_eddie:
+		host='my.mail.server'
+		port=25
+		scanperiod='30m'
+		rule='not alive'
+		action=COMMONALERT(commonmsg.port,1)
+		act2ok=COMMONFIXED(commonmsg.port)
+
+# Alert if /etc/passwd changes
+FILE passwd:    file='/etc/passwd'
+                rule='md5 != lastmd5'
+                scanperiod='1h'
+                action=ticker("%(file)s has changed"), email("alert","%(file)s has changed")
 
