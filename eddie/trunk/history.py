@@ -24,6 +24,7 @@ historySize = 5	# keep 5 levels of history max
 class history:
     def __init__(self):
 	self.histdict = {}
+	#log.log( "<history>__init__(), created new history instance", 9 )
     
     def save(self,name,item):
 	try:
@@ -34,6 +35,7 @@ class history:
     	    histlist = [item]
 
 	self.histdict[name] = histlist
+	log.log( "<history>save(), saved '%s' of '%s'" % (name,item), 9 )
 
 	#debug
 	#Len = len(histlist)		# current history length

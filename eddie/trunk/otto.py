@@ -91,6 +91,7 @@ def ottoguts(ottoHistory):
 
     # Save history (debug.. FS only for now...)
     ottoHistory.save('FS',directive.dlist)
+    ottoHistory.save('PS',directive.plist)
 
 
 
