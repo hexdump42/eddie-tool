@@ -58,7 +58,13 @@ sys.path = oslibdirs + [commonlibdir,] + sys.path
 import parseConfig, directive, definition, config, action, log, history
 
 # Python OS-specific Eddie modules
-import proc, df, netstat, system, iostat
+import proc, df, netstat, system
+try:
+    import iostat
+    module_iostat = 1
+except:
+    module_iostat = 0
+    print "No iostat module."
 
 # Main config file - this file INCLUDEs all other config files
 configdir = os.path.join(basedir, 'config')
@@ -192,9 +198,10 @@ def eddieguts(Config, eddieHistory):
     log.log( "<eddie>eddieguts(), creating system object", 8 )
     directive.system = system.system()
 
-    # instantiate an iostat object
-    log.log( "<eddie>eddieguts(), creating iostat object", 8 )
-    directive.iostat = iostat.iostat()
+    if module_iostat:
+        # instantiate an iostat object
+        log.log( "<eddie>eddieguts(), creating iostat object", 8 )
+        directive.iostat = iostat.iostat()
 
     # Now do all the checking
     log.log( "<eddie>eddieguts(), beginning checks", 7 )
