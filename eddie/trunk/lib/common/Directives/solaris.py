@@ -27,7 +27,7 @@
 
 
 # Imports: Python
-import sys, os, time, re
+import os, re
 # Imports: Eddie
 import log, directive, utils
 
@@ -35,72 +35,6 @@ import log, directive, utils
 ##
 ## Directives
 ##
-
-class CRON(directive.Directive):
-    """
-    An Eddie directive for checking that cron is working.
-    A cron job should be setup to touch the test file at least as often
-    as the CRON check will be performed.  This directive simply checks
-    that the file has been touched (modified) within the last 15 minutes,
-    implying that cron is running properly.
-
-    Example:
-	CRON crontest: file="/tmp/cron.touch"
-	               rule="now - mtime > 60 * 15"	# default rule
-		       action="email('alert', 'cron alive check failed on %(h)s')"
-    """
-
-    def __init__(self, toklist):
-	apply( directive.Directive.__init__, (self, toklist) )
-
-
-    def tokenparser(self, toklist, toktypes, indent):
-	"""
-	Parse directive arguments.
-	"""
-
-	apply( directive.Directive.tokenparser, (self, toklist, toktypes, indent) )
-
-	# test required arguments
-	try:
-	    self.args.file		# test file touched by cronjob
-	except AttributeError:
-	    raise directive.ParseFailure, "Test File not specified"
-	try:
-	    self.args.rule		# the rule
-	except AttributeError:
-	    self.args.rule = "now - mtime > 60 * 15"	# use default rule
-
-	# Set any FS-specific variables
-	#  rule = rule
-	self.defaultVarDict['file'] = self.args.file
-	self.defaultVarDict['rule'] = self.args.rule
-
-	# define the unique ID
-        if self.ID == None:
-	    self.ID = '%s.CRON.%s' % (log.hostname,self.args.rule)
-	self.state.ID = self.ID
-
-	log.log( "<solaris>CRON.tokenparser(): ID '%s' rule '%s'" % (self.ID, self.args.rule), 8 )
-
-
-    def getData(self):
-
-	from stat import *				# for ST_MTIME
-	try:
-	    mtime = os.stat( self.args.file )[ST_MTIME]
-	except OSError, detail:
-    	    log.log( "<solaris>CRON.getData(): stat had error %d, '%s'" % (detail[0], detail[1]), 4 )
-	    return None
-
-	now = time.time()
-
-	data = {}
-	data['mtime'] = mtime		# file modification time
-	data['now'] = now		# current time
-
-        return data
-
 
 
 class METASTAT(directive.Directive):
