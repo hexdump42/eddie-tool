@@ -35,7 +35,7 @@ class ottoElvin:
 	    self.elvin.notify( { 'TICKERTAPE' : 'Otto',
 	                         'TICKERTEXT' : msg,
 				       'USER' : log.hostname,
-				    'TIMEOUT' : 60 } )
+				    'TIMEOUT' : 10 } )
 	    return 0
 
 	else:
