@@ -50,7 +50,7 @@ rm -f /var/run/eddie/tmp/*.out
 
 while [ 1 ]; do
 	cd /opt/eddie/bin
-	./eddie.py 2>$RUNFILE >$RUNFILE
+	./eddie.py 2>&1 >$RUNFILE
 	retcode=$?
 	echo "eddie_wrapper: eddie died at `date` return code: $retcode" >> $RUNFILE
 	$MAIL -s "Eddie output on `hostname` at `date`" $EDDIE_ADMIN < $RUNFILE
