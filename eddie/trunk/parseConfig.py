@@ -29,8 +29,13 @@ def readFile(file, ruleList, defDict, MDict, ADict):
     # List the known directives we accept from the config
     directives = config.directives
 
-    #TODO: Check if file can't be opened...
-    conf = open(file, 'r')
+    try:
+    	conf = open(file, 'r')
+    except IOError:
+	print "Error opening file '%s'" % file;
+	log.log( "<parseConfig>readFile(), Error, Cannot open '%s' - skipping" % (file), 2 )
+	return
+
     count = 0
 
 
@@ -61,7 +66,11 @@ def readFile(file, ruleList, defDict, MDict, ADict):
 	    if d == 'INCLUDE':
 	    	# recursively read the INCLUDEd file
 		log.log( "<parseConfig>readFile(), reading INCLUDEd file %s" % elements[1], 8 )
-	    	readFile(dir+elements[1][1:-1], ruleList, defDict, MDict, ADict)
+		if string.find(elements[1], '/') > 0:
+		    readFile(elements[1][1:-1], ruleList, defDict, MDict, ADict)
+		else:
+		    readFile(dir+elements[1][1:-1], ruleList, defDict, MDict, ADict)
+
 		continue
 
 	    if directives.has_key(d):

@@ -51,7 +51,7 @@ def log(text='', level=1):
 	    logged = logged + 1
 	except IOError:
 	    # Cannot open logfile for writing - save this problem in adminlog
-	    #print "<Log>log() - Fatal log error - cannot open logfile '%s'" % logfile
+	    print "<Log>log() - Fatal log error - cannot open logfile '%s'" % logfile
 	    adminlog.append( "<Log>log() - Fatal log error - cannot open logfile '%s'" % logfile )
 
     if adminlevel > 0 and level <= adminlevel:
@@ -65,6 +65,9 @@ def log(text='', level=1):
 # sendadminlog() - send adminlog list to adminemail only if there is something in
 # this list.
 def sendadminlog():
+    if len(adminlog) == 0:
+	return
+
     tmp = os.popen('/usr/lib/sendmail -t', 'w')
     tmp.write( 'To:'+adminemail+'\n' )
     tmp.write( 'From:otto@connect.com.au\n' )

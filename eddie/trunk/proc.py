@@ -16,6 +16,9 @@ import os
 import string
 import log
 
+# List of interpreters - default empty
+interpreters = []
+
 ##
 ## Class procList - instantiates with a list or procs running
 ##
@@ -25,7 +28,7 @@ class procList:
 	self.list = []		# list of processes
 	self.nameHash = {}	# dict of processes keyed by process name
 	 
-	rawList = os.popen(' ps -e -o "pid user time pcpu s comm " ', 'r')
+	rawList = os.popen(' ps -e -o "pid user time pcpu s args" ', 'r')
 	rawList.readline()
  
 	for line in rawList.readlines():
@@ -83,9 +86,23 @@ class proc:
     def __init__(self, *arg):
 	self.raw = arg[0]
 
+	# test...
+	#INTERPRETERS=('sh','bash','perl','perl5.001','perl5.003','perl5.004','python','python1.4','python1.5')
+
 	try:
 	    path = string.split(self.raw[5], "/")
-	    comm = path[ len(path) - 1 ]
+	    comm = path[-1]
+	    # If comm is an interpreter (eg: sh, perl) then the name of the
+	    # command is actually the next argument (excluding any switches)
+	    if comm in interpreters:
+		i=6
+    		path = string.split(self.raw[i], "/")
+    		comm = path[-1]
+		while comm[0] == '-':
+		    i = i + 1
+		    path = string.split(self.raw[i], "/")
+		    comm = path[-1]
+
 	except IndexError:
 	    # This process has no command associated with it.  This can happen
 	    # when a process is <defunct>.

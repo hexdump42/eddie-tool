@@ -143,7 +143,7 @@ class FS(Directive):
     def __init__(self, *arg):
 	apply( Directive.__init__, (self,) + arg )
 	#self.regexp = 'FS[\t \n]+\([a-zA-Z0-9_/\.-]+\)[\t \n]+\([a-zA-Z0-9_><=&\|%^!-]+|[\"\'][a-zA-Z0-9_><=&\|%^!\t -]+[\"\']\)[\t \n]+\(.*\)'
-	self.regexp = 'FS[\t \n]+\([a-zA-Z0-9_/\.-]+\)[\t \n]+\([a-zA-Z0-9_$><=&\|%^!-]+\|["\'][a-zA-Z0-9_$><=&\|%^! \t-]+["\']\)[\t \n]+\(.*\)'
+	self.regexp = 'FS[\t \n]+\([a-zA-Z0-9_/\.-]+\)[\t \n]+\([a-zA-Z0-9_$><=&\|%^()!-]+\|["\'][a-zA-Z0-9_$><=&\|%^()! \t-]+["\']\)[\t \n]+\(.*\)'
 	fields = self.parseRaw()
 	self.filesystem = fields[0]		# the filesystyem to check
 	self.rule = utils.stripquote(fields[1])	# the rules

@@ -12,11 +12,13 @@
 ## $Id$
 ##
 
-import directive
-import definition
 import string
 import regex
+
+import directive
+import definition
 import log
+import proc
 
 
 ## Define exceptions
@@ -131,6 +133,15 @@ class ADMINLEVEL(ConfigOption):
 	log.adminlevel = string.atoi(value)		# set the config option
 	log.log( "<Config>ADMINLEVEL(), adminlevel set to '%d'." % (log.adminlevel), 6 )
 
+## INTERPRETERS - define the list of interpreters
+class INTERPRETERS(ConfigOption):
+    def __init__( self, *arg ):
+	apply( ConfigOption.__init__, (self,) + arg )
+	self.regexp = 'INTERPRETERS[\t ]+\(.*\)[\t \n]*'
+	value = self.parseRaw()
+	proc.interpreters = string.split(value, ',')
+	log.log( "<Config>INTERPRETERS(), defined as '%s'." % (proc.interpreters), 6 )
+
 ##
 ## This is a list of known directives we accept in otto config/rules files
 ##
@@ -140,6 +151,7 @@ directives = {  "SCANPERIOD"	: SCANPERIOD,			\
 		"LOGLEVEL"	: LOGLEVEL,			\
 		"ADMIN"		: ADMIN,			\
 		"ADMINLEVEL"	: ADMINLEVEL,			\
+		"INTERPRETERS"	: INTERPRETERS,			\
 		"M"		: definition.M,			\
 		"DEF"		: definition.DEF,		\
 		"A"		: definition.A,			\
