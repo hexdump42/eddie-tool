@@ -398,8 +398,9 @@ def main():
 	    ### Perform housecleaning duties
 
 	    # Count fds in use - for debugging
-	    numfds = countFDs()
-	    log.log( "<eddie>main(): FDs in use = %d." % (numfds), 8 )
+	    #numfds = countFDs()
+	    #log.log( "<eddie>main(): FDs in use = %d." % (numfds), 8 )
+
 	    log.log( "<eddie>main(): Threads in use = %d." % (threading.activeCount()), 8 )
 	    log.log( "<eddie>main(): Threads: %s" % (threading.enumerate()), 8 )
 
