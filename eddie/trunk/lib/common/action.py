@@ -207,14 +207,14 @@ def restart(cmd):
     # cmd should not contain any path information, hence if '/'s are found it
     # is not executed.
 
+    # Substitute variables in string
+    cmd = parseVars( cmd, varDict )
+
     # Security: if cmd contains any illegal characters, "/#;!$%&*|~`", then we abort.
     #if string.find( cmd, '/' ) != -1:
     if utils.charpresent( cmd, '/#;!$%&*|~`' ) != 0:
 	log.log( "<action>restart(), Alert, restart() arg contains illegal character and is not being executed, cmd is '%s'" % (cmd), 3 )
 	return
-
-    # Substitute variables in string
-    cmd = parseVars( cmd, varDict )
 
     if len(cmd) == 0:
         log.log( "<action>restart(), Error, no command given", 2)
