@@ -4,7 +4,7 @@
 ## Author       : Chris Miles  <chris@psychofx.com>
 ##                Rod Telford  <rtelford@psychofx.com>
 ## 
-## Date		: 19990520
+## Start Date	: 19990520
 ## 
 ## Description	: Collect current snapshot of system state
 ##
@@ -25,14 +25,81 @@
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 ########################################################################
 
-import os, string, time, re
+# Python modules
+import os, string, time, re, threading
+# Eddie modules
 import log, utils
 
 
-##
-## Class system - holds information about current system state
-##
 class system:
+    """Gathers system statistics.
+
+        Calls the following external commands to get stats from:
+        /usr/bin/vmstat -s: standard with Solaris 2.5.1 and greater
+	/usr/bin/uptime: standard with Solaris 2.5.1 and greater
+        /opt/local/bin/top: top version 3.5beta9 (compiled by user)
+	  (use of /opt/local/bin/top is being phased out)
+
+	The names of all the stats collected by the system class are:
+
+	    System stats from '/opt/local/bin/top':
+		processes	- (int)
+		sleeping	- (int)
+		zombie		- (int)
+		running		- (int)
+		stopped		- (int)
+		oncpu		- (int)
+		cpu_idle	- (float)
+		cpu_user	- (float)
+		cpu_kernel	- (float)
+		cpu_iowait	- (float)
+		cpu_swap	- (float)
+		mem_real	- (string)
+		mem_free	- (string)
+		mem_swapuse	- (string)
+		mem_swapfree	- (string)
+
+	    System stats from '/usr/bin/uptime':
+		uptime		- (string)
+		users		- (int)
+		loadavg1	- (float)
+		loadavg5	- (float)
+		loadavg15	- (float)
+
+	    System counters from '/usr/bin/vmstat -s' (see vmstat(1M)):
+		ctr_swap_ins				- (long)
+		ctr_swap_outs				- (long)
+		ctr_pages_swapped_in			- (long)
+		ctr_pages_swapped_out			- (long)
+		ctr_total_address_trans_faults_taken	- (long)
+		ctr_page_ins				- (long)
+		ctr_page_outs				- (long)
+		ctr_pages_paged_in			- (long)
+		ctr_pages_paged_out			- (long)
+		ctr_total_reclaims			- (long)
+		ctr_reclaims_from_free_list		- (long)
+		ctr_micro_hat_faults			- (long)
+		ctr_minor_as_faults			- (long)
+		ctr_major_faults			- (long)
+		ctr_copyonwrite_faults			- (long)
+		ctr_zero_fill_page_faults		- (long)
+		ctr_pages_examined_by_the_clock_daemon	- (long)
+		ctr_revolutions_of_the_clock_hand	- (long)
+		ctr_pages_freed_by_the_clock_daemon	- (long)
+		ctr_forks				- (long)
+		ctr_vforks				- (long)
+		ctr_execs				- (long)
+		ctr_cpu_context_switches		- (long)
+		ctr_device_interrupts			- (long)
+		ctr_traps				- (long)
+		ctr_system_calls			- (long)
+		ctr_total_name_lookups			- (long)
+		ctr_toolong				- (long)
+		ctr_user_cpu				- (long)
+		ctr_system_cpu				- (long)
+		ctr_idle_cpu				- (long)
+		ctr_wait_cpu				- (long)
+    """
 
     # refresh_rate : amount of time current information will be cached before
     #                being refreshed (in seconds)
@@ -40,12 +107,40 @@ class system:
 
     def __init__(self):
 	self.refresh_time = 0	# information must be refreshed at first request
+	self.hash_semaphore = threading.Semaphore()  # current thread must lock use of system hash
 
+
+    ##################################################################
+    # Public, thread-safe, methods
 
     def refresh(self):
-	"""Refresh the information"""
+	"""Force a refresh of the process list."""
 
-	self.getSystemstate()
+	self.hash_semaphore.acquire()
+	self._refresh()
+	self.hash_semaphore.release()
+
+
+    def getHash(self):
+	"""Returns hash of system stats."""
+
+	self.checkCache()	# refresh data if necessary
+
+	self.hash_semaphore.acquire()
+	system_hash = self.hash
+	self.hash_semaphore.release()
+
+	return system_hash
+
+
+    ##################################################################
+    # Private methods.  No thread safety if not using public methods.
+
+    def _refresh(self):
+	"""Refresh the system statistics hash table.
+	   It is assumed only one thread at a time will call this function."""
+
+	self._getSystemstate()
 
 	# new refresh time is current time + refresh rate (seconds)
 	self.refresh_time = time.time() + self.refresh_rate
@@ -61,9 +156,11 @@ class system:
 	    log.log( "<system>checkCache(), using cache'd system data", 7 )
 
 
-    def getSystemstate(self):
+    def _getSystemstate(self):
 	self.hash = {}		# dict of system data
+	print "\nempty system.hash:",self.hash
 
+	# Use of /opt/local/bin/top to get system stats is being phased out...
 	rawList = utils.safe_popen('/opt/local/bin/top -nud2 -s1', 'r')
 
 	# the above 'top' command actually performs two 'tops', 1 second apart,
@@ -75,7 +172,7 @@ class system:
 	while 1:
 	    line = rawList.readline()
 	    if len(line) == 0:
-		log.log( "<system>system.getSystemstate() error parsing 'top' output looking for 'load averages:'.", 2 )
+		log.log( "<system>system._getSystemstate() error parsing 'top' output looking for 'load averages:'.", 2 )
 		return
 
 	    #if line[:8] == 'last pid':
@@ -92,19 +189,20 @@ class system:
 	# line 1
 	inx = re.search( reline1, line )
 	if inx == None:
-	    log.log( "<system>system.getSystemstate() error parsing line1 'top' output.", 2 )
+	    log.log( "<system>system._getSystemstate() error parsing line1 'top' output.", 2 )
 	    return
+	## Handled by _getuptime() now
 	#self.lastpid = int(inx.group(1))
-	self.loadavg1 = float(inx.group(1))
-	self.loadavg5 = float(inx.group(2))
-	self.loadavg15 = float(inx.group(3))
-	self.time = inx.group(4)
+	#self.loadavg1 = float(inx.group(1))
+	#self.loadavg5 = float(inx.group(2))
+	#self.loadavg15 = float(inx.group(3))
+	#self.time = inx.group(4)
 
 	# line 2
 	line = rawList.readline()
 	inx = re.search( reline2, line )
 	if inx == None:
-	    log.log( "<system>system.getSystemstate() error parsing line2 'top' output.", 2 )
+	    log.log( "<system>system._getSystemstate() error parsing line2 'top' output.", 2 )
 	    return
 	self.processes = int(inx.group(1))
 	try:
@@ -132,7 +230,7 @@ class system:
 	line = rawList.readline()
 	inx = re.search( reline3, line )
 	if inx == None:
-	    log.log( "<system>system.getSystemstate() error parsing line3 'top' output.", 2 )
+	    log.log( "<system>system._getSystemstate() error parsing line3 'top' output.", 2 )
 	    return
 	self.cpu_idle = float(inx.group(1))
 	self.cpu_user = float(inx.group(2))
@@ -144,7 +242,7 @@ class system:
 	line = rawList.readline()
 	inx = re.search( reline4, line )
 	if inx == None:
-	    log.log( "<system>system.getSystemstate() error parsing line4 'top' output.", 2 )
+	    log.log( "<system>system._getSystemstate() error parsing line4 'top' output.", 2 )
 	    return
 	mem_real = inx.group('mem_real')
 	mem_free = inx.group('mem_free')
@@ -221,10 +319,10 @@ class system:
 
 	# Fill hash
 	#self.hash['lastpid'] = self.lastpid
-	self.hash['loadavg1'] = self.loadavg1
-	self.hash['loadavg5'] = self.loadavg5
-	self.hash['loadavg15'] = self.loadavg15
-	self.hash['time'] = self.time
+	#self.hash['loadavg1'] = self.loadavg1
+	#self.hash['loadavg5'] = self.loadavg5
+	#self.hash['loadavg15'] = self.loadavg15
+	#self.hash['time'] = self.time
 
 	self.hash['processes'] = self.processes
 	self.hash['sleeping'] = self.sleeping
@@ -244,16 +342,133 @@ class system:
 	self.hash['mem_swapuse'] = self.mem_swapuse
 	self.hash['mem_swapfree'] = self.mem_swapfree
 
+	vmstat_dict = self._getvmstat()
+	if vmstat_dict:
+	    print "vmstat_dict:",vmstat_dict
+	    self.hash.update(vmstat_dict)
 
-	log.log( "<proc>system(), new system list created", 7 )
+	uptime_dict = self._getuptime()
+	if uptime_dict:
+	    print "uptime_dict:",uptime_dict
+	    self.hash.update(uptime_dict)
+
+	#DEBUG
+	print "system.hash:",self.hash
+
+	log.log( "<system>system(), new system list created", 7 )
 
 
-    def getHash(self):
-	"""Returns hash of system stats."""
+    def _getvmstat(self):
+	"""Get system statistics from the 'vmstat -s' call.
+	This should work for Solaris 2.5.1/2.6/2.7/2.8."""
 
-	self.checkCache()	# refresh data if necessary
+	vmstat_cmd = "/usr/bin/vmstat -s"
 
-	return self.hash
+	(retval, output) = utils.safe_getstatusoutput( vmstat_cmd )
+
+	if retval != 0:
+	    log.log( "<system>system._getvmstat(), error calling '%s'"%(vmstat_cmd), 4 )
+	    return None
+
+	vmstat_dict = {}
+
+	for l in string.split( output, '\n' ):
+	    if string.find( l, 'swap ins' ) != -1:
+		vmstat_dict['ctr_swap_ins'] = long(string.split(l)[0])
+	    elif string.find( l, 'swap outs' ) != -1:
+		vmstat_dict['ctr_swap_outs'] = long(string.split(l)[0])
+	    elif string.find( l, 'pages swapped in' ) != -1:
+		vmstat_dict['ctr_pages_swapped_in'] = long(string.split(l)[0])
+	    elif string.find( l, 'pages swapped out' ) != -1:
+		vmstat_dict['ctr_pages_swapped_out'] = long(string.split(l)[0])
+	    elif string.find( l, 'total address trans. faults taken' ) != -1:
+		vmstat_dict['ctr_total_address_trans_faults_taken'] = long(string.split(l)[0])
+	    elif string.find( l, 'page ins' ) != -1:
+		vmstat_dict['ctr_page_ins'] = long(string.split(l)[0])
+	    elif string.find( l, 'page outs' ) != -1:
+		vmstat_dict['ctr_page_outs'] = long(string.split(l)[0])
+	    elif string.find( l, 'pages paged in' ) != -1:
+		vmstat_dict['ctr_pages_paged_in'] = long(string.split(l)[0])
+	    elif string.find( l, 'pages paged out' ) != -1:
+		vmstat_dict['ctr_pages_paged_out'] = long(string.split(l)[0])
+	    elif string.find( l, 'total reclaims' ) != -1:
+		vmstat_dict['ctr_total_reclaims'] = long(string.split(l)[0])
+	    elif string.find( l, 'reclaims from free list' ) != -1:
+		vmstat_dict['ctr_reclaims_from_free_list'] = long(string.split(l)[0])
+	    elif string.find( l, 'micro (hat) faults' ) != -1:
+		vmstat_dict['ctr_micro_hat_faults'] = long(string.split(l)[0])
+	    elif string.find( l, 'minor (as) faults' ) != -1:
+		vmstat_dict['ctr_minor_as_faults'] = long(string.split(l)[0])
+	    elif string.find( l, 'major faults' ) != -1:
+		vmstat_dict['ctr_major_faults'] = long(string.split(l)[0])
+	    elif string.find( l, 'copy-on-write faults' ) != -1:
+		vmstat_dict['ctr_copyonwrite_faults'] = long(string.split(l)[0])
+	    elif string.find( l, 'zero fill page faults' ) != -1:
+		vmstat_dict['ctr_zero_fill_page_faults'] = long(string.split(l)[0])
+	    elif string.find( l, 'pages examined by the clock daemon' ) != -1:
+		vmstat_dict['ctr_pages_examined_by_the_clock_daemon'] = long(string.split(l)[0])
+	    elif string.find( l, 'revolutions of the clock hand' ) != -1:
+		vmstat_dict['ctr_revolutions_of_the_clock_hand'] = long(string.split(l)[0])
+	    elif string.find( l, 'pages freed by the clock daemon' ) != -1:
+		vmstat_dict['ctr_pages_freed_by_the_clock_daemon'] = long(string.split(l)[0])
+	    elif string.find( l, 'forks' ) != -1:
+		vmstat_dict['ctr_forks'] = long(string.split(l)[0])
+	    elif string.find( l, 'vforks' ) != -1:
+		vmstat_dict['ctr_vforks'] = long(string.split(l)[0])
+	    elif string.find( l, 'execs' ) != -1:
+		vmstat_dict['ctr_execs'] = long(string.split(l)[0])
+	    elif string.find( l, 'cpu context switches' ) != -1:
+		vmstat_dict['ctr_cpu_context_switches'] = long(string.split(l)[0])
+	    elif string.find( l, 'device interrupts' ) != -1:
+		vmstat_dict['ctr_device_interrupts'] = long(string.split(l)[0])
+	    elif string.find( l, 'traps' ) != -1:
+		vmstat_dict['ctr_traps'] = long(string.split(l)[0])
+	    elif string.find( l, 'system calls' ) != -1:
+		vmstat_dict['ctr_system_calls'] = long(string.split(l)[0])
+	    elif string.find( l, 'total name lookups' ) != -1:
+		vmstat_dict['ctr_total_name_lookups'] = long(string.split(l)[0])
+	    elif string.find( l, 'toolong' ) != -1:
+		vmstat_dict['ctr_toolong'] = long(string.split(l)[0])
+	    elif string.find( l, 'user   cpu' ) != -1:
+		vmstat_dict['ctr_user_cpu'] = long(string.split(l)[0])
+	    elif string.find( l, 'system cpu' ) != -1:
+		vmstat_dict['ctr_system_cpu'] = long(string.split(l)[0])
+	    elif string.find( l, 'idle   cpu' ) != -1:
+		vmstat_dict['ctr_idle_cpu'] = long(string.split(l)[0])
+	    elif string.find( l, 'wait   cpu' ) != -1:
+		vmstat_dict['ctr_wait_cpu'] = long(string.split(l)[0])
+
+	return vmstat_dict
+
+
+    def _getuptime(self):
+	"""Get system statistics from the output of the 'uptime' command.
+	This should work for Solaris 2.5.1/2.6/2.7/2.8."""
+
+	uptime_cmd = "/usr/bin/uptime"
+
+	(retval, output) = utils.safe_getstatusoutput( uptime_cmd )
+
+	if retval != 0:
+	    log.log( "<system>system._getuptime(), error calling '%s'"%(uptime_cmd), 4 )
+	    return None
+
+	uptime_re = ".+up (?P<uptime>.+),\s*(?P<users>[0-9]+) users?,\s+ load average:\s+(?P<loadavg1>[0-9.]+),\s*(?P<loadavg5>[0-9.]+),\s*(?P<loadavg15>[0-9.]+)"
+	inx = re.compile( uptime_re )
+	sre = inx.search( output )
+	if sre:
+	    uptime_dict = sre.groupdict()
+	else:
+	    log.log( "<system>system._getuptime(), could not parse uptime output '%s'"%(output), 4 )
+	    return None
+
+	# convert types
+	uptime_dict['users'] = int(uptime_dict['users'])
+	uptime_dict['loadavg1'] = float(uptime_dict['loadavg1'])
+	uptime_dict['loadavg5'] = float(uptime_dict['loadavg5'])
+	uptime_dict['loadavg15'] = float(uptime_dict['loadavg15'])
+
+	return uptime_dict
 
 
 ##
