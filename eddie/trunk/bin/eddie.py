@@ -58,7 +58,8 @@ if systype == '':
     osname = uname[0]
     osver = uname[2]
     osarch = uname[4]
-    print "systype: %s/%s/%s" % (osname,osver,osarch)
+    systype = "%s/%s/%s" % (osname,osver,osarch)
+    print "systype:", systype
     oslibdirs = [ os.path.join(basedir,'lib',osname,osver,osarch),
                   os.path.join(basedir,'lib',osname,osarch,osver),
                   os.path.join(basedir,'lib',osname,osver),
@@ -329,6 +330,7 @@ def main():
     # don't log till now because log file location is defined in configuration
     log.log( "<eddie>main(), Configuration complete from '%s'" % (config_file), 7 )
     log.log( "<eddie>main(), Eddie %s, systype: %s" % (EDDIE_VER, systype), 3 )
+    log.log( "<eddie>main(), oslibdirs: %s" % (oslibdirs), 7 )
 
     if 'showconfig' in argflags.keys() and argflags['showconfig'] == 1:
 	# Just display the configuration and exit
