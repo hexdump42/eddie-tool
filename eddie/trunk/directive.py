@@ -183,8 +183,8 @@ class D(Directive):
 	# Set any D-specific variables
 	#  %dproc = the process name
 	self.varDict['dproc'] = self.daemon
-	#  %dpid = pid of process (ie: if found running for R rule)
-	self.varDict['dpid'] = '[dpid not yet defined]'
+	#  %pid = pid of process (ie: if found running for R rule)
+	self.varDict['pid'] = '[pid not yet defined]'
 
     def docheck(self):
 	log.log( "<directive>docheck(D), daemon '%s', rule '%s', action '%s'" % (self.daemon,self.rule,self.action), 8 )
@@ -198,8 +198,8 @@ class D(Directive):
     def R(self):
 	if plist.procExists( self.daemon ) > 0:
 	    log.log( "<directive>R(D) daemon is running, '%s'" % (self.daemon), 6 )
-	    # Set %dpid variable.
-	    self.varDict['dpid'] = plist[self.daemon].pid
+	    # Set %pid variable.
+	    self.varDict['pid'] = plist[self.daemon].pid
 	    self.doAction()
 
 

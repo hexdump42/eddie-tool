@@ -223,6 +223,71 @@ def restart(cmd):
     log.log( "<action>restart(), cmd '%s', return value %d" % (cmd,retval), 5 )
 
 
+# nice()
+def nice(*arg):
+    # Can be called with absolute or relative priority as follows:
+    # nice( val ) - val is new absolute priority,
+    # nice( íncr, val ) - incr is incrementor which should be one of '-' or '+'
+    # and val is relative offset.
+    # %pid should contain the pid of the process who's priority is being
+    # modified.
+    # Note that Otto must be running as Super-User to set a negative nice
+    # level.
+
+    # Min & max nice values.
+    # TODO: Are these different for different systems?  Can we get max & mins
+    # from system ??
+    nice_min = -20
+    nice_max = 19
+
+    if len(arg) < 0 or len(arg) > 2:
+	log.log( "<action>nice(), Error, %d arguments found, expecting 1 or 2" % (len(arg)), 2 )
+	return
+
+    # if one argument given, it is absolute priority level.
+    # if two arguments given, first is incrementor ('-' or '+'), second is
+    # offset
+    if len(arg) == 1:
+	# Absolute priority given
+	val = string.atoi(arg[0])
+	incr = ''
+
+	# If val out of range, error.
+	if val < nice_min or val > nice_max:
+	    log.log( "<action>nice(), Error, val out of range, val is %d, range is %d-%d" % (val,nice_min,nice_max), 2 )
+	    return
+    elif len(arg) == 2:
+	# Relative priority given, incr must be '-' or '+'
+	incr = arg[0]
+	val = string.atoi(arg[1])
+	if incr != '-' and incr != '+':
+	    log.log( "<action>nice(), Error, incremental is '%s', expecting '-' or '+'" % (incr), 2 )
+	    return
+
+
+    # If %pid not defined, error.
+    try:
+	pid = varDict['pid']
+    except KeyError:
+	log.log( "<action>nice(), Error, %pid is not defined", 2 )
+
+    # Build command
+    if incr == '':
+	cmd = '/usr/bin/renice %d %s' % (val,pid)
+    else:
+	cmd = '/usr/bin/renice -n %s%d %s' % (incr,val,pid)
+
+    # Call renice()
+    log.log( "<action>nice(), calling os.system() with cmd '%s'" % (cmd), 8 )
+    retval = os.system( cmd )
+
+    # Alert if return value != 0
+    if retval != 0:
+	log.log( "<action>nice(), Alert, return value for cmd '%s' is %d" % (cmd,retval), 3 )
+
+    log.log( "<action>nice(), cmd '%s', return value %d" % (cmd,retval), 5 )
+
+
 ##
 ## END - action.py
 ##
