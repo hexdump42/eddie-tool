@@ -113,7 +113,7 @@ class IPF(directive.Directive):
 	result = eval( self.args.rule, rulesenv )
 
 	if result == 0:
-	    self.state.stateok()	# update state info for check passed
+	    self.state.stateok(self, Config)	# update state info for check passed
 
 	else:
 	    self.state.statefail()	# update state info for check failed

@@ -127,7 +127,7 @@ class RADIUS(directive.Directive):
 	self.doAction(Config)
 
 	if z:
-	    self.state.stateok()	# update state info for check passed
+	    self.state.stateok(self, Config)	# update state info for check passed
 
         self.putInQueue( Config.q )     # put self back in the Queue
 
