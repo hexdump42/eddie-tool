@@ -127,7 +127,7 @@ class dfList(datacollect.DataCollect):
 	data={}
 
 	m1re = '(?P<mountpt>\S+)\s*\((?P<fsname>[^\)]+)\S*\):\s+(?P<blocksize>\d+) block size\s+(?P<fragsize>\d+) frag size'
-	m2re = '\s*(?P<totalblocks>\d+) total blocks\s+(?P<freeblocks>\d+) free blocks\s+(?P<availblocks>\d+) available\s+(?P<totalfiles>\d+) total files'
+	m2re = '\s*(?P<totalblocks>\d+) total blocks\s+(?P<freeblocks>\d+) free blocks\s+(?P<availblocks>\d+) available\s+(?P<totalfiles>\-?\d+) total files'
 	m3re = '\s*(?P<freefiles>\d+) free files\s+(?P<filesysid>\d+) filesys id.*'
 	m4re = '\s*(?P<fstype>\S+) fstype \s+(?P<flag>\S+) flag\s+(?P<filelen>\d+) filename length'
 
