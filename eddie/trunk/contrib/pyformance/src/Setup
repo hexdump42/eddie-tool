@@ -1,3 +1,0 @@
-*shared*
-
-solkstat solkstatmodule.c -lkstat -lm
