@@ -1,6 +1,28 @@
 Eddie CHANGES
 (reverse chronological order)
 
+Eddie-0.32 (21-Apr-2003)
+ - Added an exception handler for httplib read() where it can fail in
+   some circumstances.
+ - Fixed HTTP timing so that the whole HTTP session was timed, not just the
+   connect part.  This was mis-leading before.
+ - If no output from COM directive, set outfield1 anyway so rule
+   strings don't break.  Suggested by Arcady Genkin.
+ - Changed some sample rules to use ALERT_EMAIL alias rather than "alert"
+   fixed email address.  Thanks to Zac Stevens <zts@itga.com.au> for
+   pointing them out.
+ - Added restart option to redhat init.d script in contrib.
+ - Added new directive parameter: actionmaxcalls - defines the maxmimum number
+   of times actions will be called for a particular failure.
+ - Minor bugfix: sendmail_smtp() was returning wrong return codes; successful
+   posts were showing as failures, etc.
+ - Added new directive parameter: excludehosts
+   Directive will be skipped on any hosts specified by excludehosts.
+   Specified as a string containing a comma-separated list of hostnames.
+ - If groups of the same name are defined, merge them together rather than
+   throwing an error.  This allows for more custom rule configurations.
+   Requested by Arcady Genkin <agenkin@cdf.toronto.edu>
+
 Eddie-0.31 (11-Dec-2002)
  - Increased Linux system counters from int to long.
  - Fixed bug with isfile/isdir/etc shorthands not working properly.

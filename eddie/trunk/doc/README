@@ -2,7 +2,7 @@ This is the EDDIE Tool.  It is a monitoring, security and performance
 analysis tool for most common flavours of UNIX.
 
 It is still being continuously developed but is very stable in its current
-form and has been used in production for over 4 years (it is the primary
+form and has been used in production for over 5 years (it is the primary
 monitoring tool at the author's places of employment, for example).
 
 Documentation is online at http://eddie-tool.net/doc/ and in the doc/
