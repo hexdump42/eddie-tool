@@ -35,7 +35,6 @@ import utils, log
 
 # Define exceptions
 ParseFailure = 'ParseFailure'
-#ParseNotcomplete = 'ParseNotcomplete'
 
 
 
@@ -190,7 +189,7 @@ class ALIAS(Definition):
     """
 
     def __init__(self, list, toktypes):
-	apply( Definition.__init__, (self,list, toktypes) )
+	apply( Definition.__init__, (self, list, toktypes) )
 
 	# if we don't have 4 elements ['ALIAS', <str>, '=', <value>] then
 	# raise an error

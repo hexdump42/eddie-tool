@@ -149,8 +149,8 @@ class State:
 	    if self.direcmode > 0 and token=='\012':
 		self.direcargs = self.direcargs + self.toklist
 		self.directypes = self.directypes + self.toktypes
-		self.toklist = []	# clear token list
-		self.toktypes = []	# clear token types list
+		self.toklist = []		# clear token list
+		self.toktypes = []		# clear token types list
 		self.notfirstdirecline = 1	# passed first directive line
 		return
 
@@ -239,6 +239,31 @@ class State:
 		self.direc.scanperiod = config.scanperiod	# set default scanperiod
 
 		return
+
+	    elif config.directives.has_key(self.toklist[0]):
+		direc = config.directives[self.toklist[0]](self.toklist)
+		self.direc = direc
+
+		if direc == None:
+		    raise ParseFailure, "Directive creation failed."
+
+		self.reset()		# reset state
+
+		try:
+		    if direc.hastokenparser:
+			# some objects must wait for more multi-line arguments
+			self.direcmode = 1
+			self.direcindent = self.indent
+		except:
+		    pass
+
+		# 'give' object to parent
+		self.prevdirec = self.direcStack.top()
+		self.prevdirec.give(direc)
+		self.direc.scanperiod = config.scanperiod	# set default scanperiod
+
+		return
+
 
 	    else:
 		raise "PARSE FAILURE! toklist: %s" % self.toklist

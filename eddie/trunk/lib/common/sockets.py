@@ -77,8 +77,14 @@ def printState(Config, ccsock):
 	    for i in list:
 		# do not show templates or directives where console=None
 		if i.args.template != 'self' and i.console_output != None:
-		    #ccsock.send("%s%s - %s\n" % (cname, i, i.state.status))
-		    ccsock.send("%s%s - %s\n" % (cname, i, i.console_str()))
+		    try:
+			cstr = i.console_str()
+		    except:
+			e = sys.exc_info()
+			tb = traceback.format_list( traceback.extract_tb( e[2] ) )
+			log.log( "<sockets>printState(): console_str exception for %s: %s %s %s" % (i,e[0],e[1],tb), 5 )
+			cstr = ""
+		    ccsock.send("%s%s - %s\n" % (cname, i, cstr))
 
     for c in Config.groups:
 	if c.name == log.hostname or (c.name in Config.classDict.keys() and log.hostname in Config.classDict[c.name]):

@@ -192,19 +192,24 @@ def atom( ch ):
     elif ch == 'y' or ch == 'Y':
 	mult = 60*60*24*365
     else:
-	return 0
+	mult = None
 
     return mult
 	
 
 def val2secs( value ):
-    """Convert a time string to seconds."""
+    """
+    Convert a time string to seconds.
+    Return None if failed.
+    """
 
     if re.search( '[mshdwcyMSHDWCY]', value ) == None:
 	return string.atoi(value)
     timech = value[-1]
     value = value[:-1]
     mult = atom( timech )
+    if mult == None:
+	return None		# error parsing multiplier character
     if mult == 0:
 	return 0
     return string.atoi(value)*mult
