@@ -531,23 +531,25 @@ class PROC(Directive):
     def check(self,Config):
 	"""Executes a check string supplied by user."""
 
-	try:
-	    procenv = plist[self.daemon].procinfo()		# get dictionary of process details
-	except AttributeError:
-	    log.log( "<directive>PROC.check() warning, no process '%s'." % (self.daemon), 8 )
-	    return
+	for p in plist.list:
+	    if p.procname == self.daemon:
+		try:
+		    procenv = p.procinfo()		# get dictionary of process details
+		except AttributeError:
+		    log.log( "<directive>PROC.check() warning, no process '%s'." % (self.daemon), 8 )
+		    return
 
-	result = eval( self.checkstring, procenv )
+		result = eval( self.checkstring, procenv )
 
-	if result != 0:
-	    # build varDict from procenv
-	    for i in procenv.keys():
-		self.Action.varDict['proc%s'%(i)] = procenv[i]
-	    self.statefail()	# update state info for check failed
-	    self.doAction(Config)
+		if result != 0:
+		    # build varDict from procenv
+		    for i in procenv.keys():
+			self.Action.varDict['proc%s'%(i)] = procenv[i]
+		    self.statefail()	# update state info for check failed
+		    self.doAction(Config)
 
-	else:
-	    self.stateok()	# update state info for check passed
+		else:
+		    self.stateok()	# update state info for check passed
 
 
 
