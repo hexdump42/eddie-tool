@@ -4,6 +4,7 @@
 ##  A smart CGI interface for browsing and graphing RRD stats.  Can be used
 ##  with any RRDs but commonly used in conjuction with EDDIE Tool and
 ##  elvinrrd generated system/network RRD stats.
+##  (c) Chris Miles 2002-2005
 ##
 ##  See http://psychofx.com/eddiebrowser/ for more details/docs.
 ##
@@ -13,17 +14,18 @@
 
 #### Settings ####
 
-# RRD_DIR: a directory containing all the subdirectories of RRD files.
-RRD_DIR = '/export/rrd'
-
 # GLOBAL_CONFIG: location of global config file
-GLOBAL_CONFIG = '/export/rrd/eddiebrowser.cfg'
+GLOBAL_CONFIG = '/opt/eddiebrowser/configs/eddiebrowser.cfg'
+
+# RRD_DIR: a directory containing all the subdirectories of RRD files.
+# ** This should be defined in the global config as 'rrd_dir' now.
+#RRD_DIR = '/export/rrd'
 
 #### End of settings ####
 
 
-__version__ = '0.4.2'
-__copyright__ = 'Chris Miles 2002-2004'
+__version__ = '0.5.0'
+__copyright__ = 'Chris Miles 2002-2005'
 
 
 import cgi
@@ -59,6 +61,11 @@ class GlobalConfig:
 	self.datanames = []			# list of all data names
 	self.datagroups = {}			# dict of all data groups
 	self.filter = None			# Filter object
+	try:
+	    self.rrd_dir = RRD_DIR		# Default to global var RRD_DIR if possible
+	except NameError:
+	    self.rrd_dir = None
+	self.rrd_conf_dir = None
 
 
     def parseGlobalConfig(self,cfgfile):
@@ -84,6 +91,10 @@ class GlobalConfig:
 		if sre:
 		    if sre.group(1) == 'alias':
 			self.setAlias(sre.group(2))
+		    elif sre.group(1) == 'rrd_dir':
+			self.rrd_dir = sre.group(2)
+		    elif sre.group(1) == 'rrd_conf_dir':
+			self.rrd_conf_dir = sre.group(2)
 
 	    line = fp.readline()
 
@@ -172,18 +183,27 @@ class GlobalConfig:
     # chris 2003-06-22: Read all settings from dir/.eddiebrowser.cfg
     #	into GlobalConfig object.
     def readDirConfigs( self ):
-	"""Read settings from all directory/.eddiebrowser.cfg files."""
+	"""Read settings from all required data type specific config files.
+	"""
 
-	dirs = os.listdir( RRD_DIR )
+	dirs = os.listdir( self.rrd_dir )
 	for d in dirs:
-	    dir = os.path.join( RRD_DIR, d )
-	    self.getSettingsFromDir(dir)
+	    datadir = os.path.join( self.rrd_dir, d )
+	    # First try rrd_conf_dir/<datatype>.cfg
+	    conf1 = os.path.join( self.rrd_conf_dir, d + ".cfg" )
+	    if os.path.exists( conf1 ):
+		self.getSettingsFromDir( conf1, datadir )
+	    else:
+		# Second try rrd_dir/<datatype>/.eddiebrowser.cfg
+		conf2 = os.path.join( self.rrd_dir, d, ".eddiebrowser.cfg" )
+		self.getSettingsFromDir( conf2, datadir )
 
 
-    def getSettingsFromDir( self, dir ):
-	"""Read settings from dir/.eddiebrowser.cfg"""
+    def getSettingsFromDir( self, cfgfile, datadir ):
+	"""Read data type specific settings from cfgfile.
+	"""
 
-	cfg = parseConfig(dir)
+	cfg = parseConfig( cfgfile )
 	if cfg == None:
 	    return None
 
@@ -202,7 +222,7 @@ class GlobalConfig:
 	files = cfg['FILES']
 	inx = re.compile( files )
 
-	for f in os.listdir(dir):
+	for f in os.listdir( datadir ):
 	    sre = inx.match(f)
 	    if sre != None:
 		h = sre.group('hostname')
@@ -228,10 +248,10 @@ class GlobalConfig:
 
 
 
-def parseConfig(dir):
+def parseConfig( cfgfile ):
     cfg = {}	# config dictionary
 
-    cfgfile = os.path.join( dir, ".eddiebrowser.cfg" )
+    #cfgfile = os.path.join( dir, ".eddiebrowser.cfg" )
 
     try:
 	fp = open( cfgfile, 'r' )
@@ -385,7 +405,7 @@ def error_rrd( rrdtool, msg ):
     rrd.graph( *rrdopt )
 
 
-def graph( form ):
+def graph( form, globalcfg ):
     """Graph an RRD data source using pyrrdtool module."""
 
     try:
@@ -411,7 +431,13 @@ def graph( form ):
 	return 1
 
     # read .eddiebrowser.cfg
-    cfg = parseConfig( os.path.join( RRD_DIR, dir ) )
+    conf1 = os.path.join( globalcfg.rrd_conf_dir, dir + ".cfg" )
+    if os.path.exists( conf1 ):
+	cfg = parseConfig( conf1 )
+    else:
+	conf2 = os.path.join( globalcfg.rrd_dir, dir, ".eddiebrowser.cfg" )
+	cfg = parseConfig( conf2 )
+
     if not cfg:
 	#error_rrd( RRDtool, 'Error reading config in dir: %s'%(dir) )
 	error_rrd( rrdtool, 'Error reading config in dir: %s'%(dir) )
@@ -428,7 +454,7 @@ def graph( form ):
     graphoptions = [ '--imgformat', 'PNG' ]
 
     # parse general options
-    sourcefile = os.path.join( RRD_DIR, dir, rrd )
+    sourcefile = os.path.join( globalcfg.rrd_dir, dir, rrd )
 
     if 'GRAPH_TITLE' in cfg.keys():
 	graph_title = cfg['GRAPH_TITLE'] % vars
@@ -482,7 +508,7 @@ def graph( form ):
 	    graphdef['file'] = cfg['GRAPH_FILE_%s'%d]
 	    if graphdef['file']:
 		graphdef['file'] = graphdef['file'] % (vars)
-		graphdef['file'] = os.path.join( RRD_DIR, dir, graphdef['file'] )
+		graphdef['file'] = os.path.join( globalcfg.rrd_dir, dir, graphdef['file'] )
 	else:
 	    graphdef['file'] = sourcefile
 
@@ -576,10 +602,18 @@ def graph( form ):
 #	) )
 
 
-def showHostInfo(dir, hostname, start, filter=None):
-    cfg = parseConfig(dir)
+def showHostInfo(dir, hostname, start, globalcfg, filter=None):
+    conf1 = os.path.join( globalcfg.rrd_conf_dir, dir + ".cfg" )
+    if os.path.exists( conf1 ):
+	cfg = parseConfig( conf1 )
+    else:
+	conf2 = os.path.join( globalcfg.rrd_dir, dir, ".eddiebrowser.cfg" )
+	cfg = parseConfig( conf2 )
+
     if cfg == None:
 	return None
+
+    dir = os.path.join( globalcfg.rrd_dir, dir )
 
     if filter:
 	if cfg['GROUP'] not in filter.filtergroups and cfg['NAME'] not in filter.filtertypes:
@@ -611,15 +645,15 @@ def showHostInfo(dir, hostname, start, filter=None):
 
 
 
-def showTypes( hostname, start, filter=None ):
+def showTypes( hostname, start, globalcfg, filter=None ):
     """Get types of data to show for <hostname>."""
 
     types = {}
 
-    dirs = os.listdir( RRD_DIR )
+    dirs = os.listdir( globalcfg.rrd_dir )
     for d in dirs:
-	dir = os.path.join( RRD_DIR, d )
-	showHostInfo(dir, hostname, start, filter)
+	#dir = os.path.join( globalcfg.rrd_dir, d )
+	showHostInfo(d, hostname, start, globalcfg, filter)
 
     return
 
@@ -732,7 +766,7 @@ def showHost( hostname, start, cfg ):
 	print '[&nbsp;<a href="%s?hostname=%s&start=-41472000&%s">yearly</a>&nbsp;]' % (os.environ['SCRIPT_NAME'], hostname, cursettings)
     print "</center>"
 
-    showTypes( hostname, start, cfg.filter )
+    showTypes( hostname, start, cfg, cfg.filter )
 
     print "<form name='selecthostbot' action='%s' method=GET>" % (os.environ['SCRIPT_NAME'])
     print cfg.keepSettings(type='form')		# pass settings as hidden fields
@@ -786,12 +820,15 @@ class Filter:
 
 def main():
 
+    cfg = GlobalConfig()
+    cfg.parseGlobalConfig(GLOBAL_CONFIG)
+
     form = cgi.FieldStorage()
 
     if 'mode' in form.keys():
 	if form['mode'].value == 'graph':
 	    # Graph an RRD data source and output a PNG image
-	    graph( form )
+	    graph( form, cfg )
 	    return 1
 
     print "Content-Type: text/html"     # HTML is following
@@ -799,8 +836,6 @@ def main():
 
     print "<HTML>"
 
-    cfg = GlobalConfig()
-    cfg.parseGlobalConfig(GLOBAL_CONFIG)
     cfg.parseForm(form)
 
     hostname = None
