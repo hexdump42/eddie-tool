@@ -775,6 +775,38 @@ class Directive:
 	discarded (not re-scheduled).
 	"""
 
+	# CM 2003-09-10: If checktime specified, evaluate and don't run this
+	#	directive if outside time rule specified
+	if 'checktime' in dir(self.args):
+	    # Setup variables used to evaluate the checktime rule
+	    timevars = {}
+	    timevars['day'] = time.strftime("%a").lower()
+	    timevars['time'] = int(time.strftime("%H%M"))
+	    timevars['hour'] = int(time.strftime("%H"))
+	    timevars['minute'] = int(time.strftime("%M"))
+	    timevars['second'] = int(time.strftime("%S"))
+	    timevars['weekdays'] = ('mon','tue','wed','thu','fri')
+	    timevars['weekend'] = ('sat','sun')
+
+	    try:
+		result = eval( self.args.checktime, {}, timevars )
+	    except SyntaxError, details:
+		# Syntax error evaluating rule. Log and end thread without
+		# submitting broken directive back into queue.
+		log.log( "<directive>Directive.docheck(): SyntaxError evaluating checktime '%s', %s, timevars=%s - not re-queued" % (self.args.checktime,details,timevars), 4 )
+		return
+	    except NameError, details:
+		# Name error evaluating rule. Log and end thread without
+		# submitting broken directive back into queue.
+		log.log( "<directive>Directive.docheck(): NameError evaluating checktime '%s', %s, timevars=%s - not re-queued" % (self.args.checktime,details,timevars), 4 )
+		return
+
+	    if not result:
+		# if checktime evaluates to false, then skip the check
+		log.log( "<directive>Directive.docheck(): checktime false - skipping", 7 )
+		return
+
+
 	# If any check dependencies are failed, don't need to run this check
 	failed_deps = self.checkDependencies( self.checkdependson )
 	if failed_deps:
@@ -824,6 +856,7 @@ class Directive:
 	    # Syntax error evaluating rule. Log and end thread without
 	    # submitting broken directive back into queue.
     	    log.log( "<directive>Directive.docheck(): SyntaxError evaluating rule '%s', data=%s - not re-queued" % (self.args.rule,data), 4 )
+	    return
 	except NameError, details:
 	    # Name error evaluating rule. Log and end thread without
 	    # submitting broken directive back into queue.
