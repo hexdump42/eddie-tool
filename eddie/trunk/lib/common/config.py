@@ -13,7 +13,7 @@
 ##
 
 # Python specific modules
-import string, regex
+import string, regex, os
 
 # Eddie specific modules
 import directive, definition, log, proc, utils
@@ -52,6 +52,7 @@ class Config:
 	self.classDict = {}			# dictionary of Class definitions
 
 	self.groups = []
+	self.configfiles = {}			# dictionary of config file mtimes
 
 	# Inherit parent properties if given
 	if parent != None:
@@ -125,6 +126,15 @@ class Config:
 	    #raise "Config.give(): Unknown object type %s" % obj
 	    # Don't want any object that doesn't match above
 	    return
+
+
+    # Check if any of the config or rules files have been modified
+    def checkfiles(self):
+	for f in self.configfiles.keys():
+	    if os.stat(f)[8] != self.configfiles[f]:		# check mtime
+		return 1
+
+	return 0
 
 
 

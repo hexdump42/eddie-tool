@@ -226,12 +226,22 @@ def readConf(file, Config):
     state = State(Config)
     state.filename = file
 
+    # build a list of configfiles
+    global configfiles
+    configfiles = []
+
     # Start reading the config file
     readFile(file, state)
 
     #DEBUG: view the config!
     #print "------------------Config Follows------------------"
     #print Config
+
+    #print "DEBUG: configfiles:",configfiles
+
+    # Store a dictionary of config files and their corresponding mtimes
+    for f in configfiles:
+	Config.configfiles[f] = os.stat(f)[8]
 
 
 ###
@@ -251,6 +261,9 @@ def readFile(file, state):
 	print "Error opening file '%s'" % file;
 	log.log( "<parseConfig>readFile(), Error, Cannot open '%s' - skipping" % (file), 2 )
 	return
+
+    # add this filename to the list of config files
+    configfiles.append(file)
 
     # Let tokenize.tokenize() parse the file into tokens which it will pass to
     # state.tokeneater() which will parse the tokens and create something
