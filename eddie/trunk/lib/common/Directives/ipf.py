@@ -46,32 +46,38 @@ class IPF(directive.Directive):
     def docheck(self, Config):
 	log.log( "<ipf.py>IPF, docheck(): rule '%s'" % (self.rule), 7 )
 
-	# define the ipfstat command with full path
-	ipfstatcmd = "/opt/local/sbin/ipfstat"
+	# locations to find ipfstat command
+	ipfstatcmds = [ "/sbin/ipfstat", "/opt/local/sbin/ipfstat" ]
+	ipfstatcmd = None
 
-	try:
-	    os.stat( ipfstatcmd )
-	except os.error, detail:
+	for i in ipfstatcmds:
+            try:
+	        os.stat( i )
+		ipfstatcmd = i
+		break
+	    except os.error, detail:
+		log.log( "<ipf.py>IPF, docheck(): ipfstat not found, stat returned error %d, '%s'" % (detail[0], detail[1]), 8)
+
+	if ipfstatcmd == None:
 	    # no ipfstat
 	    ipfstat = None
 	    ipfstatin = None
 	    ipfstatout = None
-	    log.log( "<ipf.py>IPF, docheck(): ipfstat not found, stat returned error %d, '%s'" % (detail[0], detail[1]), 8)
 	else:
-	    (r, ipfstat) = commands.getstatusoutput("/opt/local/sbin/ipfstat")
+	    (r, ipfstat) = commands.getstatusoutput(ipfstatcmd)
 	    if r != 0:
 		# ipfstat call failed
-		log.log( "<ipf.py>IPF, docheck(): ipfstat call failed, returned %d, '%s'" % (r, ipfstat), 3)
+		log.log( "<ipf.py>IPF, docheck(): %s call failed, returned %d, '%s'" % (ipfstatcmd, r, ipfstat), 3)
 
-	    (r, ipfstatin) = commands.getstatusoutput("/opt/local/sbin/ipfstat -ih")
+	    (r, ipfstatin) = commands.getstatusoutput(ipfstatcmd+" -ih")
 	    if r != 0:
 		# ipfstat -ih call failed
-		log.log( "<ipf.py>IPF, docheck(): ipfstat -ih call failed, returned %d, '%s'" % (r, ipfstatin), 3)
+		log.log( "<ipf.py>IPF, docheck(): %s -ih call failed, returned %d, '%s'" % (ipfstatcmd, r, ipfstatin), 3)
 
-	    (r, ipfstatout) = commands.getstatusoutput("/opt/local/sbin/ipfstat -oh")
+	    (r, ipfstatout) = commands.getstatusoutput(ipfstatcmd+" -oh")
 	    if r != 0:
 		# ipfstat -oh call failed
-		log.log( "<ipf.py>IPF, docheck(): ipfstat -oh call failed, returned %d, '%s'" % (r, ipfstatout), 3)
+		log.log( "<ipf.py>IPF, docheck(): %s -oh call failed, returned %d, '%s'" % (ipfstatcmd, r, ipfstatout), 3)
 
 	rulesenv = {}			# environment for rules execution
 	rulesenv['ipfstat'] = str(ipfstat)
