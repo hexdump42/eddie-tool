@@ -1,10 +1,8 @@
 EDDIE TODO ** Needs updating, this list not up-to-date **
 
-- make os-dependent data collectors thread-safe, as Linux/proc.py
+- check os-dependent data collectors are thread-safe, as Linux/proc.py
 
 - Fix doArgs to use standard Python args.
-
-- Fix history object.
 
 - escalation
 
@@ -23,10 +21,6 @@ EDDIE TODO ** Needs updating, this list not up-to-date **
 
 - group should handle multiple hostnames, eg: "group myeah,myponga:"
 
-- PROC rule NR/R, change to variable, ie: rule="!exists"
-
-- back off on warnings - something like 10m, 30m, 1hr, 2hr, 4hr, etc.
-
 - allow MSG strings to be included from separate files, so instead of a string
   in the MSG def, it would have file:procwarn.
 
@@ -37,11 +31,4 @@ EDDIE TODO ** Needs updating, this list not up-to-date **
     user="username": match on user
     notuser="username": match not owned by user, and allow multiple entries
     allow userid matches in rule.
-
-BUGS:
- - Unknown directives are not handled properly.
-
- - cannot have a commented line in the middle of a directive definition...
-
- - needs a catch in SIGHUP to catch the interupted system call - severity minor [RT]
 
