@@ -129,6 +129,10 @@ class HTTP(directive.Directive):
 	# Initialize the data
 	data = {}
 	data['failed'] = 0
+	data['exception'] = ""
+	data['errno'] = ""
+	data['errstr'] = ""
+	data['time'] = ""
 
 	if self.ssl:
 	    try:
