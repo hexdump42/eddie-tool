@@ -29,7 +29,7 @@ class RADIUS(directive.Directive):
        results.
 
        Sample rule:
-       RADIUS: 'hostname[:port]' 'secret' 'username' 'password' <actions>
+       RADIUS: server='hostname[:port]' secret='secret' user='username' password='password' action='<actions>'
     """
 
     def __init__(self, toklist):
@@ -38,11 +38,33 @@ class RADIUS(directive.Directive):
 
     def tokenparser(self, toklist, toktypes, indent):
 
-	self.hostport = utils.stripquote(toklist[0])	# hostname:port
-	self.secret = utils.stripquote(toklist[1])	# secret
-	self.username = utils.stripquote(toklist[2])	# username
-	self.password = utils.stripquote(toklist[3])	# password
-	self.actionList = self.parseAction(toklist[4:])
+	tokdict=self.parseArgs(toklist)
+
+	try:
+	    self.hostport = tokdict['server']	# hostname:port
+	except KeyError:
+	    raise ParseFailure, "Server not specified"
+
+	try:
+	    self.secret = tokdict['secret']	# secret
+	except KeyError:
+	    raise ParseFailure, "Secret not specified"
+
+	try:
+	    self.username = tokdict['user']	# username
+	except KeyError:
+	    raise ParseFailure, "Username not specified"
+
+	try:
+	    self.password = tokdict['password']	# password
+	except KeyError:
+	    raise ParseFailure, "Password not specified"
+
+	try:
+	    self.actionList = self.parseAction( tokdict['action'] )
+	except KeyError:
+	    raise ParseFailure, "Action not specified"
+
 
 	if ':' in self.hostport:
 	    (self.host, self.port) = string.split( self.hostport, ':' )
@@ -62,13 +84,13 @@ class RADIUS(directive.Directive):
 	# define the unique ID
 	self.ID = '%s.RADIUS.%s.%d.%s' % (log.hostname,self.host,self.port,self.username)
 
-	log.log( "<radius.py>RADIUS.tokenparser(): ID '%s' host '%s' port %d secret '%s' username '%s'" % (self.ID, self.host, self.port, self.secret, self.username), 8 )
+	log.log( "<radius>RADIUS.tokenparser(): ID '%s' host '%s' port %d secret '%s' username '%s'" % (self.ID, self.host, self.port, self.secret, self.username), 8 )
 
 
     def docheck(self, Config):
 	"""Perform a Radius authentication and return results."""
 
-	log.log( "<radius.py>RADIUS.docheck(): host '%s' port %d username '%s'" % (self.host, self.port, self.username), 7 )
+	log.log( "<radius>RADIUS.docheck(): host '%s' port %d username '%s'" % (self.host, self.port, self.username), 7 )
 
 	timing = None
 
@@ -91,12 +113,12 @@ class RADIUS(directive.Directive):
 	# commands.
 	if timing == None:
 	    timing = 0
-	    log.log( "<radius.py>RADIUS.docheck(): timing could not be measured, setting to 0", 3 )
+	    log.log( "<radius>RADIUS.docheck(): timing could not be measured, setting to 0", 3 )
 
 	# assign variables
 	self.Action.varDict['radiustiming'] = timing
 
-	log.log( "<radius.py>RADIUS.docheck(): timing=%s z=%s" % (timing,z), 8 )
+	log.log( "<radius>RADIUS.docheck(): timing=%s z=%s" % (timing,z), 8 )
 
 	self.doAction(Config)
 

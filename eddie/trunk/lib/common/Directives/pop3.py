@@ -47,7 +47,7 @@ class pop3:
 	try:
 	    self.pop3sock.connect(self.host, self.port)
 	except socket.error, detail:
-	    log.log( "<solaris.py>pop3.connect(): exception, %d, '%s'" % (detail[0], detail[1]), 3 )
+	    log.log( "<solaris>pop3.connect(): exception, %d, '%s'" % (detail[0], detail[1]), 3 )
 	    return 0
 
 	data = self.pop3sock.recv(1024)
@@ -176,7 +176,7 @@ class POP3TIMING(directive.Directive):
        etc.
 
        Sample rule:
-       POP3TIMING: 'hostname:port' 'username' 'password' <actions>
+       POP3TIMING: server='hostname:port' user='username' password='password' action="<actions>"
     """
 
     def __init__(self, toklist):
@@ -185,10 +185,27 @@ class POP3TIMING(directive.Directive):
 
     def tokenparser(self, toklist, toktypes, indent):
 
-	self.hostport = utils.stripquote(toklist[0])	# hostname:port
-	self.username = utils.stripquote(toklist[1])	# username
-	self.password = utils.stripquote(toklist[2])	# password
-	self.actionList = self.parseAction(toklist[3:])
+	tokdict=self.parseArgs(toklist)
+
+	try:
+	    self.hostport = tokdict['server']	# hostname:port
+        except KeyError:
+            raise ParseFailure, "POP3 Server not specified"
+
+	try:
+	    self.username = tokdict['user']	# username
+        except KeyError:
+            raise ParseFailure, "Username not specified"
+
+	try:
+	    self.password = tokdict['password']	# password
+        except KeyError:
+            raise ParseFailure, "Password not specified"
+
+	try:
+	    self.actionList = self.parseAction( tokdict['action'] )
+        except KeyError:
+            raise ParseFailure, "Action not specified"
 
 	if ':' in self.hostport:
 	    (self.host, self.port) = string.split( self.hostport, ':' )
@@ -208,7 +225,7 @@ class POP3TIMING(directive.Directive):
 	# define the unique ID
 	self.ID = '%s.POP3TIMING.%s.%d.%s' % (log.hostname,self.host,self.port,self.username)
 
-	log.log( "<pop3.py>POP3TIMING.tokenparser(): ID '%s' host '%s' port %d username '%s'" % (self.ID, self.host, self.port, self.username), 8 )
+	log.log( "<pop3>POP3TIMING.tokenparser(): ID '%s' host '%s' port %d username '%s'" % (self.ID, self.host, self.port, self.username), 8 )
 
 
     def docheck(self, Config):
@@ -217,7 +234,7 @@ class POP3TIMING(directive.Directive):
 	The directive actions are always called.  Usually these will
 	record the timing details in some way."""
 
-	log.log( "<pop3.py>POP3TIMING.docheck(): host '%s' port %d username '%s'" % (self.host, self.port, self.username), 7 )
+	log.log( "<pop3>POP3TIMING.docheck(): host '%s' port %d username '%s'" % (self.host, self.port, self.username), 7 )
 
 	connecttime = None
 	authtime = None
@@ -255,18 +272,18 @@ class POP3TIMING(directive.Directive):
 	# commands.
 	if connecttime == None:
 	    connecttime = 0
-	    log.log( "<pop3.py>POP3TIMING.docheck(): connecttime could not be measured, setting to 0", 3 )
+	    log.log( "<pop3>POP3TIMING.docheck(): connecttime could not be measured, setting to 0", 3 )
 	if authtime == None:
 	    authtime = 0
-	    log.log( "<pop3.py>POP3TIMING.docheck(): authtime could not be measured, setting to 0", 3 )
+	    log.log( "<pop3>POP3TIMING.docheck(): authtime could not be measured, setting to 0", 3 )
 	if listtime == None:
 	    listtime = 0
-	    log.log( "<pop3.py>POP3TIMING.docheck(): listtime could not be measured, setting to 0", 3 )
+	    log.log( "<pop3>POP3TIMING.docheck(): listtime could not be measured, setting to 0", 3 )
 	if retrtime == None:
 	    retrtime = 0
-	    log.log( "<pop3.py>POP3TIMING.docheck(): retrtime could not be measured, setting to 0", 3 )
+	    log.log( "<pop3>POP3TIMING.docheck(): retrtime could not be measured, setting to 0", 3 )
 
-	log.log( "<pop3.py>POP3TIMING.docheck(): connecttime=%s authtime=%s listtime=%s retrtime=%s" % (connecttime, authtime, listtime, retrtime), 8 )
+	log.log( "<pop3>POP3TIMING.docheck(): connecttime=%s authtime=%s listtime=%s retrtime=%s" % (connecttime, authtime, listtime, retrtime), 8 )
 
 	self.doAction(Config)
 

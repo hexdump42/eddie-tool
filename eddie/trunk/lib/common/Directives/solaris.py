@@ -21,15 +21,39 @@ import log, directive, utils
 
 
 class CRON(directive.Directive):
+    """An Eddie directive for checking that cron is working.
+	A cron job should be setup to touch the test file at least as often
+	as the CRON check will be performed.  This directive simply checks
+	that the file has been touched (modified) within the last 15 minutes,
+	implying that cron is running properly.
+
+	Eg:
+	CRON: file="/tmp/cron.touch" rule="!alive" action="email('alert', 'cron alive check failed on %(h)s')"
+    """
+
     def __init__(self, toklist):
 	apply( directive.Directive.__init__, (self, toklist) )
 
 
     def tokenparser(self, toklist, toktypes, indent):
 
-	self.touchfile = utils.stripquote(toklist[0])	# test file touched by cronjob
-	self.rule = utils.stripquote(toklist[1])	# the rule
-	self.actionList = self.parseAction(toklist[2:])
+	tokdict=self.parseArgs(toklist)
+
+	try:
+	    self.touchfile = tokdict['file']	# test file touched by cronjob
+	except KeyError:
+	    raise ParseFailure, "Test File not specified"
+
+	try:
+	    self.rule = tokdict['rule']	# the rule
+	except KeyError:
+	    raise ParseFailure, "Rule not specified"
+
+	try:
+	    self.actionList = self.parseAction( tokdict['action'] )
+	except KeyError:
+	    raise ParseFailure, "Action not specified"
+
 
 	# Set any FS-specific variables
 	#  rule = rule
@@ -38,17 +62,17 @@ class CRON(directive.Directive):
 	# define the unique ID
 	self.ID = '%s.CRON.%s' % (log.hostname,self.rule)
 
-	log.log( "<solaris.py>CRON.tokenparser(): ID '%s' rule '%s' action '%s'" % (self.ID, self.rule, self.actionList), 8 )
+	log.log( "<solaris>CRON.tokenparser(): ID '%s' rule '%s' action '%s'" % (self.ID, self.rule, self.actionList), 8 )
 
 
     def docheck(self, Config):
-	log.log( "<solaris.py>CRON.docheck(): rule '%s'" % (self.rule), 7 )
+	log.log( "<solaris>CRON.docheck(): rule '%s'" % (self.rule), 7 )
 
 	from stat import *				# for ST_MTIME
 	try:
 	    mtime = os.stat( self.touchfile )[ST_MTIME]
 	except OSError, detail:
-    	    log.log( "<solaris.py>CRON.docheck(): stat had error %d, '%s'" % (detail[0], detail[1]), 6 )
+    	    log.log( "<solaris>CRON.docheck(): stat had error %d, '%s'" % (detail[0], detail[1]), 6 )
 	    return
 
 	import time
@@ -64,7 +88,7 @@ class CRON(directive.Directive):
 	    self.Action.varDict['crontouchfile'] = self.touchfile
 	    self.Action.varDict['crontouchfilemtime'] = str(mtime)
 
-    	    log.log( "<solaris.py>CRON.docheck(): check failed, calling doAction()", 6 )
+    	    log.log( "<solaris>CRON.docheck(): check failed, calling doAction()", 6 )
     	    self.doAction(Config)
 
 	else:
@@ -75,7 +99,15 @@ class CRON(directive.Directive):
 
 
 class METASTAT(directive.Directive):
-    """Solaris Disksuite checks for bad metadevices/disks."""
+    """Solaris Disksuite checks for bad metadevices/disks.
+	This directive only currently checks for any devices that require
+	'Maintenance' from the metastat output.
+	TODO: parse metastat output better and report the actual device
+	that is having the problem.
+
+	Eg:
+	METASTAT: action="email('alert', 'A metadevice requires maintenance on %(h)s.')"
+    """
 
     def __init__(self, toklist):
 	apply( directive.Directive.__init__, (self, toklist) )
@@ -83,7 +115,13 @@ class METASTAT(directive.Directive):
 
     def tokenparser(self, toklist, toktypes, indent):
 
-	self.actionList = self.parseAction(toklist[0:])
+	tokdict=self.parseArgs(toklist)
+
+	try:
+	    self.actionList = self.parseAction( tokdict['action'] )
+	except KeyError:
+	    raise ParseFailure, "Action not specified"
+
 
 	# Set any FS-specific variables
 	#  rule = rule
@@ -91,17 +129,17 @@ class METASTAT(directive.Directive):
 	# define the unique ID
 	self.ID = '%s.METASTAT' % (log.hostname)
 
-	log.log( "<solaris.py>METASTAT.tokenparser(): ID '%s' action '%s'" % (self.ID, self.actionList), 8 )
+	log.log( "<solaris>METASTAT.tokenparser(): ID '%s' action '%s'" % (self.ID, self.actionList), 8 )
 
 
     def docheck(self, Config):
-	log.log( "<solaris.py>METASTAT.docheck(): ", 7 )
+	log.log( "<solaris>METASTAT.docheck(): ", 7 )
 	metastat = "/usr/opt/SUNWmd/sbin/metastat"
 
 	try:
 	    os.stat( metastat )
 	except:
-	    log.log( "<solaris.py>METASTAT.docheck(): %s not found, skipping check" % (metastat), 7 )
+	    log.log( "<solaris>METASTAT.docheck(): %s not found, skipping check" % (metastat), 7 )
 	else:
 	    # metastat exists, so check for anything requiring Maintenance
 
@@ -120,7 +158,7 @@ class METASTAT(directive.Directive):
 		# assign variables
 		self.Action.varDict['metastatmaintcnt'] = int(result)
 
-		log.log( "<solaris.py>METASTAT.docheck(): check failed, calling doAction()", 6 )
+		log.log( "<solaris>METASTAT.docheck(): check failed, calling doAction()", 6 )
 		self.doAction(Config)
 
 	    else:

@@ -24,14 +24,31 @@ ParseFailure = 'ParseFailure'
 
 
 class IPF(directive.Directive):
+    """Eddie directive for performing ipfilter checks.
+	Syntax:
+	    IPF: rule="<rule>" action="<actions>"
+	Examples:
+	    IPF: rule="ipfstat == None" action="email('alert', 'ipfstat is empty')"
+	    IPF: rule="len(ipfstatin) == 0" action="email('alert', 'ipfstat has no input rules for %(h)s')"
+    """
+
     def __init__(self, toklist):
 	apply( directive.Directive.__init__, (self, toklist) )
 
 
     def tokenparser(self, toklist, toktypes, indent):
 
-	self.rule = utils.stripquote(toklist[0])	# the rule
-	self.actionList = self.parseAction(toklist[1:])
+	tokdict=self.parseArgs(toklist)
+
+	try:
+	    self.rule = tokdict['rule']
+	except KeyError:
+	    raise ParseFailure, "Rule not specified"
+
+	try:
+	    self.actionList = self.parseAction( tokdict['action'] )
+	except KeyError:
+	    raise ParseFailure, "Action not specified"
 
 	# Set any FS-specific variables
 	#  rule = rule
@@ -40,11 +57,11 @@ class IPF(directive.Directive):
 	# define the unique ID
 	self.ID = '%s.IPF.%s' % (log.hostname,self.rule)
 
-	log.log( "<ipf.py>IPF.tokenparser(): ID '%s' rule '%s' action '%s'" % (self.ID, self.rule, self.actionList), 8 )
+	log.log( "<ipf>IPF.tokenparser(): ID '%s' rule '%s' action '%s'" % (self.ID, self.rule, self.actionList), 8 )
 
 
     def docheck(self, Config):
-	log.log( "<ipf.py>IPF.docheck(): rule '%s'" % (self.rule), 7 )
+	log.log( "<ipf>IPF.docheck(): rule '%s'" % (self.rule), 7 )
 
 	# locations to find ipfstat command
 	ipfstatcmds = [ "/sbin/ipfstat", "/opt/local/sbin/ipfstat" ]
@@ -56,7 +73,7 @@ class IPF(directive.Directive):
 		ipfstatcmd = i
 		break
 	    except os.error, detail:
-		log.log( "<ipf.py>IPF.docheck(): ipfstat not found, stat returned error %d, '%s'" % (detail[0], detail[1]), 8)
+		log.log( "<ipf>IPF.docheck(): ipfstat not found, stat returned error %d, '%s'" % (detail[0], detail[1]), 8)
 
 	if ipfstatcmd == None:
 	    # no ipfstat
@@ -67,17 +84,17 @@ class IPF(directive.Directive):
 	    (r, ipfstat) = commands.getstatusoutput(ipfstatcmd)
 	    if r != 0:
 		# ipfstat call failed
-		log.log( "<ipf.py>IPF.docheck(): %s call failed, returned %d, '%s'" % (ipfstatcmd, r, ipfstat), 3)
+		log.log( "<ipf>IPF.docheck(): %s call failed, returned %d, '%s'" % (ipfstatcmd, r, ipfstat), 3)
 
 	    (r, ipfstatin) = commands.getstatusoutput(ipfstatcmd+" -ih")
 	    if r != 0:
 		# ipfstat -ih call failed
-		log.log( "<ipf.py>IPF.docheck(): %s -ih call failed, returned %d, '%s'" % (ipfstatcmd, r, ipfstatin), 3)
+		log.log( "<ipf>IPF.docheck(): %s -ih call failed, returned %d, '%s'" % (ipfstatcmd, r, ipfstatin), 3)
 
 	    (r, ipfstatout) = commands.getstatusoutput(ipfstatcmd+" -oh")
 	    if r != 0:
 		# ipfstat -oh call failed
-		log.log( "<ipf.py>IPF.docheck(): %s -oh call failed, returned %d, '%s'" % (ipfstatcmd, r, ipfstatout), 3)
+		log.log( "<ipf>IPF.docheck(): %s -oh call failed, returned %d, '%s'" % (ipfstatcmd, r, ipfstatout), 3)
 
 	rulesenv = {}			# environment for rules execution
 	rulesenv['ipfstat'] = str(ipfstat)
@@ -99,7 +116,7 @@ class IPF(directive.Directive):
 	    self.Action.varDict['ipfstatin'] = str(ipfstatin)
 	    self.Action.varDict['ipfstatout'] = str(ipfstatout)
 
-    	    log.log( "<ipf.py>IPF.docheck(): rule '%s' was false, calling doAction()" % (self.rule), 6 )
+    	    log.log( "<ipf>IPF.docheck(): rule '%s' was false, calling doAction()" % (self.rule), 6 )
     	    self.doAction(Config)
 
 	Config.q.put( (self,time.time()+self.scanperiod) )	# put self back in the Queue
