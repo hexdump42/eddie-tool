@@ -1,5 +1,6 @@
 # EDDIE config file
-#  Common message definitions for other rules to use
+#  Common message definitions for other rules to use.
+#
 #  Most messages are suitable for emails, except the messages with names
 #    ending in "_P" which are short messages suitable for pagers or SMS.
 #
@@ -108,6 +109,7 @@ M commonmsg:
 	MSG ALERT: "Warning: process %(pid)s (from %(pidfile)s) on %(h)s not running"
 	    """ALERT: The process with pid %(pid)s (from pidfile '%(pidfile)s') on %(h)s is not running.
 
+%(act)s
 -- 
 %(problemage)s
 %(problemfirstdetect)s
@@ -149,6 +151,8 @@ Please free up space immediately.
 """
 
 	MSG ALERT_P: "Alert: %(h)s:%(mountpt)s at %(pctused)s%% - %(avail)s of %(size)s remain" ""
+
+	MSG FIXED_P: "%(h)s:%(mountpt)s OK now at %(pctused)s%%" ""
 
         MSG FIXED: "%(h)s:%(mountpt)s is now fixed (%(pctused)s%%)"
             """Filesystem %(mountpt)s on %(h)s has been fixed.
