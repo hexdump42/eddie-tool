@@ -453,7 +453,7 @@ def parseVars(text, vDict):
 	# string ended while still reading varname
 	    if varname == '':
 		# no variable name - just print '%'
-		modtext = modtext + '%' + c
+		modtext = modtext + c
 	    else:
 		try:
 		    varvalue = vDict[varname]
