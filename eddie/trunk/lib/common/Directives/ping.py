@@ -29,7 +29,7 @@
 # Imports: ping modules
 import pinger
 # Imports: Python
-#import 
+import socket
 # Imports: Eddie
 import log, directive
 
@@ -97,7 +97,13 @@ class PING(directive.Directive):
 	log.log( "<ping>PING.docheck(): ID '%s' host '%s' rule '%s' numpings=%d" % (self.ID, self.args.host, self.args.rule, self.args.numpings), 7 )
 
 	# Perform the pinging
-	p = pinger.Pinger( self.args.host, self.args.numpings )
+	try:
+	    p = pinger.Pinger( self.args.host, self.args.numpings )
+	except socket.error, err:
+	    log.log( "<ping>PING.docheck(): Socket Error, host '%s', %s" % (self.args.host,err), 4 )
+	    self.putInQueue( Config.q )     # put self back in the Queue
+	    return 1
+
 	p.ping()
 	s = p.get_summary()
 	# Summary is 6-tuple:
