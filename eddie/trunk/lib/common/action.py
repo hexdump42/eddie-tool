@@ -507,77 +507,88 @@ class action:
 ## General utilities for actions
 ##
 
+
+def parseVars(text, vDict):
+    """Substitute variables in vDict dictionary into text string.  Use
+    Python's builtin tricks for this.  Very simple!"""
+
+    try:
+	return text % vDict
+    except KeyError:
+	return text
+
+
 # Parse text string replacing occurences of %var with corresponding value from
 # vDict['var'].  Return modified string.
 # If substitutions were made, recursively called itself again to make any
 # more substitutions.
-def parseVars(text, vDict):
-    slash = 0		# true if '\' found
-    varcheck = 0	# true if '%' found - so look for variable name
-    modtext = ''	# the modified text string
-    subcount = 0	# count substitutions
-
-    for c in text:
-	if varcheck == 1:
-	    # found '%' - if text following it (up to white-space or another '%')
-	    # is a key in vDict, then replace '%var' with the value of vDict['var'].
-	    # TODO: also search for %{var}
-
-	    # build list of valid alphanumeric characters
-	    alphanum = chrange('0','9') + chrange('a','z') + chrange('A','Z') + ['_']
-	    if (c in alphanum):
-
-		# must be part of variable name
-		varname = varname + c
-	    else:
-		varcheck = 0
-		# end of variable name found
-		if varname == '':
-		    # no variable name - just print '%'
-		    modtext = modtext + '%' + c
-		else:
-		    try:
-			varvalue = vDict[varname]
-			# convert any type to a string!
-			valuestr = "%s" % varvalue
-			modtext = modtext + valuestr + c
-			subcount = subcount + 1
-		    except KeyError:
-			# not a valid variable name - just print '%varname'
-			modtext = modtext + '%' + varname + c
-		    varname = ''
-	elif (c == '%') and (not slash):
-	    # found '%' - set flag to start reading variable name.
-	    # Note: ignore '%' with '\' before it, ie: '\%'.
-	    varcheck = 1
-	    varname = ''
-	elif c == '\\':	# ' [vim bug - remove this comment later]
-	    # if '\' found set slash flag to true.
-	    slash=1
-	else:
-	    # Create modified text string
-	    modtext = modtext + c
-	    slash = 0
-    
-    if varcheck == 1:
-	# string ended while still reading varname
-	    if varname == '':
-		# no variable name - just print '%'
-		modtext = modtext + c
-	    else:
-		try:
-		    varvalue = vDict[varname]
-		    modtext = modtext + '%s'%(varvalue)
-		    subcount = subcount + 1
-		except KeyError:
-		    # not a valid variable name - just print '%varname'
-		    modtext = modtext + '%' + varname
-
-    # Recurse if substitutions were made.
-    if subcount > 0:
-	modtext = parseVars(modtext, vDict)
-
-    return modtext
+#def parseVars(text, vDict):
+#    slash = 0		# true if '\' found
+#    varcheck = 0	# true if '%' found - so look for variable name
+#    modtext = ''	# the modified text string
+#    subcount = 0	# count substitutions
+#
+#    for c in text:
+#	if varcheck == 1:
+#	    # found '%' - if text following it (up to white-space or another '%')
+#	    # is a key in vDict, then replace '%var' with the value of vDict['var'].
+#	    # TODO: also search for %{var}
+#
+#	    # build list of valid alphanumeric characters
+#	    alphanum = chrange('0','9') + chrange('a','z') + chrange('A','Z') + ['_']
+#	    if (c in alphanum):
+#
+#		# must be part of variable name
+#		varname = varname + c
+#	    else:
+#		varcheck = 0
+#		# end of variable name found
+#		if varname == '':
+#		    # no variable name - just print '%'
+#		    modtext = modtext + '%' + c
+#		else:
+#		    try:
+#			varvalue = vDict[varname]
+#			# convert any type to a string!
+#			valuestr = "%s" % varvalue
+#			modtext = modtext + valuestr + c
+#			subcount = subcount + 1
+#		    except KeyError:
+#			# not a valid variable name - just print '%varname'
+#			modtext = modtext + '%' + varname + c
+#		    varname = ''
+#	elif (c == '%') and (not slash):
+#	    # found '%' - set flag to start reading variable name.
+#	    # Note: ignore '%' with '\' before it, ie: '\%'.
+#	    varcheck = 1
+#	    varname = ''
+#	elif c == '\\':	# ' [vim bug - remove this comment later]
+#	    # if '\' found set slash flag to true.
+#	    slash=1
+#	else:
+#	    # Create modified text string
+#	    modtext = modtext + c
+#	    slash = 0
+#    
+#    if varcheck == 1:
+#	# string ended while still reading varname
+#	    if varname == '':
+#		# no variable name - just print '%'
+#		modtext = modtext + c
+#	    else:
+#		try:
+#		    varvalue = vDict[varname]
+#		    modtext = modtext + '%s'%(varvalue)
+#		    subcount = subcount + 1
+#		except KeyError:
+#		    # not a valid variable name - just print '%varname'
+#		    modtext = modtext + '%' + varname
+#
+#    # Recurse if substitutions were made.
+#    if subcount > 0:
+#	modtext = parseVars(modtext, vDict)
+#
+#    return modtext
 
 
 def chrange(first,last):
