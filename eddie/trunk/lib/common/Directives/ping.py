@@ -135,7 +135,7 @@ class PING(directive.Directive):
 	data['numpktsrx'] = s[4]
 	data['pktloss'] = s[5] * 100		# convert to %
 
-	log.log( "<ping>PING.getData(): host:%s mintriptime=%s avgtriptime=%s maxtriptime=%s numpktstx=%d numpktsrx=%d pktloss=%0.2f%%" % (self.args.host,s[0],s[1],s[2],s[3],s[4],s[5]), 7 )
+	log.log( "<ping>PING.getData(): host:%s mintriptime=%s avgtriptime=%s maxtriptime=%s numpktstx=%d numpktsrx=%d pktloss=%0.2f%%" % (self.args.host,s[0],s[1],s[2],s[3],s[4],s[5]*100), 7 )
 
 	if s[4] == 0:	# if no packets received, define alive to be false
 	    data['alive'] = 0
