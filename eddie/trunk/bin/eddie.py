@@ -243,11 +243,8 @@ def main():
 
 	    # Sleep by setting SIGALRM to go off in scanperiod seconds
 	    #time.sleep( config.scanperiod )
-	    print "Setting signal.alarm( %d )" % (config.scanperiod)
 	    signal.alarm( config.scanperiod )
-	    print "signal.pause() ..."
 	    signal.pause()
-	    print "...end of signal.pause()"
 
 	except KeyboardInterrupt:
 	    # CTRL-c hit - quit now
