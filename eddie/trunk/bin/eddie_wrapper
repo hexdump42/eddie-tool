@@ -53,9 +53,13 @@ else
 fi
 
 ## Find GNU date program - used for 'gdate "+%s"' below
-GDATE=`which gdate 2>/dev/null | grep -v "^no "`
-if [ "$GDATE" = "" ]; then
-    GDATE=`which date`		# hopefully standard 'date' is GNU date (ie, Linux)
+#GDATE=`which gdate 2>/dev/null | grep -v "^no "`
+GDATE=""
+which gdate >/dev/null 2>&1
+if [ "$?" = "0" ]; then
+    GDATE=`which gdate 2>/dev/null`	# Use GNU date
+else
+    GDATE=`which date 2>/dev/null`	# hopefully standard 'date' is GNU date (ie, Linux)
 fi
 if [ "$GDATE" = "" ]; then
     echo "** Can't find date or gdate - eddie_wrapper will have problems"
