@@ -38,11 +38,11 @@
   ctr_cpu_user		- total cpu in user space (int)
   ctr_cpu_nice		- total cpu in user nice space (int)
   ctr_cpu_system	- total cpu in system space (int)
-  ctr_cpu_idle		- total cpu in idle thread (int)
+  ctr_cpu_idle		- total cpu in idle thread (long)
   ctr_cpu%d_user	- per cpu in user space (e.g., cpu0, cpu1, etc) (int)
   ctr_cpu%d_nice	- per cpu in user nice space (e.g., cpu0, cpu1, etc) (int)
   ctr_cpu%d_system	- per cpu in system space (e.g., cpu0, cpu1, etc) (int)
-  ctr_cpu%d_idle	- per cpu in idle thread (e.g., cpu0, cpu1, etc) (int)
+  ctr_cpu%d_idle	- per cpu in idle thread (e.g., cpu0, cpu1, etc) (long)
   ctr_pages_in		- pages read in (int)
   ctr_pages_out		- pages written out (int)
   ctr_pages_swapin	- swap pages read in (int)
@@ -117,7 +117,7 @@ class system(datacollect.DataCollect):
 		    self.data.datahash['ctr_cpu_user'] = int(user)
 		    self.data.datahash['ctr_cpu_nice'] = int(nice)
 		    self.data.datahash['ctr_cpu_system'] = int(system)
-		    self.data.datahash['ctr_cpu_idle'] = int(idle)
+		    self.data.datahash['ctr_cpu_idle'] = long(idle)
 		elif re.match( '^cpu([0-9]+).*', line ):
 		    # Stats for each CPU
 		    m = re.match( '^cpu([0-9]+).*', line )
@@ -126,7 +126,7 @@ class system(datacollect.DataCollect):
 		    self.data.datahash['ctr_cpu%d_user'%cpunum] = int(user)
 		    self.data.datahash['ctr_cpu%d_nice'%cpunum] = int(nice)
 		    self.data.datahash['ctr_cpu%d_system'%cpunum] = int(system)
-		    self.data.datahash['ctr_cpu%d_idle'%cpunum] = int(idle)
+		    self.data.datahash['ctr_cpu%d_idle'%cpunum] = long(idle)
 		elif line[:5] == "disk ":
 		    # TODO - need info on meaning
 		    pass
