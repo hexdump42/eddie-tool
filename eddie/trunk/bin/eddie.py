@@ -61,6 +61,8 @@ import proc, df, netstat, system, iostat
 configdir = os.path.join(basedir, 'config')
 config_file = configdir + '/eddie.cf'
 
+# Load Directive
+config.loadExtraDirectives(os.path.join(commonlibdir, "Directives"))
 
 # Exit Eddie cleanly
 def eddieexit():
