@@ -489,7 +489,7 @@ class PORT(directive.Directive):
 	data['error'] = error		# error code if connect failed
 	data['errorstr'] = errorstr	# error text for above
 
-	if recv_string:
+	if 'expect' in dir(self.args):
 	    if string.find( recv_string, self.args.expect ) == -1:
 		data['matched'] = 0	# false
 	    else:
