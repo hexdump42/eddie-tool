@@ -59,7 +59,7 @@
    ctr_pages_out	- pages written out (int)
    ctr_pages_swapin	- swap pages read in (int)
    ctr_pages_swapout	- swap pages written out (int)
-   ctr_interrupts	- number of interrupts received (int)
+   ctr_interrupts	- number of interrupts received (long)
    ctr_contextswitches 	- number of context switches (float)
    ctr_processes	- number of processes started (I think?) (int)
  
@@ -170,7 +170,7 @@ class system(datacollect.DataCollect):
 		elif line[:5] == "intr ":
 		    # Number of interrupts - only using first number
 		    ints = string.split(line)[1]
-		    self.data.datahash['ctr_interrupts'] = int(ints)
+		    self.data.datahash['ctr_interrupts'] = long(ints)
 		elif line[:5] == "ctxt ":
 		    # Number of context switches
 		    ( foo, ctxt ) = string.split(line)
