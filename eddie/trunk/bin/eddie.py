@@ -77,6 +77,7 @@ config.loadExtraDirectives(os.path.join(commonlibdir, "Directives"))
 
 # Exit Eddie cleanly
 def eddieexit():
+    log.log( '<eddie>eddieexit(), Eddie exiting cleanly.', 3 )
     # email admin any remaining messages
     log.sendadminlog(1)
     sys.exit()
@@ -105,6 +106,7 @@ def SigHandler( sig, frame ):
 	#print "q.qsize=%d" % (q.qsize())
 
 	please_die.clear()
+	global sthread
 	sthread = threading.Thread(group=None, target=scheduler, name=None, args=(q,Config,please_die), kwargs={})
 	sthread.start()	# start it up
 
@@ -117,6 +119,11 @@ def SigHandler( sig, frame ):
     elif sig == signal.SIGTERM:
 	# SIGTERM (Terminate) - quit now
 	log.log( '<eddie>SigHandler(), SIGTERM (Terminate) encountered - quitting', 1 )
+
+	log.log( '<eddie>SigHandler(), signalling scheduler thread to die', 5 )
+	please_die.set()
+	sthread.join()
+
 	print "\nEddie quitting ... bye bye"
 	eddieexit()
 
@@ -160,7 +167,7 @@ def scheduler(q, Config, die_event):
 	    time.sleep(1)
 
 	# we have spare threads so get next checking object
-	while 1:
+	while not die_event.isSet():
 	    (c,t) = q.head(block=1)	# wait for next object from queue
 	    log.log( "<eddie>scheduler(), waiting object is %s at %s" % (c,t), 9 )
 	    if t <= time.time():
@@ -168,11 +175,17 @@ def scheduler(q, Config, die_event):
 		break
 	    time.sleep(1)
 
+	# break loop if we have been signalled to die
+	if die_event.isSet():
+	    break
+
 	(c,t) = q.get(block=1)	# retrieve next object from queue
 
 	# start check in a new thread
 	log.log( "<eddie>scheduler(), Starting new thread for %s, %s" % (c,t), 8 )
 	threading.Thread(group=None, target=c.docheck, name=None, args=(Config,), kwargs={}).start()
+
+    log.log( "<eddie>scheduler(), die_event received, scheduler exiting", 5 )
 
 
 
@@ -310,6 +323,7 @@ def main():
 
     global please_die
     please_die = threading.Event()		# Event object to notify the scheduler to die
+    global sthread
     sthread = threading.Thread(group=None, target=scheduler, name=None, args=(q,Config,please_die), kwargs={})
     sthread.start()	# start it up
 
@@ -346,6 +360,8 @@ def main():
 		#print "q.qsize=%d" % (q.qsize())
 
 		please_die.clear()
+
+		global sthread
 		sthread = threading.Thread(group=None, target=scheduler, name=None, args=(q,Config,please_die), kwargs={})
 		sthread.start()	# start it up
 
