@@ -11,7 +11,7 @@
 ##
 ##
 ########################################################################
-## (C) Chris Miles 2001
+## (C) Chris Miles 2001-2004
 ##
 ## The author accepts no responsibility for the use of this software and
 ## provides it on an ``as is'' basis without express or implied warranty.
@@ -27,9 +27,12 @@
 
 
 # Imports: Python
-import os, re
+import os
+import re
 # Imports: Eddie
-import log, directive, utils
+import log
+import directive
+import utils
 
 
 ##
@@ -38,8 +41,7 @@ import log, directive, utils
 
 
 class METASTAT(directive.Directive):
-    """
-    Solaris Disksuite checks for bad metadevices/disks.
+    """Solaris Disksuite checks for bad metadevices/disks.
     This directive only currently checks for any devices that require
     'Maintenance' from the metastat output.
 
@@ -56,8 +58,7 @@ class METASTAT(directive.Directive):
 
 
     def tokenparser(self, toklist, toktypes, indent):
-	"""
-	Parse directive arguments.
+	"""Parse directive arguments.
 	"""
 
 	apply( directive.Directive.tokenparser, (self, toklist, toktypes, indent) )
@@ -80,8 +81,7 @@ class METASTAT(directive.Directive):
 
 
     def getData(self):
-	"""
-	Called by Directive docheck() method to fetch the data required for
+	"""Called by Directive docheck() method to fetch the data required for
 	evaluating the directive rule.
 	"""
 
@@ -125,15 +125,14 @@ class METASTAT(directive.Directive):
 
 
 class PRTDIAG(directive.Directive):
-    """
-    Solaris checks using prtdiag output.
+    """Solaris checks using prtdiag output.
     Currently only supports AMBIENT and CPU temperatures.
 
     TODO: parse rest of prtdiag.
 
     Example:
-	PRTDIAG: rule="temp_ambient > 40"
-                 action="email('alert', 'Ambient temperature on %(h)s is %(temp_ambient)s.')"
+        PRTDIAG: rule="temp_ambient > 40"
+            action=email('alert', 'Ambient temperature on %(h)s is %(temp_ambient)s.')
     """
 
     def __init__(self, toklist):
@@ -141,8 +140,7 @@ class PRTDIAG(directive.Directive):
 
 
     def tokenparser(self, toklist, toktypes, indent):
-	"""
-	Parse directive arguments.
+	"""Parse directive arguments.
 	"""
 
 	apply( directive.Directive.tokenparser, (self, toklist, toktypes, indent) )
@@ -178,6 +176,8 @@ class PRTDIAG(directive.Directive):
 	    prtdiag_dict = self.parse_prtdiag_u280r()
 	elif output == "SUNW,Ultra-Enterprise":
 	    prtdiag_dict = self.parse_prtdiag_Enterprise()
+	elif output == "SUNW,Serverblade1":
+	    prtdiag_dict = self.parse_prtdiag_serverblade1()
 	else:
 	    log.log( "<solaris>PRTDIAG.getData(): system type %s not supported yet, directive cancelled" % (output), 4 )
 	    raise directive.DirectiveError, "system type %s not supported yet, directive cancelled" % (output)
@@ -360,6 +360,39 @@ class PRTDIAG(directive.Directive):
 
 	return prtdiag_dict
 		
+    def parse_prtdiag_serverblade1(self):
+    	"""Parse prtdiag output of a Sun Blade server (type 1).
+	Not sure what other types are yet.
+	"""
+
+	prtdiag = "/usr/platform/SUNW,Serverblade1/sbin/prtdiag"
+	try:
+	    os.stat(prtdiag)
+	except:
+	    log.log( "<solaris>PRTDIAG.parse_prtdiag_serverblade1(): %s not found, directive cancelled" % (prtdiag), 4 )
+	    return None
+
+	cmd = "%s -v" % (prtdiag)
+	(retval, output) = utils.safe_getstatusoutput( cmd )
+
+	prtdiag_dict = {}
+	prtdiag_dict['die_temp'] = None
+	prtdiag_dict['die_status'] = None
+	prtdiag_dict['ambient_temp'] = None
+	prtdiag_dict['ambient_status'] = None
+	prtdiag_dict['cpu_fan'] = None
+
+	for line in output.split('\n'):
+	    if line.startswith('Blade/CPU0 Die'):
+	    	prtdiag_dict['die_temp']=int(line.split()[2][:-1])
+	    	prtdiag_dict['die_status']=line.split()[-1]
+	    if line.startswith('Blade/CPU0 Ambient'):
+	    	prtdiag_dict['ambient_temp']=int(line.split()[2][:-1])
+	    	prtdiag_dict['ambient_status']=line.split()[-1]
+	    if line.startswith('Blade/cpu-fan'):
+	    	prtdiag_dict['cpu_fan']=line.split()[-1]
+
+	return prtdiag_dict
 
 ##
 ## END - solaris.py
