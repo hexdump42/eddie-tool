@@ -282,6 +282,9 @@ class PID(Directive):
 		if pid[-1:] == '\n':
 		    pid = pid[:-1]
 
+		# Get rid of any other junk after pid
+		pid = string.split(pid)[0]
+
 		self.varDict['pid'] = pid
 
 		# Search for pid from process list
