@@ -10,7 +10,7 @@
 ## $Id$
 ##
 ########################################################################
-## (C) Chris Miles 2001
+## (C) Chris Miles 2001-2004
 ##
 ## The author accepts no responsibility for the use of this software and
 ## provides it on an ``as is'' basis without express or implied warranty.
@@ -25,7 +25,11 @@
 ########################################################################
 
 ## Imports: Python
-import time, sys, traceback, threading, Queue
+import time
+import sys
+import traceback
+import threading
+import Queue
 ## Imports: Eddie
 import log
 
@@ -132,25 +136,34 @@ class Elvin:
     def main(self):
 	"""The Elvin management thread."""
 
-	while 1:
-	    self.connect()		# open Elvin connection
-	    self.subscribe()		# setup any subscriptions
+	waittime = 1				# time to wait before re-connecting
 
-	    # Loop to watch message queue for any Elvin notifications to be sent
-	    # from other Elvin functions or actions.
-	    # This means no other threads should block when sending Elvin notifications.
-	    while self.connection.is_open():
-		m = self.eq.get(BLOCK)	# get next message or wait for one
-		if m.time_valid():
-		    log.log("<eddieElvin4>Elvin.main(): Sending msg from queue, %s"%(m), 9)
-		    try:
-			self.connection.notify(m.emsg)
-			log.log("<eddieElvin4>Elvin.main(): msg sent, %s"%(m), 6)
-		    except elvin.ElvinConnectNotReady, details:
-			log.log("<eddieElvin4>Elvin.main(): Elvin exception, %s, msg %s not sent"%(details, m), 3)
-			self.eq.put(m)	# put msg back in queue for re-try
-		else:
-		    log.log("<eddieElvin4>Elvin.main(): message no longer valid, discarding %s"%(m), 9)
+	while 1:
+	    status = self.connect()		# open Elvin connection
+	    if status:
+		self.subscribe()		# setup any subscriptions
+		waittime = 1			# reset wait time
+
+		# Loop to watch message queue for any Elvin notifications to be sent
+		#   from other Elvin functions or actions.
+		# This means no other threads should block when sending Elvin notifications.
+		while self.connection.is_open():
+		    m = self.eq.get(BLOCK)	# get next message or wait for one
+		    if m.time_valid():
+			log.log("<eddieElvin4>Elvin.main(): Sending msg from queue, %s"%(m), 9)
+			try:
+			    self.connection.notify(m.emsg)
+			    log.log("<eddieElvin4>Elvin.main(): msg sent, %s"%(m), 6)
+			except elvin.ElvinConnectNotReady, details:
+			    log.log("<eddieElvin4>Elvin.main(): Elvin exception, %s, msg %s not sent"%(details, m), 3)
+			    self.eq.put(m)	# put msg back in queue for re-try
+		    else:
+			log.log("<eddieElvin4>Elvin.main(): message no longer valid, discarding %s"%(m), 9)
+
+	    else:
+		log.log("<eddieElvin4>Elvin.main(): Elvin connect failed waiting %d secs"%(waittime), 5)
+		time.sleep( waittime )
+		waittime = min( waittime * 2, 60*60*4 ) # inc wait time but max 4 hours
 
 	    log.log("<eddieElvin4>Elvin.main(): Elvin connection closed...  reconnecting", 4)
 
@@ -180,10 +193,17 @@ class Elvin:
 
 	# Now open connection to server
 	log.log("<eddieElvin4>Elvin.connect(): Opening connection to Elvin, '%s'" %(self.connect_str), 8)
-	self.connection.open()
-	log.log("<eddieElvin4>Elvin.connect(): Connected to Elvin, '%s'" %(self.connect_str), 5)
+	status = 0
 
-	return 1
+	try:
+	    self.connection.open()
+	except ElvinConnectMaxRetries, msg:
+	    log.log("<eddieElvin4>Elvin.connect(): Elvin could not connect, ElvinConnectMaxRetries '%s'" %(msg), 5)
+	else:
+	    log.log("<eddieElvin4>Elvin.connect(): Connected to Elvin, '%s'" %(self.connect_str), 5)
+	    status = 1
+
+	return status
 
 
     def notify(self, emsg, validity_time=ANYTIME):
