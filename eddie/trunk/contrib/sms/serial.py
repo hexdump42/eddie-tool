@@ -18,11 +18,11 @@ from TERMIOS import *
 from FCNTL import *
 
 class modem:
-    def __init__(self, *arg):
+    def __init__(self, portName="/dev/cua/b"):
 	self.timedout = 0
-	self.open()
+	self.open(portName)
 
-    def open(self, portName="/dev/cua/b"):
+    def open(self, portName):
 
 	# ok lets try setting up the serial port
 	try:
@@ -52,11 +52,20 @@ class modem:
 	    # are not implemented.  *snarl*
 	    settings[cflag] = settings[cflag] | CRTSCTS
 
+	    # hangup on last close
+	    settings[cflag] = settings[cflag] | HUPCL
+
 	    # Don't echo received chars, or do erase or kill input processing.
 	    settings[lflag] = (settings[lflag] & ~(ECHO | ICANON))
 
 	    # Do NO output processing.
 	    settings[oflag] = 0
+
+	    # Always read 1 char or timeout
+	    settings[cc][VMIN] = 0
+
+	    # make read() timeout after 1 sec
+	    settings[cc][VTIME] = 10
 
 	    # Install the modified line settings.
 	    termios.tcsetattr(self.fd, TCSANOW, settings)
@@ -122,7 +131,8 @@ class modem:
 	os.close(self.fd)
 
 #
-# This is a test driver
+# This is a test driver which uses a siemens M1 GSM Modual 
+# to send an SMS message to my mobile
 #
 if __name__ == "__main__":
     print "Running test page to 0414786118"

@@ -40,6 +40,12 @@ class pdu:
 
 	    self.encPhone()     # encode the phone number
 	    self.encodeSM()     # encode the message
+
+	elif (len(arg) == 1):
+	    print arg[0]
+
+	else:
+	    raise TypeError, "Incorrect Number of arguments"
     
     def __setitem__(self, key, val):
 	self.pdu_enc[key] = val
@@ -50,7 +56,7 @@ class pdu:
 	except KeyError:
 	    return None
 
-    def __str__(self):
+    def print_enc(self):
 	ret = "%s%s%s%s%s%s%s%s%s%s" % (self['pdu_type'],
 	 				self['mr'],
 	 				self['ph_len'],
@@ -66,8 +72,6 @@ class pdu:
         
 
     def encPhone(self):
-    
-        print self.phone
         len_h = '%02x' % (len(self.phone) - 1)
         ret = ''
 
@@ -77,14 +81,13 @@ class pdu:
 	    except IndexError:
 		ret = ret + "F%c" % (self.phone[i])
 	
-	self.pdu_enc['ph_len'] = len_h
-	self.pdu_enc['oada']   = ret
+	self['ph_len'] = len_h
+	self['oada']   = ret
 
 	return(0)
 
 
     def encodeSM(self):
-
 	len_i = len(self.message)
 	len_h = "%02x" % len_i
 
@@ -92,8 +95,8 @@ class pdu:
 	enc      = pdu_utils.to7bb(eb)
 	hex_s    = pdu_utils.enc2hex(enc)
 
-	self.pdu_enc['udl'] = len_h
-	self.pdu_enc['ud']  = hex_s
+	self['udl'] = len_h
+	self['ud']  = hex_s
 	return(0)
 
 
@@ -107,7 +110,7 @@ if __name__ == "__main__":
     p = "%s" % p[:-1]
 
     my_pdu = pdu(p, m)
-    foo = str( my_pdu )
+    foo = my_pdu.print_enc()
     print foo
 
     sys.exit(0)
