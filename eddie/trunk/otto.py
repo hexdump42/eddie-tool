@@ -31,13 +31,13 @@ def main():
     # read in config and rules
     parseConfig.readFile(config_file, ourList)
  
-    print "M: ",ourList['M']
-    print "D: ",ourList['D']
-    print "FS: ",ourList['FS']
-    print "PID: ",ourList['PID']
-    print "SP: ",ourList['SP']
+    #print "M: ",ourList['M']
+    #print "D: ",ourList['D']
+    #print "FS: ",ourList['FS']
+    #print "PID: ",ourList['PID']
+    #print "SP: ",ourList['SP']
 
-    
+
     # instantiate a process list
     p = proc.procList()
     #print p
@@ -49,18 +49,18 @@ def main():
     # Parse all configuration options
     # (... and remove them from the Rules List ...)
     # !! TODO !!
-    config.parseConfig( ourList );
+    #config.parseConfig( ourList );
 
     # Define Messages (M-directives)
     # (... and remove them from the Rules List ...)
     # !! TODO !!
-    ourList.delete( 'M' )
+    #ourList.delete( 'M' )
 
     # Now do all the checking
     # note ... directive order is not defined (we don't currently care do we?)
-    for d in ourList.keylist():
-	print "d = ",d
-	#eval('directive.'+d+'.docheck()')
+    #for d in ourList.keylist():
+    #    print "d = ",d
+    #    #eval('directive.'+d+'.docheck()')
 
 if __name__ == "__main__":
     main()

@@ -15,6 +15,7 @@
 import os
 import string
 import regex
+import sys
 
 # Rules holds all the directives in a hash where the value of each key is the
 # list of rules relating to that key.
@@ -54,11 +55,27 @@ class Rules:
 ##
 class Directive:
     def __init__(self, *arg):
-	self.raw = arg[0]
-	self.type = string.split(self.raw)[0]
+	self.raw = arg[0]			# the raw line as read from config file
+	self.type = string.split(self.raw)[0]	# the directive type of this instance
+	self.regexp = ''			# the regexp to split the raw line into fields
+	self.action = ''			# each directive will have an action
 
     def getRaw(self):
 	return self.raw
+
+    def parseRaw(self):
+	sre = regex.compile( self.regexp )
+	inx = sre.search( self.raw )
+	if inx == -1:
+	    # probably make an exception here.....
+	    print "parseRaw() ERROR: regex search failed (in",self.type,"). Fix your regexp and try again."
+	    print "  --raw-- '%s'" % (self.raw)
+	fieldlist = ()
+	i=1
+	while( sre.group(i) != None ):
+	    fieldlist = fieldlist + (sre.group(i),)
+	    i = i + 1
+	return fieldlist
 
 ##
 ## COMMANDS
@@ -103,6 +120,7 @@ class M(Directive):
 	print "sending message to", email
 
 
+
 ##
 ## RULE-BASED COMMANDS
 ##
@@ -117,16 +135,42 @@ class A(Directive):
 
 
 class PID(Directive):
+    def __init__(self, *arg):
+	apply( Directive.__init__, (self,) + arg )
+	self.regexp = 'PID[\t \n]+\([a-zA-Z0-9_/\.]+\)[\t \n]+\([a-zA-Z0-9_]+\)[\t \n]+\([a-zA-Z0-9_]+\)[\t \n]*'
+	fields = self.parseRaw()
+	self.pidfile = fields[0]		# the pid file to check for
+	self.rule = fields[1]			# the rule (EX or PR)
+	self.action = fields[2]			# the action
+	print "<PID> pidfile: '%s' rule: '%s' action: '%s'" % (self.pidfile, self.rule, self.action)
+
     def docheck(self):
 	print "PID directive doing checking......"
 
 
 class D(Directive):
+    def __init__(self, *arg):
+	apply( Directive.__init__, (self,) + arg )
+	self.regexp = 'D[\t \n]+\([a-zA-Z0-9_]+\)[\t \n]+\([a-zA-Z0-9_]+\)[\t \n]+\([a-zA-Z0-9_]+\)[\t \n]*'
+	fields = self.parseRaw()
+	self.daemon = fields[0]			# the daemon to check for
+	self.rule = fields[1]			# the rule (NR or R)
+	self.action = fields[2]			# the action
+	print "<D> daemon: '%s' rule: '%s' action: '%s'" % (self.daemon, self.rule, self.action)
+
     def docheck(self):
 	print "D directive doing checking......"
 
 
 class SP(Directive):
+    def __init__(self, *arg):
+	apply( Directive.__init__, (self,) + arg )
+	self.regexp = 'SP[\t \n]+\([a-zA-Z0-9_/]+\)[\t \n]+\([a-zA-Z0-9_]+\)[\t \n]*'
+	fields = self.parseRaw()
+	self.port = fields[0]			# the port to check
+	self.action = fields[1]			# the action
+	print "<SP> port: '%s' action: '%s'" % (self.port, self.action)
+
     def docheck(self):
 	print "SP directive doing checking......"
 
