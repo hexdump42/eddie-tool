@@ -131,7 +131,7 @@ class procList(datacollect.DataCollect):
 	self.data.nameHash = {}		# dict of processes keyed by process name
 
 	#rawList = utils.safe_popen('/usr/bin/ps -e -o "s user ruser group rgroup uid ruid gid rgid pid ppid pgid sid pri opri pcpu pmem vsz rss osz time etime stime f c tty addr nice class wchan fname comm args"', 'r')
-	rawList = utils.safe_popen('/bin/ps -axwww -o "state user ruser uid ruid gid rgid pid ppid pgid pri pcpu pmem vsz rss time stime f tty nice wchan ucomm command"', 'r')
+	rawList = utils.safe_popen('/bin/ps -axwww -o "state user ruser uid ruid rgid pid ppid pgid pri pcpu pmem vsz rss time f tty nice wchan ucomm command"', 'r')
 	rawList.readline()		# skip header
  
 	for line in rawList.readlines():
@@ -164,20 +164,18 @@ class proc:
 	self.ruser =   fields[ 2]       # real user ID of the process
 	self.uid = int(fields[ 3])      # effective user ID number of the process as a decimal integer
 	self.ruid =int(fields[ 4])      # real user ID number of the process as a decimal integer
-	self.gid = int(fields[ 5])      # effective group ID number of the process as a decimal integer
-	self.rgid =int(fields[ 6])      # real group ID number of the process as a decimal integer
-	self.pid = int(fields[ 7])      # decimal value of the process ID
-	self.ppid =int(fields[ 8])      # decimal value of the parent process ID
-	self.pgid =int(fields[ 9])      # decimal value of the process group ID
-	self.pri = int(fields[10])      # priority of the process
-	self.pcpu =float(fields[11])    # ratio of CPU time used recently to CPU time available in the same period, expressed as a percentage
-	self.pmem =float(fields[12])       # ratio of the process's resident set size to the physical memory on the machine, expressed as a percentage
-	self.vsz = int(fields[13])      # size of the process in (virtual) memory in kilobytes as a decimal integer
-	self.rss = int(fields[14])      # resident set size of the process, in kilobytes as a decimal integer
-	self.time =    fields[15]       # cumulative CPU time of the process in the form: [dd-]hh:mm:ss
-	self.stime =   fields[16]       # starting time or date of the process
-	self.f =       fields[17]       # flags (hexadecimal and additive) associated with the process
-	self.tty =     fields[18]       # name of the controlling terminal of the process (if any)
+	self.rgid =int(fields[ 5])      # real group ID number of the process as a decimal integer
+	self.pid = int(fields[ 6])      # decimal value of the process ID
+	self.ppid =int(fields[ 7])      # decimal value of the parent process ID
+	self.pgid =int(fields[ 8])      # decimal value of the process group ID
+	self.pri = int(fields[ 9])      # priority of the process
+	self.pcpu =float(fields[10])    # ratio of CPU time used recently to CPU time available in the same period, expressed as a percentage
+	self.pmem =float(fields[11])       # ratio of the process's resident set size to the physical memory on the machine, expressed as a percentage
+	self.vsz = int(fields[12])      # size of the process in (virtual) memory in kilobytes as a decimal integer
+	self.rss = int(fields[13])      # resident set size of the process, in kilobytes as a decimal integer
+	self.time =    fields[14]       # cumulative CPU time of the process in the form: [dd-]hh:mm:ss
+	self.f =       fields[15]       # flags (hexadecimal and additive) associated with the process
+	self.tty =     fields[16]       # name of the controlling terminal of the process (if any)
 
 	if self.state == 'Z':
 	    # Zombied (or <defunct>) processes don't show any more information
@@ -187,18 +185,18 @@ class proc:
 	    self.args =    "<defunct>"
 	    self.procname = "<defunct>"
 	else:
-	    self.nice =    fields[19]       # decimal value of the system scheduling priority of the process
-	    self.wchan =   fields[20]       # address of an event for which the process is sleeping (if -, the process is running)
-	    self.comm =    fields[21]       # name of the command being executed (argv[0] value) as a string
-	    self.args =    string.join(fields[22:], " ")      # command with all its arguments as a string
+	    self.nice =    fields[17]       # decimal value of the system scheduling priority of the process
+	    self.wchan =   fields[18]       # address of an event for which the process is sleeping (if -, the process is running)
+	    self.comm =    fields[19]       # name of the command being executed (argv[0] value) as a string
+	    self.args =    string.join(fields[20:], " ")      # command with all its arguments as a string
 
 	    # Actual 'command' name with no path or interpreter - Eddie will mainly use this
 	    self.procname = string.split(self.comm, '/')[-1]
 	    if self.procname in interpreters:
 		# this command is an interpreter (eg: 'perl', 'python', etc)
 		# let's set procname to the name of the script (if there is a script)
-		if len(fields) > 23:
-		    i = 23
+		if len(fields) > 21:
+		    i = 21
 		    self.procname = string.split(fields[i], '/')[-1]
 		    # ignore arguments (strings starting with '-')
 		    try:
@@ -248,7 +246,6 @@ class proc:
 	info["ruser"] = self.ruser
 	info["uid"] = self.uid
 	info["ruid"] = self.ruid
-	info["gid"] = self.gid
 	info["rgid"] = self.rgid
 	info["pid"] = self.pid
 	info["ppid"] = self.ppid
@@ -260,7 +257,6 @@ class proc:
 	info["rss"] = self.rss
 	info["time"] = self.time
 	info['timesec'] = self.timeconv(self.time)
-	info["stime"] = self.stime
 	info["f"] = self.f
 	info["tty"] = self.tty
 	info["nice"] = self.nice
