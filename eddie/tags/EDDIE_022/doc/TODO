@@ -1,0 +1,6 @@
+Things TODO for Eddie!
+
+- Remove dependence on bin/systype.  Determine system type internally.
+- Double checking for Port directive
+
+

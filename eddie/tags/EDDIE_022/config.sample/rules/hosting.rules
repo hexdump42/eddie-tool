@@ -1,0 +1,337 @@
+# Eddie config file
+#  Rules specific to VWS hosting machines.
+#
+
+group fep:
+
+    ###########################################################################
+    # MESSAGES
+
+
+    ###########################################################################
+    # Notification Definitions
+
+
+    ###########################################################################
+    # RULES
+
+    ## PROC
+    #  Process	Rules	Action
+    #  -------	-----	------
+
+    # http's and https's
+    #PROC "001http":	NR	COMMONALERT(commonmsg.proc)
+    #PROC "001https":	NR	COMMONALERT(commonmsg.proc)
+    PROC "002http":	NR	COMMONALERT(commonmsg.proc)
+    PROC "002https":	NR	COMMONALERT(commonmsg.proc)
+    PROC "003http":	NR	COMMONALERT(commonmsg.proc)
+    PROC "003https":	NR	COMMONALERT(commonmsg.proc)
+    PROC "004http":	NR	COMMONALERT(commonmsg.proc)
+    PROC "005http":	NR	COMMONALERT(commonmsg.proc)
+    PROC "006http":	NR	COMMONALERT(commonmsg.proc)
+    PROC "007http":	NR	COMMONALERT(commonmsg.proc)
+    PROC "008http":	NR	COMMONALERT(commonmsg.proc)
+    PROC "009http":	NR	COMMONALERT(commonmsg.proc)
+    PROC "010http":	NR	COMMONALERT(commonmsg.proc)
+    PROC "011http":	NR	COMMONALERT(commonmsg.proc)
+    PROC "012http":	NR	COMMONALERT(commonmsg.proc)
+    PROC "013http":	NR	COMMONALERT(commonmsg.proc)
+    PROC "014http":	NR	COMMONALERT(commonmsg.proc)
+    PROC "015http":	NR	COMMONALERT(commonmsg.proc)
+    PROC "015https":	NR	COMMONALERT(commonmsg.proc)
+    PROC "016http":	NR	COMMONALERT(commonmsg.proc)
+    PROC "016https":	NR	COMMONALERT(commonmsg.proc)
+    PROC "017http":	NR	COMMONALERT(commonmsg.proc)
+    PROC "017https":	NR	COMMONALERT(commonmsg.proc)
+    PROC "018http":	NR	COMMONALERT(commonmsg.proc)
+    PROC "019http":	NR	COMMONALERT(commonmsg.proc)
+
+    # misc
+    PROC automountd:	NR	COMMONRESTART(commonmsg.proc)
+
+    ## FS
+    #  Filesystem   	Thresholds      Action
+    #  ----------   	----------      ----------
+    FS /home:		$OVER99		COMMONALERT(commonmsg.fs,0)
+    FS /opt:		$OVER95		COMMONALERT(commonmsg.fs,2)
+    FS /var/log:	$VARLOG1	COMMONALERT(commonmsg.fs,2)
+    FS /var/log:	$VARLOG2	COMMONALERT(commonmsg.fs,1)
+
+    ## PID
+    #    pidfile                Rules   Action
+    #    -------                -----   ------
+
+    ## PORT
+    #   Port        Bind Addr       Action
+    #   ----        ---------       ------
+
+    ## COM
+    #    command			Rules		Action
+    #    -------			-----		------
+
+
+    ## PORT
+    #     Host	Port	SendStr	Expect		Action
+    #     ----	----	-------	------		-----
+
+
+group real:
+
+    ###########################################################################
+    # MESSAGES
+
+
+    ###########################################################################
+    # Notification Definitions
+
+
+    ###########################################################################
+    # RULES
+
+    ## PROC
+    #  Process		Rules	Action
+    #  -------		-----	------
+    PROC pnserver:	NR	COMMONALERT(commonmsg.proc,1)
+    PROC rmserver:	NR	COMMONALERT(commonmsg.proc,1)
+
+    ## FS
+    #  Filesystem   		Thresholds      Action
+    #  ----------   		----------      ----------
+
+    ## PID
+    #    pidfile                Rules   Action
+    #    -------                -----   ------
+
+    ## SP
+    #   Port        Bind Addr       Action
+    #   ----        ---------       ------
+
+    ## COM
+    #    command			Rules		Action
+    #    -------			-----		------
+
+    ## PORT
+    #     Host	Port	SendStr	Expect		Action
+    #     ----	----	-------	------		-----
+
+
+group vwsserver:
+
+    ###########################################################################
+    # MESSAGES
+
+
+    ###########################################################################
+    # Notification Definitions
+
+
+    ###########################################################################
+    # RULES
+
+    ## PROC
+    #  Process		Rules	Action
+    #  -------		-----	------
+    PROC named:		NR	COMMONALERT(commonmsg.proc,2)
+    PROC mountd:	NR	COMMONALERT(commonmsg.proc,2)
+    PROC lockd:		NR	COMMONALERT(commonmsg.proc,2)
+
+    DEF EXPORT= "(capac>=97 & avail<=100MB) | (capac>=90 & capacdelta>=2)"
+    DEF ARCHIVE="(capac>=98 & avail<=100MB)"
+
+    ## FS
+    #  Filesystem   		Thresholds      Action
+    #  ----------   		----------      ----------
+    FS /home:			$OVER99		COMMONALERT(commonmsg.fs,0)
+    FS /opt:			$OVER95		COMMONALERT(commonmsg.fs,2)
+    FS /var/log:		$OVER90		COMMONALERT(commonmsg.fs,2)
+    FS /export:			$OVER95		COMMONALERT(commonmsg.fs,2)
+
+    ## PID
+    #    pidfile                	Rules   Action
+    #    -------                	-----   ------
+    PID  /var/run/named.pid:		EX	NAMEDRESTART(commonmsg.pid,0)
+    PID  /var/run/named.pid:		PR	NAMEDRESTART(commonmsg.pidpr,1)
+
+    ## SP
+    #   Port        Bind Addr       Action
+    #   ----        ---------       ------
+
+    ## COM
+    #    command			Rules		Action
+    #    -------			-----		------
+
+    ## PORT
+    #     Host	Port	SendStr	Expect		Action
+    #     ----	----	-------	------		-----
+
+
+group bunora:
+
+    ###########################################################################
+    # MESSAGES
+
+
+    ###########################################################################
+    # Notification Definitions
+
+
+    ###########################################################################
+    # RULES
+
+    ## PROC
+    #  Process		Rules	Action
+    #  -------		-----	------
+
+    # http's and https's
+    PROC httpd:		NR	COMMONALERT(commonmsg.proc,1)
+    PROC httpsd:	NR	COMMONALERT(commonmsg.proc,1)
+
+    # misc
+    PROC named:		NR	COMMONRESTART(commonmsg.proc,2)
+
+
+    DEF     OVER97= "capac>=97%"
+
+    ## FS
+    #  Filesystem   	Thresholds      Action
+    #  ----------   	----------      ----------
+    FS /home:		$OVER99		COMMONALERT(commonmsg.fs,0)
+    FS /opt:		$OVER95		COMMONALERT(commonmsg.fs,2)
+    FS /var/log:	$VARLOG1	COMMONALERT(commonmsg.fs,2)
+    FS /var/log:	$VARLOG2	COMMONALERT(commonmsg.fs,1)
+    FS /export:		$OVER97		COMMONALERT(commonmsg.fs,2)
+
+    ## PID
+    #    pidfile                Rules   Action
+    #    -------                -----   ------
+    PID  /var/run/named.pid:	EX	COMMONALERT(commonmsg.pid,0)
+    PID  /var/run/named.pid:	PR	COMMONALERT(commonmsg.pidpr,1)
+
+    ## PORT
+    #   Port        Bind Addr       Action
+    #   ----        ---------       ------
+
+    ## COM
+    #    command			Rules		Action
+    #    -------			-----		------
+
+
+    ## PORT
+    #     Host	Port	SendStr	Expect		Action
+    #     ----	----	-------	------		-----
+
+
+
+group buntor:
+
+    ###########################################################################
+    # MESSAGES
+
+
+    ###########################################################################
+    # Notification Definitions
+
+
+    ###########################################################################
+    # RULES
+
+    ## PROC
+    #  Process		Rules	Action
+    #  -------		-----	------
+
+    # http's and https's
+    PROC httpd:		NR	COMMONALERT(commonmsg.proc,1)
+    PROC httpsd:	NR	COMMONALERT(commonmsg.proc,1)
+
+    # misc
+    PROC named:		NR	COMMONRESTART(commonmsg.proc,2)
+
+
+    ## FS
+    #  Filesystem   	Thresholds      Action
+    #  ----------   	----------      ----------
+    FS /home:		$OVER99		COMMONALERT(commonmsg.fs,0)
+    FS /opt:		$OVER95		COMMONALERT(commonmsg.fs,2)
+    FS /var/log:	$VARLOG1	COMMONALERT(commonmsg.fs,2)
+    FS /var/log:	$VARLOG2	COMMONALERT(commonmsg.fs,1)
+    FS /export:		$OVER95		COMMONALERT(commonmsg.fs,2)
+
+    ## PID
+    #    pidfile                Rules   Action
+    #    -------                -----   ------
+    PID  /var/run/named.pid:	EX	COMMONALERT(commonmsg.pid,0)
+    PID  /var/run/named.pid:	PR	COMMONALERT(commonmsg.pidpr,1)
+
+    ## PORT
+    #   Port        Bind Addr       Action
+    #   ----        ---------       ------
+
+    ## COM
+    #    command			Rules		Action
+    #    -------			-----		------
+
+
+    ## PORT
+    #     Host	Port	SendStr	Expect		Action
+    #     ----	----	-------	------		-----
+
+
+
+group eko:
+
+    ###########################################################################
+    # MESSAGES
+
+
+    ###########################################################################
+    # Notification Definitions
+
+
+    ###########################################################################
+    # RULES
+
+    ## PROC
+    #  Process		Rules	Action
+    #  -------		-----	------
+
+    # misc
+    PROC named:		NR	NAMEDRESTART(commonmsg.proc,2)
+    PROC mysqld:	NR	COMMONALERT(commonmsg.proc)
+    PROC msql2d:	NR	COMMONALERT(commonmsg.proc)
+
+    # intershop
+    PROC ISService:	NR	COMMONALERT(commonmsg.proc,2)
+    PROC ISSRV:		NR	COMMONALERT(commonmsg.proc,2)
+    PROC ReqRouter:	NR	COMMONALERT(commonmsg.proc)
+    PROC dataserver:	NR	COMMONALERT(commonmsg.proc)
+
+
+    ## FS
+    #  Filesystem   	Thresholds      Action
+    #  ----------   	----------      ----------
+    FS /home:		$OVER99		COMMONALERT(commonmsg.fs,0)
+    FS /opt:		$OVER95		COMMONALERT(commonmsg.fs,2)
+    FS /var/log:	$VARLOG1	COMMONALERT(commonmsg.fs,2)
+    FS /var/log:	$VARLOG2	COMMONALERT(commonmsg.fs,1)
+    FS /export:		$OVER95		COMMONALERT(commonmsg.fs,2)
+
+    ## PID
+    #    pidfile                Rules   Action
+    #    -------                -----   ------
+    PID  /var/run/named.pid:	EX	COMMONALERT(commonmsg.pid,0)
+    PID  /var/run/named.pid:	PR	COMMONALERT(commonmsg.pidpr,1)
+
+    ## PORT
+    #   Port        Bind Addr       Action
+    #   ----        ---------       ------
+
+    ## COM
+    #    command			Rules		Action
+    #    -------			-----		------
+
+
+    ## PORT
+    #     Host	Port	SendStr	Expect		Action
+    #     ----	----	-------	------		-----
+
+

@@ -1,0 +1,175 @@
+#!/opt/python/bin/python
+## 
+## File         : estored
+## 
+## Author       : Chris Miles  <cmiles@connect.com.au>
+## 
+## Date         : 19990601
+## 
+## Description  : Elvin consumer to insert Eddie's STOREd data into a database.
+##
+## $Id$
+##
+
+################################################################
+
+import os, sys, signal, time
+import MySQL
+
+from Elvin import *
+
+
+MYSQL_HOST = 'hakisak.off.connect.com.au'
+MYSQL_DB = 'eddiedata'
+
+################################################################
+
+class eddieElvin:
+
+    def __init__(self, host='elvin.connect.com.au', port=5678):
+	self.host = host
+	self.port = port
+
+	try:
+	    print "Trying Elvin connection to %s:%d" % (self.host, self.port)
+	    self.elvin = Elvin.Elvin(Elvin.EC_NAMEDHOST, self.host, self.port,
+				     None, self._error_cb)
+	    print "Elvin connection succeeded."
+	except:
+	    sys.stderr.write("Connection to elvin failed\nIs there an elvin server running at %s:%d\n" %(self.host, self.port))
+	    #self._exit()
+	    raise ElvinError, "Connection failed to %s:%d" % (self.host,self.port)
+	else:
+	    self.connected = 1
+
+	self.DBH = MySQL.connect(MYSQL_HOST)
+	print "MySQL connected."
+
+	self.DBH.selectdb(MYSQL_DB)
+	print "DB selected."
+
+
+
+
+    def _exit(self):
+	"""Exit routine. Because the thing that created us is
+	sitting on a signal.pause. We signal ourselves to die"""
+    
+	os.kill(os.getpid(), signal.SIGUSR1)
+
+
+    def _error_cb(self, code, msg):
+	"""Elvin error callback. We reconnect"""
+
+	sys.stderr.write("Elvin has gone ... will atempt to reconnect\n")
+	self.connected = 0
+	self._destroy()
+	backoff = 4
+	while not self._reconnect():
+	    time.sleep(backoff)
+	    backoff = backoff * 2
+	    if backoff > 36000: # 10 mins
+		sys.stderr.write("Elvin is really dead.  Giving up\n")
+		os.kill(os.getpid(), signal.SIGUSR1)
+
+    def _reconnect(self):
+	"""Do the reconnection"""
+
+	try:
+	    sys.stderr.write(" Reconnecting at %s\n"%(time.ctime(time.time()),))
+	    self.elvin = Elvin.Elvin(Elvin.EC_NAMEDHOST, self.host, self.port,
+				None, self._error_cb)
+	except:
+	    sys.exc_traceback = None
+	    return 0
+
+	sys.stderr.write("New Elvin connection established\n")
+	self.connected = 1
+	return 1
+
+    def _destroy(self):
+	"""Clobber the internal elvin state so we can be deleted"""
+	#self.elvin.set_error_cb(None)
+	#self.elvin.set_quench_cb(None)
+	del self.elvin
+
+	self.DBH.close()
+    
+
+def _cleanup(sig, stackframe):
+    """Performs any cleanup before exiting"""
+
+    #print "_cleanup exiting on signal %d" %(sig,)
+    Elvin.ElvinRemovePidFile(pidname)
+    sys.exit(0)
+
+
+class storeconsumer(eddieElvin):
+
+    def get(self):
+
+	#self.subscription = 'exists(ELVIN.COMMAND)'
+	# ** above won't work as the Elvin parser refuses to parse an exists()
+	# expression with a '.' in the string.... grrr...
+	self.subscription = 'exists(ELVINDB)'
+        if self.connected:
+	    print "Subscribing to:",self.subscription
+            self.elvin.subscribe(self.subscription, self._notify_cb)
+        else:
+            sys.stderr.write("Not connected when at notify time\n")
+
+
+    def _notify_cb(self, sub_id, d_not):
+ 
+	print "Elvin gave sub_id:",sub_id
+	print "Elvin gave  d_not:",d_not
+
+	del d_not['ELVINDB']	# throw this away - only there for exists() above.
+
+	# NOTE about longs: Elvin cannot send longs so we are converting any
+	# longs to strings (ending with 'L', eg: '4239932142L').  The great
+	# thing about this is that inserting the string '4239932142L' into
+	# mysql, into a "bigint" column, works automatically!  Yay for mysql!
+
+	cols = "timestamp, hostname, "
+	values = "'%s', '%s', " % (d_not['ELVIN.TIMESTAMP'],d_not['ELVIN.HOST'])
+	for d in d_not.keys():
+	    if d[:6] != 'ELVIN.':
+		cols = cols + d + ', '
+		if type(d_not[d]) == type(""):
+		    values = values + "'%s', " % (d_not[d])
+		elif type(d_not[d]) == type(1):
+		    values = values + "%d, " % (d_not[d])
+		elif type(d_not[d]) == type(1.0):
+		    values = values + "%f, " % (d_not[d])
+		elif type(d_not[d]) == type(1L):
+		    values = values + "%ld, " % (d_not[d])
+		else:
+		    values = values + "%s, " % (d_not[d])
+
+	# throw away ', ' from end of strings
+	if len(cols) > 2:
+	    cols = cols[:-2]
+	if len(values) > 2:
+	    values = values[:-2]
+
+	#print "cols:",cols
+	#print "values:",values
+
+	cmd = 'INSERT INTO %s (%s) VALUES (%s)' % (d_not['ELVIN.TABLE'], cols, values)
+	print "cmd:",cmd
+	print
+
+	self.STH = self.DBH.query( cmd )
+
+
+
+if __name__ == "__main__":
+
+    e = storeconsumer()
+    e.get()
+
+    time.sleep(99999)
+
+
+

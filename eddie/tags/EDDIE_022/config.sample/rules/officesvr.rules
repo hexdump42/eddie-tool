@@ -1,0 +1,90 @@
+# Eddie config file
+#  Rules specific to Office Servers
+#
+
+
+group officesvr:
+
+    ###########################################################################
+    # MESSAGES
+
+    M offsvrmsg:
+	M netscape:
+	    MSG WARN: "Your netscape process on %h is using too much memory."
+		"""%procuser, you have a netscape process running on %h which is using
+%procvsz kBytes of memory.  Please quit your netscape and restart it.
+If the process size grows much more it will be automatically killed.
+
+Eddie!"""
+	    MSG ALERT: "Your netscape process on %h was killed."
+		"""%procuser, you had a netscape process running on %h which was using
+%procvsz kBytes of memory.  This process has been killed to prevent
+this host running out of memory.
+
+Eddie."""
+	    MSG ALERT_P: "netscape on %h of %procuser was killed by Eddie." ""
+
+
+    ###########################################################################
+    # Notification Definitions
+
+    #N OFFSVRALERT:
+
+    N NETSCAPEALERT:
+	notifyperiod=30m
+	escalperiod=120m
+
+	# Warning to the user [copy to cmiles]
+	Level 0:
+	    email("%procuser",WARN),email('cmiles',WARN)
+
+	# Alert the user the process is being killed!
+	Level 1:
+	    system("kill %procpid"),email("%procuser",ALERT),elvin(ALERT_P),email('cmiles',ALERT)
+		system("kill -9 %procpid"),email("%procuser",ALERT),elvin(ALERT_P),email('cmiles',ALERT)
+
+
+
+    ###########################################################################
+    # RULES
+
+    ## PROC
+    # NR = process not running
+    # R  = process is running
+    #  Process	Rules	Action
+    #  -------	-----	------
+    PROC netscape:	"vsz > 70000"	NETSCAPEALERT(offsvrmsg.netscape,0)
+    PROC netscape:	"vsz > 100000"	NETSCAPEALERT(offsvrmsg.netscape,1)
+    PROC navigator:	"vsz > 70000"	NETSCAPEALERT(offsvrmsg.netscape,0)
+    PROC navigator:	"vsz > 100000"	NETSCAPEALERT(offsvrmsg.netscape,1)
+
+    PROC wmmon:		"vsz > 40000"	system("kill %procpid"),email('cmiles','%procprocname by %procuser killed, memory usage was %procvsz.')
+
+
+    ## FS
+    # Defs for filesystem checks
+    #DEF EXPORT="capac>=95"
+    #  Filesystem   	Thresholds      Action
+    #  ----------   	----------      ----------
+    #FS /export/00:      $EXPORT         COMMONALERT(commonmsg.fs,0)
+
+    ## PID
+    #    pidfile                    Rules   Action
+    #    -------                    -----   ------
+    #PID  /etc/mail/sendmail.pid:    EX      COMMONALERT(commonmsg.pid,0)
+    #PID  /etc/mail/sendmail.pid:    PR      COMMONALERT(commonmsg.pidpr,1)
+
+    ## SP
+    #   Port        Bind Addr       Action
+    #   ----        ---------       ------
+
+    ## COM
+    #    command                            Rules       Action
+    #    -------                            -----       ------
+
+    ## PORT
+    #     Host		Port	SendStr Expect RegexAction      Action
+    #     ----		----	------- ------------------      -----
+    #PORT  'daidyai.off.connect.com.au': 50006   "\012"  "ALIVE" COMMONALERT(commonmsg.port,0)
+    #PORT  'koro':	25	""	"Sendmail"		COMMONALERT(commonmsg.port,1)
+

@@ -1,0 +1,75 @@
+# Eddie config file
+#  Rules specific to meters boxes.
+#
+
+DEF BTA4ALERT='alert@connect.com.au|bta4-admin@connect.com.au'
+DEF BTA4SYSSUP='syssup@connect.com.au|bta4-admin@connect.com.au'
+
+N BTA4ALERT:
+    notifyperiod=10m
+    escalperiod=20m
+
+    # Notification
+    Level 0:
+        email($BTA4ALERT,WARN)
+
+    # Warning
+    Level 1:
+        email($BTA4ALERT,WARN),elvin(WARN_P)
+
+    # Alert
+    Level 2:
+        email($BTA4SYSSUP,ALERT_P),elvin(ALERT_P)
+            email($BTA4ALERT,ALERT)
+
+    # Serious Alert
+    Level 3:
+        email($BTA4ALERT,ALERT),email($BTA4SYSSUP,ALERT_P),elvin(ALERT_P)
+
+
+
+group meter:
+
+    ###########################################################################
+    # MESSAGES
+
+
+    ###########################################################################
+    # Notification Definitions
+
+
+    ###########################################################################
+    # RULES
+
+    ## PROC
+    #  Process		Rules	Action
+    #  -------		-----	------
+    PROC bgp:		NR	BTA4ALERT(commonmsg.proc,2)
+    PROC netflow:	NR	BTA4ALERT(commonmsg.proc,2)
+    PROC udptee:	NR	BTA4ALERT(commonmsg.proc,2)
+    PROC 'meter.py':	NR	BTA4ALERT(commonmsg.proc,2)
+
+    ## FS
+    #  Filesystem   	Thresholds      Action
+    #  ----------   	----------      ----------
+    FS /home:		$OVER99		COMMONALERT(commonmsg.fs,0)
+    FS /opt:		$OVER95		COMMONALERT(commonmsg.fs,2)
+    FS /var/log:	$VARLOG1	COMMONALERT(commonmsg.fs,2)
+    FS /var/log:	$VARLOG2	COMMONALERT(commonmsg.fs,1)
+
+    ## PID
+    #    pidfile                Rules   Action
+    #    -------                -----   ------
+
+    ## SP
+    #   Port        Bind Addr       Action
+    #   ----        ---------       ------
+
+    ## COM
+    #    command			Rules		Action
+    #    -------			-----		------
+
+    ## PORT
+    #     Host	Port	SendStr	Expect		Action
+    #     ----	----	-------	------		-----
+

@@ -1,0 +1,106 @@
+# Eddie config file
+#  Rules specific to Primary/Secondary DNS servers.
+#
+
+group dns:
+
+    ###########################################################################
+    # MESSAGES
+
+
+    ###########################################################################
+    # Notification Definitions
+
+
+    ###########################################################################
+    # RULES
+
+    ## PROC
+    #  Process		Rules	Action
+    #  -------		-----	------
+
+    PROC named:		NR	COMMONALERT(commonmsg.proc,2)
+    PROC ntpd:		NR	COMMONALERT(commonmsg.proc,1)
+    PROC radiusd:	NR	COMMONRESTART(commonmsg.proc,0)
+    PROC sendmail:	NR	COMMONALERT(commonmsg.proc,1)
+
+    ## FS
+    #  Filesystem   	Thresholds      Action
+    #  ----------   	----------      ----------
+    FS /home:		$OVER99		COMMONALERT(commonmsg.fs,0)
+    FS /opt:		$OVER99		COMMONALERT(commonmsg.fs,1)
+    FS /var/log:	$VARLOG1	COMMONALERT(commonmsg.fs,2)
+    FS /var/log:	$VARLOG2	COMMONALERT(commonmsg.fs,1)
+    FS /var/spool:	$VARLOG1	COMMONALERT(commonmsg.fs,2)
+    FS /var/spool:	$VARLOG2	COMMONALERT(commonmsg.fs,1)
+    FS /var/tftpboot:	$VARLOG1	COMMONALERT(commonmsg.fs,2)
+
+    ## PID
+    #    pidfile                	Rules   Action
+    #    -------                	-----   ------
+    PID  /var/run/named.pid:		EX	COMMONALERT(commonmsg.pid,0)
+    PID  /var/run/named.pid:		PR	COMMONALERT(commonmsg.pidpr,1)
+    PID  /etc/mail/sendmail.pid:	EX	COMMONALERT(commonmsg.pid,0)
+    PID  /etc/mail/sendmail.pid:	PR	COMMONALERT(commonmsg.pidpr,1)
+
+    ## PORT
+    #   Port        Bind Addr       Action
+    #   ----        ---------       ------
+
+    ## COM
+    #    command			Rules		Action
+    #    -------			-----		------
+
+
+    ## PORT
+    #     Host	Port	SendStr	Expect		Action
+    #     ----	----	-------	------		-----
+
+
+
+
+# DNS cache - ie: yalumba, yulp
+
+group dnscache:
+
+    ###########################################################################
+    # MESSAGES
+
+
+    ###########################################################################
+    # Notification Definitions
+
+
+    ###########################################################################
+    # RULES
+
+    #  Process		Rules	Action
+    #  -------		-----	------
+    PROC named:		NR	COMMONALERT(commonmsg.proc,2)
+
+    #  Filesystem   	Thresholds      Action
+    #  ----------   	----------      ----------
+    FS /opt:		$OVER99		COMMONALERT(commonmsg.fs,1)
+    FS /home:		$OVER99		COMMONALERT(commonmsg.fs,0)
+    FS /var/log:	$OVER95		COMMONALERT(commonmsg.fs,2)
+
+    #    pidfile                Rules   Action
+    #    -------                -----   ------
+    PID  /var/run/named.pid:	EX	COMMONALERT(commonmsg.pid,0)
+    PID  /var/run/named.pid:	PR	COMMONALERT(commonmsg.pidpr,1)
+
+
+    #   Port        Bind Addr		Action
+    #   ----        ---------		------
+
+    #    command			Rules		Action
+    #    -------			-----		------
+    COM  "/opt/local/bin/top -nIu | /usr/bin/grep named | /usr/bin/head -1 | /usr/bin/awk '{print $10}' | /usr/bin/cut -d% -f 1":
+					"float(out) > 50.0"
+					email($ALERT,'named cpu usage is %comout %')
+
+    ## PORT
+    #     Host	Port	SendStr	Expect		Action
+    #     ----	----	-------	------		-----
+
+
