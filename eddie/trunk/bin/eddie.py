@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#! /usr/bin/env python
 ##
 ## File         : eddie.py 
 ## 
@@ -67,17 +67,14 @@ if systype == '':
                   os.path.join(basedir,'lib',osname,osver),
                   os.path.join(basedir,'lib',osname,osarch),
 		  os.path.join(basedir,'lib',osname) ]
-    #print "oslibdirs:",oslibdirs
-
 
 commonlibdir = os.path.join(basedir, 'lib/common')
 sys.path = oslibdirs + [commonlibdir,] + sys.path
-#print "sys.path:",sys.path
 
-# Python common Eddie modules
-import parseConfig, directive, definition, config, action, log, history, timeQueue, sockets
+# Eddie common modules
+import parseConfig, directive, config, log, history, timeQueue, sockets, eddieElvin4
 
-# Python OS-specific Eddie modules
+# Eddie OS-specific modules
 import proc, df, netstat, system
 try:
     import iostat
@@ -95,15 +92,15 @@ global Config
 global sthread
 global cthread
 
-# Load Directive
+# Read directive definitions from lib/common/Directives/
 config.loadExtraDirectives(os.path.join(commonlibdir, "Directives"))
 
 
 def start_threads(sargs, cargs):
     """Start any support threads that are required.
     Currently these are:
-     - Scheduler thread: schedules directives to run
-     - Console Server thread: handles connections to console port
+     - Scheduler thread: schedules directives to run [required]
+     - Console Server thread: handles connections to console port [optional]
     """
 
     please_die.clear()		# reset thread signal
@@ -180,7 +177,10 @@ def SigHandler( sig, frame ):
 	log.log( '<eddie>SigHandler(), signalling scheduler thread to die', 5 )
         stop_threads()
 
-	print "\nEddie quitting ... bye bye"
+	try:
+	    print "\nEddie quitting ... bye bye"
+	except IOError:
+	    pass	# if tty has gone it will cause this exception
 	eddieexit()
 
     elif sig == signal.SIGTERM:
@@ -190,7 +190,10 @@ def SigHandler( sig, frame ):
 	log.log( '<eddie>SigHandler(), signalling scheduler thread to die', 5 )
         stop_threads()
 
-	print "\nEddie quitting ... bye bye"
+	try:
+	    print "\nEddie quitting ... bye bye"
+	except IOError:
+	    pass	# if tty has gone it will cause this exception
 	eddieexit()
 
     elif sig == signal.SIGALRM:
@@ -362,6 +365,16 @@ def main():
 	print Config
 	eddieexit()
 
+    # Initialise Elvin connections and thread to handle Elvin messaging
+    try:
+	elvin = eddieElvin4.Elvin()
+    except eddieElvin4.ElvinInitError, details:
+	log.log( "<eddie>main(), Elvin init failed, %s, Elvin functionality will be disabled."%(details), 5 )
+	elvin = None
+    else:
+	elvin.startup()		# Start up the Elvin management thread
+    Config.set_elvin(elvin)
+
     # instantiate a process list
     log.log( "<eddie>main(), creating process object", 8 )
     directive.plist = proc.procList()
@@ -445,7 +458,10 @@ def main():
 	except KeyboardInterrupt:
 	    # CTRL-c hit - quit now
 	    log.log( '<eddie>main(), KeyboardInterrupt encountered - quitting', 1 )
-	    print "\nEddie quitting ... bye bye"
+	    try:
+		print "\nEddie quitting ... bye bye"
+	    except IOError:
+		pass	# if tty has gone it will cause this exception
 	    eddieexit()
 
 
