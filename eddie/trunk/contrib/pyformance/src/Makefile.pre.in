@@ -153,7 +153,8 @@ LIBDEST=	$(SCRIPTDIR)/python$(VERSION)
 INCLUDEPY=	$(INCLUDEDIR)/python$(VERSION)
 EXECINCLUDEPY=	$(exec_installdir)/include/python$(VERSION)
 LIBP=		$(exec_installdir)/lib/python$(VERSION)
-DESTSHARED=	$(BINLIBDEST)/site-packages
+#DESTSHARED=	$(BINLIBDEST)/site-packages
+DESTSHARED=	../lib
 
 LIBPL=		$(LIBP)/config
 
@@ -294,4 +295,4 @@ clobber:	clean
 
 # Handy target to remove everything you don't want to distribute
 distclean:	clobber
-		-rm -f Makefile Setup
+		-rm -f Makefile
