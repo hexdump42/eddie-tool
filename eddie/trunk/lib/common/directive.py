@@ -131,6 +131,7 @@ class Directive:
 		# Assume we have a simple action call (rather than a
 		# notification definition.
 		self.Action.msg = None
+		print "calling: self.Action."+a
 		eval( 'self.Action.'+a )
 	    else:
 		notif = inx.group(1)

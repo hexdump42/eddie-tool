@@ -99,7 +99,10 @@ class Config:
 	# not be kept.
 	#if useGroup( log.hostname, toklist[1] ):
 	# Add to group list
-	self.groups.append(newgroup)
+
+	# Add to parent's group list
+	if parent != None:
+	    parent.groups.append(newgroup)
 
 	return newgroup
 

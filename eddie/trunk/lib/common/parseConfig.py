@@ -64,7 +64,7 @@ class State:
 		    print "INDENT ERROR!!!! TODO"
 		    raise 'Indent Error...'
 		self.prevdirec = self.direcStack.pop()	# Restore previous direc
-		if self.direc.type == 'Config':
+		if self.prevdirec.type == 'Config':
 		    self.Config = self.groupStack.pop()
 		#elif self.prevdirec != self.direc:
 		    #print "@@@@@ Giving direc to:",self.prevdirec
