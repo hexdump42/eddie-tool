@@ -5,9 +5,10 @@
 
 # Exit if host is called 'testjump*'
 host=`cat /etc/nodename`
-echo $host | grep testjump
+echo $host | grep testjump >/dev/null
 if [ $? = 0 ]; then
-        exit 0
+	echo "eddie_wrapper: host is a testjump - quitting."
+	exit 0
 fi
 
 
