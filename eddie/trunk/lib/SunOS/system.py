@@ -103,11 +103,12 @@ class system:
 
     # refresh_rate : amount of time current information will be cached before
     #                being refreshed (in seconds)
-    refresh_rate = 60
+    refresh_rate = 30
 
     def __init__(self):
 	self.refresh_time = 0	# information must be refreshed at first request
 	self.hash_semaphore = threading.Semaphore()  # current thread must lock use of system hash
+	self.cache_semaphore = threading.Semaphore()	# serialize checking of system data cache
 
 
     ##################################################################
@@ -149,11 +150,13 @@ class system:
     def checkCache(self):
 	"""Check if cached data is invalid, ie: refresh_time has been exceeded."""
 
+	self.cache_semaphore.acquire()	# serialize refreshing of system cache
 	if time.time() > self.refresh_time:
 	    log.log( "<system>checkCache(), refreshing system data", 7 )
 	    self.refresh()
 	else:
 	    log.log( "<system>checkCache(), using cache'd system data", 7 )
+	self.cache_semaphore.release()
 
 
     def _getSystemstate(self):
