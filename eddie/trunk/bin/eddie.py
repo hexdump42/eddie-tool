@@ -30,24 +30,26 @@ try:
     syscmd = os.popen( basedir + '/bin/systype', 'r' )
     systype = syscmd.readline()[:-1]
     syscmd.close()
+    oslibdirs = [ os.path.join(basedir, 'lib/' + systype), ]
+    print "systype:",systype
 except os.error:
     systype = ''
 
 if systype == '':
     # New system type determination (preferred)
-    syscmd = os.popen( '/bin/uname -msr' )
-    systype = syscmd.readline()[:-1]
-    syscmd.close()
-    systype = re.sub( ' ', '', systype )	# strip spaces
+    uname = os.uname()
+    osname = uname[0]
+    osver = uname[2]
+    osarch = uname[4]
+    print "systype: %s/%s/%s" % (osname,osver,osarch)
+    oslibdirs = [ os.path.join(basedir,'lib',osname,osver,osarch),
+                  os.path.join(basedir,'lib',osname,osver),
+		  os.path.join(basedir,'lib',osname) ]
 
-if systype == '':
-    sys.stderr.write( 'Eddie: could not determine system type.\n' )
-print "systype:",systype
 
 commonlibdir = os.path.join(basedir, 'lib/common')
-oslibdir = os.path.join(basedir, 'lib/' + systype)
-
-sys.path = [commonlibdir, oslibdir] + sys.path
+sys.path = oslibdirs + [commonlibdir,] + sys.path
+#print "sys.path:",sys.path
 
 # Python common Eddie modules
 import parseConfig, directive, definition, config, action, log, history
