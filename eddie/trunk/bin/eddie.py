@@ -418,7 +418,22 @@ def main():
 
 ## Start...
 if __name__ == "__main__":
-    main()
+    try:
+	main()
+    except:			# catch any uncaught exceptions so we can try and nicely log them
+	e = sys.exc_info()
+	import exceptions
+	if e[0] != exceptions.SystemExit:
+	    import traceback
+	    tb = traceback.format_list( traceback.extract_tb( e[2] ) )
+	    import string
+	    tbstr = string.join(tb, '')
+	    log.log( "<eddie.py> Eddie died with exception: %s, %s\n%s" % (e[0], e[1], tbstr), 1 )
+	    log.sendadminlog()
+	    print tbstr
+	    print e[0], e[1]
+	    sys.exit(1)
+
 
     # email admin anything else...
     log.sendadminlog()
