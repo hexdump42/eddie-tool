@@ -310,11 +310,11 @@ class Directive:
 	    list = Config.ruleList[d]
 	    if list != None:
 		for i in list:
-		    if i.ID == ID:
+		    if ID == i.ID:
 			return i
 
-	for c in Config.groups:
-	    self.getDirective( ID, c.ruleList )
+	if Config.parent:
+	    return self.getDirective( ID, Config.parent )
 
 	return None
 
@@ -346,7 +346,6 @@ class Directive:
 			for t in dir(tpldirective.args):
 			    if t != 'template':
 				exec( 'self.args.%s = tpldirective.args.%s' % (t,t) )
-				#exec( "print 'self.args.%s =', self.args.%s" % (t,t) )
 
 	    # Use action parser for any of the action lists
 	    elif t == 'act2ok':

@@ -82,8 +82,8 @@ class Config:
 	self.configfiles = {}			# dictionary of config file mtimes
 
 	# Inherit parent properties if given
+	self.parent = parent
 	if parent != None:
-	    self.parent = parent
 	    self.aliasDict.update(parent.aliasDict)
 	    self.NDict.update(parent.NDict)
 	    # TODO: copy ruleList and MDict too ?
