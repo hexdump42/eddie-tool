@@ -104,7 +104,12 @@ class METASTAT(directive.Directive):
 
 	    cmd = "%s | /usr/bin/grep -i maint | /usr/bin/wc -l" % (metastat)
 	    result = commands.getoutput( cmd )
-	    if int(result) > 0:
+	    try:
+		r = int(result)
+	    except ValueError:
+		r = 0
+
+	    if r > 0:
 		# something requires Maintenance
 
 		self.statefail()	# update state info for check failed
