@@ -64,9 +64,6 @@ email() : want email actions to be performed last so that results of other
 actions can be summarized in the email.
 
 fs : '%fsls' - want a list directories under the examined fs 'ls -ld $fs'.
-   : show 'df' header with df output
-
-SIG : quit nicely on appropriate signals
 
 MAINT : Check "Maintenance" file to ignore certain checks.
 
