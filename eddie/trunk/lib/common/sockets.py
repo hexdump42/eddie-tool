@@ -71,7 +71,7 @@ def printState(Config, ccsock):
 	cname = ""		# root Config has no name
 
     # Loop the active config and print the state of each rule
-    for i in Config.groupDirectives:
+    for i in Config.groupDirectives.keys():
 	d = Config.groupDirectives[i]
 	# do not show templates or directives where console=None
 	if d.args.template != 'self' and d.console_output != None:
