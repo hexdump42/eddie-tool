@@ -27,7 +27,7 @@
 
 """
   This is an Eddie data collector.  It collects process information on
-  a generic Linux system.
+  a SunOS (Solaris) system.
 
   The following statistics are currently collected and made available to
   directives that request it (e.g., PROC):
