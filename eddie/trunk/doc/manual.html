@@ -20,11 +20,18 @@
      </ul>
     <li> <a href="#configuration">Configuration</a>
      <ul>
-      <li> <a href="#config_files">Config files</a>
-      <li> <a href="#globals">Global configurables</a>
-      <li> <a href="#config_format">Configuration format</a>
+      <li> <a href="#config_files">Config Files</a>
+      <li> <a href="#globals">Global Configurables</a>
+      <li> <a href="#config_format">Configuration Format</a>
       <li> <a href="#simple_config">Simple Configuration</a>
       <li> <a href="#directives">Directives</a>
+      <ul>
+	  <li> <a href="#commondirectiveargs">Common Directive Arguments</a>
+	  <li> <a href="#rule_format">Rule Format</a>
+	  <li> <a href="#builtindirectives">Built-in Directives</a>
+	  <li> <a href="#directivedetails">Directive Details</a>
+      </ul>
+      <li> <a href="#builtindirectives">Built-in Directives</a>
       <li> <a href="#notif_msg_objects">Notification and Message objects</a>
      </ul>
     <li> <a href="#other_features">Other Features</a>
@@ -153,7 +160,7 @@
    </ul>
 
   <p>
-   <h4><a name="globals">Global configurables</a></h4>
+   <H4><a name="globals">Global Configurables</a></H4>
   </p>
   <p>
    The global configurables are usually in eddie.cf and are listed below:
@@ -191,7 +198,7 @@
   </p>
 
   <p>
-   <H4><a name="config_format">Configuration format</a></H4>
+   <H4><a name="config_format">Configuration Format</a></H4>
   </p>
   <p>
    The EDDIE configuration follows the standard Python code format.
@@ -389,6 +396,35 @@
           Set to None to hide this directive from the Console.
     </ul>
    </p>
+
+
+  <p>
+   <H5><a name="rule_format">Rule Format</a></H5>
+  </p>
+
+  The format of rules is very simple.
+  For those familiar with Python, rules are simply Python expressions
+  which are evaluated on-the-fly with the variables set by the directive
+  at the time.
+  For those unfamiliar with Python, the expressions are almost English-like
+  using operators such as: not, and, or; and mathematical operators such as:
+  ==, !=, &gt;, &lt;, &gt;=, &lt;=.
+  Use these operators to evaluate the variables you are interested in.
+  The whole expression should evaluate to 1 (i.e., true) if the actions
+  set by the
+  <a href="#action">action</a>
+  argument should be executed.  If it evaluates to 0
+  (i.e., false) only the actions set by the
+  <a href="#actelse">actelse</a> argument are executed.
+
+  <p>
+  As rule expressions are evaluated in a Python environment, links to
+  related Python documentation is provided below.
+  <li> <a href="http://www.python.org/doc/current/lib/boolean.html">Boolean Operations</a>
+  <li> <a href="http://www.python.org/doc/current/lib/comparisons.html">Comparisons</a>
+  <li> <a href="http://www.python.org/doc/current/lib/string-methods.html">String Methods</a>
+  </p>
+
 
   <p>
    <H5><a name="builtindirectives">Built-in Directives</a></H5>
@@ -1875,7 +1911,10 @@
 
   <hr>
 
-  TODO: System-specific information......
+  <b>
+  TODO: System-specific information...... (NOT FINISHED)
+  </b>
+  <p>
 
 	  <i>Solaris</i>:
           <pre>
