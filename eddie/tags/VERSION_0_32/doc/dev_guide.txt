@@ -1,0 +1,320 @@
+The EDDIE Tool Developer's Guide
+(c) Chris Miles 2002
+
+The information contained in this guide is for persons managing, maintaining,
+or modifying EDDIE code, including developers of directives, data collectors or
+actions.
+
+
+*** The Directive API: Creating new Directives ***
+
+The Directive API has been designed so that new directives can be added with
+a minimal amount of work.  The summary of the steps required are:
+
+ - Create new Python module in the "lib/common/Directives/" directory;
+ - Sub-class the Directive base-class, creating a new directive class
+   definition;
+ - Create directive-specific methods, overriding some of the base-class
+   methods.
+
+
+** Create New Module **
+
+Eddie directives are defined in Python modules in the "lib/common/Directives/"
+directory of the Eddie tree.  If an appropriate module is not already available
+for the new directive, a new one must be created.  E.g.,
+    $ vi /opt/eddie/lib/common/Directives/mydirec.py
+
+At the very least the new module must import the 'directive' module.
+The directive module contains the Directive base-class definition, along with
+a few other useful definitions (like exceptions).
+
+If logging is required (it usually is) the 'log' module should be imported.
+See *** Logging *** in this document for more details on logging.  E.g.,
+    import directive, log
+
+
+** Create New Directive Class **
+
+The new directive class definition should have the actual directive name, and
+it should be created as a sub-class of the Directive class.  E.g.,
+    class MYFS(directive.Directive):
+	"""
+	This is my new directive.
+	It allows filesystem checks to be performed.
+	"""
+
+* constructor method *
+
+The constructor method must call the base-class constructor explicitly,
+define any required data-collectors (optional) and perform any other
+directive-specific initialization if necessary.
+E.g.,
+    def __init__(self, toklist):
+        self.need_collectors = ( ('df','dfList'), )
+        apply( directive.Directive.__init__, (self, toklist) )
+
+The toklist variable contains token information provided by the config
+parser and contains the name of the directive class along with
+(optionally) the user-defined name of the directive instance.
+
+If any data-collectors are required by this directive, the need_collectors
+attribute must be set as a tuple of (module,class) pairs.  If any of
+these required data-collectors cannot be loaded at directive initialization
+time, config parsing will halt at that point and an error will be displayed.
+See *** Data Collectors *** for more information.
+
+* tokenparser method *
+
+The tokenparser method must be created for the directive class.  It is
+used to parse all the directive arguments and perform any final setup
+tasks.  It should begin by calling the base-class tokenparser method
+which actually does the parsing of tokens and building a container of
+valid arguments.  Common directive arguments are then set before returning
+control back to the current tokenparser method.  This method should
+check the existence of required directive-specific arguments, perform
+any checking of argument values (type-checking, etc), set default action
+variables (see *** Actions ***) and finally set a unique instance ID.
+E.g.,
+    def tokenparser(self, toklist, toktypes, indent):
+        """
+        Parse directive arguments.
+        """
+
+        apply( directive.Directive.tokenparser, (self, toklist, toktypes, indent) )
+
+        # test required arguments
+        try:
+            self.args.fsname
+        except AttributeError:
+            raise ParseFailure, "Filesystem name (fsname) not specified"
+
+        try:
+            self.args.rule
+        except AttributeError:
+            raise ParseFailure, "Rule not specified"
+
+        # Set any directive-specific variables
+        self.defaultVarDict['rule'] = self.args.rule
+
+        # define the unique ID
+        if self.ID == None:
+            self.ID = '%s.FS.%s' % (log.hostname,self.args.rule)
+        self.state.ID = self.ID
+
+* getData method *
+
+The base-class handles all the grunt work when a directive is run:
+including handling re-checks (numchecks argument > 1); calling the
+directive-specific method to fetch the data (getData method);
+evaluating the rule using the data as the environment; setting the
+directive state (ok, fail, etc) depending on the value of the rule
+evaluation; calling actions appropriately; and submitting the
+directive back in the scheduler queue.
+
+The main part that the new directive designer needs to worry about
+is the part that fetches the data.  This is performed in the getData
+method which must be defined by each directive sub-class.
+
+The getData method must do whatever is necessary to fetch the
+directive-specific data (which could be as simple as calling
+a data-collector - see *** Data Collectors ***) and returning
+the data as a dictionary of name/values.
+
+The data dictionary will be used as the environment to evaluate
+the rule in (each data element will be a variable available for
+the rule).  The data will also be be inserted into the action
+variable dictionary (see *** Actions ***) for use by action calls
+and message strings, etc.
+
+If getData encounters a critical error where the directive cannot
+continue, and should not be re-scheduled again, it should raise
+a directive.DirectiveError exception.
+
+If the directive is functioning fine, but the rule should not
+be evaluated this time for some reason, getData should return
+the None object.  The directive check will end immediately and
+the directive will be re-scheduled as normal.
+
+E.g.,
+
+    def getData(self):
+        """
+        Called by Directive docheck() method to fetch the data required for
+        evaluating the directive rule.
+        """
+
+	# Get filesystem statistics from dfList data-collector
+        df = self.data_collectors['df.dfList'][self.args.fsname]
+        if df == None:
+	    # Raise an error if given filesystem is invalid
+            log.log( "<directive>FS.docheck(): Error, filesystem not found '%s'" % (self.args.fsname), 4 )
+            raise directive.DirectiveError, "Error, filesystem not found '%s'" % (self.args.fsname)
+        else:
+	    # Return dictionary of filesystem stats
+            return df.getHash()
+
+** Optional Methods **
+
+There are a few more methods which can be defined for a directive
+if they are necessary.
+
+* addVariables *
+
+If any action variables need to be added after the rule has been evaluated
+(but before actions are called) an addVariables method can be defined to
+do just this.
+
+* postAction *
+
+If any post-action processing needs to be performed, before the directive
+is re-scheduled, it can be done in a postAction method.
+
+** Test New Directive Class **
+
+Once the above steps have been completed, the new directive should be ready for
+use.  EDDIE will automatically pick it up.  A test rule can be added to the
+configuration and EDDIE restarted.  Look for errors or exceptions in the log
+file to see if there are problems.
+
+E.g.,
+
+    MYFS test:
+        fs='/var/log'
+        rule='pctused > 50'
+        action=email("root", "Filesystem %(mountpt)s is over 50%% full")
+
+
+
+*** Data Collectors ***
+
+Data collectors are the OS-specific classes and modules which collect common
+system information for directives such as PROC, FS, SYS, etc.  Not all
+directives need to use these data collectors, many directives are coded to
+collect data or perform tests internally.  These are primarily to provide a
+common set of data collection modules which are automatically loaded based
+on the current operating system and architecture.
+
+Data Collector creation has been designed to be relatively easy.  A base-class
+is provided which does most of the work, handles data-caching and refreshing,
+locking for thread-safety and provides most of the public methods.
+
+The main steps are as follows:
+ - Create OS or architecture-specific lib directory if required;
+ - Create module if an appropriate module does not already exist;
+ - Create new data collector class definition.
+
+** Create Lib Directory **
+
+If a lib directory does not already exist for the required operating system
+or architecture (e.g., Linux, SunOS, SunOS/sun4m) in the eddie/lib/ directory
+then a new one must be created.  The search order for architecture specific
+modules is:
+
+    1. eddie/lib/<osname>/<osver>/<osarch>
+    2. eddie/lib/<osname>/<osarch>/<osver>
+    3. eddie/lib/<osname>/<osver>
+    4. eddie/lib/<osname>/<osarch>
+    5. eddie/lib/<osname>
+
+where the variable directory names are taken from uname as follows:
+
+    <osname> = uname -s
+    <osver>  = uname -r
+    <osarch> = uname -m
+
+This allows the same modules to exist for multiple operating systems and the
+correct module will be imported as required.  If different modules are needed
+for different OS versions or architectures of the same operating system, they
+can be placed in the relevent subdirectory, and will be loaded automatically.
+
+
+** Create Module **
+
+If an appropriate module file is not already available, a new one should be
+created in the relevent directory (see ** Create Lib Directory ** above).
+The module must import the datacollect module, which contains the base
+DataCollect class definition.
+
+* Data Collector Class *
+
+A new class should be created which should be sub-class the
+datacollect.DataCollect class.  The constructor method only has to
+call the base-class constructor.
+
+E.g.,
+
+    class mydata(datacollect.DataCollect):
+	def __init__(self):
+	    apply( datacollect.DataCollect.__init__, (self,) )
+
+
+* collectData method *
+
+The only other method a data collector class must have is the collectData
+method.  This is where the data is collected from the system and added
+to dictionaries or lists in the self.data container class.  The self.data
+class currently has no special function other than to provide a container
+for data.  If only a single dictionary of name/values is required, the
+self.data.datahash dictionary should be used.  The built-in getHash method
+defaults to this dictionary, although the name of another dictionary can be
+passed instead.  Similarly, a getList method is also available to retrieve
+copies of any lists.
+
+The getHash and getList methods should be the only method used to access
+the dictionaries and lists in self.data as they provide thread-safety be
+locking access to the data, and they make sure to return copies of the
+data to prevent the data changing while being accessed.
+
+collecData is only called after the current thread has acquired the data lock
+so it is safe to manipulate the data structures as required in this method.
+
+E.g.,
+
+    def collectData(self):
+        """
+        Collect some data.
+        """
+
+        self.data.datahash = {}         # reset dictionary
+        self.data.datahash['data1'] = 3
+        self.data.datahash['data2'] = 3.1415
+        self.data.datahash['data3'] = 'pi'
+
+
+
+*** Actions ***
+
+TODO
+
+
+
+*** Logging ***
+
+EDDIE logs to the logfile specified by LOGFILE in the config.  It uses the
+log() function in the log.py module, and calls are of the form:
+    log.log( log_string, log_level )
+
+log_string should be formatted like:
+    "<module_name>method_name(): log_text"
+where module_name is the name of the current module, excluding ".py", e.g.,
+"directive" for a logged message in the directive.py module;
+method_name is the name of the current method or function.
+For example, a logged message in the directive module by the docheck() method
+of the FS class would look like:
+    log.log( "<directive>FS.docheck(): rule '%s' was false, calling doAction()" % (self.args.rul e), 6 )
+
+log_level defines the severity level of the log message, so the verbosity of
+logs can be set by the user with the LOGLEVEL config setting, and where the
+levels are defined as:
+    1 - critical errors where the software cannot continue
+    2 - serious errors where the software can attempt to recover or continue
+    3 - errors forcing the current thread to die prematurely
+    4 - errors where the current directive cannot continue and will not be re-scheduled
+    5 - warnings/info or errors not serious enough for the above levels
+    6 - action output
+    7 - directive output (for debugging directive checks etc)
+    8 - config parsing output (generally for debugging config problems)
+    9 - extra verbose debugging messages
+
+
