@@ -1,0 +1,10 @@
+
+Short Instructions
+------------------
+ 
+1. Build and install Python (1.5 or newer).
+2. "make -f Makefile.pre.in boot"
+3. "make"
+You should now have a shared library.
+  
+
