@@ -876,7 +876,7 @@ class PROC(Directive):
     def R(self,Config):
 	"""Call action if process is found to BE running."""
 
-	if plist.procExists( self.procname ) > 0:
+	if plist.procExists( self.args.procname ) > 0:
 	    log.log( "<directive>R(PROC) procname is running, '%s'" % (self.args.procname), 6 )
 	    # Set %procpid variable.
 	    self.Action.varDict['procpid'] = plist[self.args.procname].pid
