@@ -299,7 +299,10 @@ class HTTP(directive.Directive):
 		data['timedout'] = 1
 	    else:
 		data['errno'] = e[1][0]
-		data['errstr'] = e[1][1]
+		if len( e[1] ) > 1:
+		    data['errstr'] = e[1][1]
+		else:
+		    data['errstr'] = str(e[1])
 	    data['time_response'] = time_response_end - time_response_start
 	    data['time'] = time_response_end - time_start
 	    data['failed'] = 3
