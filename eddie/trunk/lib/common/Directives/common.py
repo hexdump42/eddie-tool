@@ -75,7 +75,7 @@ class FS(directive.Directive):
 	    self.ID = '%s.FS.%s' % (log.hostname,self.args.fs)
 	self.state.ID = self.ID
 
-	log.log( "<directive>FS.tokenparser(): ID '%s' fs '%s' rule '%s' action '%s'" % (self.state.ID, self.args.fs, self.args.rule, self.args.actionList), 8 )
+	log.log( "<directive>FS.tokenparser(): ID '%s' fs '%s' rule '%s'" % (self.state.ID, self.args.fs, self.args.rule), 8 )
 
 
     def getData(self):
@@ -86,7 +86,7 @@ class FS(directive.Directive):
 
 	df = self.data_collectors['df.dfList'][self.args.fs]
 	if df == None:
-	    log.log( "<directive>FS.docheck(), Error, filesystem not found '%s'" % (self.args.fs), 4 )
+	    log.log( "<directive>FS.docheck(): Error, filesystem not found '%s'" % (self.args.fs), 4 )
 	    return None
 	else:
 	    return df.getHash()
@@ -136,7 +136,7 @@ class PID(directive.Directive):
 	    self.ID = '%s.PID.%s.%s' % (log.hostname,self.args.pid,self.args.rule)
 	self.state.ID = self.ID
 
-	log.log( "<directive>PID.tokenparser(), ID '%s' pid '%s' rule '%s' action '%s'" % (self.state.ID, self.args.pid, self.args.rule, self.args.actionList), 8 )
+	log.log( "<directive>PID.tokenparser(): ID '%s' pid '%s' rule '%s'" % (self.state.ID, self.args.pid, self.args.rule), 8 )
 
 
     def getData(self):
@@ -212,7 +212,7 @@ class PROC(directive.Directive):
 	    self.ID = '%s.PROC.%s' % (log.hostname,self.args.name)
 	self.state.ID = self.ID
 
-	log.log( "<directive>PROC.tokenparser(): ID '%s' name '%s' rule '%s' action '%s'" % (self.state.ID, self.args.name, self.args.rule, self.args.actionList), 8 )
+	log.log( "<directive>PROC.tokenparser(): ID '%s' name '%s' rule '%s'" % (self.state.ID, self.args.name, self.args.rule), 8 )
 
 
     def getData(self):
@@ -287,7 +287,7 @@ class SP(directive.Directive):
 	    self.ID = '%s.SP.%s/%s.%s' % (log.hostname,self.args.protocol,self.port_n,self.args.bindaddr)
 	self.state.ID = self.ID
 
-	log.log( "<directive>SP.tokenparser(), ID '%s' protocol '%s', port '%s', bind addr '%s', action '%s'" % (self.state.ID, self.args.protocol, self.port, self.args.bindaddr, self.args.actionList), 8 )
+	log.log( "<directive>SP.tokenparser(): ID '%s' protocol '%s', port '%s', bind addr '%s'" % (self.state.ID, self.args.protocol, self.port, self.args.bindaddr), 8 )
 
 
     def getData(self):
@@ -347,7 +347,7 @@ class COM(directive.Directive):
 	    self.ID = '%s.COM.%s.%s' % (log.hostname,self.args.cmd,self.args.rule)
 	self.state.ID = self.ID
 
-	log.log( "<directive>COM.tokenparser(), ID '%s' cmd '%s' rule '%s' action '%s'" % (self.state.ID, self.args.cmd, self.args.rule, self.args.actionList), 8 )
+	log.log( "<directive>COM.tokenparser(): ID '%s' cmd '%s' rule '%s'" % (self.state.ID, self.args.cmd, self.args.rule), 8 )
 
 
     def getData(self):
@@ -374,7 +374,7 @@ class COM(directive.Directive):
 	    outf = open( tmpprefix + ".out", 'r' )
 	except IOError:
 	    # stdout tmp file not found
-	    log.log( "<directive>COM.docheck(), Error, could not open '%s'" % (tmpprefix + ".out"), 4 )
+	    log.log( "<directive>COM.docheck(): Error, could not open '%s'" % (tmpprefix + ".out"), 4 )
 	else:
 	    out = outf.read()
 	    outf.close()
@@ -386,7 +386,7 @@ class COM(directive.Directive):
 	    errf = open( tmpprefix + ".err", 'r' )
 	except IOError:
 	    # stderr tmp file not found
-	    log.log( "<directive>COM.docheck(), Error, could not open '%s'" % (tmpprefix + ".err"), 4 )
+	    log.log( "<directive>COM.docheck(): Error, could not open '%s'" % (tmpprefix + ".err"), 4 )
 	else:
 	    err = errf.read()
 	    errf.close()
@@ -603,7 +603,7 @@ class IF(directive.Directive):
 	    self.ID = '%s.IF.%s.%s' % (log.hostname,self.args.name,self.rule)
 	self.state.ID = self.ID
 
-	log.log( "<directive>IF.tokenparser(): ID '%s' name '%s', rule '%s', action '%s'" % (self.state.ID, self.args.name, self.args.rule, self.args.actionList), 8 )
+	log.log( "<directive>IF.tokenparser(): ID '%s' name '%s', rule '%s'" % (self.state.ID, self.args.name, self.args.rule), 8 )
 
 
     def getData(self):
@@ -664,7 +664,7 @@ class NET(directive.Directive):
 	    self.ID = '%s.NET.%s' % (log.hostname,self.args.rule)
 	self.state.ID = self.ID
 
-	log.log( "<directive>NET.tokenparser(), ID '%s' rule '%s', action '%s'" % (self.state.ID, self.args.rule, self.args.actionList), 8 )
+	log.log( "<directive>NET.tokenparser(): ID '%s' rule '%s'" % (self.state.ID, self.args.rule), 8 )
 
 
     def getData(self):
@@ -715,7 +715,7 @@ class SYS(directive.Directive):
 	    self.ID = '%s.SYS.%s' % (log.hostname,self.args.rule)
 	self.state.ID = self.ID
 
-	log.log( "<directive>SYS.tokenparser(), ID '%s' rule '%s' action '%s'" % (self.state.ID, self.args.rule, self.args.actionList), 8 )
+	log.log( "<directive>SYS.tokenparser(): ID '%s' rule '%s'" % (self.state.ID, self.args.rule), 8 )
 
 
     def getData(self):
@@ -773,7 +773,7 @@ class STORE(directive.Directive):
 	    self.ID = '%s.STORE.%s' % (log.hostname,self.args.rule)
 	self.state.ID = self.ID
 
-	log.log( "<directive>STORE.tokenparser(), ID '%s' rule '%s' action '%s'" % (self.state.ID, self.args.rule, self.args.actionList), 8 )
+	log.log( "<directive>STORE.tokenparser(): ID '%s' rule '%s'" % (self.state.ID, self.args.rule), 8 )
 
 
     def getData(self):
@@ -800,7 +800,7 @@ class STORE(directive.Directive):
 	    datahash = iostat.getHash()				# get dictionary of iostat data
 
 	if datahash == None:
-	    log.log( "<directive>STORE.getData(), rule '%s' is invalid." % (self.args.rule), 4 )
+	    log.log( "<directive>STORE.getData(): rule '%s' is invalid." % (self.args.rule), 4 )
 	    return None
 
 	return datahash
