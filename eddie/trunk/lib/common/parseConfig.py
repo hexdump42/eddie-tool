@@ -270,7 +270,7 @@ class State:
 
 
 	    else:
-		raise "PARSE FAILURE! toklist: %s" % self.toklist
+		raise config.ParseFailure, "Syntax error"
 		self.reset()		# reset state
 
 	except config.ParseFailure, msg:
