@@ -29,3 +29,11 @@ rrdfile=/export/rrd/radiustiming/*-radsvr1.rrd
 store=timing
 create=-s 60 DS:timing:GAUGE:120:0:100 RRA:AVERAGE:0.5:1:1440 RRA:AVERAGE:0.5:10:1008 RRA:AVERAGE:0.5:60:720 RRA:AVERAGE:0.5:480:1095
 
+#### CPU
+# Example of multiple store keys. All keys must exist in the Elvin message and
+# all will be updated in the RRD at once.
+elvinrrd=cpu-*
+rrdfile=/export/rrd/cpu/cpu-*.rrd
+store=cpu_user,cpu_nice,cpu_system,cpu_idle
+create=-s 60 DS:cpu_user:COUNTER:120:U:U DS:cpu_nice:COUNTER:120:U:U DS:cpu_system:COUNTER:120:U:U DS:cpu_idle:COUNTER:120:U:U RRA:AVERAGE:0.5:1:1440 RRA:AVERAGE:0.5:10:1008 RRA:AVERAGE:0.5:60:720 RRA:AVERAGE:0.5:480:1095
+
