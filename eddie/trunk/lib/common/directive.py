@@ -232,7 +232,7 @@ class Directive:
 	self.status = "fail"
 	self.lastfailtime = timenow
 
-	log.log( "<Directive>statefail, ID '%s' status '%s' lastfailtime %s faildetecttime %s"%(self.ID, self.status, self.lastfailtime, self.faildetecttime), 8 )
+	log.log( "<Directive>statefail, ID '%s' status '%s' lastfailtime %s faildetecttime %s"%(self.ID, self.status, self.lastfailtime, self.faildetecttime), 6 )
 
 	#TODO: Post an EVENT about this failure...
 	#      EVENTS are either: new failure/problem detected
@@ -243,6 +243,7 @@ class Directive:
 	"""Update state info for check succeeding."""
 
 	if self.status != "ok":
+	    log.log( "<Directive>stateok, State changed to OK.  ID '%s'."%(self.ID), 6 )
 	    #TODO: Post an EVENT about problem being resolved
 	    pass
 
