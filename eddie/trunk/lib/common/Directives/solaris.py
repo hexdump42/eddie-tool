@@ -71,6 +71,54 @@ class CRON(directive.Directive):
 	    self.stateok()	# update state info for check passed
 
 
+class METASTAT(directive.Directive):
+    """Solaris Disksuite checks for bad metadevices/disks."""
+
+    def __init__(self, toklist):
+	apply( directive.Directive.__init__, (self, toklist) )
+
+
+    def tokenparser(self, toklist, toktypes, indent):
+
+	self.actionList = self.parseAction(toklist[0:])
+
+	# Set any FS-specific variables
+	#  rule = rule
+
+	# define the unique ID
+	self.ID = '%s.METASTAT' % (log.hostname)
+
+	log.log( "<solaris.py>METASTAT.tokenparser(): ID '%s' action '%s'" % (self.ID, self.actionList), 8 )
+
+
+    def docheck(self, Config):
+	log.log( "<solaris.py>METASTAT.docheck(): ", 7 )
+	metastat = "/usr/opt/SUNWmd/sbin/metastat"
+
+	try:
+	    os.stat( metastat )
+	except:
+	    log.log( "<solaris.py>METASTAT.docheck(): %s not found, skipping check" % (metastat), 7 )
+	else:
+	    # metastat exists, so check for anything requiring Maintenance
+
+	    cmd = "%s | /usr/bin/grep -i maint | /usr/bin/wc -l" % (metastat)
+	    result = commands.getoutput( cmd )
+	    if int(result) > 0:
+		# something requires Maintenance
+
+		self.statefail()	# update state info for check failed
+
+		# assign variables
+		self.Action.varDict['metastatmaintcnt'] = int(result)
+
+		log.log( "<solaris.py>METASTAT.docheck(): check failed, calling doAction()", 6 )
+		self.doAction(Config)
+
+	    else:
+		self.stateok()	# update state info for check passed
+
+
 ##
 ## END - solaris.py
 ##
