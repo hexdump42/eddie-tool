@@ -62,6 +62,7 @@ class State:
 	self.faildetecttime = None	# first time failure was detected for current problem
 	self.ack = ack.ack()		# ack object to track acknowledgements
 	self.checkcount = 0		# count number of checks/re-checks
+	self.failcount = 0		# count number of continuous failed checks
 	self.thisdirective = thisdirective	# pointer to the directive this object belongs to
 
 	# Status can be:
@@ -86,10 +87,12 @@ class State:
 	    # if this is not a repeated failure then record the time of this
 	    # first failure detection
 	    self.faildetecttime = timenow
+	    self.failcount = 1
 
 	    self.status = "failinitial"
 
 	self.checkcount = self.checkcount + 1
+	self.failcount = self.failcount + 1
 
 	if self.checkcount >= self.thisdirective.args.numchecks:
 	    # Only put in "fail" state when all rechecks have failed
@@ -136,7 +139,9 @@ class State:
 
 	self.status = "ok"
 
-	self.checkcount = 0	# reset check counter
+	self.checkcount = 0		# reset check counter
+	self.failcount = 0		# reset fail count
+	self.thisdirective.current_actionperiod = 0	# reset the current actionperiod
 
 	log.log( "<directive>State.stateok(): ID '%s' status '%s'"%(self.ID, self.status), 7 )
 
@@ -158,51 +163,6 @@ class State:
 	    tdiff[i] = t9[i] - t0[i]
 
 	return tdiff
-
-
-
-class Rules:
-    """
-    Rules holds all the directives in a hash where the value of each key is the
-    list of rules relating to that key.
-    """
-
-    def __init__(self):
-	self.hash = {}
-
-    # Overload '+', eg: rules + directive_rule
-    def __add__(self, new):
-	try:
-	    tl = self.hash[new.type]
-
-	except KeyError:
-	    self.hash[new.type] = []
-	    tl = []
-
-	tl.append(new)
-
-	self.hash[new.type] = tl
-	return(self)
-
-    # Overload '[]', eg: fs_directive_list = rules['FS']
-    def __getitem__(self, key):
-	try:
-	    return self.hash[key]
-	except KeyError:
-	    return None
-
-    def keys(self):
-	return self.hash.keys()
-    
-    def delete(self, directive):
-	del self.hash[directive]
-
-    def __str__(self):
-	#str = ""
-	#for r in self.hash.keys():
-	#    str = str + "%s\n" % self.hash[r]
-	#return str
-	return "%s" % self.hash
 
 
 
@@ -260,6 +220,10 @@ class Directive:
 	# Set default output displayed on console connections
 	self.console_output = '%(state)s'
 
+	# List of directives this directive is dependent on
+	self.actiondependson = []	# action dependencies
+	self.checkdependson = []	# check dependencies
+
 	# directives keep state information about themselves
 	self.state = State(self)
 
@@ -268,6 +232,8 @@ class Directive:
 	self.args.numchecks = 1	# perform only 1 check at a time by default
 	self.args.checkwait = 0	# time to wait in between multiple checks
 	self.args.template = None	# no template by default
+	self.current_actionperiod = 0	# reset the current actionperiod
+	self.lastactiontime = 0		# time previous actions were called
 
 
     def request_collector(self):
@@ -301,22 +267,80 @@ class Directive:
 	return 1		# ok
 
 
-    def __str__( self ):
-	return "%s.%s" % (self.type, self.ID)
+    def __repr__( self ):
+	return "%s" % (self.ID)
 
 
-    def getDirective( self, ID, Config ):
-	for d in Config.ruleList.keys():
-	    list = Config.ruleList[d]
-	    if list != None:
-		for i in list:
-		    if ID == i.ID:
-			return i
+    def getDirective( self, ID, Config, norecurse=0 ):
+	"""getDirective: find the directive specified by ID, searching
+	the current group first, then recursing the parent groups if
+	not found.  Return None if not found.
 
-	if Config.parent:
+	Set norecurse=1 if recursing parent groups is not required.
+	"""
+
+	for d in Config.groupDirectives.keys():
+	    if ID == Config.groupDirectives[d].ID:
+		return Config.groupDirectives[d]
+
+	if Config.parent and norecurse==0:
 	    return self.getDirective( ID, Config.parent )
 
 	return None
+
+
+    def getGroup( self, groupname, Config ):
+	"""getGroup: find the group specified by groupname, searching
+	the current group first, then recursing the parent groups if
+	not found.  Return None if not found.
+	"""
+
+	for g in Config.groups:
+	    if g.name == groupname:
+		return g
+
+	if Config.parent:
+	    return self.getGroup( groupname, Config.parent )
+
+	return None
+
+
+    def findDirective( self, ID, Config ):
+	"""findDirective: find a directive specified by ID, and optionally
+	by group.
+
+	If specified by ID only, the directive is recursively searched for
+	in the current group and all parent groups.
+
+	If a group is specified, the directive is searched for in that group
+	only.  The group is first searched for in the current group and
+	recursively up the parent groups.
+
+	E.g. 1: findDirective( 'router_ping', Config )
+	E.g. 2: findDirective( 'routers.router_ping', Config )
+	E.g. 3: findDirective( 'routers.router1.router_ping', Config )
+	"""
+
+	if not '.' in ID:
+	    # No group specified, just search current and parent groups
+	    return self.getDirective( ID, Config )
+
+	else:
+	    # group is specified
+	    lookfor = string.split(ID, '.')
+	    grp = self.getGroup( lookfor[0], Config )	# get base group
+	    if not grp:
+		return None
+
+	    if len(lookfor) > 2:			# find subsequent groups
+		for g in lookfor[1:-1]:
+		    if g in grp.groups:
+			grp = grp.groups[g]
+		    else:
+			return None
+
+	    # now fetch the directive
+	    return self.getDirective( lookfor[-1], grp, norecurse=1 )
 
 
     def tokenparser(self, toklist, toktypes, indent):
@@ -338,7 +362,7 @@ class Directive:
 	    if t == 'template':	# special handler for templates
 		self.args.template = tokdict[t]	# template name
 		if self.args.template != 'self':
-		    tpldirective = self.getDirective(self.args.template, self.Config)
+		    tpldirective = self.findDirective(self.args.template, self.Config)
 		    if tpldirective == None:
 			raise ParseFailure, "template '%s' not found." % (self.args.template)
 		    else:
@@ -374,6 +398,11 @@ class Directive:
 		if self.args.scanperiod == None:
 		    raise ParseFailure, "Invalid scanperiod: '%s'"%(self.args.scanperiod)
 	    self.scanperiod = self.args.scanperiod	# set the scanperiod
+
+	try:
+	    self.actionperiod = self.args.actionperiod
+	except AttributeError:
+	    self.actionperiod = 'scanperiod'	# actionperiod defaults to scanperiod
 
 	# test numchecks argument is integer and >= 0
 	if type(self.args.numchecks) != type(1):
@@ -414,6 +443,34 @@ class Directive:
 	for n in self.parent.NDict.keys():
 	    execstr = "self.Action.%s = self.parent.NDict[n].doAction" % (n)
 	    exec( execstr )
+
+	# Set action dependents if given
+	try:
+	    actiondepends_names = string.split(self.args.actiondependson, ',')
+	except AttributeError:
+	    pass	# no dependents given
+	else:
+	    for dep in actiondepends_names:
+		d = string.strip(dep)
+		directive = self.findDirective( d, self.Config )
+		if directive:
+		    self.actiondependson.append( directive )
+		else:
+		    raise ParseFailure, "Directive %s, referred to in actiondependson, not found"%(d)
+
+	# Set check dependents if given
+	try:
+	    checkdepends_names = string.split(self.args.checkdependson, ',')
+	except AttributeError:
+	    pass	# no dependents given
+	else:
+	    for dep in checkdepends_names:
+		d = string.strip(dep)
+		directive = self.findDirective( d, self.Config )
+		if directive:
+		    self.checkdependson.append( directive )
+		else:
+		    raise ParseFailure, "Directive %s, referred to in checkdependson, not found"%(d)
 
 	# Set any default action variables
 	if 'rule' in dir(self.args):
@@ -545,9 +602,22 @@ class Directive:
 	else:
 	    self.state.checkcount = 0	# performing action so reset counter
   
+	if self.state.failcount > 1:
+	    timewaited = time.time() - self.lastactiontime
+
+	    if timewaited < self.current_actionperiod:
+		# If current_actionperiod has not passed between action calls
+		# then wait a bit longer
+		log.log( "<directive>doAction(): current_actionperiod (%s) not reached, actions not run" % self.current_actionperiod, 6 )
+		return
 
 	# record action information
-	self.lastactiontime = time.localtime(time.time())
+	self.lastactiontime = time.time()
+
+	# Setup environment to evaluate new actionperiod
+	evalenv = { 'scanperiod' : self.scanperiod,
+	            't' : self.current_actionperiod }
+	self.current_actionperiod = eval( self.actionperiod, {"__builtins__": {}}, evalenv )
 
 	# Make sure there are some actions to perform
 	# (they are not always necessary)
@@ -603,7 +673,7 @@ class Directive:
 
 	else:
 	    # reschedule in scanperiod seconds
-	    q.put( (self,time.time()+self.scanperiod) )
+	    q.put( (self, time.time()+self.scanperiod) )
 	    log.log( "<directive>Directive.putInQueue(): %s re-queued by scanperiod (%d secs)" % (self,self.scanperiod), 7)
 
 
@@ -652,6 +722,14 @@ class Directive:
 	discarded (not re-scheduled).
 	"""
 
+	# If any check dependencies are failed, don't need to run this check
+	failed_deps = self.checkDependencies( self.checkdependson )
+	if failed_deps:
+	    log.log( "<directive>Directive.docheck(): dependencies %s failed, %s not checking" % (failed_deps, self.ID), 7 )
+	    self.putInQueue( Config.q )	# put self back in the Queue
+	    return
+
+	# If this is the second or subsequent check of a re-check, refresh the data
 	if self.state.checkcount > 0:
 	    for i in self.data_collectors.keys():
 		self.data_collectors[i].refresh()	# force refresh of data if re-checking
@@ -682,7 +760,7 @@ class Directive:
 	except SyntaxError, details:
 	    # Syntax error evaluating rule. Log and end thread without
 	    # submitting broken directive back into queue.
-    	    log.log( "<directive>Directive.docheck(): SyntaxError evaluating rule '%s'" % (self.args.rule), 4 )
+    	    log.log( "<directive>Directive.docheck(): SyntaxError evaluating rule '%s' - not re-queued" % (self.args.rule), 4 )
 	    return
 
 	# Create action string substitution variables.
@@ -700,8 +778,14 @@ class Directive:
 	else:
 	    self.state.statefail()	# update state info for check failed
 
-    	    log.log( "<directive>Directive.docheck(): directive %s rule failed, calling doAction()" % (self.ID), 7 )
-    	    self.doAction(Config)
+    	    log.log( "<directive>Directive.docheck(): %s rule failed, calling doAction()" % (self.ID), 7 )
+	    # If any dependencies are also failed, running actions for this
+	    # directive are not required.
+	    failed_deps = self.checkDependencies( self.actiondependson )
+	    if failed_deps:
+    	        log.log( "<directive>Directive.docheck(): dependencies %s failed, %s not calling actions" % (failed_deps, self.ID), 7 )
+	    else:
+    	        self.doAction(Config)
 
 	self.postAction( data )		# perform any post-action processing
 
@@ -771,6 +855,17 @@ class Directive:
 	cstr = self.console_output % vars
 	return cstr
 
+    def checkDependencies(self, deplist):
+	"""checkDependencies: return a list of any failed directives which this
+	directive is dependent on.  Pass dependency list as deplist.
+	"""
+
+	failed = []
+        for d in deplist:
+	    if d.state.status == 'fail':
+	        failed.append(d)
+
+	return failed
 
 
 ##

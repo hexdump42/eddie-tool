@@ -276,16 +276,12 @@ def buildCheckQueue(q, Config):
     Build the queue of checks that the scheduler will start with.
     """
 
-    for d in Config.ruleList.keys():
-	list = Config.ruleList[d]
-	if list != None:
-	    for i in list:
-		# if directive template is 'self', do not schedule it
-		if i.args.template != 'self':
-		    log.log( "<eddie>buildCheckQueue(): adding to Queue: %s" % (i), 8 )
-		    q.put( (i,0) )
-	else:
-	    log.log( "<eddie>buildCheckQueue(): Config.ruleList['%s'] is empty" % (d), 5 )
+    for i in Config.groupDirectives:
+	# if directive template is 'self', do not schedule it
+	d = Config.groupDirectives[i]
+	if d.args.template != 'self':
+	    log.log( "<eddie>buildCheckQueue(): adding to Queue: %s" % (d), 8 )
+	    q.put( (d,0) )
 
     for c in Config.groups:
 	if c.name == log.hostname or (c.name in Config.classDict.keys() and log.hostname in Config.classDict[c.name]):

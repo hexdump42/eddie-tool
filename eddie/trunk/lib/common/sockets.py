@@ -71,20 +71,18 @@ def printState(Config, ccsock):
 	cname = ""		# root Config has no name
 
     # Loop the active config and print the state of each rule
-    for d in Config.ruleList.keys():
-	list = Config.ruleList[d]
-	if list != None:
-	    for i in list:
-		# do not show templates or directives where console=None
-		if i.args.template != 'self' and i.console_output != None:
-		    try:
-			cstr = i.console_str()
-		    except:
-			e = sys.exc_info()
-			tb = traceback.format_list( traceback.extract_tb( e[2] ) )
-			log.log( "<sockets>printState(): console_str exception for %s: %s %s %s" % (i,e[0],e[1],tb), 5 )
-			cstr = ""
-		    ccsock.send("%s%s - %s\n" % (cname, i, cstr))
+    for i in Config.groupDirectives:
+	d = Config.groupDirectives[i]
+	# do not show templates or directives where console=None
+	if d.args.template != 'self' and d.console_output != None:
+	    try:
+		cstr = d.console_str()
+	    except:
+		e = sys.exc_info()
+		tb = traceback.format_list( traceback.extract_tb( e[2] ) )
+		log.log( "<sockets>printState(): console_str exception for %s: %s %s %s" % (d,e[0],e[1],tb), 5 )
+		cstr = ""
+	    ccsock.send("%s%s - %s\n" % (cname, d, cstr))
 
     for c in Config.groups:
 	if c.name == log.hostname or (c.name in Config.classDict.keys() and log.hostname in Config.classDict[c.name]):
@@ -155,7 +153,7 @@ def console_server_thread(Config, die_event, consport):
 		return
 
             if e[1][0] == errno.ECONNRESET:         # 'Connection reset by peer'
-                log.log( "<sockets>console_server_thread(), Connection reset by peer - continuing.", 5 )
+                log.log( "<sockets>console_server_thread(), Connection reset by peer - continuing.", 7 )
                 continue
 
             log.log( "<sockets>console_server_thread(), Socket error - resetting socket and continuing: %s, %s" % (e[1][0],e[1][1]), 5 )

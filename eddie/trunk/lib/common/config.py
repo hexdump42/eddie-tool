@@ -69,7 +69,7 @@ class Config:
 	self.display = 0	# flag to indicate if we have displayed some info about the config (ie: only display it once)
 
     	# initialise our config lists/dicts
-       	self.ruleList = directive.Rules()	# object which holds all rule definitions
+       	self.groupDirectives = {}		# holds all directives for this group
 	self.MDict = definition.MsgDict()	# object which holds all Message definitions
 	if parent != None:
 	    self.MDict.update(parent.MDict)	# inherit parent M-tree
@@ -92,7 +92,7 @@ class Config:
 	"""Display Config in readable format (ie: for debugging)."""
 
 	str = "<Config name='%s' type='%s'" % (self.name, self.type)
-	str = str + "\n\n ruleList: %s" % self.ruleList
+	str = str + "\n\n groupDirectives: %s" % self.groupDirectives
 	str = str + "\n\n groups:"
 	for i in self.groups:
 	    str = str + " %s" % i
@@ -150,8 +150,10 @@ class Config:
 	elif obj.type == 'CLASS':
 	    self.classDict[obj.name] = obj.hosts
 	elif obj.type in directives.keys():
-	    # add Rule to ruleList...
-	    self.ruleList = self.ruleList + obj
+	    if obj.ID in self.groupDirectives:
+	        raise ParseFailure, "Duplicate directive name: %s" % obj.ID
+	    # add directive
+	    self.groupDirectives[obj.ID] = obj
 	else:
 	    #raise "Config.give(): Unknown object type %s" % obj
 	    # Don't want any object that doesn't match above
@@ -177,12 +179,9 @@ class Config:
     def getDirective(self, id):
 	"""Return directive object with given id."""
 
-	for d in self.ruleList.keys():
-	    list = self.ruleList[d]
-	    if list != None:
-		for i in list:
-		    if i.ID == id:
-			return i
+	for d in self.groupDirectives.keys():
+	    if d.ID == id:
+		return d
 
 	return None
 

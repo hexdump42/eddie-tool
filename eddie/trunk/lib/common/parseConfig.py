@@ -132,8 +132,8 @@ class State:
 		    # replace token with value and fix toklist
 		    if type(aval) == type("string"):
 			aval = '"%s"'%(aval)
-		    token = aval
 		    log.log( "<parseConfig>tokeneater(), ALIAS substituted %s for %s" % (aval,token), 8 )
+		    token = aval
 
 	    if toktype != "COMMENT" and token != "\012":
 		# If token not a comment, newline, indent or dedent then add to our list of
