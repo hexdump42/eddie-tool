@@ -5,7 +5,7 @@
 
 while [ 1 ]; do
 	cd /opt/eddie/bin
-	./eddie.py 2>&1 >/tmp/.eddie$$.out
+	./eddie.py >/tmp/.eddie$$.out 2>&1
 	/usr/bin/mailx -s "Eddie output on `hostname` at `date`" cmiles@connect.com.au < /tmp/.eddie$$.out
 	/usr/bin/sleep 30
 	echo "eddie_wrapper: restarting Eddie at `date`."
