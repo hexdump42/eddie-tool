@@ -27,8 +27,8 @@
 """
   This is an Eddie data collector.  It collects System data and statistics on
   a generic Linux system.
-  The following statistics are currently collected and made available to the
-  appropriate directives (e.g., SYS):
+  The following statistics are currently collected and made available to
+  directives that request it (e.g., SYS):
 
   loadavg1		- 1min load average (float)
   loadavg5		- 5min load average (float)
@@ -54,45 +54,29 @@
 """
 
 # Python modules
-import os, string, time, re
+import string, re
 # Eddie modules
-import log
+import datacollect, log
 
 
-##
-## Class system - holds information about current system state
-##
-class system:
-
-    # refresh_rate : amount of time current information will be cached before
-    #                being refreshed (in seconds)
-    refresh_rate = 60
+class system(datacollect.DataCollect):
+    """
+    Class system - collects current system statistics.
+    """
 
     def __init__(self):
-	self.refresh_time = 0	# information must be refreshed at first request
+	apply( datacollect.DataCollect.__init__, (self,) )
 
 
-    def refresh(self):
-	"""Refresh the information"""
+    ##################################################################
+    # Private methods
 
-	self.getSystemstate()
+    def collectData(self):
+	"""
+	Collect system statistics data.
+	"""
 
-	# new refresh time is current time + refresh rate (seconds)
-	self.refresh_time = time.time() + self.refresh_rate
-
-
-    def checkCache(self):
-	"""Check if cached data is invalid, ie: refresh_time has been exceeded."""
-
-	if time.time() > self.refresh_time:
-	    log.log( "<system>system.checkCache(), refreshing system data", 7 )
-	    self.refresh()
-	else:
-	    log.log( "<system>system.checkCache(), using cache'd system data", 7 )
-
-
-    def getSystemstate(self):
-	self.hash = {}		# dict of system data
+	self.data.datahash = {}
 
 	# Get load averages from /proc
 	try:
@@ -103,9 +87,9 @@ class system:
 	    line = fp.read()
 	    fp.close()
 	    ( loadavg1, loadavg5, loadavg15, foo, foo ) = string.split( line )
-	    self.hash['loadavg1'] = float(loadavg1)
-	    self.hash['loadavg5'] = float(loadavg5)
-	    self.hash['loadavg15'] = float(loadavg15)
+	    self.data.datahash['loadavg1'] = float(loadavg1)
+	    self.data.datahash['loadavg5'] = float(loadavg5)
+	    self.data.datahash['loadavg15'] = float(loadavg15)
 
 	# Get uptime and idle-uptime counters from /proc
 	try:
@@ -116,8 +100,8 @@ class system:
 	    line = fp.read()
 	    fp.close()
 	    ( uptime, uptimeidle ) = string.split( line )
-	    self.hash['ctr_uptime'] = float(uptime)
-	    self.hash['ctr_uptimeidle'] = float(uptimeidle)
+	    self.data.datahash['ctr_uptime'] = float(uptime)
+	    self.data.datahash['ctr_uptimeidle'] = float(uptimeidle)
 
 	# Get system statistics from /proc
 	try:
@@ -130,19 +114,19 @@ class system:
 		if line[:4] == "cpu ":
 		    # Total CPU stats
 		    ( foo, user, nice, system, idle ) = string.split(line)
-		    self.hash['ctr_cpu_user'] = int(user)
-		    self.hash['ctr_cpu_nice'] = int(nice)
-		    self.hash['ctr_cpu_system'] = int(system)
-		    self.hash['ctr_cpu_idle'] = int(idle)
+		    self.data.datahash['ctr_cpu_user'] = int(user)
+		    self.data.datahash['ctr_cpu_nice'] = int(nice)
+		    self.data.datahash['ctr_cpu_system'] = int(system)
+		    self.data.datahash['ctr_cpu_idle'] = int(idle)
 		elif re.match( '^cpu([0-9]+).*', line ):
 		    # Stats for each CPU
 		    m = re.match( '^cpu([0-9]+).*', line )
 		    cpunum = int(m.group(1))
 		    ( foo, user, nice, system, idle ) = string.split(line)
-		    self.hash['ctr_cpu%d_user'%cpunum] = int(user)
-		    self.hash['ctr_cpu%d_nice'%cpunum] = int(nice)
-		    self.hash['ctr_cpu%d_system'%cpunum] = int(system)
-		    self.hash['ctr_cpu%d_idle'%cpunum] = int(idle)
+		    self.data.datahash['ctr_cpu%d_user'%cpunum] = int(user)
+		    self.data.datahash['ctr_cpu%d_nice'%cpunum] = int(nice)
+		    self.data.datahash['ctr_cpu%d_system'%cpunum] = int(system)
+		    self.data.datahash['ctr_cpu%d_idle'%cpunum] = int(idle)
 		elif line[:5] == "disk ":
 		    # TODO - need info on meaning
 		    pass
@@ -161,43 +145,35 @@ class system:
 		elif line[:5] == "page ":
 		    # Pages in/out
 		    ( foo, pagein, pageout ) = string.split(line)
-		    self.hash['ctr_pages_in'] = int(pagein)
-		    self.hash['ctr_pages_out'] = int(pageout)
+		    self.data.datahash['ctr_pages_in'] = int(pagein)
+		    self.data.datahash['ctr_pages_out'] = int(pageout)
 		elif line[:5] == "swap ":
 		    # Swap Pages in/out
 		    ( foo, swapin, swapout ) = string.split(line)
-		    self.hash['ctr_pages_swapin'] = int(swapin)
-		    self.hash['ctr_pages_swapout'] = int(swapout)
+		    self.data.datahash['ctr_pages_swapin'] = int(swapin)
+		    self.data.datahash['ctr_pages_swapout'] = int(swapout)
 		elif line[:5] == "intr ":
 		    # Number of interrupts - only using first number
 		    ints = string.split(line)[1]
-		    self.hash['ctr_interrupts'] = int(ints)
+		    self.data.datahash['ctr_interrupts'] = int(ints)
 		elif line[:5] == "ctxt ":
 		    # Number of context switches
 		    ( foo, ctxt ) = string.split(line)
-		    self.hash['ctr_contextswitches'] = int(ctxt)
+		    self.data.datahash['ctr_contextswitches'] = int(ctxt)
 		elif line[:6] == "btime ":
 		    # boot time, in seconds since the epoch (January 1, 1970)
 		    ( foo, btime ) = string.split(line)
-		    self.hash['boottime'] = int(btime)
+		    self.data.datahash['boottime'] = int(btime)
 		elif line[:10] == "processes ":
 		    # number of processes started (I presume?)
 		    ( foo, processes ) = string.split(line)
-		    self.hash['ctr_processes'] = int(processes)
+		    self.data.datahash['ctr_processes'] = int(processes)
 		line = fp.readline()
 		# any other stats are ignored.
 
 	    fp.close()
 
-	log.log( "<proc>system.getSystemstate(), new system list created", 7 )
-
-
-    def getHash(self):
-	"""Returns hash of system stats."""
-
-	self.checkCache()	# refresh data if necessary
-
-	return self.hash
+	log.log( "<system>system.collectData(): system data collected", 7 )
 
 
 ##

@@ -24,10 +24,20 @@
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 ########################################################################
 
+"""
+  This is an Eddie data collector.  It collects process information on
+  a generic Linux system.
+
+  The following statistics are currently collected and made available to
+  directives that request it (e.g., PROC):
+
+  TODO...
+"""
+
 # Python modules
-import os, string, time, threading
+import string
 # Eddie modules
-import log, utils
+import datacollect, log, utils
 
 
 # This fetches data by parsing system calls of common commands.  This was done because
@@ -40,89 +50,62 @@ import log, utils
 interpreters = []
 
 
-##
-## Class procList - holds a list of running processes and related information
-##
-class procList:
-
-    # refresh_rate : amount of time current process list will be cached before
-    #                refreshing with new process list (in seconds)
-    refresh_rate = 60
+class procList(datacollect.DataCollect):
+    """
+    Class procList - holds a list of running processes and related information.
+    """
 
     def __init__(self):
-	self.refresh_time = 0	# process list must be refreshed at first request
-
-	self.semaphore = threading.Semaphore()	# must be thread-friendly now
+	apply( datacollect.DataCollect.__init__, (self,) )
 
 
     ##################################################################
-    # Public, thread-safe, methods
-
-    def refresh(self):
-	"""Force a refresh of the process list."""
-
-	self.semaphore.acquire()
-	self._refresh()
-	self.semaphore.release()
-
+    # Public methods
 
     def procExists(self, procname):
-	"""Searches the 'ps' dictionary and returns number of occurrences
-	of procname."""
+	"""
+	Search the process list and return the number of occurrences
+	of procname.
+	"""
 
-	self.semaphore.acquire()
-	self._checkCache()	# refresh process data if necessary
+	proclist = self.getList( 'proclist' )	# safely get copy of process list
 
 	count = 0		# count number of occurrences of 'procname'
-	for i in self.list:
+	for i in proclist:
 	    command = string.split(i.comm, '/')[-1]
-	    #if procname == 'radiusd':
-		#print "command: '%16s'  i.procname: '%16s'  procname: '%16s'  i.comm: '%s'" % (command,i.procname,procname,i.comm)
 	    if command == procname or i.procname == procname:
-		#print "command: '%s' i.procname: '%s'  procname: '%s'" % (command,i.comm,procname)
 		count = count + 1
-
-	self.semaphore.release()
 
 	return count
 
 
     def pidExists(self, pid):
-        """Searches the 'ps' dictionary and returns number of occurrences
-	of pid (should be 0 or 1 for any sane system...)"""
+        """
+	Return true (1) if a process with 'pid' exists,
+	or false (0) otherwise.
+	"""
 
-	self.semaphore.acquire()
-	self._checkCache()	# refresh process data if necessary
+	prochash = self.getHash( 'datahash' )	# safely get copy of process dict
 
-	count = 0		# count number of occurrences of 'pid'
-	for i in self.list:
-	    if i.pid == pid:
-		count = count + 1
-
-	self.semaphore.release()
-
-	return count
-
-
-    def getList(self):
-	"""Return copy of process list."""
-
-	return self.list
+	try:
+	    prochash[pid]
+	    return 1
+	except KeyError:
+	    return 0
 
 
     def __getitem__(self, name):
-	"""Overload '[]', eg: returns corresponding proc object for given
-	process name."""
+	"""
+	Overload '[]' to return corresponding process object for given
+	process name.
+	"""
 
-	self.semaphore.acquire()
-	self._checkCache()	# refresh process data if necessary
+	processes = self.getHash( 'nameHash' )	# safely get copy of process name dictionary
 
 	try:
-	    r = self.nameHash[name]
+	    r = processes[name]
 	except KeyError:
-	    r = None
-
-	self.semaphore.release()
+	    r = None		# no such process called 'name'
 
 	return r
 
@@ -130,79 +113,48 @@ class procList:
     def allprocs(self):
 	"""Return dictionary of all processes (which are dictionaries of each process' details."""
 
-	self.semaphore.acquire()
-	self._checkCache()	# refresh process data if necessary
+	processes = self.getHash( 'nameHash' )	# safely get copy of process name dictionary
 
 	allprocs = {}
 
-	for p in self.nameHash.keys():
-	    allprocs[p] = self.nameHash[p].procinfo()
-
-	self.semaphore.release()
+	for p in processes.keys():
+	    allprocs[p] = processes[p].procinfo()
 
 	return allprocs
-
-    def __str__(self):
-
-	# note: don't do cache check - assume we want to display current data
-
-	rv = 'PID     USER            COMMAND                 TIME            CPU     STATUS\n'
-	self.semaphore.acquire()
- 	for item in self.list:
- 	    rv = rv + str(item) + '\n'
-	self.semaphore.release()
-
-	return(rv)
-	    
-
 
 
     ##################################################################
     # Private methods.  No thread safety if not using public methods.
 
-    def _refresh(self):
-	self._getProcList()
+    def collectData(self):
+	"""
+	Collect process list.
+	"""
 
-	# new refresh time is current time + refresh rate (seconds)
-	self.refresh_time = time.time() + self.refresh_rate
+	self.data.datahash = {}		# dict of processes keyed by pid
+	self.data.proclist = []		# list of processes
+	self.data.nameHash = {}		# dict of processes keyed by process name
 
-
-    def _checkCache(self):
-	"""Check if cached procList data is invalid, ie: refresh_time has
-	been exceeded."""
-
-	if time.time() > self.refresh_time:
-	    log.log( "<proc>procList.checkCache(), refreshing procList", 7 )
-	    self._refresh()
-	else:
-	    log.log( "<proc>procList.checkCache(), using cache'd procList", 7 )
-
-
-    def _getProcList(self):
-	self.hash = {}		# dict of processes keyed by pid
-	self.list = []		# list of processes
-	self.nameHash = {}	# dict of processes keyed by process name
-	 
+	# TODO: read process info from /proc instead of parsing 'ps' output...
 	rawList = utils.safe_popen('ps -e -o "s user ruser group rgroup uid ruid gid rgid pid ppid pgid sid pri opri pcpu pmem vsz rss osz time etime stime f c tty addr nice class wchan fname comm args"', 'r')
-	#rawList = utils.safe_popen(' ps -e -o "pid user time pcpu s args" ', 'r')
 	rawList.readline()
  
 	for line in rawList.readlines():
 	    p = proc(line)
-	    self.list.append(p)
-	    self.hash[p.pid] = p
-	    self.nameHash[string.split(p.comm, '/')[-1]] = p
+	    self.data.proclist.append(p)
+	    self.data.datahash[p.pid] = p
+	    self.data.nameHash[string.split(p.comm, '/')[-1]] = p
 
 	utils.safe_pclose( rawList )
-	#rawList.close()
 
-	log.log( "<proc>procList._getProcList(), new proc list created", 7 )
+	log.log( "<proc>procList.collectData(): new process list created", 7 )
 
 
-##
-## Class proc : holds a process record
-##
 class proc:
+    """
+    Class proc : holds information about a single process.
+    """
+
     def __init__(self, rawline):
 
 	fields = string.split(rawline)
@@ -279,7 +231,6 @@ class proc:
 	u = string.ljust(self.user, 10)
 	t = string.ljust(self.time, 10)
 
-	#return( '%s\t%s\t%s\t%s\t%s\t%s' % (self.pid, u, c, t, self.percent, self.status ) )
 	return( '%s\t%s\t%s\t%s\t%s\t%s' % (self.pid, u, c, t, self.pcpu, self.s) )
 
 

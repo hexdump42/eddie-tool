@@ -1,11 +1,12 @@
 ## 
 ## File		: netstat.py 
 ## 
-## Author       : Chris Miles  <chris@psychofx.com>
+## Author       : Rod Telford  <rtelford@psychofx.com>
+##                Chris Miles  <chris@psychofx.com>
 ## 
-## Start Date	: 20010709
+## Start Date	: 19980122
 ## 
-## Description	: Library of classes that deal with a HP-UX netstat list
+## Description	: Data Collectors for HP-UX network statistics
 ##
 ## $Id$
 ##
@@ -24,105 +25,44 @@
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 ########################################################################
 
-# Python imports
-import os, string, re, time
-# Eddie imports
-import log, utils
+"""
+  This is an Eddie data collector module.  It collects Network-related statistics.
+  It defines four Data Collectors:
+
+  TCPtable: collects list of current TCP connections.
+  UDPtable: collects list of current UDP connections.
+  IntTable: collects network interface statistics.
+"""
 
 
-##
-## Class netstat - holds all information about current network information
-##
-class netstat:
-    # refresh_rate : amount of time current process list will be cached before
-    #                refreshing with new process list (in seconds)
-    refresh_rate = 60
+# Python modules
+import string, re
+# Eddie modules
+import datacollect, log, utils
 
+
+
+class TCPtable(datacollect.DataCollect):
+    """
+    Collects current TCP connections table.
+    """
 
     def __init__(self):
-        self.refresh_time = 0   # process list must be refreshed at first request
+        apply( datacollect.DataCollect.__init__, (self,) )
 
 
-    def refresh(self):
-        """Refresh the network stats tables"""
-
-	self.tcptable = tcptable()	# get tcp connections table
-	self.udptable = udptable()	# get udp connections table
-	self.iftable = iftable()	# get interface table
-	self.statstable = statstable()	# get network statistics table
-
-        # new refresh time is current time + refresh rate (seconds)
-        self.refresh_time = time.time() + self.refresh_rate
+    ##################################################################
+    # Public methods
 
 
-    def checkCache(self):
-        """Check if cached data is invalid, ie: refresh_time has
-        been exceeded."""
+    ##################################################################
+    # Private methods
 
-        if time.time() > self.refresh_time:
-            log.log( "<netstat>netstat.checkCache(): refreshing network data", 7 )
-            self.refresh()
-        else:
-            log.log( "<netstat>netstat.checkCache(): using cached network data", 7 )
+    def collectData(self):
 
-
-    def __str__(self):
-	str = "tcptable: %s udptable: %s iftable: %s statstable: %s" % (tcptable, udptable, iftable, statstable)
-	return(str)
-
-
-    def portExists(self, proto, port, addr): 
-	"""Return tcp/udp object if it exists, else None."""
-
-        self.checkCache()       # refresh process data if necessary
-
-	key = "%s:%s" % (addr, port)
-	if proto == 'tcp':
-	    return self.tcptable[key]
-	elif proto == 'udp':
-	    return self.udptable[key]
-	else:
-	    log.log( "<netstat>netstat.portExists(): Error, proto not supported '%s'" % (proto), 3 )
-	    raise "Netstat Exception", "proto not supported '%s'" % (proto)
-	
-
-    def getInterface(self, name):
-	"""Return an interface object if it exists, else None."""
-
-        self.checkCache()       # refresh process data if necessary
-
-	return self.iftable[name]
-
-
-    def getAllInterfaces(self):
-	"""Return a dictionary of all interfaces containing dictionaries of their stats."""
-
-        self.checkCache()       # refresh process data if necessary
-
-	ifdict = {}
-	for i in self.iftable.keys():
-	    ifdict[i] = {}				# make sure it is a copy of the data
-	    ifdict[i].update(self.iftable[i].ifinfo())
-
-	return ifdict
-
-
-    def getNetworkStats(self):
-	"""Return a dictionary of network statistics."""
-
-	self.checkCache()	# refresh process data if necessary
-
-	return self.statstable.getHash()
-
-
-class tcptable:
-    """Contains current tcp connections table."""
-     
-    def __init__(self):
-
-	self.list = []			# list of tcp objects
-	self.hash = {}			# hash of same objects keyed on '<ip>:<port>'
-	self.numsockets = 0
+	self.data.datalist = []		# list of tcp objects
+	self.data.datahash = {}		# hash of same objects keyed on '<ip>:<port>'
+	self.data.numconnections = 0
 
 	# get the tcp stats
 	rawList = utils.safe_popen('netstat -anf inet | grep ^tcp | grep LISTEN', 'r')
@@ -135,19 +75,15 @@ class tcptable:
 
 	    t = tcp(f)			# new tcp instance
 
-	    self.list.append(t)
-	    self.hash['%s:%s' % (t.local_addr_ip,t.local_addr_port)] = t
+	    self.data.datalist.append(t)
+	    self.data.datahash['%s:%s' % (t.local_addr_ip,t.local_addr_port)] = t
 
-	    self.numsockets = self.numsockets + 1	# count number of tcp sockets
+	    self.data.numconnections = self.data.numconnections + 1
 
 	utils.safe_pclose( rawList )
 
+        log.log( "<netstat>TCPtable.collectData(): Collected %d TCP connections" %(self.data.numconnections), 6 )
 
-    def __getitem__(self, key):
-	try:
-	    return self.hash[key]
-	except KeyError:
-	    return None
 
 
 class tcp:
@@ -183,14 +119,27 @@ class tcp:
 
 
 
-class udptable:
-    """Contains current udp connections table."""
-     
-    def __init__(self):
+class UDPtable(datacollect.DataCollect):
+    """
+    Collects current UDP connections table.
+    """
 
-	self.list = []			# list of ucp objects
-	self.hash = {}			# hash of same objects keyed on '<ip>:<port>'
-	self.numsockets = 0
+    def __init__(self):
+        apply( datacollect.DataCollect.__init__, (self,) )
+
+
+    ##################################################################
+    # Public methods
+
+
+    ##################################################################
+    # Private methods
+
+    def collectData(self):
+
+	self.data.datalist = []		# list of tcp objects
+	self.data.datahash = {}		# hash of same objects keyed on '<ip>:<port>'
+	self.data.numconnections = 0
 
 	# get the udp stats
 	rawList = utils.safe_popen('netstat -anf inet | grep ^udp', 'r')
@@ -203,19 +152,14 @@ class udptable:
 
 	    t = udp(f)			# new udp instance
 
-	    self.list.append(t)
-	    self.hash['%s:%s' % (t.local_addr_ip,t.local_addr_port)] = t
+	    self.data.datalist.append(t)
+	    self.data.datahash['%s:%s' % (t.local_addr_ip,t.local_addr_port)] = t
 
-	    self.numsockets = self.numsockets + 1	# count number of tcp sockets
+	    self.data.numconnections = self.data.numconnections + 1
 
 	utils.safe_pclose( rawList )
 
-
-    def __getitem__(self, key):
-	try:
-	    return self.hash[key]
-	except KeyError:
-	    return None
+        log.log( "<netstat>UDPtable.collectData(): Collected %d UDP connections" %(self.data.numconnections), 6 )
 
 
 
@@ -248,14 +192,30 @@ class udp:
 	self.receive_queue = int(fields[1])
 
 
-class iftable:
-    """Contains current network interface table."""
-     
-    def __init__(self):
 
-	self.list = []			# list of interface objects
-	self.hash = {}			# hash of same objects keyed on interface name (eg: 'lan0')
-	self.numinterfaces = 0
+class IntTable(datacollect.DataCollect):
+    """
+    The network interface statistics Data Collector.
+    """
+
+    def __init__(self):
+        apply( datacollect.DataCollect.__init__, (self,) )
+
+
+    ##################################################################
+    # Public methods
+
+
+    ##################################################################
+    # Private methods
+
+    def collectData(self):
+        """
+        Collect network interface data.
+        """
+
+	self.data.datahash = {}		# hash of same objects keyed on interface name
+	self.data.numinterfaces = 0
 
 	# get the interface stats
 	rawList = utils.safe_popen('netstat -in', 'r')
@@ -271,23 +231,13 @@ class iftable:
 
 	    t = interface(f)		# new interface instance
 
-	    self.list.append(t)
-	    self.hash[t.name] = t
+	    self.data.datahash[t.name] = t
 
-	    self.numinterfaces = self.numinterfaces + 1		# count number of interfaces
+	    self.data.numinterfaces = self.data.numinterfaces + 1
 
 	utils.safe_pclose( rawList )
 
-
-    def __getitem__(self, key):
-	try:
-	    return self.hash[key]
-	except KeyError:
-	    return None
-
-
-    def keys(self):
-	return self.hash.keys()
+        log.log( "<netstat>IntTable.collectData(): Collected data for %d interfaces" %(self.data.numinterfaces), 6 )
 
 
 
@@ -330,54 +280,6 @@ class interface:
 	info['opkts'] = self.opkts
 
 	return info
-
-
-
-class statstable:
-    """Contains current network statistics table."""
-     
-    def __init__(self):
-
-	self.hash = {}			# hash of stats
-
-	return	# TODO - not done yet....
-
-	# get the network stats
-	rawList = utils.safe_popen('netstat -s', 'r')
-
-	# regexp for pulling out stats
-	udpre = "\s*(\w+)\s*=\s*([-0-9]+)(.*)"
-	sre = re.compile(udpre)
-
-	line = rawList.readline()
-	while 1:
-	    inx = sre.search( line )
-	    if inx == None:
-		log.log("<netstat>statstable.init(): getting udp stats, no re match for line '%s'" % (line), 9)
-		line = rawList.readline()
-		if len(line) == 0:
-		    break
-	    else:
-		self.hash[inx.group(1)] = long(inx.group(2))
-		line = inx.group(3)
-
-	utils.safe_pclose( rawList )
-
-
-    def __getitem__(self, key):
-	try:
-	    return self.hash[key]
-	except KeyError:
-	    return None
-
-
-    def getHash(self):
-	"""Return a copy of the internal hash."""
-
-	hashcopy = {}
-	hashcopy.update(self.hash)
-
-	return hashcopy
 
 
 ##

@@ -5,7 +5,7 @@
 ## 
 ## Start Date	: 19990929
 ## 
-## Description	: Library of classes that deal with a Linux netstat list
+## Description	: Library of classes that deal with Linux network statistics
 ##
 ## $Id$
 ##
@@ -24,10 +24,20 @@
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 ########################################################################
 
+"""
+  This is an Eddie data collector.  It collects Network-related statistics.
+  It defines four Data Collectors:
+
+  TCPtable: collects list of current TCP connections.
+  UDPtable: collects list of current UDP connections.
+  IntTable: collects network interface statistics.
+  stats_ctrs: collects network stats counters.
+"""
+
 # Python modules
-import os, string, re, time
+import string
 # Eddie modules
-import log, utils
+import datacollect, log, utils
 
 
 # This fetches data by parsing system calls of common commands.  This was done because
@@ -36,102 +46,29 @@ import log, utils
 # directly from /proc or the kernel.  CM 19990929
 
 
-##
-## Class netstat - holds all information about current network information
-##
-class netstat:
-    # refresh_rate : amount of time current process list will be cached before
-    #                refreshing with new process list (in seconds)
-    refresh_rate = 60
 
+class TCPtable(datacollect.DataCollect):
+    """
+    Collects current TCP connections table.
+    """
 
     def __init__(self):
-        self.refresh_time = 0   # process list must be refreshed at first request
+	apply( datacollect.DataCollect.__init__, (self,) )
 
 
-    def refresh(self):
-        """Refresh the network stats tables"""
-
-	self.tcptable = tcptable()	# get tcp connections table
-	self.udptable = udptable()	# get udp connections table
-	self.iftable = iftable()	# get interface table
-	#self.statstable = statstable()	# get network statistics table
-
-        # new refresh time is current time + refresh rate (seconds)
-        self.refresh_time = time.time() + self.refresh_rate
+    ##################################################################
+    # Public methods
 
 
-    def checkCache(self):
-        """Check if cached data is invalid, ie: refresh_time has
-        been exceeded."""
+    ##################################################################
+    # Private methods
 
-        if time.time() > self.refresh_time:
-            log.log( "<netstat>netstat.checkCache(), refreshing network data", 7 )
-            self.refresh()
-        else:
-            log.log( "<netstat>netstat.checkCache(), using cache'd network data", 7 )
+    def collectData(self):
+	self.data.datalist = []			# list of TCP objects
+	self.data.datahash = {}			# hash of same objects keyed on '<ip>:<port>'
+	self.data.numconnections = 0
 
-
-    def __str__(self):
-	str = "tcptable: %s udptable: %s iftable: %s " % (tcptable, udptable, iftable)
-	return(str)
-
-
-    def portExists(self, proto, port, addr): 
-	"""Return tcp/udp object if it exists, else None."""
-
-        self.checkCache()       # refresh process data if necessary
-
-	key = "%s:%s" % (addr, port)
-	if proto == 'tcp':
-	    return self.tcptable[key]
-	elif proto == 'udp':
-	    return self.udptable[key]
-	else:
-	    log.log( "<netstat>netstat.portExists(), error, proto not supported '%s'" % (proto), 3 )
-	    raise "Netstat Exception", "proto not supported '%s'" % (proto)
-	
-
-    def getInterface(self, name):
-	"""Return an interface object if it exists, else None."""
-
-        self.checkCache()       # refresh process data if necessary
-
-	return self.iftable[name]
-
-
-    def getAllInterfaces(self):
-	"""Return a dictionary of all interfaces containing dictionaries of their stats."""
-
-        self.checkCache()       # refresh process data if necessary
-
-	ifdict = {}
-	for i in self.iftable.keys():
-	    ifdict[i] = {}				# make sure it is a copy of the data
-	    ifdict[i].update(self.iftable[i].ifinfo())
-
-	return ifdict
-
-
-    def getNetworkStats(self):
-	"""Return a dictionary of network statistics."""
-
-	self.checkCache()	# refresh process data if necessary
-
-	return self.statstable.getHash()
-
-
-class tcptable:
-    """Contains current tcp connections table."""
-     
-    def __init__(self):
-
-	self.list = []			# list of tcp objects
-	self.hash = {}			# hash of same objects keyed on '<ip>:<port>'
-	self.numsockets = 0
-
-	# get the tcp stats
-	#rawList = os.popen('netstat -anA inet -t', 'r')
+	# get list of current TCP connections
 	rawList = utils.safe_popen('netstat -anA inet -t', 'r')
 
 	# skip header line
@@ -143,26 +80,23 @@ class tcptable:
 	    if len(f) != 6:
 		continue		# should be 7 fields per line
 
-	    t = tcp(f)			# new tcp instance
+	    t = tcp(f)			# new TCP instance
 
-	    self.list.append(t)
-	    self.hash['%s:%s' % (t.local_addr_ip,t.local_addr_port)] = t
+	    self.data.datalist.append(t)
+	    self.data.datahash['%s:%s' % (t.local_addr_ip,t.local_addr_port)] = t
 
-	    self.numsockets = self.numsockets + 1	# count number of tcp sockets
+	    self.data.numconnections = self.data.numconnections + 1	# count number of TCP connections
 
-	#rawList.close()
 	utils.safe_pclose( rawList )
 
+	log.log( "<netstat>TCPtable.collectData(): Collected %d TCP connections" %(self.data.numconnections), 6 )
 
-    def __getitem__(self, key):
-	try:
-	    return self.hash[key]
-	except KeyError:
-	    return None
 
 
 class tcp:
-    """Holds information about a single tcp connection."""
+    """
+    Holds information about a single TCP connection.
+    """
 
     def __init__(self, fields):
 
@@ -188,17 +122,29 @@ class tcp:
 
 
 
-class udptable:
-    """Contains current udp connections table."""
-     
+class UDPtable(datacollect.DataCollect):
+    """
+    Collects current UDP connections table.
+    """
+
     def __init__(self):
+	apply( datacollect.DataCollect.__init__, (self,) )
 
-	self.list = []			# list of tcp objects
-	self.hash = {}			# hash of same objects keyed on '<ip>:<port>'
-	self.numsockets = 0
 
-	# get the udp stats
-	#rawList = os.popen('netstat -anA inet -u', 'r')
+    ##################################################################
+    # Public methods
+
+
+    ##################################################################
+    # Private methods
+
+    def collectData(self):
+
+	self.data.datalist = []			# list of UDP objects
+	self.data.datahash = {}			# hash of same objects keyed on '<ip>:<port>'
+	self.data.numconnections = 0
+
+	# get the UDP stats
 	rawList = utils.safe_popen('netstat -anA inet -u', 'r')
 
 	# skip header lines (2)
@@ -213,25 +159,20 @@ class udptable:
 
 	    t = udp(f)			# new udp instance
 
-	    self.list.append(t)
-	    self.hash['%s:%s' % (t.local_addr_ip,t.local_addr_port)] = t
+	    self.data.datalist.append(t)
+	    self.data.datahash['%s:%s' % (t.local_addr_ip,t.local_addr_port)] = t
 
-	    self.numsockets = self.numsockets + 1	# count number of tcp sockets
+	    self.data.numconnections = self.data.numconnections + 1	# count number of UDP connections
 
-	#rawList.close()
 	utils.safe_pclose( rawList )
 
-
-    def __getitem__(self, key):
-	try:
-	    return self.hash[key]
-	except KeyError:
-	    return None
-
+	log.log( "<netstat>UDPtable.collectData(): Collected %d UDP connections" %(self.data.numconnections), 6 )
 
 
 class udp:
-    """Holds information about a single udp connection."""
+    """
+    Holds information about a single UDP connection.
+    """
 
     def __init__(self, fields):
 
@@ -260,14 +201,29 @@ class udp:
 
 
 
-class iftable:
-    """Contains current network interface table."""
+class IntTable(datacollect.DataCollect):
+    """
+    The network interface statistics Data Collector.
+    """
 
     def __init__(self):
+	apply( datacollect.DataCollect.__init__, (self,) )
 
-	self.list = []			# list of interface objects
-	self.hash = {}			# hash of same objects keyed on interface name (eg: 'hme0')
-	self.numinterfaces = 0
+
+    ##################################################################
+    # Public methods
+
+
+    ##################################################################
+    # Private methods
+
+    def collectData(self):
+	"""
+	Collect network interface data.
+	"""
+
+	self.data.datahash = {}		# hash of same objects keyed on interface name
+	self.data.numinterfaces = 0
 
 	# get the interface statistics
 	fp = open('/proc/net/dev', 'r')
@@ -287,28 +243,20 @@ class iftable:
 
 	    t.name = string.strip(name)
 
-	    self.list.append(t)
-	    self.hash[t.name] = t
+	    self.data.datahash[t.name] = t
 
-	    self.numinterfaces = self.numinterfaces + 1		# count number of interfaces
+	    self.data.numinterfaces = self.data.numinterfaces + 1	# count number of interfaces
 
 	fp.close()
 
-
-    def __getitem__(self, key):
-	try:
-	    return self.hash[key]
-	except KeyError:
-	    return None
-
-
-    def keys(self):
-	return self.hash.keys()
+	log.log( "<netstat>IntTable.collectData(): Collected data for %d interfaces" %(self.data.numinterfaces), 6 )
 
 
 
 class interface:
-    """Holds information about a single network interface."""
+    """
+    Holds information about a single network interface.
+    """
 
     def __init__(self, fields):
 
@@ -361,7 +309,56 @@ class interface:
 	return info
 
 
+class stats_ctrs(datacollect.DataCollect):
+    """
+    Collect network statistics counters.
+    """
 
+    def __init__(self):
+	apply( datacollect.DataCollect.__init__, (self,) )
+
+
+    ##################################################################
+    # Public methods
+
+
+    ##################################################################
+    # Private methods
+
+    def collectData(self):
+	"""
+	Collect network statistics.
+	"""
+
+	self.data.datahash = {}			# hash of statistics
+
+	# get the network statistics from /proc/net/snmp on Linux 2.x
+	fp = open('/proc/net/snmp', 'r')
+
+	line1 = fp.readline()		# read pairs
+	line2 = fp.readline()		# of lines
+	while len(line2) > 0:
+	    (proto1, stats_names) = string.split(line1, ':')
+	    (proto2, stats_values) = string.split(line2, ':')
+	    # both lines should have same protocol
+	    if proto1 != proto2:
+		log.log( "<netstat>stats_ctrs.__init__(): error, protocol mis-match reading /proc/net/snmp for stats", 3 )
+		raise "Netstat Error", "Error, protocol mis-match reading /proc/net/snmp for stats."
+	    stats_names = string.split(stats_names)	# convert to list
+	    stats_values = string.split(stats_values)	# convert to list
+	    # make sure lists are the same length
+	    if len(stats_names) != len(stats_values):
+		log.log( "<netstat>stats_ctrs.__init__(): warning, list lengths differ, reading /proc/net/snmp for stats, stats_names=%s, stats_values=%s" % (stats_names,stats_values), 4 )
+	    else:
+		for i in range(0, len(stats_names)):
+		    self.data.datahash[proto1+stats_names[i]] = int(stats_values[i])
+
+	    line1 = fp.readline()		# read pairs
+	    line2 = fp.readline()		# of lines
+
+	fp.close()
+
+	log.log( "<netstat>stats_ctrs.collectData(): Collected %d network counters" %(len(self.data.datahash)), 6 )
 
 ##
 ## END - netstat.py

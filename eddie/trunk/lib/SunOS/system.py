@@ -25,14 +25,25 @@
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 ########################################################################
 
+"""
+  This is an Eddie data collector.  It collects System data and statistics on
+  a Solaris system.
+  The following statistics are currently collected and made available to
+  directives that request it (e.g., SYS):
+
+  (See system class doc info below.)
+"""
+
+
 # Python modules
-import os, string, time, re, threading
+import string, re
 # Eddie modules
-import log, utils
+import datacollect, log, utils
 
 
-class system:
-    """Gathers system statistics.
+class system(datacollect.DataCollect):
+    """
+    Gathers system statistics.
 
         Calls the following external commands to get stats from:
         /usr/bin/vmstat -s: standard with Solaris 2.5.1 and greater
@@ -104,66 +115,25 @@ class system:
 		cpu_swap	- percentage of cpu blocked on swap (float)
     """
 
-    # refresh_rate : amount of time current information will be cached before
-    #                being refreshed (in seconds)
-    refresh_rate = 30
-
     def __init__(self):
-	self.refresh_time = 0	# information must be refreshed at first request
-	self.hash_semaphore = threading.Semaphore()  # current thread must lock use of system hash
-	self.cache_semaphore = threading.Semaphore()	# serialize checking of system data cache
+	apply( datacollect.DataCollect.__init__, (self,) )
+
 
 
     ##################################################################
     # Public, thread-safe, methods
 
-    def refresh(self):
-	"""Force a refresh of the process list."""
-
-	self.hash_semaphore.acquire()
-	self._refresh()
-	self.hash_semaphore.release()
-
-
-    def getHash(self):
-	"""Returns hash of system stats."""
-
-	self.checkCache()	# refresh data if necessary
-
-	self.hash_semaphore.acquire()
-	system_hash = self.hash
-	self.hash_semaphore.release()
-
-	return system_hash
 
 
     ##################################################################
     # Private methods.  No thread safety if not using public methods.
 
-    def _refresh(self):
-	"""Refresh the system statistics hash table.
-	   It is assumed only one thread at a time will call this function."""
+    def collectData(self):
+        """
+        Collect system statistics data.
+        """
 
-	self._getSystemstate()
-
-	# new refresh time is current time + refresh rate (seconds)
-	self.refresh_time = time.time() + self.refresh_rate
-
-
-    def checkCache(self):
-	"""Check if cached data is invalid, ie: refresh_time has been exceeded."""
-
-	self.cache_semaphore.acquire()	# serialize refreshing of system cache
-	if time.time() > self.refresh_time:
-	    log.log( "<system>system.checkCache(), refreshing system data", 7 )
-	    self.refresh()
-	else:
-	    log.log( "<system>system.checkCache(), using cache'd system data", 7 )
-	self.cache_semaphore.release()
-
-
-    def _getSystemstate(self):
-	self.hash = {}		# dict of system data
+	self.data.datahash = {}		# dict of system data
 
 	# Use of /opt/local/bin/top to get system stats is being phased out...
 	rawList = utils.safe_popen('/opt/local/bin/top -nud2 -s1', 'r')
@@ -245,32 +215,32 @@ class system:
 
 	utils.safe_pclose( rawList )
 
-	self.hash['processes'] = self.processes
-	self.hash['sleeping'] = self.sleeping
-	self.hash['zombie'] = self.zombie
-	self.hash['running'] = self.running
-	self.hash['stopped'] = self.stopped
-	self.hash['oncpu'] = self.oncpu
+	self.data.datahash['processes'] = self.processes
+	self.data.datahash['sleeping'] = self.sleeping
+	self.data.datahash['zombie'] = self.zombie
+	self.data.datahash['running'] = self.running
+	self.data.datahash['stopped'] = self.stopped
+	self.data.datahash['oncpu'] = self.oncpu
 
-	self.hash['cpu_idle'] = self.cpu_idle
-	self.hash['cpu_user'] = self.cpu_user
-	self.hash['cpu_kernel'] = self.cpu_kernel
-	self.hash['cpu_iowait'] = self.cpu_iowait
-	self.hash['cpu_swap'] = self.cpu_swap
+	self.data.datahash['cpu_idle'] = self.cpu_idle
+	self.data.datahash['cpu_user'] = self.cpu_user
+	self.data.datahash['cpu_kernel'] = self.cpu_kernel
+	self.data.datahash['cpu_iowait'] = self.cpu_iowait
+	self.data.datahash['cpu_swap'] = self.cpu_swap
 
 	vmstat_dict = self._getvmstat()
 	if vmstat_dict:
-	    self.hash.update(vmstat_dict)
+	    self.data.datahash.update(vmstat_dict)
 
 	vmstat2_dict = self._getvmstat2()
 	if vmstat2_dict:
-	    self.hash.update(vmstat2_dict)
+	    self.data.datahash.update(vmstat2_dict)
 
 	uptime_dict = self._getuptime()
 	if uptime_dict:
-	    self.hash.update(uptime_dict)
+	    self.data.datahash.update(uptime_dict)
 
-	log.log( "<system>system._getSystemstate(), new system list created", 7 )
+	log.log( "<system>system.collectData(): new system list created", 7 )
 
 
     def _getvmstat(self):
