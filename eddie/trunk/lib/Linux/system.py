@@ -48,7 +48,7 @@
   ctr_pages_swapin	- swap pages read in (int)
   ctr_pages_swapout	- swap pages written out (int)
   ctr_interrupts	- number of interrupts received (int)
-  ctr_contextswitches 	- number of context switches (int)
+  ctr_contextswitches 	- number of context switches (float)
   ctr_processes		- number of processes started (I think?) (int)
   boottime		- time of boot (epoch) (int)
 """
@@ -159,7 +159,7 @@ class system(datacollect.DataCollect):
 		elif line[:5] == "ctxt ":
 		    # Number of context switches
 		    ( foo, ctxt ) = string.split(line)
-		    self.data.datahash['ctr_contextswitches'] = int(ctxt)
+		    self.data.datahash['ctr_contextswitches'] = long(ctxt)
 		elif line[:6] == "btime ":
 		    # boot time, in seconds since the epoch (January 1, 1970)
 		    ( foo, btime ) = string.split(line)
