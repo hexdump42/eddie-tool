@@ -29,6 +29,9 @@ class LOGSCAN(directive.Directive):
        LOGSCAN messages: file="/var/log/messages"
                          regex=".*error.*"
                          action="email('alert', 'Log match', '%(logscanmatch)s')"
+
+       Optional arguments:
+	negate=true	# only lines NOT matching regex will cause action
     """
 
     def __init__(self, toklist):
@@ -51,9 +54,21 @@ class LOGSCAN(directive.Directive):
         except AttributeError:
             raise directive.ParseFailure, "Regex not specified"
 
+	try:
+	    self.args.negate		# whether to negate rule
+	    if self.args.negate == '1' or self.args.negate == 'true' or self.args.negate == 'on':
+		self.args.negate = 1
+	    elif self.args.negate == '0' or self.args.negate == 'false' or self.args.negate == 'off':
+		self.args.negate = 0
+	    else:
+		raise directive.ParseFailure, "Unknown argument '%s' to negate option" % (self.args.negate)
+        except AttributeError:
+            self.args.negate=0
+
 	# Set variables for Actions to use
 	self.Action.varDict['logscanfile'] = self.args.file
 	self.Action.varDict['logscanregex'] = self.args.regex
+	self.Action.varDict['logscannegate'] = self.args.negate
 
 	# define the unique ID
         if self.ID == None:
@@ -110,7 +125,7 @@ class LOGSCAN(directive.Directive):
 
 		    while len(line) > 0:
 			inx = sre.match( line )
-			if inx:
+			if (inx and not self.args.negate) or (not inx and self.args.negate):
 			    matchedlines.append( line )
 			line = fp.readline()
 
