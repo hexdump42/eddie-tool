@@ -43,6 +43,9 @@ class Config:
     	# initialise our config lists/dicts
        	self.ruleList = directive.Rules()	# object which holds all rule definitions
 	self.MDict = definition.MsgDict()	# object which holds all Message definitions
+	if parent != None:
+	    self.MDict.update(parent.MDict)	# inherit parent M-tree
+
 	self.defDict = {}			# dictionary of DEFinitions
 	self.NDict = {}				# dictionary of Notification definitions
 	self.classDict = {}			# dictionary of Class definitions
@@ -91,6 +94,10 @@ class Config:
 	# Create new group
 	newgroup = Config(toklist[1], parent)
 
+	# If current host is a part of this group then add the group to the
+	# list, otherwise don't bother - so the group will be parsed but will
+	# not be kept.
+	#if useGroup( log.hostname, toklist[1] ):
 	# Add to group list
 	self.groups.append(newgroup)
 

@@ -108,6 +108,10 @@ def check(Config):
 	else:
 	    log.log( "<eddie>check(), Config.ruleList['%s'] is empty" % (d), 4 )
 
+    for c in Config.groups:
+	log.log( "<eddie>check(), Calling check() with group %s" % (c.name), 8 )
+	check(c)
+
 
 # Parse command-line arguments
 def doArgs(args, argflags):

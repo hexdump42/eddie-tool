@@ -162,6 +162,7 @@ class State:
 		    if direc != None:
 			self.prevdirec = self.direcStack.top()
 			self.prevdirec.give(direc)
+			direc.parent = self.prevdirec	# show directive its parent
 
 		    self.reset()		# reset state
 		    self.direc = direc	# current directive

@@ -103,8 +103,8 @@ class eddieElvin:
 
     def _destroy(self):
 	"""Clobber the internal elvin state so we can be deleted"""
-	self.elvin.set_error_cb(None)
-	self.elvin.set_quench_cb(None)
+	#self.elvin.set_error_cb(None)
+	#self.elvin.set_quench_cb(None)
 	del self.elvin
     
 def _cleanup(sig, stackframe):

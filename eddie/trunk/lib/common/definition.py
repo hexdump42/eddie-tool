@@ -50,14 +50,21 @@ class MsgDict:
 	except KeyError:
 	    return None
 
+    def __str__(self):
+	return "%s" % self.hash
+
     def keys(self):
 	return self.hash.keys()
-    
+
     def delete(self, name):
 	del self.hash[name]
 
-    def __str__(self):
-	return "%s" % self.hash
+    # update this dictionary with adict as per dict.update() method
+    def update(self, adict):
+	#self.hash.update(adict)
+	#..update() not working ?!??!
+	for a in adict.keys():
+	    self.hash[a] = adict[a]
 
 
 ##

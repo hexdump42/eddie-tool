@@ -53,8 +53,11 @@ def log(text='', level=1):
 	    logged = logged + 1
 	except IOError:
 	    # Cannot open logfile for writing - save this problem in adminlog
-	    print "<Log>log() - Fatal log error - cannot open logfile '%s'" % logfile
-	    adminlog.append( "<Log>log() - Fatal log error - cannot open logfile '%s'" % logfile )
+	    logstr = "<Log>log() - Log warning - cannot write to logfile '%s'" % logfile
+	    print logstr
+	    datetime = time.asctime(time.localtime(time.time()))
+	    logtext = "%s [%d]:%s\n" % (datetime,3,logstr)
+	    adminlog.append( logtext )
 
     if adminlevel > 0 and level <= adminlevel:
 	# log to adminlog
