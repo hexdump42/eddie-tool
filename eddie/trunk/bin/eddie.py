@@ -113,6 +113,11 @@ def SigHandler( sig, frame ):
     elif sig == signal.SIGINT:
 	# SIGINT (CTRL-c) - quit now
 	log.log( '<eddie>SigHandler(), SIGINT (KeyboardInterrupt) encountered - quitting', 1 )
+
+	log.log( '<eddie>SigHandler(), signalling scheduler thread to die', 5 )
+	please_die.set()
+	sthread.join()
+
 	print "\nEddie quitting ... bye bye"
 	eddieexit()
 
