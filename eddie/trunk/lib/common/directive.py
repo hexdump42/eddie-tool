@@ -158,6 +158,7 @@ class FS(Directive):
 	self.varDict['fsrule'] = self.rule
 
     def docheck(self):
+	log.log( "<directive>FS(), docheck(), fs '%s', rule '%s'" % (self.filesystem,self.rule), 7 )
 	df = dlist[self.filesystem]
 	if df == None:
 	    log.log( "<directive>FS(), Error, no df with filesystem '%s'" % (self.filesystem), 2 )
@@ -254,6 +255,7 @@ class PID(Directive):
 	self.varDict['pidf'] = self.pidfile
 
     def docheck(self):
+	log.log( "<directive>PID(), docheck(), pidfile '%s', rule '%s'" % (self.pidfile,self.rule), 7 )
 	if self.rule == "EX":
 	    # Check if pidfile exists
 	    try:
@@ -321,7 +323,7 @@ class D(Directive):
 	self.varDict['pid'] = '[pid not yet defined]'
 
     def docheck(self):
-	log.log( "<directive>docheck(D), daemon '%s', rule '%s', action '%s'" % (self.daemon,self.rule,self.action), 8 )
+	log.log( "<directive>D(), docheck(), daemon '%s', rule '%s'" % (self.daemon,self.rule), 7 )
 	self.ruleDict[ self.rule ]()
 
     def NR(self):
@@ -362,6 +364,7 @@ class SP(Directive):
 
 
     def docheck(self):
+	log.log( "<directive>SP(), docheck(), proto '%s', port '%s', addr '%s'" % (self.proto,self.port_n,self.addr), 7 )
 
 	ret = nlist.portExists(self.proto, self.port, self.addr) != None
 	if ret != 0:
@@ -388,6 +391,7 @@ class COM(Directive):
 	self.varDict['rule'] = self.rule
 
     def docheck(self):
+	log.log( "<directive>COM(), docheck(), command '%s', rule '%s'" % (self.command,self.rule), 7 )
 	tmpprefix = "/var/tmp/com%d" % os.getpid()
 	cmd = "%s >%s.out 2>%s.err" % (self.command, tmpprefix, tmpprefix )
 	log.log( "<directive>COM.docheck(), calling system('%s')" % (cmd), 8 )

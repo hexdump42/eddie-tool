@@ -69,7 +69,7 @@ def SigHandler( sig, frame ):
 
     if sig == signal.SIGHUP:
 	# SIGHUP (Hangup) - reload config
-	log.log( '<eddie>SigHandler(), SIGHUP encountered - reloading config', 2 )
+	log.log( '<eddie>SigHandler(), SIGHUP encountered - reloading config', 3 )
 	#
 	# reset lists and read in config and rules
 	ourList = directive.Rules()
@@ -82,19 +82,19 @@ def SigHandler( sig, frame ):
 
     elif sig == signal.SIGINT:
 	# SIGINT (CTRL-c) - quit now
-	log.log( '<eddie>SigHandler(), SIGINT (KeyboardInterrupt) encountered - quitting', 2 )
+	log.log( '<eddie>SigHandler(), SIGINT (KeyboardInterrupt) encountered - quitting', 1 )
 	print "\nEddie quitting ... bye bye"
 	eddieexit()
 
     elif sig == signal.SIGTERM:
 	# SIGTERM (Terminate) - quit now
-	log.log( '<eddie>SigHandler(), SIGTERM (Terminate) encountered - quitting', 2 )
+	log.log( '<eddie>SigHandler(), SIGTERM (Terminate) encountered - quitting', 1 )
 	print "\nEddie quitting ... bye bye"
 	eddieexit()
 
     else:
 	# un-handled signal - log & ignore it
-	log.log( '<eddie>SigHandler(), unknown signal received, %d - ignoring' % sig, 2 )
+	log.log( '<eddie>SigHandler(), unknown signal received, %d - ignoring' % sig, 3 )
 
 
 # The guts of the Eddie program - sets up the lists, reads config info, gets
@@ -133,7 +133,7 @@ def eddieguts(eddieHistory):
 
     # Now do all the checking
     # note ... directive order is not defined (we don't currently care do we?)
-    log.log( "<eddie>eddieguts(), beginning checks", 8 )
+    log.log( "<eddie>eddieguts(), beginning checks", 7 )
 
     ## debugging - test with 'D' directive for now ##
     for d in ourList.keylist():
@@ -143,7 +143,7 @@ def eddieguts(eddieHistory):
 	    for i in list:
 		i.docheck()
 	else:
-	    log.log( "<eddie>eddieguts(), ourList['%s'] is empty" % (d), 6 )
+	    log.log( "<eddie>eddieguts(), ourList['%s'] is empty" % (d), 4 )
 
     # Save history (debug.. FS only for now...)
     eddieHistory.save('FS',directive.dlist)
@@ -203,7 +203,7 @@ def main():
 
 	except KeyboardInterrupt:
 	    # CTRL-c hit - quit now
-	    log.log( '<eddie>main(), KeyboardInterrupt encountered - quitting', 2 )
+	    log.log( '<eddie>main(), KeyboardInterrupt encountered - quitting', 1 )
 	    print "\nEddie quitting ... bye bye"
 	    break
 

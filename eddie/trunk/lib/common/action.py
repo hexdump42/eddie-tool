@@ -200,6 +200,7 @@ def system(cmd):
 
     log.log( "<action>system(), cmd '%s', return value %d" % (cmd,retval), 5 )
 
+
 # restart()
 def restart(cmd):
     # cmd is cmd to be executed with: '/etc/init.d/cmd start'.
@@ -327,10 +328,11 @@ def eddielog(*arg):
     # Log the text
     retval = log.log( logstr, loglevel )
 
-    # Alert if return value != 0
-    if retval != 1:
+    # Alert if return value == 0
+    if retval == 0:
 	log.log( "<action>log(), Alert, return value for log.log( '%s', %d ) is %d" % (logstr,loglevel,retval), 3 )
-
+    else:
+    	log.log( "<action>eddielog(), text '%s', loglevel %d" % (logstr,loglevel), 5 )
 
 
 # elvin()
@@ -361,9 +363,10 @@ def elvin(msg):
     else:
 	log.log( "<action>elvin('%s')" % (msg), 5 )
 
+
 # elvinPage()
 def elvinPage(pager, msg):
-    # send a message via Elvin message system
+    # send a message via Elvin message system to Pager
     elvinServer = 'chintoo'
     elvinPort = 5678
 
