@@ -1,5 +1,6 @@
 # EDDIE config file
 #  Common rules for all machines
+#
 #  This is a sample configuration only, and only provided as a guide
 #  for designing your own rules.
 
@@ -89,7 +90,7 @@ PROC proctpl:
     act2ok=COMMONFIXED(commonmsg.proc,0)
 
 # a template for FS directives
-PROC fstpl:
+FS fstpl:
     template=self           # indicates this is a template definition
     scanperiod='10m'        # check filesystems every 10 mins
     actionperiod='t*1.5'    # exponential delay for subsequent alerts
