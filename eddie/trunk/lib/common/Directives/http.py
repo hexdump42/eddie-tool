@@ -112,6 +112,7 @@ class HTTP(directive.Directive):
 	    time	(float)   - elapsed time of connection
 
 	    if failed:
+		exception (string) - exception type
 		errno	(integer) - error code of failure
 		errstr	(string)  - error message
 
