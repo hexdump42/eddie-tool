@@ -1,0 +1,65 @@
+
+    OTTO - The Automated Administrator or "My name is ... Otto,
+    ====   ===========================     and I like to get ... blotto!"
+
+COMMANDS:
+--------
+
+  D	Daemons running.  Check that process $NAME is currently running.
+  	IFNOT( <action> ) - perform action if process not running,
+	IFIS( <action> ) - perform action if process is running.
+
+  PC	Process policies.
+	- CPU %usage (Current or averaged over n scans).
+	- Total CPU usage (ie: hrs:mins) - reached limit or growing by >= n.
+	- Priority ??
+	- Memory Usage ??
+	- Number of children (child processes) ??
+
+  MEM	OS Memory Monitor
+	- alert if memory use over limit, or only n Mb left, etc...
+
+  PID	PID File Check
+	- check if PID file exists,
+	- and/or if PID file contents is actual process
+
+  FS	Filesystem Usage
+	- over %
+	- over amount
+	- increasing by n%/scan, etc
+
+  F	File size
+	- over n Mb
+	- increasing by n Mb/scan, etc
+
+  SP	Service Ports
+	- check port is alive
+
+  L	Machine Load
+	- report if load average over n.
+
+  B	Boot
+	- report if machine has just booted up
+	  (ie: if uptime < scan_frequency)
+
+
+MISC
+----
+	- LOG everything (to syslog or private logfile?? probably private)
+	- ps, df: support standard and ucb
+
+
+RESPONSE FUNCTIONS
+-------- ---------
+	- email( address, MSGNAME, ALERTLEVEL )
+		- ALERTLEVEL means ?
+	- page( MSGNAME )
+	- restart( COMMAND_TO_RESTART )   <-+ same ?
+	- system( SYSTEM_COMMAND )        <-+ same ?
+	- nice( NICE_LEVEL )
+	- log( MSGNAME )
+		- logs extra message to OTTO logfile
+	- syslog( MSGNAME )
+		- logs message to syslog
+
+
