@@ -15,7 +15,7 @@ you want to monitor before you can monitor it.
 
 2. Point EDDIE to your Python installation.
    [EDDIE requires Python 1.6+, and has been tested with most Python versions
-   between 1.6.1 and 2.1]
+   between 1.6.1 and 2.2]
    So edit the first line of eddie/bin/eddie.py to point to your python.
    Eg:
        $ which python
@@ -29,6 +29,7 @@ you want to monitor before you can monitor it.
    and modify it to suit your needs.
    Eg:
        $ cd /opt/eddie
+       $ mkdir config
        $ cp config.sample/eddie.cf config/eddie.cf
        $ vi config/eddie.cf
    the documentation in eddie.cf should explain enough to get you started.
@@ -54,16 +55,16 @@ FS rootfs:	fs='/'
 ######################################################
 
    These are two basic EDDIE directives.  The first is a process check which
-   will alert if the init process is not running.  procname defines the
-   process name, rule defines the type of check (NR means "Not Running") and
-   action defines what to do if rule is true.
+   will alert if the init process is not running.  'procname' defines the
+   process name, 'rule' defines the type of check (NR means "Not Running") and
+   'action' defines what to do if the rule evaluates to true.
 
    The second directive is a filesystem check which checks if the root
-   filesystem is 90% or more full.  fs defines the filesystem to check,
-   rule defines the type of rule, in this case a simple test is defined
-   which will be executed in a Python environment.  capac will contain the
+   filesystem is 90% or more full.  'fs' defines the filesystem to check,
+   'rule' defines the rule to evaluate, in this case it is a simple test
+   which will be executed in a Python environment;  'capac' will contain the
    current percentage full of the filesystem in question, and so the rule
-   will be true if capac is >= 90%.  The action, again, defines what action
+   will be true if 'capac' is >= 90%.  The 'action', again, defines what action
    to take if the rule is true.
 
 7. Start EDDIE running by starting bin/eddie.py

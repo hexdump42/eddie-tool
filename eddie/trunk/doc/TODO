@@ -1,8 +1,17 @@
 EDDIE TODO
 
-- df.py: df list needs to cache properly like other data collectors...
+- create a generic data-collector class which provides thread-safe access to
+  cached data for the data-collector classes to inherit.
 
-- rule dependencies
+- access to data-collectors should be through a dedicated class, which tracks
+  which data-collectors are available for the particular platform, rather
+  than the hard-coded method that exists now.
+
+- Elvin connection code needs to be re-written to run in its own thread to
+  prevent multiple threads creating Elvin connections, and to fix up Elvin
+  re-connection problems.
+
+- implement rule dependencies
 
 - make os-dependent data collectors thread-safe, as Linux/proc.py
 
@@ -14,8 +23,6 @@ EDDIE TODO
 
 - msg objects in action calls, eg:
     PORT  'hostname': 50006   ""  "ALIVE" email('alert', commonmsg.port.WARN)
-
-- store disk usage in eddiedb
 
 - check inode usage
 

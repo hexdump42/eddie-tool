@@ -1,6 +1,49 @@
 Eddie CHANGES
 (reverse chronological order)
 
+Eddie-0.28 (9-Mar-2002)
+ - Cleaned up df code, added data caching and made thread-safe, like other
+   data collectors.
+ - Fixed up eddie_wrapper locating GNU date on Solaris.
+ - Fixed memory-leak in disk-usage code (reported by Dougal Scott
+   <dwagon@connect.com.au>).
+ - Exit with error if all threads are locked (cannot kill threads in current
+   Python implementation).
+   Make eddie_wrapper a little smarter when restarting eddie process.
+ - Added example init.d scripts to contrib for Solaris and Redhat Linux.
+ - Added another vmstat parser to get free memory/swap information for
+   Solaris.
+ - Added a common semaphore for utils.safe_popen()/safe_pclose() and
+   utils.safe_getstatusoutput() to use between them.  It appears that
+   system calls, of any sort - system() calls, popen(), commands module,
+   etc - are not thread-safe and cannot be performed simultaneously by
+   multiple threads at once.  This should prevent such race-conditions as
+   all EDDIE system calls use these functions.
+ - Cleaned up access to the system stats cache so that only one thread at a
+   time will be refreshing the data.
+ - Added some more smarts to eddie_wrapper:
+   - don't start Eddie if one is already running.
+   - don't restart Eddie more than a set number of times in a short period of
+     time (requires GNU date command).
+ - Put semaphore lock around Elvin notify to ensure thread-safe notifications
+   are being sent.  Suspect duplicates were being sent before.
+ - Now logs the current thread name for each log entry for improved debugging.
+ - A lot of cleaning up of system.py for Solaris.
+   Added all counter stats from 'vmstat -s'.
+   Changed gathering of loadavg/uptime stats from '/usr/bin/uptime' rather than
+   '/opt/local/bin/top' - trying to phase out use of 'top'.
+   Improved documentation at top of class, with listing of every stats variable
+   available from the system class.
+ - Added prtdiag parsing for Enterprise class servers (E3500,E6500,etc)
+   for temperature.
+ - Added support for prtdiag for Sun U280R's.
+ - Added list of paths to find metastat command for Solaris METASTAT directive.
+ - Added PRTDIAG directive to provide an interface to the system-specific
+   data provided by prtdiag on Sun machines.
+   Currently only system temperatures are extracted for U450s and U250s.
+ - Added support for VxFS filesystems in df.py for Solaris.
+ - Updated docs to require Python versions 1.6+
+
 Eddie-0.27 (12-Nov-2001)
  - Put semaphore lock around Elvin connect calls to prevent multiple threads
    trying to connect at once.
