@@ -18,6 +18,8 @@ EDDIE_VER='0.24'
 # Standard Python modules
 import sys, os, time, signal, re, threading
 
+print "Eddie v%s" % (EDDIE_VER)
+
 # Work out the base Eddie directory which should contain bin/, lib/, etc...
 cwd = os.getcwd()
 ewd = os.path.split(sys.argv[0])[0]
@@ -48,7 +50,7 @@ if systype == '':
                   os.path.join(basedir,'lib',osname,osver),
                   os.path.join(basedir,'lib',osname,osarch),
 		  os.path.join(basedir,'lib',osname) ]
-    print "oslibdirs:",oslibdirs
+    #print "oslibdirs:",oslibdirs
 
 
 commonlibdir = os.path.join(basedir, 'lib/common')
@@ -168,7 +170,13 @@ def scheduler(q, Config, die_event):
 	    # do nothing while we have no active threads to play with
 	    # TODO: if we wait too long, something is probably wrong, so do something about it...
 	    log.log( "<eddie>scheduler(), active thread count is %d - waiting till < %d" % (threading.activeCount(),config.num_threads), 8 )
-	    time.sleep(1)
+	    try:
+		time.sleep(1)
+	    except IOError:
+		# Indicates a signal received under Linux, just continue
+		# coz main thread should be setting up to exit.
+		log.log( "<eddie>scheduler(), IOError received by sleep(1) #1 - assume exiting so ignoring", 8 )
+		pass
 
 	# we have spare threads so get next checking object
 	while not die_event.isSet():
@@ -177,7 +185,13 @@ def scheduler(q, Config, die_event):
 	    if t <= time.time():
 		log.log( "<eddie>scheduler(), object %s,%s is ready to run" % (c,t), 9 )
 		break
-	    time.sleep(1)
+	    try:
+		time.sleep(1)
+	    except IOError:
+		# Indicates a signal received under Linux, just continue
+		# coz main thread should be setting up to exit.
+		log.log( "<eddie>scheduler(), IOError received by sleep(1) #2 - assume exiting so ignoring", 8 )
+		pass
 
 	# break loop if we have been signalled to die
 	if die_event.isSet():
