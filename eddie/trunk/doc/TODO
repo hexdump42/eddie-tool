@@ -22,9 +22,9 @@ y Directive template creation, eg:
     not enforced because it shouldn't hurt.... directives ignore any arguments
     they don't need.
 
-- rule dependencies
+y Directives spanning multiple lines not parsed properly.
 
-+ See BUG re multi-line directives...
+- rule dependencies
 
 - make os-dependent data collectors thread-safe, as Linux/proc.py
 
@@ -69,7 +69,6 @@ y Directive template creation, eg:
 
 BUGS:
  - Unknown directives are not handled properly.
- - Directives spanning multiple lines not parsed properly.
 
  - Bus Error/core dump from iostat/kstat library sometimes when
    collecting iostat data.
