@@ -507,8 +507,16 @@ class SP(Directive):
 	if ret != 0:
 	    log.log( "<directive>SP(), port %s/%s listener found bound to %s" % (self.proto , self.port_n, self.addr), 8 )
 	else:
-	    self.doAction(Config)
-	    log.log( "<directive>SP(), port %s/%s no listener found bound to %s" % (self.proto , self.port_n, self.addr), 6 )
+	    log.log( "<directive>SP(), port %s/%s no listener found bound to %s - sleeping before recheck..." % (self.proto , self.port_n, self.addr), 8 )
+	    time.sleep( 30 )
+	    nlist.refresh()		# force refresh of network stats
+
+	    ret = nlist.portExists(self.proto, self.port, self.addr) != None
+	    if ret != 0:
+		log.log( "<directive>SP(), port %s/%s listener found bound to %s" % (self.proto , self.port_n, self.addr), 8 )
+	    else:
+		self.doAction(Config)
+		log.log( "<directive>SP(), port %s/%s no listener found bound to %s" % (self.proto , self.port_n, self.addr), 6 )
 
 
 class COM(Directive):
@@ -827,7 +835,7 @@ class NET(Directive):
 
 	log.log( "<directive>NET(), docheck(), rulestring '%s'" % (self.rulestring), 7 )
 
-	netenv = nlist.statstable.hash	# get dictionary of network stats
+	netenv = nlist.statstable.getHash()	# get dictionary of network stats
 
 	result = eval( self.rulestring, netenv )
 
@@ -884,6 +892,73 @@ class SYS(Directive):
 	    for i in sysenv.keys():
 		self.Action.varDict['sys%s'%(i)] = sysenv[i]
 	    self.doAction(Config)
+
+
+
+class STORE(Directive):
+    """Store selected host data."""
+
+    def __init__(self, toklist):
+	apply( Directive.__init__, (self, toklist) )
+
+	# Must be 2 tokens to make up: ['STORE', ':']
+	if len(toklist) != 2:
+	    raise ParseError, "STORE parse error, expected 2 tokens, found %d" % (len(toklist))
+	if toklist[1] != ':':
+	    raise ParseError, "STORE parse error, no colon"
+
+	self.rulestring = ''
+
+
+    def tokenparser(self, toklist, toktypes, indent):
+	"""Parse rest of rule (after ':')."""
+
+	# Expect first token to be rule (a string)
+        if toktypes[0] != 'STRING':
+	    raise ParseError, "STORE parse error, data list is not string."
+
+	self.rulestring = utils.stripquote(toklist[0])		# the variable space to store
+
+	self.actionList = self.parseAction(toklist[1:])
+
+	self.Action.varDict['storerule'] = self.rulestring
+
+	log.log( "<Directive>STORE, rule '%s', action '%s'" % (self.rulestring, self.actionList), 8 )
+
+
+    def docheck(self, Config):
+	"""Perform the check.  In this case, the 'check' is automatically true (we always want to store)."""
+
+	log.log( "<directive>STORE(), docheck(), rulestring '%s'" % (self.rulestring), 7 )
+
+	datahash = None
+
+	# Get data as directed by rulestring.
+	# * this is hard-coded to a few different 'rules' atm.  This should be
+	# cleaned up later to handle any type of rule (TODO)
+
+	if self.rulestring[:6] == 'system':
+	    datahash = syslist.getHash()			# get dictionary of system stats
+	elif self.rulestring[:7] == 'netstat':
+	    #datahash = nlist.statstable.getHash()		# get dictionary of network stats
+	    datahash = nlist.getNetworkStats()			# get dictionary of network stats
+	elif self.rulestring[:4] == 'proc':
+	    datahash = plist.allprocs()				# get dictionary of process details
+	elif self.rulestring[:2] == 'if':
+	    datahash = nlist.getAllInterfaces()			# get dictionary of interface details
+
+	if datahash == None:
+	    log.log( "<directive>STORE(), docheck(), rulestring '%s' is invalid." % (self.rulestring), 3 )
+	    return
+
+	# Create a new hash with 'data.' prepended to each key (as required by estored).
+# Don't do this anymore.
+#	storeenv = {}
+#	for i in datahash.keys():
+#	    storeenv['data.'+i] = datahash[i]
+
+	self.Action.storedict = datahash
+	self.doAction(Config)
 
 
 

@@ -33,55 +33,26 @@ from Elvin import *
 #    log.log( "<eddieElvin>ImportError: Elvin, ElvinMisc - Elvin not available", 2 );
 
 ################################################################
+## Exceptions:
 ElvinError = 'ElvinError'
 
-#
-# TODO make 2 new classes derrived from eddieElvin, elvinTicker and elvinPage
-# rtelford (980418)
-#
 
+class elvinConnection:
+    """A shared object which maintains a single connection to the Elvin server."""
 
-class eddieElvin:
-
-    def __init__(self, host='elvin', port=5678):
+    def __init__(self, host='elvin.connect.com.au', port=5678):
 	self.host = host
 	self.port = port
 
 	try:
-	    print "Trying Elvin connection to %s:%d" % (self.host, self.port)
 	    self.elvin = Elvin.Elvin(Elvin.EC_NAMEDHOST, self.host, self.port,
 				     None, self._error_cb)
-	    print "Elvin connection succeeded."
 	except:
 	    sys.stderr.write("Connection to elvin failed\nIs there an elvin server running at %s:%d\n" %(self.host, self.port))
 	    #self._exit()
 	    raise ElvinError, "Connection failed to %s:%d" % (self.host,self.port)
 	else:
 	    self.connected = 1
-
-
-    # must override this method
-    def sendmsg(self,msg):
-	if self.connected:
-	    #self.elvin.notify( { 'TICKERTAPE' : 'EddieTest',
-	    self.elvin.notify( { 'TICKERTAPE' : 'Eddie',
-	                         'TICKERTEXT' : msg,
-				       'USER' : log.hostname,
-				    'TIMEOUT' : 10, 
-				  'MIME_TYPE' : 'x-elvin/slogin',
-				  'MIME_ARGS' : log.hostname } )
-	    return 0
-
-	else:
-	    return 1
-
-
-    def _exit(self):
-	"""Exit routine. Because the thing that created us is
-	sitting on a signal.pause. We signal ourselves to die"""
-    
-	os.kill(os.getpid(), signal.SIGUSR1)
-
 
     def _error_cb(self, code, msg):
 	"""Elvin error callback. We reconnect"""
@@ -112,18 +83,53 @@ class eddieElvin:
 	self.connected = 1
 	return 1
 
+
+    def _exit(self):
+	"""Exit routine. Because the thing that created us is
+	sitting on a signal.pause. We signal ourselves to die"""
+    
+	os.kill(os.getpid(), signal.SIGUSR1)
+
+
     def _destroy(self):
 	"""Clobber the internal elvin state so we can be deleted"""
 	#self.elvin.set_error_cb(None)
 	#self.elvin.set_quench_cb(None)
+	print "eddieElvin: _destroy() deleting self.elvin"
 	del self.elvin
-    
-def _cleanup(sig, stackframe):
-    """Performs any cleanup before exiting"""
 
-    #print "_cleanup exiting on signal %d" %(sig,)
-    Elvin.ElvinRemovePidFile(pidname)
-    sys.exit(0)
+
+
+ec=None
+
+class eddieElvin:
+
+    def __init__(self):
+	global ec
+	print "eddieElvin init: ec:",ec
+	if ec == None:
+	    ec = elvinConnection()
+
+	self.connected = ec.connected
+
+
+    # must override this method
+    def sendmsg(self,msg):
+	if self.connected:
+	    #self.elvin.notify( { 'TICKERTAPE' : 'EddieTest',
+	    self.elvin.notify( { 'TICKERTAPE' : 'Eddie',
+	                         'TICKERTEXT' : msg,
+				       'USER' : log.hostname,
+				    'TIMEOUT' : 10, 
+				  'MIME_TYPE' : 'x-elvin/slogin',
+				  'MIME_ARGS' : log.hostname } )
+	    return 0
+
+	else:
+	    return 1
+
+
+
 
 class elvinTicker(eddieElvin):
 
@@ -174,7 +180,73 @@ class elvinPage(eddieElvin):
 
 
 
+class elvindb(eddieElvin):
+    """Send a dictionary through Elvin to a database listener process."""
 
+    def send(self, table, data):
+	"""Send the dictionary, aimed for table 'table' in db.
+	- 'table' is a string specifying which table to insert the data into.
+	- 'data' is a dictionary of data.
+	"""
+
+	# If any of the data in 'data' is a dictionary, save these off
+	# separately and send each one over Elvin.
+	extrahashes = {}
+
+	# Elvin can't send longs :(
+	# Let's get around this for now by converting them to strings!  The
+	# consumer at the other end must look for strings containing all digits
+	# and ending with a 'L' and convert them back to longs... a hack I know...
+
+	for i in data.keys():
+	    if type(data[i]) == type(0L):
+		data[i] = "%s" % (data[i])
+
+	    if type(data[i]) == type({}):
+		extrahashes[i] = data[i]
+		del data[i]
+
+		# and check this sub-dictionary for longs... :(
+		for s in extrahashes[i].keys():
+		    if type(extrahashes[i][s]) == type(0L):
+			extrahashes[i][s] = "%s" % (extrahashes[i][s])
+
+	#print "data:",data
+	#print "extrahashes:",extrahashes
+
+	timestamp = time.strftime("%Y%m%d%H%M%S", time.localtime(time.time()))
+
+	if self.connected:
+	    # Create db entry creation 'command'
+	    edict = {      'ELVIN.TABLE' : table,
+		         'ELVIN.COMMAND' : 'CREATE',
+		            'ELVIN.HOST' : log.hostname,
+			       'ELVINDB' : 'ELVINDB',		# put in for the exists() to work - shouldn't be needed...
+		       'ELVIN.TIMESTAMP' : timestamp
+		    }
+
+	    if len(extrahashes) > 0:
+		for e in extrahashes.keys():
+		    edictcopy = {}
+		    edictcopy.update(edict)
+		    edictcopy.update(extrahashes[e])		# add all the system data
+
+		    #self.elvin.notify( edictcopy )
+		    ec.elvin.notify( edictcopy )
+	    else:
+		edict.update(data)		# add all the system data
+
+		#self.elvin.notify( edict )
+		ec.elvin.notify( edict )
+
+	    return 0
+
+	else:
+	    return 1
+
+
+
+## Test code...
 
 if __name__ == "__main__":
 

@@ -281,13 +281,14 @@ class action:
 
 	try:
 	    #e = eddieElvin.elvinTicker( elvinServer, elvinPort )
-	    e = eddieElvin.eddieElvin( elvinServer, elvinPort )
+	    #e = eddieElvin.eddieElvin( elvinServer, elvinPort )
+	    e = eddieElvin.eddieElvin()
 	except eddieElvin.ElvinError:
 	    log.log( "<action>elvin(), Error, eddieElvin(%s, %d) could not connect" % (elvinServer,elvinPort), 2 )
 	    return
 
 	retval = e.sendmsg( msg )
-	e._destroy()			# close connection
+	#e._destroy()			# close connection
 
 	# Alert if return value != 0
 	if retval != 0:
@@ -371,6 +372,30 @@ class action:
 	    return
 
 	log.log( "<action>page('%s')" % (msg), 5 )
+
+
+    def elvindb(self, table):
+	"""Send information to remote database listener via Elvin."""
+
+	try:
+	    e = eddieElvin.elvindb()
+	except eddieElvin.ElvinError:
+	    log.log( "<action>elvindb(), Error, eddieElvin.elvindb() could not connect", 2 )
+	    return
+
+	print "created elvindb() connection to elvin"
+	retval = e.send(table, self.storedict)
+
+	# kill elvin connection (I hope?!)
+	#e._destroy()			# close connection
+	#del e
+
+	# Alert if return value != 0
+	if retval != 0:
+	    log.log( "<action>elvindb('%s', dict), Alert, return value for e.send() is %d" % (table,retval), 3 )
+	else:
+	    log.log( "<action>elvindb('%s', dict): store ok" % (table), 6 )
+
 
     #
     # Utilities for action functions

@@ -352,6 +352,7 @@ directives = {
                 "IF"		: directive.IF,
                 "NET"		: directive.NET,
                 "SYS"		: directive.SYS,
+                "STORE"		: directive.STORE,
              }
 
 ## Just the definitions
