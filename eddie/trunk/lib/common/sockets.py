@@ -28,9 +28,11 @@
 ########################################################################
 
 
-
-import sys,socket,string,select,traceback
+# Imports: Python
+import sys,socket,string,select,traceback,errno
+# Imports: Eddie
 import log
+
 
 # class wrapper for socket
 class socketstate:
@@ -140,13 +142,13 @@ def console_server_thread(Config, die_event, consport):
             s.close()
             s = None
 
-            if e[1][0] == 98:		# address already in use
+            if e[1][0] == errno.EADDRINUSE:		# address already in use
                 log.log("<sockets>console_server_thread(), Port %d already in use - exiting" % (consport), 1 )
 		sys.stderr.write( "Eddie: port %d already in use, quitting\n" % (consport) )
                 die_event.set()		# signal other threads to exit
 		return
 
-            if e[1][0] == 131:         # 'Connection reset by peer'
+            if e[1][0] == errno.ECONNRESET:         # 'Connection reset by peer'
                 log.log( "<sockets>console_server_thread(), Connection reset by peer - continuing.", 8 )
                 continue
 
