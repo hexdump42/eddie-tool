@@ -184,9 +184,101 @@ E.g.,
                action='email("root", "Filesystem %(mountpt)s is over 50%% full")'
 
 
+
 *** Data Collectors ***
 
-TODO
+Data collectors are the OS-specific classes and modules which collect common
+system information for directives such as PROC, FS, SYS, etc.  Not all
+directives need to use these data collectors, many directives are coded to
+collect data or perform tests internally.  These are primarily to provide a
+common set of data collection modules which are automatically loaded based
+on the current operating system and architecture.
+
+Data Collector creation has been designed to be relatively easy.  A base-class
+is provided which does most of the work, handles data-caching and refreshing,
+locking for thread-safety and provides most of the public methods.
+
+The main steps are as follows:
+ - Create OS or architecture-specific lib directory if required;
+ - Create module if an appropriate module does not already exist;
+ - Create new data collector class definition.
+
+** Create Lib Directory **
+
+If a lib directory does not already exist for the required operating system
+or architecture (e.g., Linux, SunOS, SunOS/sun4m) in the eddie/lib/ directory
+then a new one must be created.  The search order for architecture specific
+modules is:
+
+    1. eddie/lib/<osname>/<osver>/<osarch>
+    2. eddie/lib/<osname>/<osarch>/<osver>
+    3. eddie/lib/<osname>/<osver>
+    4. eddie/lib/<osname>/<osarch>
+    5. eddie/lib/<osname>
+
+where the variable directory names are taken from uname as follows:
+
+    <osname> = uname -s
+    <osver>  = uname -r
+    <osarch> = uname -m
+
+This allows the same modules to exist for multiple operating systems and the
+correct module will be imported as required.  If different modules are needed
+for different OS versions or architectures of the same operating system, they
+can be placed in the relevent subdirectory, and will be loaded automatically.
+
+
+** Create Module **
+
+If an appropriate module file is not already available, a new one should be
+created in the relevent directory (see ** Create Lib Directory ** above).
+The module must import the datacollect module, which contains the base
+DataCollect class definition.
+
+* Data Collector Class *
+
+A new class should be created which should be sub-class the
+datacollect.DataCollect class.  The constructor method only has to
+call the base-class constructor.
+
+E.g.,
+
+    class mydata(datacollect.DataCollect):
+	def __init__(self):
+	    apply( datacollect.DataCollect.__init__, (self,) )
+
+
+* collectData method *
+
+The only other method a data collector class must have is the collectData
+method.  This is where the data is collected from the system and added
+to dictionaries or lists in the self.data container class.  The self.data
+class currently has no special function other than to provide a container
+for data.  If only a single dictionary of name/values is required, the
+self.data.datahash dictionary should be used.  The built-in getHash method
+defaults to this dictionary, although the name of another dictionary can be
+passed instead.  Similarly, a getList method is also available to retrieve
+copies of any lists.
+
+The getHash and getList methods should be the only method used to access
+the dictionaries and lists in self.data as they provide thread-safety be
+locking access to the data, and they make sure to return copies of the
+data to prevent the data changing while being accessed.
+
+collecData is only called after the current thread has acquired the data lock
+so it is safe to manipulate the data structures as required in this method.
+
+E.g.,
+
+    def collectData(self):
+        """
+        Collect some data.
+        """
+
+        self.data.datahash = {}         # reset dictionary
+        self.data.datahash['data1'] = 3
+        self.data.datahash['data2'] = 3.1415
+        self.data.datahash['data3'] = 'pi'
 
 
 
