@@ -27,9 +27,9 @@ LOGLEVEL <loglevel>
 		2 - log important errors - which may cause incorrect operation
 		3 - log alerts - do not affect program operation, but aren't good
 		4 - log warnings - don't affect anything but should be noted
-		5 - log actions taken and above
-		6 - log informative messages and above
-		7 - ??
+		5 - log actions taken
+		6 - log informative messages
+		7 - log user-debug messages - usually all checks performed
 		8 - log most things except multi-line crap - good for debugging
 		9 - log EVERYTHING! - use with caution!
 	Each set level will cause logging of itself and all log levels less
