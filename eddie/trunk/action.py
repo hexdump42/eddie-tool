@@ -27,6 +27,8 @@ def mail(user,*arg):
     for i in arg:
 	print i,
     print ")"
+    multUsers = string.split( user, '|' )
+    print 'multUsers:',multUsers
 
 # system()
 def system(cmd):

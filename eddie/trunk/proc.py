@@ -61,8 +61,6 @@ class proc:
     def __init__(self, *arg):
 	self.raw = arg[0]
 
-	print 'self.raw:',self.raw
-
 	try:
 	    path = string.split(self.raw[5], "/")
 	    comm = path[ len(path) - 1 ]
