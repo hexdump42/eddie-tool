@@ -22,17 +22,20 @@ import config
 import time
 import action
 import log
+import history
 
 # Main config file - this file INCLUDEs all other config files
 config_file = 'config/otto.cf'
 
+
 # The guts of the Otto program - sets up the lists, reads config info, gets
 # system information, then performs the checking.
-def ottoguts():
+def ottoguts(ottoHistory):
     global ourList		# global list of all directives
     global defDict		# global dictionary of DEFinitions
     global MDict		# global dictionary of Messages
     global ADict		# global dictionary of Actions
+
 
     # initialise our global lists/dicts
     ourList = directive.Rules()
@@ -86,12 +89,19 @@ def ottoguts():
 	else:
 	    log.log( "<otto>ottoguts(), ourList['%s'] is empty" % (d), 6 )
 
+    # Save history (debug.. FS only for now...)
+    ottoHistory.save('FS',directive.dlist)
+
+
+
 def main():
+    history.ottoHistory = history.history()
 
     # Main Loop
     while 1:
 	try:
-	    ottoguts()
+	    ottoguts(history.ottoHistory)
+
 	    log.log( '<otto>main(), sleeping for %d secs' % (config.scanperiod), 6 )
 	    print 'Press CTRL-C to quit'
 	    time.sleep( config.scanperiod )

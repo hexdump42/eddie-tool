@@ -15,6 +15,7 @@
 import os
 import string
 import log
+import history
 
 ##
 ## Class dfList - instantiates with a list of disk stats
@@ -75,8 +76,19 @@ class df:
 	self.size    = self.raw[1]	# Size of filesystem
 	self.used    = self.raw[2]	# kb used
 	self.avail   = self.raw[3]	# kb free
-	self.pctused = self.raw[4]	# Percentage Used
+	self.pctused = self.raw[4][:-1]	# Percentage Used
 	self.mountpt = self.raw[5]	# Mount point
+
+	prevdf = history.ottoHistory.list('FS')
+	if prevdf == []:
+	    # No history - deltas are 0
+	    self.usedDelta = "0"
+	    self.availDelta = "0"
+	    self.pctusedDelta = "0"
+	else:
+	    self.usedDelta = "%d" % (string.atoi(self.used) - string.atoi(prevdf[self.fs].getUsed()))
+	    self.availDelta = "%d" % (string.atoi(self.avail) - string.atoi(prevdf[self.fs].getAvail()))
+	    self.pctusedDelta = "%d" % (string.atoi(self.pctused) - string.atoi(prevdf[self.fs].getPctused()))
 
 
     def __str__(self):
@@ -104,11 +116,19 @@ class df:
 	return self.avail
 
     def getPctused(self):
-	return self.pctused[:-1]	# strip '%' off end
+	return self.pctused	# strip '%' off end
 
     def getMountpt(self):
 	return self.mountpt
 
+    def getUsedDelta(self):
+	return self.usedDelta
+
+    def getAvailDelta(self):
+	return self.availDelta
+
+    def getPctusedDelta(self):
+	return self.pctusedDelta	# strip '%' off end
 
 ##
 ## END - df.py

@@ -153,7 +153,7 @@ class FS(Directive):
 	self.filesystem = fields[0]		# the filesystyem to check
 	self.rule = utils.stripquote(fields[1])	# the rules
 	self.action = fields[2]			# the action
-	print "<FS> filesystem: '%s' rule: '%s' action: '%s'" % (self.filesystem, self.rule, self.action)
+	log.log( "<FS> filesystem: '%s' rule: '%s' action: '%s'" % (self.filesystem, self.rule, self.action), 8 )
 
 	# Set any FS-specific variables
 	#  fsf = filesystem
@@ -162,30 +162,25 @@ class FS(Directive):
 	self.varDict['fsrule'] = self.rule
 
     def docheck(self):
-	print "FS directive doing checking......"
 	df = dlist[self.filesystem]
 	if df == None:
 	    log.log( "<directive>FS(), Error, no df with filesystem '%s'" % (self.filesystem), 2 )
 	    return
-
-	print "df = ",df
 
 	dfenv = {}			# environment for df rules execution
 	dfenv['used'] = string.atoi(df.getUsed())
 	dfenv['avail'] = string.atoi(df.getAvail())
 	dfenv['capac'] = string.atoi(df.getPctused())
 	# TODO : calculate deltas from history...
-	dfenv['useddelta'] = 0
-	dfenv['availdelta'] = 0
-	dfenv['capacdelta'] = 0
+	dfenv['useddelta'] = string.atoi(df.getUsedDelta())
+	dfenv['availdelta'] = string.atoi(df.getAvailDelta())
+	dfenv['capacdelta'] = string.atoi(df.getPctusedDelta())
 
 	self.parseRule()
 
-	print "used='%d', avail='%d', capac='%d'" % (dfenv['used'],dfenv['avail'],dfenv['capac'])
+	#print "used='%d', avail='%d', capac='%d', useddelta='%d', availdelta='%d', capacdelta='%d'" % (dfenv['used'],dfenv['avail'],dfenv['capac'],dfenv['useddelta'],dfenv['availdelta'],dfenv['capacdelta'])
 
 	result = eval( self.rule, dfenv )
-
-	print "DEBUG FS: result of eval( %s ) = %d" % ( self.rule, result )
 
 	if result != 0:
 	    # assign variables
@@ -201,8 +196,6 @@ class FS(Directive):
     # Parse the rule line and replace/remove certain characters
     def parseRule(self):
 	parsed = ""
-
-	print "DEBUG: self.rule = '%s'" % self.rule
 
 	skipnext = 0			# flag to skip next character/s
 
@@ -233,8 +226,6 @@ class FS(Directive):
 		continue
 	    
 	    parsed = parsed + c
-
-	print "DEBUG: parsed   = '%s'" % parsed
 
 	self.rule = parsed
 
