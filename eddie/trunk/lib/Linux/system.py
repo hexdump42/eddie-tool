@@ -69,9 +69,11 @@
 """
 
 # Python modules
-import string, re
+import string
+import re
 # Eddie modules
-import datacollect, log
+import datacollect
+import log
 
 
 class system(datacollect.DataCollect):
@@ -128,20 +130,56 @@ class system(datacollect.DataCollect):
 	    while line != "":
 		if line[:4] == "cpu ":
 		    # Total CPU stats
-		    ( foo, user, nice, system, idle ) = string.split(line)
-		    self.data.datahash['ctr_cpu_user'] = long(user)
-		    self.data.datahash['ctr_cpu_nice'] = long(nice)
-		    self.data.datahash['ctr_cpu_system'] = long(system)
-		    self.data.datahash['ctr_cpu_idle'] = long(idle)
+		    cpusplit = string.split(line)
+		    if len(cpusplit) == 5:
+			# Redhat Linux (probably other Linuxes?)
+			( foo, user, nice, system, idle ) = cpusplit
+			self.data.datahash['ctr_cpu_user'] = long(user)
+			self.data.datahash['ctr_cpu_nice'] = long(nice)
+			self.data.datahash['ctr_cpu_system'] = long(system)
+			self.data.datahash['ctr_cpu_idle'] = long(idle)
+		    elif len(cpusplit) == 8:
+			# Redhat Enterprise Linux (not sure if this is specific to RHEL
+			# or is a change in kernel 2.4.21+)
+			( foo, user, nice, system, idle, iowait, hardirq, softirq ) = cpusplit
+			self.data.datahash['ctr_cpu_user'] = long(user)
+			self.data.datahash['ctr_cpu_nice'] = long(nice)
+			self.data.datahash['ctr_cpu_system'] = long(system)
+			self.data.datahash['ctr_cpu_idle'] = long(idle)
+			self.data.datahash['ctr_cpu_iowait'] = long(iowait)
+			self.data.datahash['ctr_cpu_hardirq'] = long(hardirq)
+			self.data.datahash['ctr_cpu_softirq'] = long(softirq)
+		    else:
+			# Which kernel is this???
+			raise datacollect.DataFailure, "Cannot read cpu line in /proc/stat: %s" % (line)
 		elif re.match( '^cpu([0-9]+).*', line ):
 		    # Stats for each CPU
 		    m = re.match( '^cpu([0-9]+).*', line )
 		    cpunum = int(m.group(1))
-		    ( foo, user, nice, system, idle ) = string.split(line)
-		    self.data.datahash['ctr_cpu%d_user'%cpunum] = long(user)
-		    self.data.datahash['ctr_cpu%d_nice'%cpunum] = long(nice)
-		    self.data.datahash['ctr_cpu%d_system'%cpunum] = long(system)
-		    self.data.datahash['ctr_cpu%d_idle'%cpunum] = long(idle)
+		    cpusplit = string.split(line)
+		    #( foo, user, nice, system, idle ) = string.split(line)
+		    if len(cpusplit) == 5:
+			# Redhat Linux (probably other Linuxes?)
+			( foo, user, nice, system, idle ) = cpusplit
+			self.data.datahash['ctr_cpu%d_user'%cpunum] = long(user)
+			self.data.datahash['ctr_cpu%d_nice'%cpunum] = long(nice)
+			self.data.datahash['ctr_cpu%d_system'%cpunum] = long(system)
+			self.data.datahash['ctr_cpu%d_idle'%cpunum] = long(idle)
+		    elif len(cpusplit) == 8:
+			# Redhat Enterprise Linux (not sure if this is specific to RHEL
+			# or is a change in kernel 2.4.21+)
+			( foo, user, nice, system, idle, iowait, hardirq, softirq ) = cpusplit
+			self.data.datahash['ctr_cpu%d_user'%cpunum] = long(user)
+			self.data.datahash['ctr_cpu%d_nice'%cpunum] = long(nice)
+			self.data.datahash['ctr_cpu%d_system'%cpunum] = long(system)
+			self.data.datahash['ctr_cpu%d_idle'%cpunum] = long(idle)
+			self.data.datahash['ctr_cpu%d_iowait'%cpunum] = long(iowait)
+			self.data.datahash['ctr_cpu%d_hardirq'%cpunum] = long(hardirq)
+			self.data.datahash['ctr_cpu%d_softirq'%cpunum] = long(softirq)
+		    else:
+			# Which kernel is this???
+			raise datacollect.DataFailure, "Cannot read cpu line in /proc/stat: %s" % (line)
+
 		elif line[:5] == "disk ":
 		    # TODO - need info on meaning
 		    pass
