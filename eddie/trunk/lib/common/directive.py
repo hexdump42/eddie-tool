@@ -15,7 +15,7 @@
 
 
 # Imports: Python
-import os, string, re, sys, socket, time
+import os, string, re, sys, socket, time, threading
 # Imports: Eddie
 import action, definition, utils, log, ack
 
@@ -651,6 +651,8 @@ class SP(Directive):
 	Config.q.put( (self,time.time()+self.scanperiod) )	# put self back in the Queue
 
 
+COMsemaphore = threading.Semaphore()
+
 class COM(Directive):
     def __init__(self, toklist):
 	apply( Directive.__init__, (self, toklist) )
@@ -685,9 +687,12 @@ class COM(Directive):
 
 
     def docheck(self, Config):
-	log.log( "<directive>COM(), docheck(), command '%s', rule '%s'" % (self.command,self.rule), 7 )
+	log.log( "<directive>COM.docheck(), command '%s', rule '%s'" % (self.command,self.rule), 7 )
+	log.log( "<directive>COM.docheck(), acquiring semaphore lock for command '%s'" % (self.command), 8 )
+	COMsemaphore.acquire()
+	log.log( "<directive>COM.docheck(), semaphore acquired for command '%s'" % (self.command), 8 )
 	tmpprefix = "/var/tmp/com%d" % os.getpid()
-	cmd = "%s >%s.out 2>%s.err" % (self.command, tmpprefix, tmpprefix )
+	cmd = "{ %s ; } >%s.out 2>%s.err" % (self.command, tmpprefix, tmpprefix )
 	log.log( "<directive>COM.docheck(), calling system('%s')" % (cmd), 8 )
 	retval = os.system( cmd )
 	signum = None
@@ -728,6 +733,9 @@ class COM(Directive):
 	    err = string.strip(err)
 	    if err[-1:] == '\n':
 		err = err[:-1]
+
+	COMsemaphore.release()
+	log.log( "<directive>COM.docheck(), released semaphore lock for command '%s'" % (self.command), 8 )
 
         log.log( "<directive>COM.docheck(), retval=%d" % retval, 8 )
         log.log( "<directive>COM.docheck(), signum=%s" % signum, 8 )
