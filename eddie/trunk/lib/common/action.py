@@ -466,11 +466,11 @@ def parseVars(text, vDict):
 
     try:
 	return text % vDict
-    except KeyError:
-	log.log( "<action>parseVars(): KeyError exception for '%s' from string '%s' with dictionary '%s'" % (sys.exc_value, text, vDict), 5 )
+    except KeyError, msg:
+	log.log( "<action>parseVars(): KeyError exception for '%s' from string '%s' with dictionary '%s'" % (msg, text, vDict), 5 )
 	return text
-    except TypeError:
-	log.log( "<action>parseVars(): TypeError exception for '%s' from string '%s' with dictionary '%s'" % (sys.exc_value, text, vDict), 5 )
+    except TypeError, msg:
+	log.log( "<action>parseVars(): TypeError exception for '%s' from string '%s' with dictionary '%s'" % (msg, text, vDict), 5 )
 	return text
 
 
