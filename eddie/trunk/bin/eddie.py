@@ -14,7 +14,6 @@
 
 EDDIE_VER='0.24'
 
-NUM_THREADS=10
 
 # Standard Python modules
 import sys, os, time, signal, re, threading
@@ -165,10 +164,10 @@ def scheduler(q, Config, die_event):
 
     while not die_event.isSet():
 
-	while threading.activeCount() > NUM_THREADS:
+	while threading.activeCount() > config.num_threads:
 	    # do nothing while we have no active threads to play with
 	    # TODO: if we wait too long, something is probably wrong, so do something about it...
-	    log.log( "<eddie>scheduler(), active thread count is %d - waiting till < %d" % (threading.activeCount(),NUM_THREADS), 8 )
+	    log.log( "<eddie>scheduler(), active thread count is %d - waiting till < %d" % (threading.activeCount(),config.num_threads), 8 )
 	    time.sleep(1)
 
 	# we have spare threads so get next checking object
@@ -338,7 +337,7 @@ def main():
 
 	    # Count fds in use - for debugging
 	    numfds = countFDs()
-	    log.log( "main(): FDs in use = %d." % (numfds), 7 )
+	    log.log( "<eddie>main(), FDs in use = %d." % (numfds), 7 )
 
 	    # check if any config/rules files have been modified
 	    # if so, re-read config

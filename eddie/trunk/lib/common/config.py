@@ -23,11 +23,20 @@ import directive, definition, log, proc, utils, eddieElvin
 ParseFailure = 'ParseFailure'
 ParseNotcomplete = 'ParseNotcomplete'
 
+############### DEFAULT SETTINGS ###################
 ##
 ## Scan Period in seconds (default is 10 minutes)
 ##
 scanperiod = 10*60
 scanperiodraw = '10m'
+
+##
+## Maximum number of threads Eddie will attempt to limit to.
+## Set with NUMTHREADS in config.
+##
+num_threads = 10
+
+####################################################
 
 
 class Config:
@@ -140,7 +149,7 @@ class Config:
 		    return 1
 	    except os.error:
 		if sys.exc_value == 'Connection timed out':
-		    log.log( "<Config>Checkfiles(), Timeout while trying to stat '%s' - skipping file checks."%(f), 4 )
+		    log.log( "<config>Checkfiles(), Timeout while trying to stat '%s' - skipping file checks."%(f), 4 )
 		    return 0
 
 	return 0
@@ -200,7 +209,7 @@ class SCANPERIOD(ConfigOption):
 	if value > 0:
 	    global scanperiod
 	    scanperiod = value			# set the config option
-	log.log( "<Config>SCANPERIOD(), scanperiod set to %s (%d seconds)." % (scanperiodraw, scanperiod), 6 )
+	log.log( "<config>SCANPERIOD(), scanperiod set to %s (%d seconds)." % (scanperiodraw, scanperiod), 6 )
 
 
 ## LOGFILE - where to store log messages
@@ -220,7 +229,7 @@ class LOGFILE(ConfigOption):
 
 	# ok, value is 3rd list element
 	log.logfile = utils.stripquote(list[2])			# set the config option
-	log.log( "<Config>LOGFILE(), logfile set to '%s'." % (log.logfile), 6 )
+	log.log( "<config>LOGFILE(), logfile set to '%s'." % (log.logfile), 6 )
 
 
 
@@ -263,7 +272,7 @@ class ADMIN(ConfigOption):
 
 	# ok, value is 3rd list element
 	log.adminemail = utils.stripquote(list[2])		# set the config option
-	log.log( "<Config>ADMIN(), admin set to '%s'." % (log.adminemail), 6 )
+	log.log( "<config>ADMIN(), admin set to '%s'." % (log.adminemail), 6 )
 
 
 ## ADMINLEVEL - how much logging to send to admin
@@ -283,7 +292,7 @@ class ADMINLEVEL(ConfigOption):
 
 	# ok, value is 3rd list element
 	log.adminlevel = string.atoi(list[2])		# set the config option
-	log.log( "<Config>ADMINLEVEL(), adminlevel set to '%d'." % (log.adminlevel), 6 )
+	log.log( "<config>ADMINLEVEL(), adminlevel set to '%d'." % (log.adminlevel), 6 )
 
 
 ## ADMIN_NOTIFY - how often to send admin-logs to admin
@@ -310,7 +319,7 @@ class ADMIN_NOTIFY(ConfigOption):
 	value = utils.val2secs( rawval )		# convert value to seconds
 	if value > 0:
 	    log.admin_notify = value		# set the config option
-	log.log( "<Config>ADMIN_NOTIFY(), admin_notify set to %s (%d seconds)." % (rawval, log.admin_notify), 6 )
+	log.log( "<config>ADMIN_NOTIFY(), admin_notify set to %s (%d seconds)." % (rawval, log.admin_notify), 6 )
 
 
 ## INTERPRETERS - define the list of interpreters
@@ -330,7 +339,7 @@ class INTERPRETERS(ConfigOption):
 
 	value = utils.stripquote(list[2])
 	proc.interpreters = string.split(value, ',')
-	log.log( "<Config>INTERPRETERS(), interpreters defined as '%s'." % (proc.interpreters), 6 )
+	log.log( "<config>INTERPRETERS(), interpreters defined as '%s'." % (proc.interpreters), 6 )
 
 
 ## CLASS - define a class
@@ -354,7 +363,7 @@ class CLASS(ConfigOption):
 	hosts = utils.stripquote(hosts)	# in case the arguments are in quotes (optional)
 	self.hosts = string.split(hosts, ',')	# finally, split into list of hosts
 
-	log.log( "<Config>CLASS(), class created %s:%s." % (self.name,self.hosts), 8 )
+	log.log( "<config>CLASS(), class created %s:%s." % (self.name,self.hosts), 8 )
 
 
 ## ELVINHOST - hostname or address of Elvin server
@@ -374,7 +383,7 @@ class ELVINHOST(ConfigOption):
 
 	# ok, value is 3rd list element
 	eddieElvin.ELVINHOST = utils.stripquote(list[2])		# set the config option
-	log.log( "<Config>ELVINHOST(), elvin host set to '%s'." % (eddieElvin.ELVINHOST), 6 )
+	log.log( "<config>ELVINHOST(), elvin host set to '%s'." % (eddieElvin.ELVINHOST), 6 )
 
 
 ## ELVINPORT - tcp port of Elvin server
@@ -394,7 +403,28 @@ class ELVINPORT(ConfigOption):
 
 	# ok, value is 3rd list element
 	eddieElvin.ELVINPORT = int(list[2])		# set the config option
-	log.log( "<Config>ELVINPORT(), elvin port set to '%d'." % (eddieElvin.ELVINPORT), 6 )
+	log.log( "<config>ELVINPORT(), elvin port set to '%d'." % (eddieElvin.ELVINPORT), 6 )
+
+
+## NUMTHREADS - limit thread creation
+class NUMTHREADS(ConfigOption):
+    def __init__( self, list ):
+	apply( ConfigOption.__init__, (self,list) )
+
+	# if the last token isn't a carriage-return then we don't have the
+	# whole line yet...
+	if list[-1] != '\012':
+	    raise ParseNotcomplete
+
+	# if we don't have 4 elements ['NUMTHREADS', '=', <int>, '012'] then
+	# raise an error
+	if len(list) != 4:
+	    raise ParseFailure, "NUMTHREADS definition has %d tokens when expecting 4" % len(list)
+
+	# ok, value is 3rd list element
+	global num_threads
+	num_threads = int(list[2])		# set the config option
+	log.log( "<config>NUMTHREADS, num_threads set to '%d'." % (num_threads), 6 )
 
 
 def loadExtraDirectives( directivedir ):
@@ -462,6 +492,7 @@ settings = {
 		"CLASS"		: CLASS,
 		"ELVINHOST"	: ELVINHOST,
 		"ELVINPORT"	: ELVINPORT,
+		"NUMTHREADS"	: NUMTHREADS,
            }
 
 ## Join all the above dictionaries to make the total keywords dictionary
