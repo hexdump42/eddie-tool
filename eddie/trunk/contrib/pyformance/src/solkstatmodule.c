@@ -107,6 +107,20 @@ kstat_find(self, args)
     return ret;
 }
 
+
+static char kstat_Close__doc__[] =
+""
+;
+
+static void
+kstat_Close(self, args)
+    kstatobject *self;
+    PyObject *args;
+{
+    kstat_close(self->kc);
+}
+
+
 /*
 static char kstat_getdata__doc__[] =
 ""
@@ -125,6 +139,7 @@ kstat_getdata(self, args)
 static struct PyMethodDef kstat_methods[] = {
     {"getnext",	(PyCFunction)kstat_getnext,	METH_VARARGS,	kstat_getnext__doc__},
     {"lookup",	(PyCFunction)kstat_find,	METH_VARARGS,	kstat_lookup__doc__},
+    {"close",	(PyCFunction)kstat_Close,	METH_VARARGS,	kstat_Close__doc__},
  /*   {"getdata",	(PyCFunction)kstat_getdata,	METH_VARARGS,	kstat_getdata__doc__}, */
     {NULL,		NULL}		/* sentinel */
 };
@@ -300,7 +315,7 @@ skstat_open(self, args)
     
     ret = (PyObject *)newkstatobject(kc, kc->kc_chain);
 
-    kstat_close(kc);
+    /*kstat_close(kc);*/
 
     return ret;
 }
