@@ -11,7 +11,7 @@
 ## $Id$
 ##
 ########################################################################
-## (C) Chris Miles 2001
+## (C) Chris Miles 2001-2002
 ##
 ## The author accepts no responsibility for the use of this software and
 ## provides it on an ``as is'' basis without express or implied warranty.
@@ -26,12 +26,13 @@
 ########################################################################
 
 """
-  This is an Eddie data collector.  It collects System data and statistics on
-  a Solaris system.
-  The following statistics are currently collected and made available to
-  directives that request it (e.g., SYS):
+  This is an Eddie data collector.  It collects System data and statistics
+  on a Solaris system.
 
-  (See system class doc info below.)
+  Data collectors provided by this module:
+    - system: collects system stats.  See the class doc below for details
+      of exactly which statistics are gathered and what they are called in
+      the EDDIE environment.
 """
 
 
@@ -45,74 +46,72 @@ class system(datacollect.DataCollect):
     """
     Gathers system statistics.
 
-        Calls the following external commands to get stats from:
-        /usr/bin/vmstat -s: standard with Solaris 2.5.1 and greater
-	/usr/bin/uptime: standard with Solaris 2.5.1 and greater
-        /opt/local/bin/top: top version 3.5beta9 (compiled by user)
-	  (use of /opt/local/bin/top is being phased out and should not be needed)
+    Calls the following external commands to get stats from:
+    /usr/bin/vmstat -s: standard with Solaris 2.5.1 and greater
+    /usr/bin/uptime: standard with Solaris 2.5.1 and greater
 
-	The names of all the stats collected by the system class are:
+    The names of all the stats collected by the system class are:
 
-	    System stats from '/usr/bin/uptime':
-		uptime		- time since last boot (string)
-		users		- number of logged on users (int)
-		loadavg1	- 1 minute load average (float)
-		loadavg5	- 5 minute load average (float)
-		loadavg15	- 15 minute load average (float)
+    System stats from '/usr/bin/uptime':
+	uptime		- time since last boot (string)
+	users		- number of logged on users (int)
+	loadavg1	- 1 minute load average (float)
+	loadavg5	- 5 minute load average (float)
+	loadavg15	- 15 minute load average (float)
 
-	    System counters from '/usr/bin/vmstat -s' (see vmstat(1M)):
-		ctr_swap_ins				- (long)
-		ctr_swap_outs				- (long)
-		ctr_pages_swapped_in			- (long)
-		ctr_pages_swapped_out			- (long)
-		ctr_total_address_trans_faults_taken	- (long)
-		ctr_page_ins				- (long)
-		ctr_page_outs				- (long)
-		ctr_pages_paged_in			- (long)
-		ctr_pages_paged_out			- (long)
-		ctr_total_reclaims			- (long)
-		ctr_reclaims_from_free_list		- (long)
-		ctr_micro_hat_faults			- (long)
-		ctr_minor_as_faults			- (long)
-		ctr_major_faults			- (long)
-		ctr_copyonwrite_faults			- (long)
-		ctr_zero_fill_page_faults		- (long)
-		ctr_pages_examined_by_the_clock_daemon	- (long)
-		ctr_revolutions_of_the_clock_hand	- (long)
-		ctr_pages_freed_by_the_clock_daemon	- (long)
-		ctr_forks				- (long)
-		ctr_vforks				- (long)
-		ctr_execs				- (long)
-		ctr_cpu_context_switches		- (long)
-		ctr_device_interrupts			- (long)
-		ctr_traps				- (long)
-		ctr_system_calls			- (long)
-		ctr_total_name_lookups			- (long)
-		ctr_toolong				- (long)
-		ctr_user_cpu				- (long)
-		ctr_system_cpu				- (long)
-		ctr_idle_cpu				- (long)
-		ctr_wait_cpu				- (long)
+    System counters from '/usr/bin/vmstat -s' (see vmstat(1M)):
+	ctr_swap_ins				- (long)
+	ctr_swap_outs				- (long)
+	ctr_pages_swapped_in			- (long)
+	ctr_pages_swapped_out			- (long)
+	ctr_total_address_trans_faults_taken	- (long)
+	ctr_page_ins				- (long)
+	ctr_page_outs				- (long)
+	ctr_pages_paged_in			- (long)
+	ctr_pages_paged_out			- (long)
+	ctr_total_reclaims			- (long)
+	ctr_reclaims_from_free_list		- (long)
+	ctr_micro_hat_faults			- (long)
+	ctr_minor_as_faults			- (long)
+	ctr_major_faults			- (long)
+	ctr_copyonwrite_faults			- (long)
+	ctr_zero_fill_page_faults		- (long)
+	ctr_pages_examined_by_the_clock_daemon	- (long)
+	ctr_revolutions_of_the_clock_hand	- (long)
+	ctr_pages_freed_by_the_clock_daemon	- (long)
+	ctr_forks				- (long)
+	ctr_vforks				- (long)
+	ctr_execs				- (long)
+	ctr_cpu_context_switches		- (long)
+	ctr_device_interrupts			- (long)
+	ctr_traps				- (long)
+	ctr_system_calls			- (long)
+	ctr_total_name_lookups			- (long)
+	ctr_toolong				- (long)
+	ctr_user_cpu				- (long)
+	ctr_system_cpu				- (long)
+	ctr_idle_cpu				- (long)
+	ctr_wait_cpu				- (long)
 
-	    Process/memory stats from '/usr/bin/vmstat' (see vmstat(1M)):
-	        procs_running	- number of processes running (int)
-	        procs_blocked	- number of processes blocked (int)
-	        procs_waiting	- number of processes waiting (int)
-	        mem_swapfree	- amount of free swap (kB) (int)
-	        mem_free	- amount of free RAM (kB) (int)
-
-	    System stats from '/opt/local/bin/top' (phasing out):
-		processes	- total number of processes (int)
-		sleeping	- number of processes in sleeping state (int)
-		zombie		- number of processes in zombie state (int)
-		running		- number of processes in running state (int)
-		stopped		- number of processes in stopped state (int)
-		oncpu		- number of processes on cpus (int)
-		cpu_idle	- percentage of cpu in idle thread (float)
-		cpu_user	- percentage of cpu in user mode (float)
-		cpu_kernel	- percentage of cpu in kernel mode (float)
-		cpu_iowait	- percentage of cpu blocked on iowait (float)
-		cpu_swap	- percentage of cpu blocked on swap (float)
+    Process/memory stats from '/usr/bin/vmstat' (see vmstat(1M)):
+        procs_running	- number of processes running (int)
+        procs_blocked	- number of processes blocked (int)
+        procs_waiting	- number of processes waiting (int)
+        mem_swapfree	- amount of free swap (kB) (int)
+        mem_free	- amount of free RAM (kB) (int)
+        page_reclaims	- page reclaims (int)
+        minor_faults	- minor faults (int)
+        kb_paged_in	- kilobytes paged in (int)
+        kb_paged_out	- kilobytes paged out (int)
+        kb_freed	- kilobytes freed (int)
+        kb_deficit	- anticipated short-term memory shortfall (Kbytes) (int)
+        scan_rate	- pages scanned by clock algorithm (int)
+        device_interrupts - (non clock) device interrupts (int)
+        system_calls	- system calls (int)
+        cpu_context_switches - CPU context switches (int)
+	cpu_user	- percentage of cpu in user mode (float)
+	cpu_system	- percentage of cpu in kernel mode (float)
+	cpu_idle	- percentage of cpu in idle thread (float)
     """
 
     def __init__(self):
@@ -123,6 +122,7 @@ class system(datacollect.DataCollect):
     ##################################################################
     # Public, thread-safe, methods
 
+    # none special to this class
 
 
     ##################################################################
@@ -147,10 +147,6 @@ class system(datacollect.DataCollect):
 	uptime_dict = self._getuptime()
 	if uptime_dict:
 	    self.data.datahash.update(uptime_dict)
-
-	top_dict = self._getTop()
-	if top_dict:
-	    self.data.datahash.update(top_dict)
 
 
         log.log( "<system>system.collectData(): collected data for %d system statistics" % (len(self.data.datahash.keys())), 6 )
@@ -274,7 +270,6 @@ class system(datacollect.DataCollect):
 
     def _getvmstat2(self):
 	"""Get system statistics from the output of the 'vmstat' command.
-	This is only used to get free memory and free swap currently.
 	This should work for Solaris 2.5.1/2.6/2.7/2.8."""
 
 	vmstat_cmd = "/usr/bin/vmstat 1 2 | /usr/bin/tail -1"
@@ -286,7 +281,7 @@ class system(datacollect.DataCollect):
 	    return None
 
 	v_split = string.split( output )
-	if len(v_split) < 5:
+	if len(v_split) != 22:
 	    log.log( "<system>system._getvmstat2(): vmstat output invalid, '%s'"%(output), 5 )
 	    return None
 
@@ -297,122 +292,29 @@ class system(datacollect.DataCollect):
 	    vmstat_dict['procs_waiting'] = int(v_split[2])
 	    vmstat_dict['mem_swapfree'] = int(v_split[3])
 	    vmstat_dict['mem_free'] = int(v_split[4])
+	    vmstat_dict['page_reclaims'] = int(v_split[5])
+	    vmstat_dict['minor_faults'] = int(v_split[6])
+	    vmstat_dict['kb_paged_in'] = int(v_split[7])
+	    vmstat_dict['kb_paged_out'] = int(v_split[8])
+	    vmstat_dict['kb_freed'] = int(v_split[9])
+	    vmstat_dict['kb_deficit'] = int(v_split[10])
+	    vmstat_dict['scan_rate'] = int(v_split[11])
+	    #vmstat_dict['disk1'] = int(v_split[12]) # disk stats not used
+	    #vmstat_dict['disk2'] = int(v_split[13])
+	    #vmstat_dict['disk3'] = int(v_split[14])
+	    #vmstat_dict['disk4'] = int(v_split[15])
+	    vmstat_dict['device_interrupts'] = int(v_split[16])
+	    vmstat_dict['system_calls'] = int(v_split[17])
+	    vmstat_dict['cpu_context_switches'] = int(v_split[18])
+	    vmstat_dict['cpu_user'] = float(v_split[19])
+	    vmstat_dict['cpu_system'] = float(v_split[20])
+	    vmstat_dict['cpu_idle'] = float(v_split[21])
 	except ValueError:
 	    log.log( "<system>system._getvmstat2(): could not parse vmstat output '%s'"%(output), 5 )
 	    return None
 
 	return vmstat_dict
 
-
-    def _getTop(self):
-        """Get some stastics from the 'top' command.
-        This was the old way and is being replaced by the above calls.
-	This should be removed by the next release...
-	"""
-
-	datahash = {}
-
-	if not os.path.exists('/opt/local/bin/top'):
-	    return None
-
-	# Use of /opt/local/bin/top to get system stats is being phased out...
-	rawList = utils.safe_popen('/opt/local/bin/top -nud2 -s1', 'r')
-
-	# the above 'top' command actually performs two 'tops', 1 second apart,
-	# so that we can get current cpu time allocation (idle/etc).
-	# We must skip through the output to the start of the second 'top'.
-
-	rawList.readline()	# skip start of first 'top'
-
-	while 1:
-	    line = rawList.readline()
-	    if len(line) == 0:
-		log.log( "<system>system._getSystemstate(): error parsing 'top' output looking for 'load averages:'.", 5 )
-		utils.safe_pclose( rawList )
-		return None
-
-	    #if line[:8] == 'last pid':
-	    if string.find(line, 'load averages:') != -1:
-		break
- 
-	# regexps for parsing top of 'top' output to get info we want
-	#reline1 = "last pid:\s*([0-9]+);\s*load averages:\s*([0-9]+\.[0-9]+),\s*([0-9]+\.[0-9]+),\s*([0-9]+\.[0-9]+)\s+([0-9]+:[0-9]+:[0-9]+)"
-	reline1 = ".*load averages:\s*([0-9]+\.[0-9]+),\s*([0-9]+\.[0-9]+),\s*([0-9]+\.[0-9]+)\s+([0-9]+:[0-9]+:[0-9]+)"
-	reline2 = "([0-9]+)\s+processes:(?:\s+(?P<sleeping>[0-9]+)\s+sleeping,)?(?:\s+(?P<zombie>[0-9]+)\s+zombie,)?(?:\s+(?P<running>[0-9]+)\s+running,)?(?:\s+(?P<stopped>[0-9]+)\s+stopped,)?(?:\s+(?P<oncpu>[0-9]+)\s+on cpu)?.*"
-	reline3 = "CPU states:\s*([0-9.]+)% idle,\s*([0-9.]+)% user,\s*([0-9.]+)% kernel,\s*([0-9.]+)% iowait,\s*([0-9.]+)% swap"
-	#reline4 = "Memory:\s*(?P<mem_real>\w+)\s*real,\s*(?P<mem_free>\w+)\s*free,(?:\s*(?P<mem_swapuse>\w+)\s*swap in use,)?\s*(?P<mem_swapfree>\w+)\s*swap free"
-
-	# line 1
-	inx = re.search( reline1, line )
-	if inx == None:
-	    log.log( "<system>system._getSystemstate() error parsing line1 'top' output.", 5 )
-	    utils.safe_pclose( rawList )
-	    return None
-	## Handled by _getuptime() now
-	#lastpid = int(inx.group(1))
-	#loadavg1 = float(inx.group(1))
-	#loadavg5 = float(inx.group(2))
-	#loadavg15 = float(inx.group(3))
-	#time = inx.group(4)
-
-	# line 2
-	line = rawList.readline()
-	inx = re.search( reline2, line )
-	if inx == None:
-	    log.log( "<system>system._getSystemstate(): error parsing line2 'top' output.", 5 )
-	    utils.safe_pclose( rawList )
-	    return None
-	processes = int(inx.group(1))
-	try:
-	    sleeping = int(inx.group('sleeping'))
-	except:
-	    sleeping = 0
-	try:
-	    zombie = int(inx.group('zombie'))
-	except:
-	    zombie = 0
-	try:
-	    running = int(inx.group('running'))
-	except:
-	    running = 0
-	try:
-	    stopped = int(inx.group('stopped'))
-	except:
-	    stopped = 0
-	try:
-	    oncpu = int(inx.group('oncpu'))
-	except:
-	    oncpu = 0
-
-	# line 3
-	line = rawList.readline()
-	inx = re.search( reline3, line )
-	if inx == None:
-	    log.log( "<system>system._getSystemstate(): error parsing line3 'top' output.", 5 )
-	    utils.safe_pclose( rawList )
-	    return None
-	cpu_idle = float(inx.group(1))
-	cpu_user = float(inx.group(2))
-	cpu_kernel = float(inx.group(3))
-	cpu_iowait = float(inx.group(4))
-	cpu_swap = float(inx.group(5))
-
-	utils.safe_pclose( rawList )
-
-	datahash['processes'] = processes
-	datahash['sleeping'] = sleeping
-	datahash['zombie'] = zombie
-	datahash['running'] = running
-	datahash['stopped'] = stopped
-	datahash['oncpu'] = oncpu
-
-	datahash['cpu_idle'] = cpu_idle
-	datahash['cpu_user'] = cpu_user
-	datahash['cpu_kernel'] = cpu_kernel
-	datahash['cpu_iowait'] = cpu_iowait
-	datahash['cpu_swap'] = cpu_swap
-
-        return datahash
 
 
 ##
