@@ -20,6 +20,8 @@ import config
 
 def readFile(file, ruleList):
 
+    dir = file[:string.rfind(file, '/')]+'/'
+
     # List the known directives we accept from the config
     directives = config.directives
     
@@ -55,6 +57,11 @@ def readFile(file, ruleList):
 
 		    action = directives[d](mess)
 	    
+		elif d == 'INCLUDE':
+		    # recursively read the INCLUDEd file
+		    readFile(dir+elements[1][1:-1], ruleList)
+		    continue
+
 		else:
 		    action = directives[d](line)
 		

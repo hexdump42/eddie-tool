@@ -32,7 +32,10 @@ class Rules:
 	return(self)
 
     def __getitem__(self, key):
-    	return self.hash[key]
+	try:
+	    return self.hash[key]
+	except KeyError:
+	    return None
 
 class Directive:
     def __init__(self, *arg):
@@ -40,6 +43,14 @@ class Directive:
 	self.type = string.split(self.raw)[0]
 #	print self.raw
 
+
+## COMMANDS ##
+
+class SCANPERIOD(Directive):
+    pass
+
+class INCLUDE(Directive):
+    pass
 
 class FS(Directive):
     pass
