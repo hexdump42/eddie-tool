@@ -174,7 +174,7 @@ def SigHandler( sig, frame ):
 	# SIGINT (CTRL-c) - quit now
 	log.log( '<eddie>SigHandler(), SIGINT (KeyboardInterrupt) encountered - quitting', 1 )
 
-	log.log( '<eddie>SigHandler(), signalling scheduler thread to die', 5 )
+	log.log( '<eddie>SigHandler(), signalling scheduler thread to die', 6 )
         stop_threads()
 
 	try:
@@ -187,7 +187,7 @@ def SigHandler( sig, frame ):
 	# SIGTERM (Terminate) - quit now
 	log.log( '<eddie>SigHandler(), SIGTERM (Terminate) encountered - quitting', 1 )
 
-	log.log( '<eddie>SigHandler(), signalling scheduler thread to die', 5 )
+	log.log( '<eddie>SigHandler(), signalling scheduler thread to die', 6 )
         stop_threads()
 
 	try:
@@ -355,9 +355,9 @@ def main():
     parseConfig.readConf(config_file, Config)
 
     # don't log till now because log file location is defined in configuration
-    log.log( "<eddie>main(), Configuration complete from '%s'" % (config_file), 5 )
+    log.log( "<eddie>main(), Configuration complete from '%s'" % (config_file), 6 )
     log.log( "<eddie>main(), Eddie %s, systype: %s" % (EDDIE_VER, systype), 5 )
-    log.log( "<eddie>main(), oslibdirs: %s" % (oslibdirs), 5 )
+    log.log( "<eddie>main(), oslibdirs: %s" % (oslibdirs), 8 )
 
     if 'showconfig' in argflags.keys() and argflags['showconfig'] == 1:
 	# Just display the configuration and exit
