@@ -88,7 +88,7 @@ class DiskStatistics(datacollect.DataCollect):
 
 	if not os.path.isfile( KSTAT_CMD ):
 	    #log.log( "<diskdevice>DiskStatistics.collectData(): No kstat command '%s'" %(KSTAT_CMD), 4 )
-	    raise DataFailure, "No kstat command '%s'" %(KSTAT_CMD)
+	    raise datacollect.DataFailure, "No kstat command '%s'" %(KSTAT_CMD)
 
 	# get the tcp stats
 	cmd = "%s %s %s" % (KSTAT_CMD, KSTAT_ARG, self.kstat_class)
@@ -153,7 +153,7 @@ class TapeStatistics(datacollect.DataCollect):
 
 	if not os.path.isfile( KSTAT_CMD ):
 	    #log.log( "<diskdevice>TapeStatistics.collectData(): No kstat command '%s'" %(KSTAT_CMD), 4 )
-	    raise DataFailure, "No kstat command '%s'" %(KSTAT_CMD)
+	    raise datacollect.DataFailure, "No kstat command '%s'" %(KSTAT_CMD)
 
 	# get the tcp stats
 	cmd = "%s %s %s" % (KSTAT_CMD, KSTAT_ARG, self.kstat_class)
