@@ -12,7 +12,23 @@ if [ $? = 0 ]; then
 fi
 
 
-RUNFILE=/var/run/eddie$$.out
+# stdout/err from Eddie stored in temp file
+RUNFILE=/var/run/eddie/tmp/eddie$$.out
+
+
+# Create (if necessary) /var/run/eddie/tmp
+if [ ! -d /var/run/eddie/tmp ]; then
+ 	mkdir -p /var/run/eddie/tmp >dev/null 2>&1
+	if [ $? -gt 0 ]; then
+		echo '$0: "mkdir -p /var/run/eddie/tmp" failed.'
+		RUNFILE=/var/tmp/eddie$$.out
+        fi
+fi
+
+
+# clean up a bit
+rm -f /var/run/eddie/tmp/*.out
+
 
 while [ 1 ]; do
 	cd /opt/eddie/bin
@@ -24,4 +40,5 @@ while [ 1 ]; do
 	echo "eddie_wrapper: restarting Eddie at `date`."
 done
 
+# clean up some more
 rm -f $RUNFILE
