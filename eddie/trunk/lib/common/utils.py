@@ -16,6 +16,37 @@
 import regex
 import string
 
+
+##
+## General purpose stack object
+class Stack:
+    def __init__(self):
+	self.stack = []
+
+    def __str__(self):
+	return "%s" % self.stack
+
+    def __len__(self):
+	return len(self.stack)
+
+    def __getitem__(self, item):
+	return self.stack[item]
+
+    def push(self, obj):
+	self.stack.append( obj )
+
+    def pop(self):
+	obj = self.stack[-1]
+	del self.stack[-1]
+	return obj
+
+    def top(self):
+	if len(self.stack) == 0:
+	    return None
+	else:
+	    return self.stack[-1]
+
+
 ##
 ## trickySplit( line, delim ) - split line by delimiter delim, but ignoring
 ## delimiters found inside ()'s, []'s, {}'s, '''s and ""'s.
@@ -149,6 +180,17 @@ def atom( ch ):
 
     return mult
 	
+
+def val2secs( value ):
+    if regex.search( '[mshdwcyMSHDWCY]', value ) == -1:
+	return string.atoi(value)
+    timech = value[-1]
+    value = value[:-1]
+    mult = atom( timech )
+    if mult == 0:
+	#log.log( "<Config>val2secs(%d,'%s'), Error : timech is '%s'" % (self,value,timech), 2 )
+	return 0
+    return string.atoi(value)*mult
 
 ##
 ## END - utils.py

@@ -1,4 +1,4 @@
-#!/opt/python/bin/python
+#!/opt/python/bin/python1.5.0
 ## 
 ## File         : eddie.py 
 ## 
@@ -14,7 +14,7 @@
 
 
 # Standard Python modules
-import sys, os, time, signal
+import sys, os, time, signal, thread
 
 # Work out the base Eddie directory which should contain bin/, lib/, etc...
 cwd = os.getcwd()
@@ -97,16 +97,19 @@ def SigHandler( sig, frame ):
 	log.log( '<eddie>SigHandler(), unknown signal received, %d - ignoring' % sig, 3 )
 
 
+def check(Config):
+    for d in Config.ruleList.keys():
+	list = Config.ruleList[d]
+	if list != None:
+	    for i in list:
+		i.docheck(Config)
+	else:
+	    log.log( "<eddie>eddieguts(), ourList['%s'] is empty" % (d), 4 )
+
+
 # The guts of the Eddie program - sets up the lists, reads config info, gets
 # system information, then performs the checking.
-def eddieguts(eddieHistory):
-
-    #print "M: ",ourList['M']
-    #print "D: ",ourList['D']
-    #print "FS: ",ourList['FS']
-    #print "PID: ",ourList['PID']
-    #print "SP: ",ourList['SP']
-
+def eddieguts(Config, eddieHistory):
 
     # instantiate a process list
     log.log( "<eddie>eddieguts(), creating process list", 8 )
@@ -135,15 +138,7 @@ def eddieguts(eddieHistory):
     # note ... directive order is not defined (we don't currently care do we?)
     log.log( "<eddie>eddieguts(), beginning checks", 7 )
 
-    ## debugging - test with 'D' directive for now ##
-    for d in ourList.keylist():
-    #for d in ('COM',):
-	list = ourList[d]
-	if list != None:
-	    for i in list:
-		i.docheck()
-	else:
-	    log.log( "<eddie>eddieguts(), ourList['%s'] is empty" % (d), 4 )
+    check(Config)
 
     # Save history (debug.. FS only for now...)
     eddieHistory.save('FS',directive.dlist)
@@ -151,49 +146,42 @@ def eddieguts(eddieHistory):
 
 
 def main():
-    global ourList		# global list of all directives
-    global defDict		# global dictionary of DEFinitions
-    global MDict		# global dictionary of Messages
-    global ADict		# global dictionary of Actions
-
+    # Catch most important signals
     signal.signal( signal.SIGALRM, signal.SIG_IGN )
     signal.signal( signal.SIGHUP, SigHandler )
     signal.signal( signal.SIGINT, SigHandler )
     signal.signal( signal.SIGTERM, SigHandler )
 
     #    TODO: Is there a simpler Python-way of getting hostname ??
-    #    TODO: Get the hostname at program startup, not here...
     tmp = os.popen('uname -n', 'r')
     hostname = tmp.readline()
     log.hostname = hostname[:-1]	# strip \n off end
     tmp.close()
 
+    # instantiate global Config object
+    Config = config.Config( '__main__' )
+
     # New history object
     history.eddieHistory = history.history()
 
-    # initialise our global lists/dicts
-    ourList = directive.Rules()
-    defDict = {}
-    MDict = definition.MsgDict()
-    ADict = {}
-
     # read in config and rules
-    parseConfig.readFile(config_file, ourList, defDict, MDict, ADict)
+    parseConfig.readConf(config_file, Config)
 
-    directive.ADict = ADict		# make ADict viewable in directive module
-    action.MDict = MDict		# make MDict viewable in action module
+    #directive.ADict = ADict		# make ADict viewable in directive module
+    #action.MDict = MDict		# make MDict viewable in action module
 
     # Main Loop
     while 1:
 	try:
 	    # perform guts of Eddie
-	    eddieguts(history.eddieHistory)
+	    eddieguts(Config, history.eddieHistory)
 
 	    # email admin the adminlog if required
 	    log.sendadminlog()
 
 	    # sleep for set period - only quits with CTRL-c
 	    log.log( '<eddie>main(), sleeping for %d secs' % (config.scanperiod), 6 )
+	    print '<eddie>main(), sleeping for %d secs' % (config.scanperiod)
 	    #print 'Press CTRL-C to quit'
 
 	    # Sleep by setting SIGALRM to go off in scanperiod seconds
@@ -211,6 +199,16 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+    # Catch most important signals
+    #signal.signal( signal.SIGALRM, signal.SIG_IGN )
+    #signal.signal( signal.SIGHUP, SigHandler )
+    #signal.signal( signal.SIGINT, SigHandler )
+    #signal.signal( signal.SIGTERM, SigHandler )
+    # Run the thing in a separate thread
+    #thread.start_new_thread(main, ())
+    # Handle keyboard signals
+    #signal.pause()
 
     # email admin anything else...
     log.sendadminlog()

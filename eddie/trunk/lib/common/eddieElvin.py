@@ -17,12 +17,19 @@
 import time, types, os, sys, thread, signal, getopt
 import log
 import snpp
-sys.path = ['/import/src/bin/elvin/dstc/lib/python', '/import/src/bin/elvin/dstc/sparc-sun-solaris2.5/lib'] + sys.path
-try:
-	import Elvin, ElvinMisc
-except ImportError:
-    print "Elvin not available..."
-    log.log( "<eddieElvin>ImportError: Elvin, ElvinMisc - Elvin not available", 2 );
+#sys.path = ['/import/src/bin/elvin/dstc/lib/python', '/import/src/bin/elvin/dstc/sparc-sun-solaris2.5/lib'] + sys.path
+sys.path = ['/import/src/bin/elvin/elvin3.12/dstc/lib/python', '/import/src/bin/elvin/elvin3.12/dstc/sparc-sun-solaris2.5/lib'] + sys.path
+
+UseElvin = 1	# Switch Elvin usage on by default
+
+import Elvin, ElvinMisc
+
+#try:
+#	import Elvin, ElvinMisc
+#except ImportError:
+#    UseElvin = 0	# Switch Elvin usage off
+#    print "Elvin not available..."
+#    log.log( "<eddieElvin>ImportError: Elvin, ElvinMisc - Elvin not available", 2 );
 
 ################################################################
 ElvinError = 'ElvinError'
@@ -40,14 +47,18 @@ class eddieElvin:
 	self.port = port
 
 	try:
+	    print "Trying Elvin connection to %s:%d" % (self.host, self.port)
 	    self.elvin = Elvin.Elvin(Elvin.EC_NAMEDHOST, self.host, self.port,
 				     None, self._error_cb)
+	    print "Made Elvin connection..."
 	except:
 	    #sys.stderr.write("Connection to elvin failed\nIs there an elvin server running at %s:%d\n" %(self.host, self.port))
 	    #self._exit()
 	    raise ElvinError, "Connection failed to %s:%d" % (self.host,self.port)
 	else:
 	    self.connected = 1
+
+	print "Elvin connection succeeded."
 
     # must override this method
     def sendmsg(self,msg):
