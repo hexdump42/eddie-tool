@@ -33,34 +33,37 @@ PROJECT PLAN:
 			- still defining log levels
 		Variables - %sys, %act, %actnm		Chris	98%
 			- all done I think...
-		netstat class				Rod
+		netstat class				Rod	1%
 		DEF substition				Chris	100%
 		History:
 			fs				Chris	90%
 			proc				Chris	90%
-			netstat
+			netstat				-	0%
 		ADMIN stuff
-			- ADMIN
-			- ADMINLEVEL
-			- admin emailing
+			- ADMIN				-	0%
+			- ADMINLEVEL			-	0%
+			- admin emailing		-	0%
 	Directives:
 		D					Chris	100%
 		FS					Chris	90%
 		PID					Chris	100%
-		SP					Rod
+		SP					Rod	0%
+		COM					Chris	0%
 	Actions:
 		email()					Chris	100%
 		system()				Chris	100%
 		restart()				Chris	100%
 		nice()					Chris	100%
 		ottolog()				Chris	100%
-		syslog()
+		syslog()				--	0%
 
 
 FUTURE TODO:
 -----------
 email() : want email actions to be performed last so that results of other
 actions can be summarized in the email.
+
+fs : '%fsls' - want a list directories under the examined fs 'ls -ld $fs'.
 
 
 
