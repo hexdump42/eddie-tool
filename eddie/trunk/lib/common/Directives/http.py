@@ -310,7 +310,10 @@ class HTTP(directive.Directive):
 	    data['body'] = r.read()
 	except:
 	    e = sys.exc_info()
-	    log.log( "<http>HTTP.getData(): response read failed, exception=%s, errno=%s, errstr=%s"%(e[0],e[1][0],e[1][1]), 7 )
+	    if e[0] == socket.timeout:
+		log.log( "<http>HTTP.getData(): response read failed with timeout, exception=%s, errstr=%s"%(e[0],str(e[1])), 7 )
+	    else:
+		log.log( "<http>HTTP.getData(): response read failed, exception=%s, errno=%s, errstr=%s"%(e[0],e[1][0],e[1][1]), 7 )
 	    data['body'] = "<read failed>"
 
 	data['status'] = r.status
