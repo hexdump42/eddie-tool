@@ -2,8 +2,8 @@
 ## 
 ## File         : eddie.py 
 ## 
-## Author       : Rod Telford  <rtelford@connect.com.au>
-##                Chris Miles  <cmiles@connect.com.au>
+## Author       : Rod Telford  <rtelford@codefx.com.au>
+##                Chris Miles  <cmiles@codefx.com.au>
 ## 
 ## Date         : 971204 
 ## 
@@ -12,7 +12,7 @@
 ## $Id$
 ##
 
-EDDIE_VER='0.20'
+EDDIE_VER='0.22'
 
 # Standard Python modules
 import sys, os, time, signal, re
@@ -132,7 +132,7 @@ def doArgs(args, argflags):
     for a in args:
 	if a == '-v' or a == '--version':
 	    print "Eddie (c) Chris Miles and Rod Telford 1998"
-	    print "  cmiles@connect.com.au / rtelford@connect.com.au"
+	    print "  cmiles@codefx.com.au / rtelford@codefx.com.au"
 	    print "  Version: %s" % EDDIE_VER
 	    eddieexit()
 	elif a == '-h' or a == '--help' or a == '-?':

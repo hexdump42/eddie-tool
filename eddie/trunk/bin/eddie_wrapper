@@ -1,7 +1,11 @@
 #!/bin/sh
 #
 ## Eddie wrapper script to make sure it keeps running!
-## 990302 Chris Miles <cmiles@connect.com.au>
+## 990302 Chris Miles <chris@codefx.com.au>
+
+# Address to receive restart messages
+EDDIE_ADMIN=chris@psychofx.com
+
 
 # Set path for mail/sleep/etc
 PATH=/bin:/usr/bin
@@ -49,7 +53,7 @@ while [ 1 ]; do
 	./eddie.py >$RUNFILE 2>&1
 	retcode=$?
 	echo "eddie_wrapper: eddie died at `date` return code: $retcode" >> $RUNFILE
-	$MAIL -s "Eddie output on `hostname` at `date`" cmiles@connect.com.au < $RUNFILE
+	$MAIL -s "Eddie output on `hostname` at `date`" $EDDIE_ADMIN < $RUNFILE
 	sleep 30
 	echo "eddie_wrapper: restarting Eddie at `date`."
 done
