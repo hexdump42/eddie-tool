@@ -51,7 +51,7 @@ ADMIN_NOTIFY=1d         # Send Admin summaries only once a day
 #  using.  All directives are executed in their own thread so they do not hold
 #  up other directives scheduled for the same time.  A recommended minimum is
 #  about 5 (although there is no checking yet so be careful).  A good setting
-#  is probably 10 to 20.  
+#  is probably 15 to 20.  
 
 NUMTHREADS=20
 
@@ -105,7 +105,7 @@ ELVINSCOPE='Elvin'
 #  (which is normally what you want).
 #  Use: INTERPRETERS='<name>[,<name> ...]'
 
-INTERPRETERS='sh,bash,perl,perl5.001,perl5.003,perl5.004,python,python1.4,python1.5,python1.5.2'
+INTERPRETERS='sh,bash,perl,perl5.001,perl5.003,perl5.004,python,python1.5,python1.5.2'
 
 
 # CLASS
@@ -115,9 +115,9 @@ INTERPRETERS='sh,bash,perl,perl5.001,perl5.003,perl5.004,python,python1.4,python
 #  same name.
 #  Use: CLASS <name>=<hostname>[,<hostname> ...]
 
-CLASS news=perki,merki
-CLASS dns=yarrina,warrane
-CLASS cache=myeah,myponga,myangup,myalla,myoon
+CLASS news=host1,host2
+CLASS dns=host3
+CLASS cache=host5,host6,host7
 
 
 # ALIAS
@@ -127,7 +127,7 @@ CLASS cache=myeah,myponga,myangup,myalla,myoon
 #  Use: ALIAS <name>="<string>"
 
 ALIAS ALERT_EMAIL="alert@domain.name"
-ALIAS SYSSUP_EMAIL="syssup@domain.name"
+ALIAS ONCALL_EMAIL="oncall-pager@domain.name"
 
 
 # INCLUDE
@@ -136,9 +136,16 @@ ALIAS SYSSUP_EMAIL="syssup@domain.name"
 #  are usually defined in separate files to keep things tidy.
 #  Use: INCLUDE '<filename>'
 
-INCLUDE 'rules/common.rules'
-INCLUDE 'rules/host.rules'
-INCLUDE 'rules/dns.rules'
-INCLUDE 'rules/news.rules'
-INCLUDE 'rules/cache.rules'
+# These are provided as examples only.  Rules need to be customized for your
+# environment.  Use these as a guide for designing your own rules.
+INCLUDE 'rules/message.rules'	# common MSG definitions
+
+INCLUDE 'rules/common.rules'	# common rules for all hosts
+INCLUDE 'rules/host.rules'	# rule specific to certain hosts
+
+INCLUDE 'rules/cache.rules'	# rules specific to proxy caches
+INCLUDE 'rules/dns.rules'	# rules specific to DNS servers
+INCLUDE 'rules/news.rules'	# rules specific to news servers
+
+INCLUDE 'rules/rrd.rules'	# rules for storing data in RRD dbs via elvinrrd
 
