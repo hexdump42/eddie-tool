@@ -277,8 +277,7 @@ def scheduler(q, Config, die_event):
 
 
 def buildCheckQueue(q, Config):
-    """
-    Build the queue of checks that the scheduler will start with.
+    """Build the queue of checks that the scheduler will start with.
     """
 
     log.log( "<eddie>buildCheckQueue(): Adding directives to Queue for hostname '%s'" % (log.hostname), 8 )
@@ -296,6 +295,11 @@ def buildCheckQueue(q, Config):
 
     # chris 2004-09-20: throw away any domain parts of hostname; group names can't contain dots
     shorthostname = log.hostname.split('.')[0]
+
+    # chris 2004-12-30: replace '-' with '_' for now...
+    # TODO: this is a hack as group names in the config cannot contain '-'; this will
+    # be resolved in the future when proper matching options are implemented fully.
+    shorthostname = shorthostname.replace('-','_')
 
     for c in Config.groups:
 	if c.name == shorthostname or (c.name in Config.classDict.keys() and shorthostname in Config.classDict[c.name]):
