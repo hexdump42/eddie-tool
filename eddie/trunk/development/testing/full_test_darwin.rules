@@ -1,0 +1,311 @@
+# Eddie config file
+#  Rules to test ALL Directives for: Darwin / OS X
+#
+# $Id$
+# $Source$
+
+INCLUDE 'message.rules'
+
+
+N COMMONALERT:
+    notifyperiod='10m'
+    escalperiod='20m'
+
+    # Notification
+    Level 0:
+	email(ALERT_EMAIL,WARN)
+
+    # Warning
+    Level 1:
+	email("chris",WARN),ticker(WARN_P)
+
+    # Alert
+    Level 2:
+	email(SYSSUP_EMAIL,ALERT_P),ticker(ALERT_P)
+
+    # Serious Alert
+    Level 3:
+	email(ALERT_EMAIL,ALERT),email(SYSSUP_EMAIL,ALERT_P),ticker(ALERT_P)
+
+
+N COMMONFIXED:
+
+    # The rule has changed state to OK
+    Level 0:
+        email(ALERT_EMAIL,FIXED),ticker(FIXED)
+
+
+### PROC ###
+
+# Process doesn't exist
+PROC proc_not_exists:
+    name='top'
+    rule='not exists'
+    action=COMMONALERT(commonmsg.proc,1)
+
+# Process does exist
+PROC proc_exists:
+    name='big_virus'
+    rule='exists'
+    action=email(ALERT_EMAIL, "%(name)s process is running")
+
+
+
+### FS ###
+
+FS rootfs:
+    fs='/'
+    rule='pctused >= 10'
+    action=COMMONALERT(commonmsg.fs,1)
+
+
+### PID ###
+
+PID test_pid_not_exists:
+    pidfile='/var/run/syslog.pid'
+    rule='not exists'
+    action=COMMONALERT(commonmsg.pid,0)
+
+PID test_pid_exists_and_not_running:
+    pidfile='/var/run/syslog.pid'
+    rule='exists and not running'
+    action=COMMONALERT(commonmsg.pidpr,1)
+    console=None
+
+
+### SP ###
+
+SP sp_not_exists:
+    port='ssh'
+    protocol='tcp'
+    bindaddr='0.0.0.0'
+    rule='not exists'
+    action=COMMONALERT(commonmsg.sp,1)
+
+SP sp_not_exists_star:
+    port='ssh'
+    protocol='tcp'
+    bindaddr='*'
+    rule='not exists'
+    action=COMMONALERT(commonmsg.sp,1)
+
+SP sp_not_exists_udp:
+    port='1022'
+    protocol='udp'
+    bindaddr='127.0.0.1'
+    rule='not exists'
+    action=COMMONALERT(commonmsg.sp,1)
+
+
+### PORT ###
+
+PORT port_smtp:
+    host='mail.psychofx.com'
+    port=25
+    expect="220"
+    rule='not alive or not matched'
+    action=email(ALERT_EMAIL, '%(host)s port %(port)d connection error','error: %(error)s (%(errorstr)s)')
+
+PORT port_26:
+    host='mail.psychofx.com'
+    port=26
+    expect="220"
+    rule='not alive or not matched'
+    action=email(ALERT_EMAIL, '%(host)s port %(port)d connection error','error: %(error)s (%(errorstr)s)')
+
+
+### IF ###
+
+IF en0:
+    name='en0'
+    rule='tx_bytes > 0'
+    action=email(ALERT_EMAIL, 'Interface %(name)s tx_bytes=%(tx_bytes)s')
+
+IF en4:
+    name='en4'
+    rule='not exists'
+    action=email(ALERT_EMAIL, 'The interface %(name)s does not exist')
+
+
+### NET ###
+
+## TODO
+#NET nettest:
+#    rule="'discarded for bad checksums' > 0"
+#    action=ticker('TcpInErrs = %(TcpInErrs)s')
+
+
+### SYS ###
+
+SYS sys_loadavg1:
+    rule="loadavg1 > 0.01"
+    action=email(ALERT_EMAIL, '%(h)s loadavg1 is %(loadavg1)0.2f')
+
+
+### LOGSCAN ###
+
+LOGSCAN log_test:
+    file='/var/tmp/eddie.log'
+    regex='Exception'
+    scanperiod='30s'
+    action=email(ALERT_EMAIL, "Logscan %(h)s:%(file)s", "Logscan matched %(linecount)d lines:\n%(lines)s")
+
+
+### PING ###
+
+PING ping_test:
+    host='10.0.0.1'
+    numpings=10
+    scanperiod='2m'
+    rule="not alive"
+    action=email(ALERT_EMAIL, "%(host)s failed ping")
+
+PING ping_pktloss:
+    host='217.206.106.163'
+    numpings=20
+    scanperiod='1m'
+    rule="pktloss >= 0.0"
+    action=email(ALERT_EMAIL, "%(host)s packetloss=%(pktloss)0.1f%% avgrtt=%(avgtriptime)0.03fs")
+
+
+### FILE ###
+
+FILE file1:
+    file='/tmp/file1.tmp'
+    rule='not exists'
+    action=email(ALERT_EMAIL, "%(file)s does not exist")
+    act2ok=email("ALERT_EMAIL, %(file)s now exists")
+
+FILE file2:
+    file='/tmp/file2.tmp'
+    rule='mtime != lastmtime'
+    action=email(ALERT_EMAIL, "%(file)s has changed: %(mtime)s was %(lastmtime)s")
+
+FILE file_test:
+    file='/dev'
+    #file='/tmp/ssh-XXiy2gS9/agent.1267'
+    rule='1'
+    action=email(ALERT_EMAIL, "%(file)s", """
+     mode = %(mode)s	\n
+     perm = %(perm)s	\n
+     sticky = %(sticky)s	\n
+     type = %(type)s	\n
+     ino = %(ino)s	\n
+     dev = %(dev)s	\n
+     nlink = %(nlink)s	\n
+     uid = %(uid)s	\n
+     gid = %(gid)s	\n
+     size = %(size)s	\n
+     atime = %(atime)s	\n
+     mtime = %(mtime)s	\n
+     ctime = %(ctime)s	\n
+	\n
+     issocket = %(issocket)s	\n
+     issymlink = %(issymlink)s	\n
+     isfile = %(isfile)s	\n
+     isblockdevice = %(isblockdevice)s	\n
+     isdir = %(isdir)s	\n
+     ischardevice = %(ischardevice)s	\n
+     isfifo = %(isfifo)s	\n
+     """)
+
+
+### POP3TIMING ###
+
+POP3TIMING pop3_enternet:
+    server='mail.enternet.com.au'
+    user='cmiles'
+    password='cowano37'
+    rule='not connected'
+    action=email(ALERT_EMAIL, "pop3 to %(server)s failed")
+    actelse=email(ALERT_EMAIL, "pop3 to %(server)s successful, connecttime=%(connecttime)s")
+
+
+### RADIUS ###
+
+RADIUS radius_test:
+    server='rad1.mel.connect.com.au:1812'
+    secret='grictest'
+    user='cmiles@enternet.com.au'
+    password='cowano37'
+    rule='passed'
+    action=email(ALERT_EMAIL, "Radius auth passed, time=%(timing)s")
+    actelse=email(ALERT_EMAIL, "Radius auth failed")
+
+
+## COM ##
+
+COM current_user:
+    cmd="who am i"
+    rule="out != ''"
+    action=email(ALERT_EMAIL, "user=%(out)s")
+
+
+## HTTP ##
+
+HTTP http_test_ok:
+    url='http://www.psychofx.com/'
+    rule='not failed'
+    action=email(ALERT_EMAIL, '%(url)s succeeded', """
+     time: %(time)f seconds	\n
+     status: %(status)d		\n
+     reason: %(reason)s		\n
+     length: %(length)s		\n
+     version: %(version)s	\n
+     header:\n%(header)s	\n\n
+     body:\n%(body)s
+     """)
+    actelse=email(ALERT_EMAIL, '%(url)s failed', """
+     exception: %(exception)s	\n
+     errno: %(errno)s		\n
+     errstr: %(errstr)s
+     """)
+
+HTTP http_test_fail:
+    url='http://www.badurl.com/'
+    rule='not failed'
+    action=email(ALERT_EMAIL, '%(url)s succeeded', """
+     time: %(time)f seconds	\n
+     status: %(status)d		\n
+     reason: %(reason)s		\n
+     length: %(length)s		\n
+     version: %(version)s	\n
+     header:\n%(header)s	\n\n
+     body:\n%(body)s
+     """)
+    actelse=email(ALERT_EMAIL, '%(url)s failed', """
+     exception: %(exception)s	\n
+     errno: %(errno)s		\n
+     errstr: %(errstr)s
+     """)
+
+
+### SNMP ###
+
+#SNMP pp_router:
+#    host="210.8.131.214"
+#    oid="1.3.6.1.2.1.2.2.1.10.1"
+#    community="DPL"
+#    rule='not failed'
+#    maxretry=10
+#    action=email(ALERT_EMAIL, 'Response: %(response)s')
+
+
+
+
+
+### Directive non-specific ###
+
+PROC test_checktime:
+    name='top_on_mon_or_tue'
+    checktime="day=='mon' or day=='tue'"
+    rule='not exists'
+    action=COMMONALERT(commonmsg.proc,1)
+
+PROC testactionmaxcalls:
+    name='proc_max2alerts'
+    rule='not exists'
+    scanperiod='15s'
+    actionmaxcalls=2
+    action=COMMONALERT(commonmsg.proc,1)
+
