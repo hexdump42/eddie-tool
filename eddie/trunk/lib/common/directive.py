@@ -138,7 +138,7 @@ class Directive:
 		msg = inx.group(2)
 		level = inx.group(3)
 		if level == None or level == '':
-		    level = 0
+		    level = '0'
 
 		print ">>>> notif:",notif
 		print ">>>> msg:",msg
@@ -147,7 +147,7 @@ class Directive:
 		try:
 		    afunc = Config.NDict[notif].levels[level]
 		except KeyError:
-		    print "Eddie: Error in directive.py line 148: Config.NDict[notif].levels[level] - level=%d" % level
+		    #print "Eddie: Error in directive.py line 148: Config.NDict[notif].levels[level] - level=%d" % level
 		    log.log( "<directive>doAction(), Error in directive.py line 148: Config.NDict[notif].levels[level] - level=%d" % level, 1 )
 		else:
 		    #print ">>>> afunc:",afunc
@@ -365,8 +365,8 @@ class PID(Directive):
 class PROC(Directive):
     def __init__(self, toklist):
 	apply( Directive.__init__, (self, toklist) )
-	self.name = toklist[1]			# the daemon to check for
-	self.daemon = toklist[1]		# the daemon to check for
+	self.name = utils.stripquote(toklist[1])			# the daemon to check for
+	self.daemon = utils.stripquote(toklist[1])		# the daemon to check for
 	self.ruleDict = { 'NR' : self.NR,
 		          'R'  : self.R }
 
