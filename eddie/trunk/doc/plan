@@ -42,6 +42,11 @@ COMMANDS:
 	- report if machine has just booted up
 	  (ie: if uptime < scan_frequency)
 
+  INCLUDE
+	- include another file
+
+  M	- define a message
+
 
 MISC
 ----
