@@ -222,14 +222,14 @@ class IntTable(datacollect.DataCollect):
 	self.data.datahash = {}		# hash of same objects keyed on interface name
 	self.data.numinterfaces = 0
 
-	# get the interface stats
+	# get the interface packet stats
 	rawList = utils.safe_popen('netstat -ind', 'r')
 
 	for line in rawList.readlines():
 	    f = string.split(line)
 
 	    if len(f) != 10:
-		continue		# should be 9 fields per line
+		continue		# should be 10 fields per line
 
 	    # only want lines where Address is a valid IP address
 	    int_re = "[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+"
@@ -242,6 +242,29 @@ class IntTable(datacollect.DataCollect):
 		self.data.numinterfaces = self.data.numinterfaces + 1
 
 	utils.safe_pclose( rawList )
+
+	# get the interface bytes stats
+	rawList = utils.safe_popen('netstat -inb', 'r')
+
+	for line in rawList.readlines():
+	    f = string.split(line)
+
+	    if len(f) != 6:
+		continue		# should be 6 fields per line
+
+	    # only want lines where Address is a valid IP address
+	    int_re = "[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+"
+	    sre = re.compile(int_re)
+	    inx = sre.search( f[3] )
+	    if inx != None:
+		# only want interfaces that were found above
+		if f[0] in self.data.datahash.keys():
+		    self.data.datahash[f[0]].interface_bytes(f)	# update interface data
+		else:
+		    log.log( "<netstat>IntTable.collectData(): interface mismatch in netstat -inb, %s" %(f[0]), 5 )
+
+	utils.safe_pclose( rawList )
+
 
         log.log( "<netstat>IntTable.collectData(): Collected data for %d interfaces" %(self.data.numinterfaces), 6 )
 
@@ -286,10 +309,14 @@ class interface:
 	# drops
 	self.drops = long(fields[9])
 
+	# ibytes & obytes have to be collected by a separate netstat call
+	self.ibytes = 0.0
+	self.obytes = 0.0
 
 
     def ifinfo(self):
-	"""Return interface details as a dictionary."""
+	"""Return interface details as a dictionary.
+	"""
 
 	info = {}
 	info['name'] = self.name
@@ -302,8 +329,21 @@ class interface:
 	info['oerrs'] = self.oerrs
 	info['collis'] = self.collis
 	info['drops'] = self.drops
+	info['ibytes'] = self.ibytes
+	info['obytes'] = self.obytes
 
 	return info
+
+
+    def interface_bytes(self, fields):
+	"""Update interface stats with bytes counters from a netstat -inb call.
+	"""
+
+	# ibytes
+	self.ibytes = long(fields[4])
+
+	# obytes
+	self.obytes = long(fields[5])
 
 
 ##
