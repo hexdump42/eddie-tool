@@ -29,7 +29,7 @@
 ##   messages.  If set as an environment variable it will not be
 ##   over-written.  Defaults to not set.
 
-if [ $EDDIE_ADMIN = "" ]
+if [ "$EDDIE_ADMIN" = "" ]
 then
     #EDDIE_ADMIN=eddie-adm@domain.name
     EDDIE_ADMIN=
