@@ -2,7 +2,8 @@
 ## 
 ## File		: config.py 
 ## 
-## Author	: Rod Telford 
+## Author       : Rod Telford  <rtelford@connect.com.au>
+##                Chris Miles  <cmiles@connect.com.au>
 ## 
 ## Date		: 971211 
 ## 

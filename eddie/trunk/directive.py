@@ -2,7 +2,8 @@
 ## 
 ## File		: directive.py 
 ## 
-## Author	: Rod Telford 
+## Author       : Rod Telford  <rtelford@connect.com.au>
+##                Chris Miles  <cmiles@connect.com.au>
 ## 
 ## Date		: 971205 
 ## 
@@ -13,6 +14,7 @@
 
 import os
 import string
+import regex
 
 # Rules holds all the directives in a hash where the value of each key is the
 # list of rules relating to that key.
@@ -27,7 +29,7 @@ class Rules:
 
 	except KeyError:
 	    self.hash[new.type] = []
-	    tl = self.hash[new.type]
+	    tl = []
 
 	tl.append(new)
 
@@ -47,7 +49,9 @@ class Rules:
     def delete(self, directive):
 	del self.hash[directive]
 
-# The base directive class.  Derive all directives from this base class.
+##
+## The base directive class.  Derive all directives from this base class.
+##
 class Directive:
     def __init__(self, *arg):
 	self.raw = arg[0]
@@ -56,8 +60,9 @@ class Directive:
     def getRaw(self):
 	return self.raw
 
-## COMMANDS ##
-
+##
+## COMMANDS
+##
 class SCANPERIOD(Directive):
     # remove docheck()
     def docheck(self):
@@ -69,15 +74,38 @@ class SCANPERIOD(Directive):
 class INCLUDE(Directive):
     pass
 
-## MESSAGE DIRECTIVE ##
-
+##
+## MESSAGE DIRECTIVE
+##
 class M(Directive):
+    def __init__(self, *arg):
+	self.raw = arg[0]
+
+	# get the object type and the name of this message
+	lines = string.split(self.raw, "\n")
+	fl = string.split(lines[0])
+	self.type = fl[0]
+	self.name = fl[1]
+
+	# define regexp for extracting the subject for the email
+	sre = regex.compile("\"\(.*\)\"")
+	inx  = sre.search(lines[0])
+	self.subject = sre.group(1)
+
+	# now get the message body
+	lines.remove(lines[0])
+	self.message = string.join(lines, "\n")
+
     def docheck(self):
 	print "M directive doing checking......"
 
+    def send(self, email):
+	print "sending message to", email
 
+
+##
 ## RULE-BASED COMMANDS
-
+##
 class FS(Directive):
     def docheck():
 	print "FS directive doing checking......"
