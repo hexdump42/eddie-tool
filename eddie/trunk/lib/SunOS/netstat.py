@@ -113,6 +113,9 @@ class tcp:
 	    raise "Netstat Parse Error", "tcp, expected '<ip>.<port>', found '%s'" % (fields[0])
 	self.local_addr_ip = fields[0][:dot]
 	self.local_addr_port = fields[0][dot+1:]
+	# CM 2004-05-16: convert '*' to standard wildcard address '0.0.0.0'
+	if self.local_addr_ip == '*':
+	    self.local_addr_ip = '0.0.0.0'
 
 	# remote address
 	dot = string.rfind(fields[1], '.')
@@ -204,6 +207,9 @@ class udp:
 	    raise "Netstat Parse Error", "udp, expected '<ip>.<port>', found '%s'" % (fields[0])
 	self.local_addr_ip = fields[0][:dot]
 	self.local_addr_port = fields[0][dot+1:]
+	# CM 2004-05-16: convert '*' to standard wildcard address '0.0.0.0'
+	if self.local_addr_ip == '*':
+	    self.local_addr_ip = '0.0.0.0'
 
 	# state
 	self.state = fields[1]
