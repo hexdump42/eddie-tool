@@ -525,6 +525,43 @@ class action:
 
 
 
+    def elvinrrd(self, key, variable, data):
+	"""Send information to remote RRDtool database listener via Elvin.
+	"""
+
+	log.log( "<action.py>action.elvinrrd( key='%s' variable='%s' data='%s' )"%(key,variable,data), 8 )
+
+	if eddieElvin4.UseElvin == 0:
+	    log.log( "<action.py>action.elvinrrd(), Elvin is not available - skipping.", 8 )
+	    return 0
+
+	try:
+	    e = eddieElvin4.elvinrrd()
+	except eddieElvin4.ElvinError:
+	    log.log( "<action.py>action.elvinrrd(), Error, eddieElvin4.elvinrrd() could not connect", 2 )
+	    return
+
+	#print "created elvinrrd() connection to elvin"
+
+	if variable == None or data == None:
+	    # error
+	    raise "elvinrrd exception, no variable or data defined"
+	else:
+	    key = parseVars( key, self.varDict )	# substitute variables
+	    variable = parseVars( variable, self.varDict )	# substitute variables
+	    data = parseVars( data, self.varDict )	# substitute variables
+
+	    log.log( "<action.py>action.elvinrrd() sending: key='%s' variable='%s' data='%s'"%(key,variable,data), 8 )
+	    retval = e.send(key, variable, data)
+
+	# Alert if return value != 0
+	if retval != 0:
+	    log.log( "<action.py>action.elvinrrd(%s, %s, %s), Alert, return value for e.send() is %d" % (key,variable,data,retval), 3 )
+	else:
+	    log.log( "<action.py>action.elvinrrd(%s, %s, %s): store ok" % (key,variable,data), 7 )
+
+
+
 ##
 ## General utilities for actions
 ##

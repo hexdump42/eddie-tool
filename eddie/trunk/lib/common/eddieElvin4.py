@@ -215,6 +215,34 @@ class elvindb(eddieElvin):
 	    return 1
 
 
+class elvinrrd(eddieElvin):
+    """Send a dictionary through Elvin to a listener process which should store
+       the data into an RRDtool database.  Supports Elvin4+ only."""
+
+    def __init__(self):
+        apply( eddieElvin.__init__, (self,) )
+
+
+    def send(self, key, variable, data):
+	"""Send the message.
+	"""
+
+	#timestamp = time.strftime("%Y%m%d%H%M%S", time.localtime(time.time()))
+
+	if self.connected:
+	    # Create db entry creation 'command'
+	    edict = {      'ELVINRRD' : key,
+		             variable : data
+		    }
+
+	    ec.elvinc.notify( edict )
+
+	    return 0
+
+	else:
+	    return 1
+
+
 ##
 ## END - eddieElvin4.py
 ##
