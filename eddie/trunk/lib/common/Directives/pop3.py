@@ -246,6 +246,21 @@ class POP3TIMING(directive.Directive):
 	self.Action.varDict['pop3timinglisttime'] = listtime
 	self.Action.varDict['pop3timingretrtime'] = retrtime
 
+	# Values are set to None if there was some problem performing the
+	# commands.
+	if connecttime == None:
+	    connecttime = 0
+	    log.log( "<pop3.py>POP3TIMING.docheck(): connecttime could not be measured, setting to 0", 3 )
+	if authtime == None:
+	    authtime = 0
+	    log.log( "<pop3.py>POP3TIMING.docheck(): authtime could not be measured, setting to 0", 3 )
+	if listtime == None:
+	    listtime = 0
+	    log.log( "<pop3.py>POP3TIMING.docheck(): listtime could not be measured, setting to 0", 3 )
+	if authtime == None:
+	    authtime = 0
+	    log.log( "<pop3.py>POP3TIMING.docheck(): retrtime could not be measured, setting to 0", 3 )
+
 	log.log( "<pop3.py>POP3TIMING.docheck(): connecttime=%f authtime=%f listtime=%f retrtime=%f" % (connecttime, authtime, listtime, retrtime), 8 )
 
 	self.doAction(Config)
