@@ -301,7 +301,7 @@ skstat_open(self, args)
     ret = (PyObject *)newkstatobject(kc, kc->kc_chain);
 
     kstat_close(kc);
-	
+
     return ret;
 }
 
