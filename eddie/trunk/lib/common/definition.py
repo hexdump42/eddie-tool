@@ -185,44 +185,42 @@ class M(Definition):
 
 
 
-class DEF(Definition):
-    """DEF Definition - defines global string aliases to be replaced
-       during config file parsing only.  eg:
-	DEF FSRULE="capac>=90%"
-	...
-	FS: fs='/' rule=$FSRULE action=" ... "
-
-	This goes against the general Python-like format of the config
-	file and may disappear in the future.
-    """
-
-    def __init__(self, list):
-	apply( Definition.__init__, (self,list) )
-
-	# if the last token isn't a carriage-return then we don't have the
-	# whole line yet...
-#	if list[-1] != '\012':
-#	    #raise ParseNotcomplete
-#	    raise ParseFailure
-
-	# if we don't have 4 elements ['DEF', <str>, '=', <str>] then
-	# raise an error
-	if len(list) != 4:
-	    #print "..DEF list:",list
-	    raise ParseFailure, "DEF definition has %d tokens when expecting 4" % len(list)
-
-	# OK, grab values
-	self.name = list[1]		# the name of this DEFinition
-	self.text = list[3]		# the text that is assigned to it
-	log.log( "<Definition>DEF(), DEF created, name '%s', text '%s'" % (self.name,self.text), 8 )
+## DEFs replaced by ALIAS's everywhere, without the '$'...
+#class DEF(Definition):
+#    """DEF Definition - defines global string aliases to be replaced
+#       during config file parsing only.  eg:
+#	DEF FSRULE="capac>=90%"
+#	...
+#	FS: fs='/' rule=$FSRULE action=" ... "
+#
+#	This goes against the general Python-like format of the config
+#	file and may disappear in the future.
+#    """
+#
+#    def __init__(self, list):
+#	apply( Definition.__init__, (self,list) )
+#
+#	# if we don't have 4 elements ['DEF', <str>, '=', <str>] then
+#	# raise an error
+#	if len(list) != 4:
+#	    #print "..DEF list:",list
+#	    raise ParseFailure, "DEF definition has %d tokens when expecting 4" % len(list)
+#
+#	# OK, grab values
+#	self.name = list[1]		# the name of this DEFinition
+#	self.text = list[3]		# the text that is assigned to it
+#	log.log( "<Definition>DEF(), DEF created, name '%s', text '%s'" % (self.name,self.text), 8 )
 
 
 class ALIAS(Definition):
-    """ALIAS Definition - defines string aliases which can appear as
-	arguments to action calls, etc. eg:
+    """ALIAS Definition - defines string aliases which can appear anywhere
+       in the config or as arguments to action calls, etc. eg:
 	ALIAS ALERT='root'
-	...
 	FS: fs='/' rule="capac>=90%" action="email(ALERT, 'fs nearly full')"
+
+       or
+	ALIAS FSRULE="capac>=90%"
+	FS: fs='/' rule=FSRULE action=" ... "
     """
 
     def __init__(self, list):

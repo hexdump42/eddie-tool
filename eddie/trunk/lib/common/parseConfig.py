@@ -141,20 +141,34 @@ class State:
 		self.toklist.append(token)
 		self.toktypes.append(toktype)
 
-	    # Substitute $VAR variables for DEF's
-	    if len(self.toklist) > 1 and self.toktypes[-2] == "DOLLAR":
-		if toktype != "NAME":
-		    # '$' must be followed by a "NAME" toktype
-		    raise config.ParseFailure, "'$' followed by illegal characters."
-		else:
-		    # Replace last two tokens with variable substitution
-		    try:
-			del self.toklist[-2:]
-			self.toklist.append(self.Config.defDict[token])
-		    except KeyError:
-			raise config.ParseFailure, "Variable substitution error for $%s" % token
-		    del self.toktypes[-2:]
-		    self.toktypes.append("NAME")
+#	    # Substitute $VAR variables for DEF's
+#	    if len(self.toklist) > 1 and self.toktypes[-2] == "DOLLAR":
+#		if toktype != "NAME":
+#		    # '$' must be followed by a "NAME" toktype
+#		    raise config.ParseFailure, "'$' followed by illegal characters."
+#		else:
+#		    # Replace last two tokens with variable substitution
+#		    try:
+#			del self.toklist[-2:]
+#			self.toklist.append(self.Config.defDict[token])
+#		    except KeyError:
+#			raise config.ParseFailure, "Variable substitution error for $%s" % token
+#		    del self.toktypes[-2:]
+#		    self.toktypes.append("NAME")
+
+	    # Substitute ALIAS's
+	    if toktype == "NAME":
+		try:
+		    # see if matching ALIAS name exists (except drops out if not)
+		    self.Config.aliasDict[token]
+
+		    # replace token with value and fix toklist
+		    log.log( "<parseConfig>tokeneater(), ALIAS substituted %s for %s" % (token,self.Config.aliasDict[token]), 7 )
+		    del self.toklist[-1]
+		    self.toklist.append(self.Config.aliasDict[token])
+		    token = self.Config.aliasDict[token]
+		except:
+		    pass
 
 	    # DEBUG
 	    #print "toklist:",self.toklist

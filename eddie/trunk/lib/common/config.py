@@ -69,7 +69,7 @@ class Config:
 	if parent != None:
 	    self.MDict.update(parent.MDict)	# inherit parent M-tree
 
-	self.defDict = {}			# dictionary of DEFinitions
+	#self.defDict = {}			# dictionary of DEFinitions
 	self.aliasDict = {}			# dictionary of ALIASes
 	self.NDict = {}				# dictionary of Notification definitions
 	self.classDict = {}			# dictionary of Class definitions
@@ -80,7 +80,7 @@ class Config:
 	# Inherit parent properties if given
 	if parent != None:
 	    self.parent = parent
-	    self.defDict.update(parent.defDict)
+	    #self.defDict.update(parent.defDict)
 	    self.aliasDict.update(parent.aliasDict)
 	    self.NDict.update(parent.NDict)
 	    # TODO: copy ruleList and MDict too ?
@@ -96,7 +96,7 @@ class Config:
 	str = str + "\n\n MDict:"
 	for i in self.MDict.keys():
 	    str = str + " %s" % self.MDict[i]
-	str = str + "\n\n defDict: %s" % self.defDict
+	#str = str + "\n\n defDict: %s" % self.defDict
 	str = str + "\n\n aliasDict: %s" % self.aliasDict
         str = str + "\n\n NDict:"
 	for i in self.NDict.keys():
@@ -143,8 +143,8 @@ class Config:
 	    self.NDict[obj.name] = obj
 	elif obj.type == 'M':
 	    self.MDict[obj.name] = obj
-	elif obj.type == 'DEF':
-	    self.defDict[obj.name] = obj.text
+#	elif obj.type == 'DEF':
+#	    self.defDict[obj.name] = obj.text
 	elif obj.type == 'ALIAS':
 	    self.aliasDict[obj.name] = obj.text
 	elif obj.type == 'CLASS':
@@ -205,11 +205,6 @@ class SCANPERIOD(ConfigOption):
 
 	apply( ConfigOption.__init__, (self,list) )
 
-	# if the last token isn't a carriage-return then we don't have the
-	# whole line yet...  DEFUNCT
-	#if list[-1] != '\012':
-	#    raise ParseNotcomplete
-
 	# if we don't have 3 or 4 elements ['SCANPERIOD', '=', <int>, [<char>,]] then raise an error
 	if len(list) < 3 or len(list) > 4:
 	    raise ParseFailure, "SCANPERIOD definition has %d tokens when expecting 3 or 4" % len(list)
@@ -234,11 +229,6 @@ class LOGFILE(ConfigOption):
     def __init__( self, list ):
 	apply( ConfigOption.__init__, (self,list) )
 
-	# if the last token isn't a carriage-return then we don't have the
-	# whole line yet...  DEFUNCT
-	#if list[-1] != '\012':
-	#    raise ParseNotcomplete
-
 	# if we don't have 3 elements ['LOGFILE', '=', <val>] then raise an error
 	if len(list) != 3:
 	    raise ParseFailure, "LOGFILE definition has %d tokens when expecting 3" % len(list)
@@ -253,11 +243,6 @@ class LOGFILE(ConfigOption):
 class LOGLEVEL(ConfigOption):
     def __init__( self, list ):
 	apply( ConfigOption.__init__, (self,list) )
-
-	# if the last token isn't a carriage-return then we don't have the
-	# whole line yet...  DEFUNCT
-	#if list[-1] != '\012':
-	#    raise ParseNotcomplete
 
 	# if we don't have 3 elements ['LOGLEVEL', '=', <val>] then raise an error
 	if len(list) != 3:
@@ -276,11 +261,6 @@ class ADMIN(ConfigOption):
     def __init__( self, list ):
 	apply( ConfigOption.__init__, (self,list) )
 
-	# if the last token isn't a carriage-return then we don't have the
-	# whole line yet...  DEFUNCT
-	#if list[-1] != '\012':
-	#    raise ParseNotcomplete
-
 	# if we don't have 3 elements ['ADMIN', '=', <str>] then
 	# raise an error
 	if len(list) != 3:
@@ -296,11 +276,6 @@ class ADMINLEVEL(ConfigOption):
     def __init__( self, list ):
 	apply( ConfigOption.__init__, (self,list) )
 
-	# if the last token isn't a carriage-return then we don't have the
-	# whole line yet...  DEFUNCT
-	#if list[-1] != '\012':
-	#    raise ParseNotcomplete
-
 	# if we don't have 3 elements ['ADMINLEVEL', '=', <val>] then
 	# raise an error
 	if len(list) != 3:
@@ -315,11 +290,6 @@ class ADMINLEVEL(ConfigOption):
 class ADMIN_NOTIFY(ConfigOption):
     def __init__( self, list ):
 	apply( ConfigOption.__init__, (self,list) )
-
-	# if the last token isn't a carriage-return then we don't have the
-	# whole line yet...  DEFUNCT
-	#if list[-1] != '\012':
-	#    raise ParseNotcomplete
 
 	# if we don't have 3 or 4 elements ['ADMIN_NOTIFY', '=', <int>, [<char>,]] then raise an error
 	if len(list) < 3 or len(list) > 4:
@@ -342,11 +312,6 @@ class INTERPRETERS(ConfigOption):
     def __init__( self, list ):
 	apply( ConfigOption.__init__, (self,list) )
 
-	# if the last token isn't a carriage-return then we don't have the
-	# whole line yet...  DEFUNCT
-	#if list[-1] != '\012':
-	#    raise ParseNotcomplete
-
 	# if we don't have 3 elements ['INTERPRETERS', '=', <str>] then raise an error
 	if len(list) != 3:
 	    raise ParseFailure, "INTERPRETERS definition has %d tokens when expecting 3" % len(list)
@@ -361,10 +326,6 @@ class CLASS(ConfigOption):
     def __init__( self, list ):
 	apply( ConfigOption.__init__, (self,list) )
 
-	# if the last token isn't a carriage-return then we don't have the
-	# whole line yet...  DEFUNCT
-	#if list[-1] != '\012':
-	#    raise ParseNotcomplete
 
 	# if we don't have at least 4 elements ['CLASS', '=', <str>, [',', <str>, ...] ]
 	# then raise an error
@@ -413,11 +374,6 @@ class ELVINSCOPE(ConfigOption):
 class NUMTHREADS(ConfigOption):
     def __init__( self, list ):
 	apply( ConfigOption.__init__, (self,list) )
-
-	# if the last token isn't a carriage-return then we don't have the
-	# whole line yet...  DEFUNCT
-	#if list[-1] != '\012':
-	#    raise ParseNotcomplete
 
 	# if we don't have 3 elements ['NUMTHREADS', '=', <int>] then raise an error
 	if len(list) != 3:
@@ -479,7 +435,6 @@ directives = {
 definitions = {
 		"M"		: definition.M,
 		"MSG"		: definition.MSG,
-		"DEF"		: definition.DEF,
 		"ALIAS"		: definition.ALIAS,
               }
 
