@@ -1223,6 +1223,9 @@ class PORT(Directive):
 		if e[1][0] == 146:		# Connection Refused
 		    log.log( "<Directive>PORT.isalive(), ID '%s', Connection refused" % (self.state.ID), 5 )
 		    return 0
+		elif e[1][0] == 145:		# Connection Timed Out
+		    log.log( "<Directive>PORT.isalive(), ID '%s', Connection Timed Out" % (self.state.ID), 5 )
+		    return 0
 		else:
 		    tb = traceback.format_list( traceback.extract_tb( e[2] ) )
 		    log.log( "<Directive>PORT.isalive(), ID '%s', Uncaught: %s, %s, %s" % (self.state.ID, e[0], e[1], tb), 3 )
