@@ -22,11 +22,11 @@ Eddie."""
 
 	# Notify
 	Level 0:
-	    email($ALERT,ALERT),ticker(ALERT_P)
+	    email(ALERT_EMAIL,ALERT),ticker(ALERT_P)
 
 	# Notify/page
 	Level 1:
-	    email($ALERT,ALERT),email($SYSSUP,ALERT_P),ticker(ALERT_P)
+	    email(ALERT_EMAIL,ALERT),email(SYSSUP_EMAIL,ALERT_P),ticker(ALERT_P)
 
 
 
@@ -38,7 +38,7 @@ Eddie."""
 			action='COMMONALERT(commonmsg.proc,2)'
     PROC actived:	procname='actived'
 			rule=NR
-			action='email($ALERT,"Alert: %(procp)s on %(h)s not running - restarting..."),system("su news -c /opt/local/news/bin/actived")'
+			action='email(ALERT_EMAIL,"Alert: %(procp)s on %(h)s not running - restarting..."),system("su news -c /opt/local/news/bin/actived")'
 
 
     FS varspool:	fs='/var/spool'

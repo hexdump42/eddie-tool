@@ -101,15 +101,14 @@ CLASS dns=yarrina,warrane
 CLASS cache=myeah,myponga,myangup,myalla,myoon
 
 
-# DEF
-#  Define some aliases which can appear in the config at any time as $NAME.
-#  These are expanded when the config is parsed.
-#  (Warn: these may disappear at a later stage as they break the Python
-#  look-and-feel of the config.)
-#  Use: DEF <name>="<string>"
+# ALIAS
+#  Define some aliases which will be substituted during config parsing,
+#  or, if located within action calls, will be substituted when that
+#  action is called.
+#  Use: ALIAS <name>="<string>"
 
-DEF ALERT="alert@domain.name"
-DEF SYSSUP="syssup@domain.name"
+ALIAS ALERT_EMAIL="alert@domain.name"
+ALIAS SYSSUP_EMAIL="syssup@domain.name"
 
 
 # INCLUDE

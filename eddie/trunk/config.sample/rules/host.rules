@@ -38,6 +38,6 @@ group koro:
     ## Check ntp stratum is sane
     COM stratum3:	cmd="/opt/local/sbin/xntpdc -c sysinfo | grep stratum | awk '{ print $2 }'"
 			rule="int(out) > 3"
-			action='email($ALERT,"Stratum > 3")'
+			action='email(ALERT_EMAIL,"Stratum > 3")'
 
 

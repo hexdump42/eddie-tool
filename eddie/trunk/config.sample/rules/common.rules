@@ -202,19 +202,19 @@ N COMMONALERT:
 
     # Notification
     Level 0:
-	email($ALERT,WARN)
+	email(ALERT_EMAIL,WARN)
 
     # Warning
     Level 1:
-	email($ALERT,WARN),ticker(WARN_P)
+	email(ALERT_EMAIL,WARN),ticker(WARN_P)
 
     # Alert
     Level 2:
-	email($SYSSUP,ALERT_P),ticker(ALERT_P)
+	email(SYSSUP_EMAIL,ALERT_P),ticker(ALERT_P)
 
     # Serious Alert
     Level 3:
-	email($ALERT,ALERT),email($SYSSUP,ALERT_P),ticker(ALERT_P)
+	email(ALERT_EMAIL,ALERT),email(SYSSUP_EMAIL,ALERT_P),ticker(ALERT_P)
 
 
 
@@ -222,33 +222,33 @@ N COMMONRESTART:
 
     # Restart and notify
     Level 0:
-	restart("%(procp)s"),email($ALERT,RE_WARN)
+	restart("%(procp)s"),email(ALERT_EMAIL,RE_WARN)
 
     # Restart/page
     Level 1:
-	restart("%(procp)s"),email($SYSSUP,RE_WARN),ticker(RE_WARN_P)
+	restart("%(procp)s"),email(SYSSUP_EMAIL,RE_WARN),ticker(RE_WARN_P)
 
 
 N SYSLOGRESTART:
 
     # Restart and notify
     Level 0:
-	restart("syslog"),email($ALERT,RE_WARN)
+	restart("syslog"),email(ALERT_EMAIL,RE_WARN)
 
     # Restart/page
     Level 1:
-	restart("syslog"),email($SYSSUP,RE_WARN),ticker(RE_WARN_P)
+	restart("syslog"),email(SYSSUP_EMAIL,RE_WARN),ticker(RE_WARN_P)
 
 
 N NAMEDRESTART:
 
     # Restart and notify
     Level 0:
-	restart("bind"),email($ALERT,RE_WARN)
+	restart("bind"),email(ALERT_EMAIL,RE_WARN)
 
     # Restart/page
     Level 1:
-	restart("bind"),email($SYSSUP,RE_WARN),ticker(RE_WARN_P)
+	restart("bind"),email(SYSSUP_EMAIL,RE_WARN),ticker(RE_WARN_P)
 
 
 ###########################################################################
