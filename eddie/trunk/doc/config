@@ -1,0 +1,84 @@
+      OTTO - The Automated Administrator!
+      Chris Miles <cmiles@connect.com.au>
+     Rod Telford <rtelford@connect.com.au>
+     -------------------------------------
+
+                  Config Options
+                  ==============
+
+INCLUDE <filename>
+      -	the file <filename> will be parsed before returning to the current
+       	config file.  The path is assumed to be relative to the directory
+	where the current config file is located.  This allows each
+	directive configuration to be in a different file.
+	Note that <filename> must be enclosed by single (') or double (")
+	quotes.
+
+LOGFILE <logfile>
+      -	the file where Otto will write standard log messages.  Note that
+       	<logfile> must be enclosed by single (') or double (") quotes.
+
+LOGLEVEL <loglevel>
+      -	the amount of detail Otto will log (to <logfile>).  The levels
+       	are defined as follows:
+		0 - no logging at all
+		1 - ??
+		2 - ??
+		3 - ??
+		4 - ??
+		5 - ??
+		6 - ??
+		7 - ??
+		8 - ??
+		9 - log EVERYTHING!
+	Note: levels 1-8 have not yet been defined!
+
+SCANPERIOD <time>[s|m|h|d|w|c|y]
+      -	approximate minimum scan period.  <time> is in seconds unless
+	specified by an appended character as follows:
+		s - seconds
+		m - minutes
+		h - hours
+		d - days
+		w - weeks
+		c - calendar months
+		y - years
+	Otto will actually sleep for <time> seconds between each check
+	which means that the full interval between checks will be greater
+	than <time> [ie: <otto execution time>+<time>].
+
+
+                  HOW TO ADD A CONFIG
+                  ===================
+
+New config options are setup in config.py as follows:
+1.  Create a new class for the config option, preferably with the classname
+    the same as the option name.  It should be a derived class of
+    ConfigOption.  It should call the default __init__ function of
+    ConfigOption as the first command in its __init__ function.
+    It should setup a regexp which will find the command in a string
+    (assume comments have been stripped).  It should then call
+    self.parseRaw() which will return the value of the option and
+    set this value to a global variable.
+
+    The following template should probably be used:
+
+	## NEWOPTION - a template for a new config option		**
+	class NEWOPTION(ConfigOption):					**
+    	def __init__( self, *arg ):
+	    apply( ConfigOption.__init__, (self,) + arg )
+	    self.regexp = 'NEWOPTION[\t ]+\([a-zA-Z0-9]+\)[\t \n]*'	**
+	    value = self.parseRaw()
+	    global newoption						**
+	    newoption = value		# set the config option		**
+
+    The lines with ** at the end need to be modified.
+
+2.  Add the config command to the dictionary of directives located at
+    the bottom of the file, with the command in quotes (") followed by
+    the classname of the command.  eg:
+
+		"NEWOPTION"	: NEWOPTION,			\
+	
+3.  Add an explanation of the new config option to doc/config.
+
