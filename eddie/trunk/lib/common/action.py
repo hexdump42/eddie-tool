@@ -65,6 +65,7 @@ class action:
 	    body = msg
 
 	# run thru parseVars() to substitute variables from varDict
+	users = parseVars( users, self.varDict )
 	subj = parseVars( subj, self.varDict )
 	body = parseVars( body, self.varDict )
 
