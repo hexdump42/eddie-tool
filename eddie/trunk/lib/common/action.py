@@ -180,7 +180,7 @@ class action:
 	utils.safe_pclose( tmp )
 
 	if not log.log( "<action.py>action.email(), email sent to '%s', subject '%s', body '%s'" % (u,subj,body), 9 ):
-	    log.log( "<action.py>action.email('%s', '%s', '%s')" % (u,subj,body[:20]) ,5 )
+	    log.log( "<action.py>action.email('%s', '%s', '%s')" % (u,subj,body[:20]), 6 )
 	
 
 
@@ -204,7 +204,7 @@ class action:
 	if retval != 0:
 	    log.log( "<action.py>action.system(), Alert, return value for cmd '%s' is %d" % (cmd,retval), 3 )
 
-	log.log( "<action.py>action.system(), cmd '%s', return value %d" % (cmd,retval), 5 )
+	log.log( "<action.py>action.system(), cmd '%s', return value %d" % (cmd,retval), 6 )
 
 
     # restart()
@@ -241,7 +241,7 @@ class action:
 	if retval != 0:
 	    log.log( "<action.py>action.restart(), Alert, return value for cmd '%s' is %d" % (cmd,retval), 3 )
 
-	log.log( "<action.py>action.restart(), cmd '%s', return value %d" % (cmd,retval), 5 )
+	log.log( "<action.py>action.restart(), cmd '%s', return value %d" % (cmd,retval), 6 )
 
 	return retval
 
@@ -308,7 +308,7 @@ class action:
 	if retval != 0:
 	    log.log( "<action.py>action.nice(), Alert, return value for cmd '%s' is %d" % (cmd,retval), 3 )
 
-	log.log( "<action.py>action.nice(), cmd '%s', return value %d" % (cmd,retval), 5 )
+	log.log( "<action.py>action.nice(), cmd '%s', return value %d" % (cmd,retval), 6 )
 
 
     # eddielog()
@@ -343,7 +343,7 @@ class action:
 	if retval == 0:
 	    log.log( "<action.py>action.eddielog(), Alert, return value for log.log( '%s', %d ) is %d" % (logstr,loglevel,retval), 3 )
 	else:
-	    log.log( "<action.py>action.eddielog(), text '%s', loglevel %d" % (logstr,loglevel), 5 )
+	    log.log( "<action.py>action.eddielog(), text '%s', loglevel %d" % (logstr,loglevel), 6 )
 
 
     # Send Elvin Ticker message
@@ -379,7 +379,7 @@ class action:
 	if retval != 0:
 	    log.log( "<action.py>action.ticker(), Alert, return value for e.sendmsg('%s') is %d" % (body,retval), 3 )
 	else:
-	    log.log( "<action.py>action.ticker('%s')" % (body), 5 )
+	    log.log( "<action.py>action.ticker('%s')" % (body), 6 )
 
 
     # elvinPage()
@@ -419,7 +419,7 @@ class action:
 	if retval != 0:
 	    log.log( "<action.py>action.elvinPage(), Alert, return value for e.sendmsg('%s') is %d" % (body,retval), 3 )
 	else:
-	    log.log( "<action.py>action.elvinPage('%s')" % (body), 5 )
+	    log.log( "<action.py>action.elvinPage('%s')" % (body), 6 )
 
 
     # Temporary: page via email for now...
