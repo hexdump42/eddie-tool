@@ -338,7 +338,7 @@ def eddielog(*arg):
 # elvin()
 def elvin(msg):
     # send a message via Elvin message system
-    elvinServer = 'chintoo'
+    elvinServer = 'elvin'
     elvinPort = 5678
 
     if len(msg) == 0:
@@ -367,7 +367,7 @@ def elvin(msg):
 # elvinPage()
 def elvinPage(pager, msg):
     # send a message via Elvin message system to Pager
-    elvinServer = 'chintoo'
+    elvinServer = 'elvin'
     elvinPort = 5678
 
     if len(msg) == 0:
@@ -396,7 +396,7 @@ def elvinPage(pager, msg):
 # page()
 def page(pager, msg):
     # send a page via SNPP
-    pageServer = 'chintoo'
+    pageServer = 'elvin'
 
     if len(msg) == 0:
 	# msg must contain something
