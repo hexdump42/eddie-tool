@@ -1,0 +1,39 @@
+# elvinrrd.cf - Config File for elvinrrd.py [SAMPLE]
+# $Id$
+# $Source$
+#
+# Fields per entry (entries separated by a blank line):
+#  elvinrrd=<string>            # elvin key to match against
+#  rrdfile=<filename>           # rrd file to update
+#  store=<string>               # elvin key to store
+#  create=<string>              # rrd create args if rrd file does not exist
+#########################
+
+#### Load Average
+# Store 5 min loadavg stats (in cricket-compatable RRD file)
+elvinrrd=loadavg5-*
+rrdfile=/export/rrd/loadavg/loadavg5-*.rrd
+store=loadavg5
+create=-s 300 DS:loadavg5:GAUGE:600:0:200 RRA:AVERAGE:0.5:1:600 RRA:AVERAGE:0.5:6:600 RRA:AVERAGE:0.5:24:600 RRA:AVERAGE:0.5:288:600 RRA:MAX:0.5:24:600 RRA:MAX:0.5:288:600
+
+#### scanrate
+elvinrrd=sr-*
+rrdfile=/export/rrd/scanrate/sr-*.rrd
+store=scanrate
+create=-s 60 DS:scan:COUNTER:120:U:U RRA:AVERAGE:0.5:1:1440 RRA:AVERAGE:0.5:10:1008 RRA:AVERAGE:0.5:60:720 RRA:AVERAGE:0.5:480:1095
+
+#### radius timing
+# radius timing stats from hosts to radsvr1
+elvinrrd=*-radsvr1
+rrdfile=/export/rrd/radiustiming/*-radsvr1.rrd
+store=timing
+create=-s 60 DS:timing:GAUGE:120:0:100 RRA:AVERAGE:0.5:1:1440 RRA:AVERAGE:0.5:10:1008 RRA:AVERAGE:0.5:60:720 RRA:AVERAGE:0.5:480:1095
+
+#### CPU
+# Example of multiple store keys. All keys must exist in the Elvin message and
+# all will be updated in the RRD at once.
+elvinrrd=cpu-*
+rrdfile=/export/rrd/cpu/cpu-*.rrd
+store=cpu_user,cpu_nice,cpu_system,cpu_idle
+create=-s 60 DS:cpu_user:COUNTER:120:U:U DS:cpu_nice:COUNTER:120:U:U DS:cpu_system:COUNTER:120:U:U DS:cpu_idle:COUNTER:120:U:U RRA:AVERAGE:0.5:1:1440 RRA:AVERAGE:0.5:10:1008 RRA:AVERAGE:0.5:60:720 RRA:AVERAGE:0.5:480:1095
+

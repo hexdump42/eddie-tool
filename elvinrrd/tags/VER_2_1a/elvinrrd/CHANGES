@@ -1,0 +1,20 @@
+ElvinRRD CHANGES
+(reverse chronological order)
+
+ElvinRRD-2.1a (1-Nov-2001)
+ - Fixed support for multiple store keys.  Multiple store keys must be
+   separated by ',' (no spaces).  All keys must be found in the Elvin message,
+   and all will be updated in the RRD at once.
+ - Added full command-line argument support.
+ - Cleaned up logging - can define different logging levels (minimal, verbose,
+   debug) and optionally log to a logfile.
+ - Updated elvinrrd.cf sample configuration file with new config format.
+ - Added a create argument so RRD files are automatically created if they do
+   not already exist.
+ - Changed config format, allowing wildcards to be supplied in the elvinrrd
+   key which can be substituted in the rrdfile, store and create arguments if
+   required.
+
+
+ElvinRRD-1.0 (5-Sep-2001)
+ - Initial test version of elvinrrd.
