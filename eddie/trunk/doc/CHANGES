@@ -1,6 +1,62 @@
 Eddie CHANGES
 (reverse chronological order)
 
+Eddie-0.34 (13-Sep-2004)
+ - OpenBSD: collect in/out byte counters for network interfaces, which
+   requires an extra netstat call.
+ - OpenBSD: added drops counter to network interface stats.
+ - OpenBSD: fixed some bugs preventing network interface statistics collection
+   from working properly.
+ - Improved handling of exceptions when counting file descriptors in use.
+   Instead of raising a global exception (and causing EDDIE to die) just log
+   the exception and carry on.
+ - Perform global housekeeping duties more often.  Now they are every
+   1 minute instead of every 10 minutes.  This means that changes to
+   config and rules files will be picked up much faster.
+ - Added pysnmp module to Extra dir, which EDDIE uses for making SNMP queries.
+ - Extra 3rd-party modules are now being distributed with EDDIE.  They will
+   live in lib/common/Extra/ and are provided to make installation simpler
+   for commonly-used modules.
+ - HTTP: Make sure 'ip' message variable is initialized in HTTP directives.
+ - HTTP: Some HTTP response exceptions were not being caught properly.
+ - HTTP: Some socket.timeout checks weren't checking for the correct version
+   of Python (which was causing AttributeError exceptions).
+ - HTTP: Changed the logging of response body read() exceptions which were not
+   working for some types of exceptions.
+ - Made eddie_wrapper smarter about finding a date or gdate command to use.
+ - Darwin: Fixed a bug parsing vmstat statistics.  These counters were
+   being truncated (and hence wrong) before.
+ - Darwin: Better handling of parsing errors in the proc data collector.
+ - The COM directive now shares the utils.systemcall_semaphore semaphore
+   rather than relying on its own.  This prevents conflicts between any
+   threads that need to perform a system() (or os.popen() or
+   commands.getstatusoutput()) simultaneously.
+   Thanks to Denis Menshikov for verifying this issue.
+ - Bugfix for SP directive determining the right protocol (Dougal Scott).
+ - Bugfix for a problem that occasionally the get TCPtable returns no entries
+   for no obvious reason. This means that all the SP style checks would
+   start complaining that no one is listening (Dougal Scott).
+ - If ELVINURL and ELVINSCOPE are both undefined in eddie.cf then disable
+   Elvin functionality.
+ - Update to MYSQL directive adding "result#" variable (Dougal Scott).
+ - Converted mysql.py from DOS line endings to UNIX.
+ - Fixed 'daemon' call in contrib init script so it works properly on newer
+   versions of Redhat.
+ - Added new exception DataFailure.
+   Changed exceptions to be subclasses of Exception.
+   Catch DataFailure exceptions from collectData().  These are raised if the
+   Data Collector encounters a major problem collecting the data.
+ - Added support for Redhat Enterprise Linux (or perhaps newer kernels 2.4.21+)
+   which has extra stats added to the cpu fields in /proc/stat.  The cpu counters
+   now available with these kernels are:
+    ctr_cpu_user
+    ctr_cpu_nice
+    ctr_cpu_system
+    ctr_cpu_idle
+    ctr_cpu_iowait
+    ctr_cpu_hardirq
+    ctr_cpu_softirq
+
 Eddie-0.33 (15-Jul-2004)
  - Handle socket timeout exceptions properly when HTTP response read() fails.
  - Handle socket.settimeout() not being available on Python pre-2.3 versions.
