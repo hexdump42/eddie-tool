@@ -42,6 +42,8 @@ class netstatList:
 	    self.hash[key] = p
 	    self.list.append(p)
 
+	rawList.close()
+
 	# ok now we want the udp stuff
 	rawList = os.popen('netstat -anf inet -P udp | grep Idle', 'r')
 
@@ -56,6 +58,8 @@ class netstatList:
 	    key = self.proto + self.port + self.host
 	    self.hash[key] = p
 	    self.list.append(p)
+
+	rawList.close()
 
 	log.log( "<netstat>netstatList(), created new instance", 8 )
 	

@@ -38,8 +38,10 @@ class procList:
 	    self.hash[fields[0]] = p
 	    self.nameHash[p.command] = p
 
+	rawList.close()
+
 	log.log( "<proc>procList(), created new instance", 8 )
-	
+
     def __str__(self):
 	rv = 'PID     USER            COMMAND                 TIME            CPU     STATUS\n'
  	for item in self.list:

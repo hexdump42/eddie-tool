@@ -117,6 +117,7 @@ def readFile(file, ruleList, defDict, MDict, ADict):
 
 	    else:
 	       log.log( "<parseConfig>readFile(), Alert, ignoring unknown directive '%s' in '%s' on line %d" % (d,file,count), 3 )
+    conf.close()
 
 
 # find any DEF's in line (ie: $SPAZ) and replace with definition
