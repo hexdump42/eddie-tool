@@ -70,7 +70,7 @@ class eddieElvin:
 	except:
 	    sys.stderr.write( "Connection to elvin failed - connection string was '%s'\n" % (connect_string) )
 	    if logfile != None:
-		log( "Connection to elvin failed - connection string was '%s'\n" % (connect_string) )
+		log( "Connection to elvin failed - connection string was '%s'" % (connect_string) )
 	    sys.exit(1)
 
 
@@ -180,7 +180,7 @@ class storeconsumer(eddieElvin):
 	    else:
 		sys.stderr.write( "IOError: %s, message %s\n" % (err, msg) )
 		if logfile:
-		    log( "IOError: %s, message %s\n" % (err, msg) )
+		    log( "IOError: %s, message %s" % (err, msg) )
 
 	return 0
 
