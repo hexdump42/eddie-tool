@@ -6,12 +6,13 @@
 ## 
 ## Start Date	: 19980122
 ## 
-## Description	: Library of classes that deal with a solaris netstat list
+## Description	: Eddie-Tool data collector for SunOS/Solaris network
+##		  stats.
 ##
 ## $Id$
 ##
 ########################################################################
-## (C) Chris Miles 2001
+## (C) Chris Miles 2001-2004
 ##
 ## The author accepts no responsibility for the use of this software and
 ## provides it on an ``as is'' basis without express or implied warranty.
@@ -37,16 +38,30 @@
 
 
 # Python modules
-import string, re
+import string
+import re
 # Eddie modules
-import datacollect, log, utils
+import datacollect
+import log
+import utils
 
 
+##
+## Exceptions
+##
+ 
+class InterfaceError(Exception):
+    """InterfaceError: could not create an Interface instance.
+    """
+    pass
 
+
+##
+## Classes
+##
 
 class TCPtable(datacollect.DataCollect):
-    """
-    Collects current TCP connections table.
+    """Collects current TCP connections table.
     """
 
     def __init__(self):
@@ -98,8 +113,7 @@ class TCPtable(datacollect.DataCollect):
 
 
 class tcp:
-    """
-    Holds information about a single tcp connection.
+    """Holds information about a single tcp connection.
     """
 
     def __init__(self, fields):
@@ -142,8 +156,7 @@ class tcp:
 
 
 class UDPtable(datacollect.DataCollect):
-    """
-    Collects current UDP connections table.
+    """Collects current UDP connections table.
     """
 
     def __init__(self):
@@ -192,8 +205,7 @@ class UDPtable(datacollect.DataCollect):
 
 
 class udp:
-    """
-    Holds information about a single udp connection.
+    """Holds information about a single udp connection.
     """
 
     def __init__(self, fields):
@@ -217,8 +229,11 @@ class udp:
 
 
 class IntTable(datacollect.DataCollect):
-    """
-    The network interface statistics Data Collector.
+    """The network interface statistics Data Collector.
+    Collects stats for every physical interface.
+    It gets all interface names from 'netstat -in' call.
+    Then for every physical (or non-logical) interface it fetches
+    stats from a 'netstat -k <int>' call.
     """
 
     def __init__(self):
@@ -233,47 +248,104 @@ class IntTable(datacollect.DataCollect):
     # Private methods
 
     def collectData(self):
-        """
-        Collect network interface data.
+        """Collect network interface data.
         """
 
+	self.data.phys_interfaces = []	# list of physical (non-logical) interface names
 	self.data.datahash = {}		# hash of same objects keyed on interface name
 	self.data.numinterfaces = 0
+	interfacelines = {}
 
-	# get the interface stats
+	# get list of network interfaces
 	rawList = utils.safe_popen('netstat -in', 'r')
 
 	# skip header line
 	rawList.readline()
 
+	# collect all non-logical interface names
 	for line in rawList.readlines():
 	    f = string.split(line)
-
-	    if len(f) != 10:
-		continue		# should be 10 fields per line
-
-	    t = interface(f)		# new interface instance
-
-	    self.data.datahash[t.name] = t
-
-	    self.data.numinterfaces = self.data.numinterfaces + 1
+	    if len(f) > 0 and ':' not in f[0]:
+		# not a logical interface so remember it
+		self.data.phys_interfaces.append( f[0] )
+		interfacelines[f[0]] = line		# store the line to parse a little later
 
 	utils.safe_pclose( rawList )
+
+	# now collect stats for all interfaces found above
+	for intname in self.data.phys_interfaces:
+	    try:
+	        newint = Interface( intname )				# new Interface instance
+		newint.parse_netstat_in( interfacelines[intname] )	# parse 'netstat -in' line
+		newint.collect_stats()					# get stats from 'netstat -k'
+	        self.data.datahash[intname] = newint
+		self.data.numinterfaces = self.data.numinterfaces + 1
+	    except InterfaceError, msg:
+        	log.log( "<netstat>IntTable.collectData(): Could not create interface for '%s', %s" %(intname,msg), 5 )
 
         log.log( "<netstat>IntTable.collectData(): Collected data for %d interfaces" %(self.data.numinterfaces), 6 )
 
 
 
-class interface:
-    """Holds information about a single network interface."""
+class Interface:
+    """An Interface instance represents one physical interface on the system
+    and collects and stores information and statistics related to the interface.
 
-    def __init__(self, fields):
+    Use collect_stats() method to fetch stats from a 'netstat -k <int>' call.
 
-	if len(fields) != 10:
-	    raise "Netstat Parse Error", "interface class requires 10 fields, not %d" % (len(fields))
+    Use parse_netstat_in(line) to parse a 'netstat -in' output line and collect
+    details (mtu, address, etc).
 
-	# interface name address
-	self.name = fields[0]
+    TODO: use ndd to get physical interface settings, eg:
+	    ndd -set /dev/hme instance #
+	    ndd -get /dev/hme link_status
+	    ndd -get /dev/hme link_speed
+	    ndd -get /dev/hme link_mode
+    """
+
+    def __init__( self, name ):
+	if not name:
+	    raise InterfaceError, "Interface name '%s' is invalid" %(name)
+
+	self.name = name	# the interface name (e.g., hme0)
+	self.stats = {}		# dictionary to hold all collected stats
+
+
+    def collect_stats( self ):
+	"""Collect all the statistics from a call to 'netstat -k <intname>'.
+	"""
+
+	# interfaces stats
+	rawList = utils.safe_popen( '/usr/bin/netstat -k %s'%(self.name), 'r' )
+
+	# skip header line - but bail if there is no output at all
+	if not rawList.readline():
+	    utils.safe_pclose( rawList )
+	    #raise InterfaceError, "No stats for interface '%s'" %(name)
+	    return
+
+	# collect all non-logical interface names
+	for line in rawList.readlines():
+	    f = string.split(line)
+	    try:
+	        d = dict( [(f[x],int(f[x+1])) for x in range(0, len(f), 2)] )
+	        self.stats.update( d )
+	    except:
+        	log.log( "<netstat>Interface.collect_stats(): Could not parse line (skipped), %s: %s" %(sys.exc_info()[0],line), 5 )
+
+	utils.safe_pclose( rawList )
+
+
+    def parse_netstat_in( self, line ):
+	"""Parse 'netstat -in' line and fetch interface details.
+	"""
+
+	fields = line.split()
+
+	if len( fields ) != 10:
+	    # expecting 10 fields per line
+            log.log( "<netstat>Interface.parse_netstat_in(): Could not parse line (skipped), expected 10 fields: %s" %(line), 5 )
+	    return
 
 	# mtu
 	self.mtu = int(fields[1])
@@ -284,47 +356,50 @@ class interface:
 	# address
 	self.address = fields[3]
 
-	# input packets
-	self.ipkts = long(fields[4])
-
-	# input errors
-	self.ierrs = long(fields[5])
-
-	# output packets
-	self.opkts = long(fields[6])
-
-	# output errors
-	self.oerrs = long(fields[7])
-
-	# collisions
-	self.collis = long(fields[8])
-
 	# queue
-	self.queue = long(fields[9])
+	self.queue = int(fields[9])
 
 
-    def ifinfo(self):
-	"""Return interface details as a dictionary."""
+    def ifinfo( self ):
+	"""Return interface details & statistics as a dictionary.
+	"""
 
 	info = {}
 	info['name'] = self.name
 	info['mtu'] = self.mtu
 	info['net'] = self.net
 	info['address'] = self.address
-	info['ipkts'] = self.ipkts
-	info['ierrs'] = self.ierrs
-	info['opkts'] = self.opkts
-	info['oerrs'] = self.oerrs
-	info['collis'] = self.collis
-	info['queue'] = self.queue
+        info['queue'] = self.queue
+	info.update( self.stats )
+
+	# backwards compatability - support some older stats names
+	if 'ipackets' in info.keys():
+            info['ipkts'] = info['ipackets']
+	else:
+            info['ipkts'] = 0
+	if 'opackets' in info.keys():
+            info['opkts'] = info['opackets']
+	else:
+            info['opkts'] = 0
+	if 'ierrors' in info.keys():
+            info['ierrs'] = info['ierrors']
+	else:
+            info['ierrs'] = 0
+	if 'oerrors' in info.keys():
+            info['oerrs'] = info['oerrors']
+	else:
+            info['oerrs'] = 0
+	if 'collisions' in info.keys():
+            info['collis'] = info['collisions']
+	else:
+            info['collis'] = 0
 
 	return info
 
 
 
 class stats_ctrs(datacollect.DataCollect):
-    """
-    Collect network statistics counters.
+    """Collect network statistics counters.
     """
 
     def __init__(self):
