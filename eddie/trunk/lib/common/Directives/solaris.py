@@ -101,7 +101,7 @@ class CRON(directive.Directive):
     	    self.doAction(Config)
 
 	else:
-	    self.state.stateok(self, Config)	# update state info for check passed
+	    self.state.stateok(Config)	# update state info for check passed
 
         self.putInQueue( Config.q )     # put self back in the Queue
 
@@ -171,7 +171,7 @@ class METASTAT(directive.Directive):
 		self.doAction(Config)
 
 	    else:
-		self.state.stateok(self, Config)	# update state info for check passed
+		self.state.stateok(Config)	# update state info for check passed
 
         self.putInQueue( Config.q )     # put self back in the Queue
 

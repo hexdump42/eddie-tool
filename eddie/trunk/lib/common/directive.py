@@ -40,13 +40,19 @@ ParseFailure = 'ParseFailure'
 class State:
     """Object to track the state of a directive."""
 
-    def __init__(self):
+    def __init__(self, thisdirective):
 	self.ID = None			# each directive has a unique ID
 	self.lastfailtime = None	# last time a failure was detected
 	self.faildetecttime = None	# first time failure was detected for current problem
 	self.ack = ack.ack()		# ack object to track acknowledgements
-	self.status = "ok"		# status of most recent check: "ok" or "fail"
 	self.checkcount = 0		# count number of checks/re-checks
+	self.thisdirective = thisdirective	# pointer to the directive this object belongs to
+
+	# Status can be:
+	#  ok          - no problem
+	#  failinitial - possible failure state (might need more rechecks, for example)
+	#  fail        - check has failed
+	self.status = "ok"		# status of most recent check
 
 
     def ack(self, user=None, details=None):
@@ -65,10 +71,16 @@ class State:
 	    # first failure detection
 	    self.faildetecttime = timenow
 
-	self.status = "fail"
-	self.lastfailtime = timenow
+	    self.status = "failinitial"
 
 	self.checkcount = self.checkcount + 1
+
+	if self.checkcount >= self.thisdirective.args.numchecks:
+	    # Only put in "fail" state when all rechecks have failed
+	    # otherwise the state is left in "failinitial" state
+	    self.status = "fail"
+
+	self.lastfailtime = timenow
 
 	log.log( "<directive>State.statefail(), ID '%s' status '%s' checkcount %d lastfailtime %s faildetecttime %s"%(self.ID, self.status, self.checkcount, self.lastfailtime, self.faildetecttime), 6 )
 
@@ -77,11 +89,14 @@ class State:
 	#                     or: repeating failure
 
 
-    def stateok(self, thisdirective, Config):
+    def stateok(self, Config):
 	"""Update state info for check succeeding."""
 
-	if self.status != "ok":
-	    # This is a state change back to OK.
+	if self.status == "fail":
+	    # This is a state change from "fail" to "ok".
+	    # If state was "failinitial" then check never really failed
+	    # properly so allow change back to "ok" silently.
+
 	    # Mark the lastfailtime as now, as state has been failed up until
 	    # this point in time.
 	    timenow = time.localtime(time.time())
@@ -89,9 +104,7 @@ class State:
 
 	    log.log( "<directive>State.stateok(), State changed to OK.  ID '%s'."%(self.ID), 6 )
 
-	    # Perform act2ok action calls if any were defined for this directive
-            #thisdirective.doOkAct(Config)
-            thisdirective.performAction(Config,thisdirective.args.actokList)
+	    self.thisdirective.performAction(Config,self.thisdirective.args.actokList)
 
 	    #TODO: Post an EVENT about problem being resolved
 
@@ -220,7 +233,7 @@ class Directive:
 	self.Action.varDict['actnm'] = '[actnm not yet defined]'
 
 	# directives keep state information about themselves
-	self.state = State()
+	self.state = State(self)
 
 	self.requeueTime = None	# specific requeue time can be specified
 
@@ -659,7 +672,7 @@ class FS(Directive):
 	self.Action.varDict['fsdf'] = "%s%s" % (dlist.dfheader,df)
 
 	if result == 0:
-	    self.state.stateok(self, Config)	# update state info for check passed
+	    self.state.stateok(Config)	# update state info for check passed
 
 	else:
 	    self.state.statefail()	# update state info for check failed
@@ -772,7 +785,7 @@ class PID(Directive):
 		self.doAction(Config)
 	    else:
 		log.log( "<directive>PID(), EX, pidfile '%s' found" % (self.args.pid), 8 )
-		self.state.stateok(self, Config)		# update state info for check passed
+		self.state.stateok(Config)		# update state info for check passed
 		pidfile.close()
 
 	elif self.args.rule == "PR":
@@ -806,7 +819,7 @@ class PID(Directive):
 		    self.doAction(Config)
 		else:
 		    log.log( "<directive>PID(), PR, pid %s is in process list" % (pid), 7 )
-		    self.state.stateok(self, Config)		# update state info for check passed
+		    self.state.stateok(Config)		# update state info for check passed
 
 
 	else:
@@ -888,7 +901,7 @@ class PROC(Directive):
 	    self.doAction(Config)
 	    return
 
-	self.state.stateok(self, Config)	# update state info for check passed
+	self.state.stateok(Config)	# update state info for check passed
 
 
     def R(self,Config):
@@ -902,7 +915,7 @@ class PROC(Directive):
 	    self.doAction(Config)
 
 	else:
-	    self.state.stateok(self, Config)	# update state info for check passed
+	    self.state.stateok(Config)	# update state info for check passed
 
 
     def check(self,Config):
@@ -927,7 +940,7 @@ class PROC(Directive):
 		    self.doAction(Config)
 
 		else:
-		    self.state.stateok(self, Config)	# update state info for check passed
+		    self.state.stateok(Config)	# update state info for check passed
 
 
 
@@ -982,7 +995,7 @@ class SP(Directive):
 	ret = nlist.portExists(self.args.protocol, self.port, self.args.bindaddr) != None
 	if ret != 0:
 	    log.log( "<directive>SP(), port %s/%s listener found bound to %s" % (self.args.protocol , self.port_n, self.args.bindaddr), 8 )
-	    self.state.stateok(self, Config)	# update state info for check passed
+	    self.state.stateok(Config)	# update state info for check passed
 	else:
 	    log.log( "<directive>SP(), port %s/%s no listener found bound to %s" % (self.args.protocol , self.port_n, self.args.bindaddr), 6 )
 	    self.state.statefail()	# update state info for check failed
@@ -1102,7 +1115,7 @@ class COM(Directive):
 	    self.state.statefail()	# update state info for check failed
 	    self.doAction(Config)
 	else:
-	    self.state.stateok(self, Config)	# update state info for check passed
+	    self.state.stateok(Config)	# update state info for check passed
 
 	self.putInQueue( Config.q )	# put self back in the Queue
 
@@ -1167,7 +1180,7 @@ class PORT(Directive):
 	    self.state.statefail()	# update state info for check failed
             self.doAction(Config)
 	else:
-	    self.state.stateok(self, Config)	# update state info for check passed
+	    self.state.stateok(Config)	# update state info for check passed
 
 	self.putInQueue( Config.q )	# put self back in the Queue
 
@@ -1295,7 +1308,7 @@ class IF(Directive):
 	    self.state.statefail()	# update state info for check failed
 	    self.doAction(Config)
 	else:
-	    self.state.stateok(self, Config)	# update state info for check passed
+	    self.state.stateok(Config)	# update state info for check passed
 
 
     def EX(self, Config):
@@ -1310,7 +1323,7 @@ class IF(Directive):
 	    self.state.statefail()	# update state info for check failed
 	    self.doAction(Config)
 	else:
-	    self.state.stateok(self, Config)	# update state info for check passed
+	    self.state.stateok(Config)	# update state info for check passed
 
 
     def check(self, Config):
@@ -1336,7 +1349,7 @@ class IF(Directive):
 	    self.state.statefail()	# update state info for check failed
 	    self.doAction(Config)
 	else:
-	    self.state.stateok(self, Config)	# update state info for check passed
+	    self.state.stateok(Config)	# update state info for check passed
 
 
 class NET(Directive):
@@ -1390,7 +1403,7 @@ class NET(Directive):
 	    self.state.statefail()	# update state info for check failed
 	    self.doAction(Config)
 	else:
-	    self.state.stateok(self, Config)	# update state info for check passed
+	    self.state.stateok(Config)	# update state info for check passed
 
 	self.putInQueue( Config.q )	# put self back in the Queue
 
@@ -1452,7 +1465,7 @@ class SYS(Directive):
 	    self.state.statefail()	# update state info for check failed
 	    self.doAction(Config)
 	else:
-	    self.state.stateok(self, Config)	# update state info for check passed
+	    self.state.stateok(Config)	# update state info for check passed
 
 	self.putInQueue( Config.q )	# put self back in the Queue
 
@@ -1527,7 +1540,7 @@ class STORE(Directive):
 
 	self.state.statefail()	# state should be fail before doAction() called
 	self.doAction(Config)
-	self.state.stateok(self, Config)	# reset state
+	self.state.stateok(Config)	# reset state
 
 	self.putInQueue( Config.q )	# put self back in the Queue
 

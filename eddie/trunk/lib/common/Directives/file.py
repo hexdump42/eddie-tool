@@ -177,7 +177,7 @@ class FILE(directive.Directive):
 	    log.log( "<logscanning>LOGSCAN.docheck(): ID '%s' rule result=%d" % (self.ID, result), 8 )
 
 	    if result == 0:
-		self.state.stateok(self, Config)	# reset state info
+		self.state.stateok(Config)	# reset state info
 	    else:
 		self.state.statefail()	# set state to fail before calling doAction()
 		self.doAction(Config)

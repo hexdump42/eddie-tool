@@ -136,7 +136,7 @@ class PING(directive.Directive):
         result = eval( self.args.rule, rulesenv )
 
         if result == 0:
-            self.state.stateok(self, Config)    # update state info for check passed
+            self.state.stateok(Config)    # update state info for check passed
 
 	else:
 	    self.state.statefail()	# set state to fail before calling doAction()
