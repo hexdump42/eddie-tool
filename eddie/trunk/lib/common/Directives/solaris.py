@@ -1,7 +1,7 @@
 ## 
 ## File		: solaris.py 
 ## 
-## Author       : Chris Miles  <chris@psychofx.com>
+## Author       : Chris Miles  <cmiles@codefx.com.au>
 ## 
 ## Date		: 20000615
 ## 
@@ -27,7 +27,7 @@
 
 
 # Imports: Python
-import sys, os, commands, time
+import sys, os, time, re
 # Imports: Eddie
 import log, directive, utils
 
@@ -148,12 +148,12 @@ class METASTAT(directive.Directive):
 	try:
 	    os.stat( metastat )
 	except:
-	    log.log( "<solaris>METASTAT.docheck(): %s not found, skipping check" % (metastat), 7 )
+	    log.log( "<solaris>METASTAT.docheck(): %s not found, directive cancelled" % (metastat), 4 )
 	else:
 	    # metastat exists, so check for anything requiring Maintenance
 
 	    cmd = "%s | /usr/bin/grep -i maint | /usr/bin/wc -l" % (metastat)
-	    result = commands.getoutput( cmd )
+	    (retval, result) = utils.safe_getstatusoutput( cmd )
 	    try:
 		r = int(result)
 	    except ValueError:
@@ -173,7 +173,171 @@ class METASTAT(directive.Directive):
 	    else:
 		self.state.stateok(Config)	# update state info for check passed
 
-        self.putInQueue( Config.q )     # put self back in the Queue
+            self.putInQueue( Config.q )     # put self back in the Queue
+
+
+class PRTDIAG(directive.Directive):
+    """Solaris checks using prtdiag output.
+	Currently only supports AMBIENT and CPU temperatures.
+	TODO: parse rest of prtdiag.
+
+	Eg:
+	PRTDIAG: rule="temp_ambient > 40"
+                 action="email('alert', 'Ambient temperature on %(h)s is %(PRTDIAG_temp_ambient)s.')"
+    """
+
+    def __init__(self, toklist, toktypes):
+	apply( directive.Directive.__init__, (self, toklist, toktypes) )
+
+
+    def tokenparser(self, toklist, toktypes, indent):
+	apply( directive.Directive.tokenparser, (self, toklist, toktypes, indent) )
+
+	# test required arguments
+	try:
+	    self.args.rule		# the rule
+	except AttributeError:
+	    raise directive.ParseFailure, "Rule not specified"
+
+	# Set any PRTDIAG-specific variables
+	self.Action.varDict['rule'] = self.args.rule
+
+	# define the unique ID
+        if self.ID == None:
+	    self.ID = '%s.PRTDIAG' % (log.hostname)
+	self.state.ID = self.ID
+
+	log.log( "<solaris>PRTDIAG.tokenparser(): ID '%s' rule '%s' action '%s'" % (self.ID, self.args.rule, self.args.actionList), 8 )
+
+
+    def docheck(self, Config):
+	log.log( "<solaris>PRTDIAG.docheck(): ", 7 )
+
+	# Determine system type and parse system-specific output
+	cmd = "/usr/bin/uname -i"
+	(retval, output) = utils.safe_getstatusoutput( cmd )
+	if output == "SUNW,Ultra-4":
+	    prtdiag_dict = self.parse_prtdiag_u450()
+	elif output == "SUNW,Ultra-250":
+	    prtdiag_dict = self.parse_prtdiag_u250()
+	else:
+	    log.log( "<solaris>PRTDIAG.docheck(): system type %s not supported yet, directive cancelled" % (output), 4 )
+
+	if prtdiag_dict == None:	# there was an error, just exit
+	    return
+
+	rulesenv = {}
+	rulesenv.update(prtdiag_dict)
+
+	# Evaluate rule
+	result = eval( self.args.rule, rulesenv )
+
+	if result:
+	    self.state.statefail()	# update state info for check failed
+
+	    # assign variables
+	    for i in prtdiag_dict.keys():
+		self.Action.varDict['PRTDIAG_%s'%(i)] = prtdiag_dict[i]
+
+	    log.log( "<solaris>PRTDIAG.docheck(): check failed, calling doAction()", 6 )
+	    self.doAction(Config)
+
+	else:
+	    self.state.stateok(Config)	# update state info for check passed
+
+	self.putInQueue( Config.q )     # put self back in the Queue
+
+
+    def parse_prtdiag_u450(self):
+	"""Parse prtdiag for a U450."""
+
+	prtdiag = "/usr/platform/sun4u/sbin/prtdiag"
+
+	try:
+	    os.stat( prtdiag )
+	except:
+	    log.log( "<solaris>PRTDIAG.parse_prtdiag_u450(): %s not found, directive cancelled" % (prtdiag), 4 )
+	    return None
+
+	cmd = "%s -v" % (prtdiag)
+	(retval, output) = utils.safe_getstatusoutput( cmd )
+
+	# Initialise prtdiag dictionary of values
+	prtdiag_dict = {}
+	prtdiag_dict['temp_ambient'] = None
+	prtdiag_dict['temp_cpu0'] = None
+	prtdiag_dict['temp_cpu1'] = None
+	prtdiag_dict['temp_cpu2'] = None
+	prtdiag_dict['temp_cpu3'] = None
+	prtdiag_dict['temp_supply0'] = None
+	prtdiag_dict['temp_supply1'] = None
+	prtdiag_dict['temp_supply2'] = None
+
+	for l in output.split('\n'):
+	    inx = re.search("^AMBIENT\s+([0-9]+)", l)
+	    if inx:	# AMBIENT temp
+		prtdiag_dict['temp_ambient'] = int(inx.group(1))
+		continue
+
+	    inx = re.search("^CPU\s+([0-9])\s+([0-9]+)", l)
+	    if inx:	# CPU temps
+		prtdiag_dict['temp_cpu%s'%(inx.group(1))] = int(inx.group(2))
+		continue
+
+	    inx = re.search("([0-9])\s+[0-9]+ W\s+([0-9]+)\s+\w+", l)
+	    if inx:	# Power Supply temps
+		prtdiag_dict['temp_supply%s'%(inx.group(1))] = int(inx.group(2))
+		continue
+
+	return prtdiag_dict
+		
+
+    def parse_prtdiag_u250(self):
+	"""Parse prtdiag for a U250."""
+
+	prtdiag = "/usr/platform/sun4u/sbin/prtdiag"
+
+	try:
+	    os.stat( prtdiag )
+	except:
+	    log.log( "<solaris>PRTDIAG.parse_prtdiag_u250(): %s not found, directive cancelled" % (prtdiag), 4 )
+	    return None
+
+	cmd = "%s -v" % (prtdiag)
+	(retval, output) = utils.safe_getstatusoutput( cmd )
+
+	# Initialise prtdiag dictionary of values
+	prtdiag_dict = {}
+	prtdiag_dict['temp_cpu0'] = None
+	prtdiag_dict['temp_cpu1'] = None
+	prtdiag_dict['temp_mb0'] = None
+	prtdiag_dict['temp_mb1'] = None
+	prtdiag_dict['temp_pdb'] = None
+	prtdiag_dict['temp_scsi'] = None
+
+	for l in output.split('\n'):
+	    inx = re.search("CPU([0-9])\s+([0-9]+)", l)
+	    if inx:	# CPU temps
+		prtdiag_dict['temp_cpu%s'%(inx.group(1))] = int(inx.group(2))
+		continue
+
+	    inx = re.search("MB([0-9])\s+([0-9]+)", l)
+	    if inx:	# Motherboard (?) temps
+		prtdiag_dict['temp_mb%s'%(inx.group(1))] = int(inx.group(2))
+		continue
+
+	    inx = re.search("PDB\s+([0-9]+)", l)
+	    if inx:	# PDB ?? temps
+		prtdiag_dict['temp_pdb'] = int(inx.group(1))
+		continue
+
+	    inx = re.search("SCSI\s+([0-9]+)", l)
+	    if inx:	# SCSI ?? temps
+		prtdiag_dict['temp_scsi'] = int(inx.group(1))
+		continue
+
+	return prtdiag_dict
+		
 
 
 ##
