@@ -27,7 +27,7 @@
 ########################################################################
 
 global EDDIE_VER
-EDDIE_VER='0.28'
+EDDIE_VER='0.29'
 
 
 # Python modules
@@ -42,50 +42,29 @@ ewd = os.path.split(sys.argv[0])[0]
 fullp = os.path.join(cwd, ewd)
 basedir = os.path.join(fullp, '..')
 
-# Determine OS type dynamically...
-try:
-    # use old systype if available (backwards compatability)
-    os.stat( basedir + '/bin/systype' )
-    syscmd = os.popen( basedir + '/bin/systype', 'r' )
-    systype = syscmd.readline()[:-1]
-    syscmd.close()
-    oslibdirs = [ os.path.join(basedir, 'lib/' + systype), ]
-    print "systype:",systype
-except os.error:
-    systype = ''
+# Determine system type
+uname = os.uname()
+osname = uname[0]
+osver = uname[2]
+osarch = uname[4]
+systype = "%s/%s/%s" % (osname,osver,osarch)
+print "systype:", systype
 
-if systype == '':
-    # New system type determination (preferred)
-    uname = os.uname()
-    osname = uname[0]
-    osver = uname[2]
-    osarch = uname[4]
-    systype = "%s/%s/%s" % (osname,osver,osarch)
-    print "systype:", systype
-    oslibdirs = [ os.path.join(basedir,'lib',osname,osver,osarch),
-                  os.path.join(basedir,'lib',osname,osarch,osver),
-                  os.path.join(basedir,'lib',osname,osver),
-                  os.path.join(basedir,'lib',osname,osarch),
-		  os.path.join(basedir,'lib',osname) ]
+oslibdirs = [ os.path.join(basedir,'lib',osname,osver,osarch),
+	      os.path.join(basedir,'lib',osname,osarch,osver),
+	      os.path.join(basedir,'lib',osname,osver),
+	      os.path.join(basedir,'lib',osname,osarch),
+	      os.path.join(basedir,'lib',osname) ]
 
 commonlibdir = os.path.join(basedir, 'lib/common')
 sys.path = oslibdirs + [commonlibdir,] + sys.path
 
 # Eddie common modules
-import parseConfig, directive, config, log, history, timeQueue, sockets, eddieElvin4
-
-# Eddie OS-specific modules
-import proc, df, netstat, system
-try:
-    import iostat
-    module_iostat = 1
-except:
-    module_iostat = 0
-    print "No iostat module."
+import parseConfig, directive, config, log, timeQueue, sockets, eddieElvin4, datacollect
 
 # Main config file - this file INCLUDEs all other config files
 configdir = os.path.join(basedir, 'config')
-config_file = configdir + '/eddie.cf'
+config_file = os.path.join(configdir, 'eddie.cf')
 
 # Globals
 global Config
@@ -112,13 +91,15 @@ def start_threads(sargs, cargs):
     global cthread		# the Console Server thread
     if config.consport > 0:	# don't start if CONSPORT=0
 	cthread = threading.Thread(group=None, target=sockets.console_server_thread, name='Console', args=cargs, kwargs={})
+	cthread.setDaemon(1)	# mark thread as Daemon-thread so Eddie will not block when trying to terminate
 	cthread.start()
 
     return()
 
 
 def stop_threads():
-    """Stop any threads started by start_threads().
+    """
+    Stop any threads started by start_threads().
     """
 
     please_die.set()		# signal threads to die
@@ -132,21 +113,24 @@ def stop_threads():
 
  
 def eddieexit():
-    """Exit Eddie cleanly.
+    """
+    Exit Eddie cleanly.
     """
 
-    log.log( '<eddie>eddieexit(), Eddie exiting cleanly.', 5 )
+    log.log( '<eddie>eddieexit(): Eddie exiting cleanly.', 5 )
     # email admin any remaining messages
     log.sendadminlog(1)
     sys.exit()
 
 
 def SigHandler( sig, frame ):
-    """Handle all the signals we are interested in."""
+    """
+    Handle all the signals we are interested in.
+    """
 
     if sig == signal.SIGHUP:
 	# SIGHUP (Hangup) - reload config
-	log.log( '<eddie>SigHandler(), SIGHUP encountered - reloading config', 5 )
+	log.log( '<eddie>SigHandler(): SIGHUP encountered - reloading config', 5 )
 
         stop_threads()
 
@@ -162,9 +146,6 @@ def SigHandler( sig, frame ):
 	buildCheckQueue(q, Config)
 	Config.q = q
 
-	#print "q:",q
-	#print "q.qsize=%d" % (q.qsize())
-
         sargs = (q,Config,please_die)
         cargs = (Config, please_die, config.consport)
 
@@ -172,9 +153,9 @@ def SigHandler( sig, frame ):
 
     elif sig == signal.SIGINT:
 	# SIGINT (CTRL-c) - quit now
-	log.log( '<eddie>SigHandler(), SIGINT (KeyboardInterrupt) encountered - quitting', 1 )
+	log.log( '<eddie>SigHandler(): SIGINT (KeyboardInterrupt) encountered - quitting', 1 )
 
-	log.log( '<eddie>SigHandler(), signalling scheduler thread to die', 6 )
+	log.log( '<eddie>SigHandler(): signalling scheduler thread to die', 6 )
         stop_threads()
 
 	try:
@@ -185,9 +166,9 @@ def SigHandler( sig, frame ):
 
     elif sig == signal.SIGTERM:
 	# SIGTERM (Terminate) - quit now
-	log.log( '<eddie>SigHandler(), SIGTERM (Terminate) encountered - quitting', 1 )
+	log.log( '<eddie>SigHandler(): SIGTERM (Terminate) encountered - quitting', 1 )
 
-	log.log( '<eddie>SigHandler(), signalling scheduler thread to die', 6 )
+	log.log( '<eddie>SigHandler(): signalling scheduler thread to die', 6 )
         stop_threads()
 
 	try:
@@ -202,11 +183,13 @@ def SigHandler( sig, frame ):
 
     else:
 	# un-handled signal - log & ignore it
-	log.log( '<eddie>SigHandler(), unknown signal received, %d - ignoring' % sig, 5 )
+	log.log( '<eddie>SigHandler(): unknown signal received, %d - ignoring' % sig, 5 )
 
 
 def countFDs():
-    """Count number of file descriptors in use."""
+    """
+    Count number of file descriptors in use.
+    """
 
     import errno
     fdcnt = 0
@@ -222,10 +205,12 @@ def countFDs():
 
 
 def scheduler(q, Config, die_event):
-    """The Eddie scheduler thread.  This thread tracks the queue of waiting
+    """
+    The Eddie scheduler thread.  This thread tracks the queue of waiting
     checks and executes them in their own thread as required.  It attempts
     to limit the number of actual checking threads running to keep things
-    sane."""
+    sane.
+    """
 
     while not die_event.isSet():
 
@@ -233,13 +218,13 @@ def scheduler(q, Config, die_event):
 	while threading.activeCount() > config.num_threads:
 	    # do nothing while we have no active threads to play with
 	    # TODO: if we wait too long, something is probably wrong, so do something about it...
-	    log.log( "<eddie>scheduler(), active thread count is %d - waiting till < %d" % (threading.activeCount(),config.num_threads), 8 )
+	    log.log( "<eddie>scheduler(): active thread count is %d - waiting till < %d" % (threading.activeCount(),config.num_threads), 8 )
 	    if time.time() - loop_start > 30*60:
 		# if this loop has been running for over 30 mins, then all
 		# threads are locked badly and something is wrong.  Force an
 		# exit...
 		# (there is no ability to kill threads in current Python implementation)
-		log.log( "<eddie>scheduler(), active thread count has been %d for over %d mins - forcing exit" % (threading.activeCount(),time.time() - loop_start), 1 )
+		log.log( "<eddie>scheduler(): active thread count has been %d for over %d mins - forcing exit" % (threading.activeCount(),time.time() - loop_start), 1 )
 		eddieexit()
 
 	    try:
@@ -247,22 +232,22 @@ def scheduler(q, Config, die_event):
 	    except IOError:
 		# Indicates a signal received under Linux, just continue
 		# coz main thread should be setting up to exit.
-		log.log( "<eddie>scheduler(), IOError received by sleep(1) #1 - assume exiting so ignoring", 8 )
+		log.log( "<eddie>scheduler(): IOError received by sleep(1) #1 - assume exiting so ignoring", 8 )
 		pass
 
 	# we have spare threads so get next checking object
 	while not die_event.isSet():
 	    (c,t) = q.head(block=1)	# wait for next object from queue
-	    log.log( "<eddie>scheduler(), waiting object is %s at %s" % (c,t), 9 )
+	    log.log( "<eddie>scheduler(): waiting object is %s at %s" % (c,t), 9 )
 	    if t <= time.time():
-		log.log( "<eddie>scheduler(), object %s,%s is ready to run" % (c,t), 9 )
+		log.log( "<eddie>scheduler(): object %s,%s is ready to run" % (c,t), 9 )
 		break
 	    try:
 		time.sleep(1)
 	    except IOError:
 		# Indicates a signal received under Linux, just continue
 		# coz main thread should be setting up to exit.
-		log.log( "<eddie>scheduler(), IOError received by sleep(1) #2 - assume exiting so ignoring", 8 )
+		log.log( "<eddie>scheduler(): IOError received by sleep(1) #2 - assume exiting so ignoring", 8 )
 		pass
 
 	# break loop if we have been signalled to die
@@ -274,20 +259,21 @@ def scheduler(q, Config, die_event):
 	if c.args.numchecks > 0:
 	    # start check in a new thread
 	    thr = threading.Thread(group=None, target=c.safeCheck, name="%s"%(c), args=(Config,), kwargs={})
-	    log.log( "<eddie>scheduler(), Starting new thread for %s, %s" % (c,thr), 8 )
+	    log.log( "<eddie>scheduler(): Starting new thread for %s, %s" % (c,thr), 8 )
 	    thr.setDaemon(1)	# mark thread as Daemon-thread so Eddie will not block when trying to terminate
 	    			# with still-running threads.
 	    thr.start()		# new thread starts running
 	else:
 	    # when numchecks == 0 we don't do any checks at all...
-	    log.log( "<eddie>scheduler(), Not scheduling checks for %s when numchecks=%d" % (c,c.args.numchecks), 7 )
+	    log.log( "<eddie>scheduler(): Not scheduling checks for %s when numchecks=%d" % (c,c.args.numchecks), 7 )
 
-    log.log( "<eddie>scheduler(), die_event received, scheduler exiting", 4 )
-
+    log.log( "<eddie>scheduler(): die_event received, scheduler exiting", 4 )
 
 
 def buildCheckQueue(q, Config):
-    """Build the queue of checks that the scheduler will start with."""
+    """
+    Build the queue of checks that the scheduler will start with.
+    """
 
     for d in Config.ruleList.keys():
 	list = Config.ruleList[d]
@@ -295,22 +281,24 @@ def buildCheckQueue(q, Config):
 	    for i in list:
 		# if directive template is 'self', do not schedule it
 		if i.args.template != 'self':
-		    log.log( "<eddie>buildCheckQueue(), adding to Queue: %s" % (i), 8 )
+		    log.log( "<eddie>buildCheckQueue(): adding to Queue: %s" % (i), 8 )
 		    q.put( (i,0) )
 	else:
-	    log.log( "<eddie>buildCheckQueue(), Config.ruleList['%s'] is empty" % (d), 5 )
+	    log.log( "<eddie>buildCheckQueue(): Config.ruleList['%s'] is empty" % (d), 5 )
 
     for c in Config.groups:
 	if c.name == log.hostname or (c.name in Config.classDict.keys() and log.hostname in Config.classDict[c.name]):
-	    log.log( "<eddie>buildCheckQueue(), Adding checks from group %s to queue" % (c.name), 7 )
+	    log.log( "<eddie>buildCheckQueue(): Adding checks from group %s to queue" % (c.name), 7 )
 	    buildCheckQueue(q, c)
 	else:
-	    log.log( "<eddie>buildCheckQueue(), Not queueing group %s" % (c.name), 8 )
-
+	    log.log( "<eddie>buildCheckQueue(): Not queueing group %s" % (c.name), 8 )
 
 
 def doArgs(args, argflags):
-    """Parse command-line arguments."""
+    """
+    Parse command-line arguments.
+    """
+
     for a in args:
 	if a == '-v' or a == '--version':
 	    print "Eddie (c) Chris Miles and Rod Telford 1998-2001"
@@ -328,7 +316,9 @@ def doArgs(args, argflags):
 
 
 def main():
-    """Startup routine - setup then start main loop."""
+    """
+    Startup routine - setup then start main loop.
+    """
 
     # Catch most important signals
     signal.signal( signal.SIGALRM, SigHandler )
@@ -348,16 +338,17 @@ def main():
     global Config
     Config = config.Config( '__main__' )
 
-    # New history object
-    history.eddieHistory = history.history()
+    # data_modules handles access to all data collector modules
+    data_modules = datacollect.DataModules()
+    directive.data_modules = data_modules
 
     # read in config and rules
     parseConfig.readConf(config_file, Config)
 
     # don't log till now because log file location is defined in configuration
-    log.log( "<eddie>main(), Configuration complete from '%s'" % (config_file), 6 )
-    log.log( "<eddie>main(), Eddie %s, systype: %s" % (EDDIE_VER, systype), 5 )
-    log.log( "<eddie>main(), oslibdirs: %s" % (oslibdirs), 8 )
+    log.log( "<eddie>main(): Configuration complete from '%s'" % (config_file), 6 )
+    log.log( "<eddie>main(): Eddie %s, systype: %s" % (EDDIE_VER, systype), 5 )
+    log.log( "<eddie>main(): oslibdirs: %s" % (oslibdirs), 8 )
 
     if 'showconfig' in argflags.keys() and argflags['showconfig'] == 1:
 	# Just display the configuration and exit
@@ -369,42 +360,17 @@ def main():
     try:
 	elvin = eddieElvin4.Elvin()
     except eddieElvin4.ElvinInitError, details:
-	log.log( "<eddie>main(), Elvin init failed, %s, Elvin functionality will be disabled."%(details), 5 )
+	log.log( "<eddie>main(): Elvin init failed, %s, Elvin functionality will be disabled."%(details), 5 )
 	elvin = None
     else:
 	elvin.startup()		# Start up the Elvin management thread
     Config.set_elvin(elvin)
-
-    # instantiate a process list
-    log.log( "<eddie>main(), creating process object", 8 )
-    directive.plist = proc.procList()
-
-    # instantiate a disk usage list
-    log.log( "<eddie>eddieguts(), creating df object", 8 )
-    directive.dlist = df.dfList()
-
-    # instantiate a netstat list
-    log.log( "<eddie>eddieguts(), creating netstat object", 8 )
-    directive.nlist = netstat.netstat()
-
-    # instantiate a system object
-    log.log( "<eddie>eddieguts(), creating system object", 8 )
-    directive.system = system.system()
-
-    if module_iostat:
-        # instantiate an iostat object
-        log.log( "<eddie>eddieguts(), creating iostat object", 8 )
-        directive.iostat = iostat.iostat()
-
 
     # Main Loop
     # Initialise check queue
     q = timeQueue.timeQueue(0)			# new timeQueue object, size is infinite
     buildCheckQueue(q, Config)
     Config.q = q
-
-    #print "q:",q
-    #print "q.qsize=%d" % (q.qsize())
 
     global please_die
     please_die = threading.Event()		# Event object to notify the scheduler to die
@@ -420,17 +386,17 @@ def main():
 
 	    # Count fds in use - for debugging
 	    numfds = countFDs()
-	    log.log( "<eddie>main(), FDs in use = %d." % (numfds), 8 )
-	    log.log( "<eddie>main(), Threads in use = %d." % (threading.activeCount()), 8 )
-	    log.log( "<eddie>main(), Threads: %s" % (threading.enumerate()), 9 )
+	    log.log( "<eddie>main(): FDs in use = %d." % (numfds), 8 )
+	    log.log( "<eddie>main(): Threads in use = %d." % (threading.activeCount()), 8 )
+	    log.log( "<eddie>main(): Threads: %s" % (threading.enumerate()), 9 )
 
 	    # check if any config/rules files have been modified
 	    # if so, re-read config
 	    if Config.checkfiles():
-		log.log( '<eddie>main(), config files modified - signalling scheduler to die', 7 )
+		log.log( '<eddie>main(): config files modified - signalling scheduler to die', 7 )
                 stop_threads()
 
-		log.log( '<eddie>main(), config files modified - reloading config', 5 )
+		log.log( '<eddie>main(): config files modified - reloading config', 5 )
 
 		# reset config and read in config and rules
 		Config = config.Config( '__main__' )
@@ -457,7 +423,7 @@ def main():
 
 	except KeyboardInterrupt:
 	    # CTRL-c hit - quit now
-	    log.log( '<eddie>main(), KeyboardInterrupt encountered - quitting', 1 )
+	    log.log( '<eddie>main(): KeyboardInterrupt encountered - quitting', 1 )
 	    try:
 		print "\nEddie quitting ... bye bye"
 	    except IOError:
@@ -465,7 +431,7 @@ def main():
 	    eddieexit()
 
 
-    log.log( '<eddie>main(), main thread signalled to die - exiting', 1 )
+    log.log( '<eddie>main(): main thread signalled to die - exiting', 1 )
     eddieexit()
 
 
@@ -475,7 +441,7 @@ def main():
 if __name__ == "__main__":
     try:
 	main()
-    except:			# catch any uncaught exceptions so we can try and nicely log them
+    except:		# catch any uncaught exceptions so we can log them
 	e = sys.exc_info()
 	import exceptions
 	if e[0] != exceptions.SystemExit:
@@ -483,7 +449,7 @@ if __name__ == "__main__":
 	    tb = traceback.format_list( traceback.extract_tb( e[2] ) )
 	    import string
 	    tbstr = string.join(tb, '')
-	    log.log( "<eddie.py> Eddie died with exception: %s, %s\n%s" % (e[0], e[1], tbstr), 1 )
+	    log.log( "<eddie.py>: Eddie died with exception: %s, %s\n%s" % (e[0], e[1], tbstr), 1 )
 	    log.sendadminlog()
 	    print tbstr
 	    print e[0], e[1]
@@ -492,6 +458,7 @@ if __name__ == "__main__":
 
     # email admin anything else...
     log.sendadminlog()
+
 
 ###
 ### END eddie.py
