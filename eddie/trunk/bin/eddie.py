@@ -26,7 +26,7 @@
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 ########################################################################
 
-__version__='0.34'
+__version__='0.34a'
 
 
 # Python modules
