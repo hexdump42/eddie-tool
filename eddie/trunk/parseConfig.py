@@ -18,6 +18,9 @@ import regex
 import directive
 import config
 
+# Define exceptions
+#ParseFailure = 'ParseFailure'
+
 def readFile(file, ruleList):
 
     dir = file[:string.rfind(file, '/')]+'/'
@@ -63,7 +66,11 @@ def readFile(file, ruleList):
 		    continue
 
 		else:
-		    action = directives[d](line)
+		    try:
+			action = directives[d](line)
+		    except directive.ParseFailure, errr:
+			print "Parse failure on line '"+line+"' - skipping."
+			continue
 		
 		ruleList + action
 	    else:

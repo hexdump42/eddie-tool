@@ -17,6 +17,9 @@ import string
 import regex
 import sys
 
+# Define exceptions
+ParseFailure = 'ParseFailure'
+
 # Rules holds all the directives in a hash where the value of each key is the
 # list of rules relating to that key.
 class Rules:
@@ -64,12 +67,12 @@ class Directive:
 	return self.raw
 
     def parseRaw(self):
+	# TODO - remove comments (ie: everything after #)
 	sre = regex.compile( self.regexp )
 	inx = sre.search( self.raw )
 	if inx == -1:
 	    # probably make an exception here.....
-	    print "parseRaw() ERROR: regex search failed (in",self.type,"). Fix your regexp and try again."
-	    print "  --raw-- '%s'" % (self.raw)
+	    raise ParseFailure, "Error while parsing line: "+self.raw
 	fieldlist = ()
 	i=1
 	while( sre.group(i) != None ):
