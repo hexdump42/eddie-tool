@@ -260,3 +260,15 @@ COM loadavg:	cmd="uptime | cut -d, -f4 | awk '{print $3}'"
 		action='elvin("Load on %h is %comout")'
 
 
+# LOGSCAN directive scans logfiles, looking for lines which match the given
+# regex and performs the given actions.
+LOGSCAN daemonlog:	file='/var/log/daemonlog'	# logfile to scan
+			regex='.*'			# regex to match
+			scanperiod='12h'		# how often to scan
+			action='email("alert", "daemonlog %(h)s:%(logscanfile)s", "-- Logscan matched %(logscanlinecount)d lines: --\n%(logscanlines)s")'
+
+LOGSCAN priv:		file='/var/log/messages'	# logfile to scan
+			regex='.*priv.*'		# regex to match
+			scanperiod='2h'			# how often to scan
+			action='email("alert", "priv scan %(h)s:%(logscanfile)s", "-- Logscan matched %(logscanlinecount)d lines: --\n%(logscanlines)s")'
+
