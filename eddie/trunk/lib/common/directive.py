@@ -265,7 +265,7 @@ class PID(Directive):
 		log.log( "<directive>PID(), EX, pidfile '%s' not found" % (self.pidfile), 6 )
 		self.doAction()
 	    else:
-		log.log( "<directive>PID(), EX, pidfile '%s' found" % (self.pidfile), 6 )
+		log.log( "<directive>PID(), EX, pidfile '%s' found" % (self.pidfile), 8 )
 		pidfile.close()
 
 	elif self.rule == "PR":
@@ -295,7 +295,7 @@ class PID(Directive):
     		    log.log( "<directive>PID(), PR, pid %s not in process list" % (pid), 6 )
 		    self.doAction()
 		else:
-    		    log.log( "<directive>PID(), PR, pid %s is in process list" % (pid), 6 )
+    		    log.log( "<directive>PID(), PR, pid %s is in process list" % (pid), 8 )
 
 
 	else:
@@ -368,7 +368,7 @@ class SP(Directive):
 
 	ret = nlist.portExists(self.proto, self.port, self.addr) != None
 	if ret != 0:
-	    log.log( "<directive>SP(), port %s/%s listener found bound to %s" % (self.proto , self.port_n, self.addr), 6 )
+	    log.log( "<directive>SP(), port %s/%s listener found bound to %s" % (self.proto , self.port_n, self.addr), 8 )
 	else:
 	    self.doAction()
 	    log.log( "<directive>SP(), port %s/%s no listener found bound to %s" % (self.proto , self.port_n, self.addr), 6 )
