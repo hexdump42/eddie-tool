@@ -1,4 +1,4 @@
-#!/opt/python152/bin/python
+#!/usr/bin/python
 ## 
 ## File         : eddie.py 
 ## 
@@ -93,6 +93,10 @@ def SigHandler( sig, frame ):
 	print "\nEddie quitting ... bye bye"
 	eddieexit()
 
+    elif sig == signal.SIGALRM:
+	# SIGALRM (Alarm) - return to force a continue
+	return
+
     else:
 	# un-handled signal - log & ignore it
 	log.log( '<eddie>SigHandler(), unknown signal received, %d - ignoring' % sig, 3 )
@@ -177,7 +181,7 @@ def eddieguts(Config, eddieHistory):
 ## Startup routine - setup then start main loop.
 def main():
     # Catch most important signals
-    signal.signal( signal.SIGALRM, signal.SIG_IGN )
+    signal.signal( signal.SIGALRM, SigHandler )
     signal.signal( signal.SIGHUP, SigHandler )
     signal.signal( signal.SIGINT, SigHandler )
     signal.signal( signal.SIGTERM, SigHandler )
@@ -239,8 +243,11 @@ def main():
 
 	    # Sleep by setting SIGALRM to go off in scanperiod seconds
 	    #time.sleep( config.scanperiod )
+	    print "Setting signal.alarm( %d )" % (config.scanperiod)
 	    signal.alarm( config.scanperiod )
+	    print "signal.pause() ..."
 	    signal.pause()
+	    print "...end of signal.pause()"
 
 	except KeyboardInterrupt:
 	    # CTRL-c hit - quit now
