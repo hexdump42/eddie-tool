@@ -62,7 +62,7 @@ class State:
     # - Parses the tokens given to it (from tokenize.tokenize()) and uses them
     #   to create the configuration information.
     #
-    def tokeneater(self, type, token, (srow, scol), (erow, ecol), line):
+    def tokeneater(self, ttype, token, (srow, scol), (erow, ecol), line):
 	try:
 	    #print " "
 	    #print "direcmode:",self.direcmode
@@ -71,7 +71,7 @@ class State:
 	    #print "notfirstdirecline:",self.notfirstdirecline
 
 	    # The type of token
-	    toktype = tokenize.tok_name[type]
+	    toktype = tokenize.tok_name[ttype]
 
 	    #DEBUG:
 	    #print "%d,%d-%d,%d:\t%s\t%s" % \
@@ -158,17 +158,16 @@ class State:
 
 	    # Substitute ALIAS's
 	    if toktype == "NAME":
-		try:
-		    # see if matching ALIAS name exists (except drops out if not)
-		    self.Config.aliasDict[token]
+		if self.Config.aliasDict.has_key(token):
+		    aval = self.Config.aliasDict[token]
 
 		    # replace token with value and fix toklist
-		    log.log( "<parseConfig>tokeneater(), ALIAS substituted %s for %s" % (token,self.Config.aliasDict[token]), 7 )
+		    if type(aval) == type("string"):
+			aval = '"%s"'%(aval)
 		    del self.toklist[-1]
-		    self.toklist.append(self.Config.aliasDict[token])
-		    token = self.Config.aliasDict[token]
-		except:
-		    pass
+		    self.toklist.append(aval)
+		    token = aval
+		    log.log( "<parseConfig>tokeneater(), ALIAS substituted %s for %s" % (aval,token), 7 )
 
 	    # DEBUG
 	    #print "toklist:",self.toklist
@@ -249,8 +248,7 @@ class State:
 		return
 
 	    elif config.keywords.has_key(self.toklist[0]):
-		#print " -> toklist:",self.toklist
-		direc = config.keywords[self.toklist[0]](self.toklist)
+		direc = config.keywords[self.toklist[0]](self.toklist,self.toktypes)
 		self.direc = direc
 
 		if direc == None:

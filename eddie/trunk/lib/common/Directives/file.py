@@ -50,8 +50,8 @@ class FILE(directive.Directive):
 	None
     """
 
-    def __init__(self, toklist):
-	apply( directive.Directive.__init__, (self, toklist) )
+    def __init__(self, toklist, toktypes):
+	apply( directive.Directive.__init__, (self, toklist, toktypes) )
 
 	self.lastmode = None	# keep copy of stats from last check
 

@@ -93,7 +93,7 @@ class Definition:
        this base class.
     """
 
-    def __init__(self, list):
+    def __init__(self, list, typelist):
 	self.basetype = 'Definition'	# the object can know its own basetype
 	self.type = list[0]		# the definition type of this instance
 	self.hastokenparser = 0		# no tokenparser() function by default
@@ -105,8 +105,8 @@ class Definition:
 class MSG(Definition):
     """Message Definition."""
 
-    def __init__(self, toklist):
-	apply( Definition.__init__, (self, toklist) )
+    def __init__(self, toklist, toktypes):
+	apply( Definition.__init__, (self, toklist, toktypes) )
 	self.name = toklist[1]
 	self.subject = None
 	self.message = None
@@ -149,8 +149,8 @@ class MSG(Definition):
 class M(Definition):
     """Message-list Definition."""
 
-    def __init__(self, toklist):
-	apply( Definition.__init__, (self, toklist) )
+    def __init__(self, toklist, toktypes):
+	apply( Definition.__init__, (self, toklist, toktypes) )
 	self.name = toklist[1]
 	self.MDict = {}			# Create dict of M's or MSG's
 	log.log( "<Definition>M(), M created, name '%s'" % (self.name), 8 )
@@ -213,33 +213,36 @@ class M(Definition):
 
 
 class ALIAS(Definition):
-    """ALIAS Definition - defines string aliases which can appear anywhere
+    """ALIAS Definition - defines a variable which can appear anywhere
        in the config or as arguments to action calls, etc. eg:
-	ALIAS ALERT='root'
-	FS: fs='/' rule="capac>=90%" action="email(ALERT, 'fs nearly full')"
+	ALIAS ALERT_EMAIL='root'
+	FS: fs='/' rule="capac>=90%" action="email(ALERT_EMAIL, 'fs nearly full')"
 
        or
 	ALIAS FSRULE="capac>=90%"
 	FS: fs='/' rule=FSRULE action=" ... "
     """
 
-    def __init__(self, list):
-	apply( Definition.__init__, (self,list) )
+    def __init__(self, list, toktypes):
+	apply( Definition.__init__, (self,list, toktypes) )
 
-	# if the last token isn't a carriage-return then we don't have the
-	# whole line yet...  DEFUNCT
-	#if list[-1] != '\012':
-	#    raise ParseNotcomplete
-
-	# if we don't have 4 elements ['ALIAS', <str>, '=', <str>] then
+	# if we don't have 4 elements ['ALIAS', <str>, '=', <value>] then
 	# raise an error
 	if len(list) != 4:
 	    raise ParseFailure, "ALIAS definition has %d tokens when expecting 4" % len(list)
 
 	# OK, grab values
 	self.name = list[1]			# the name of this ALIAS
-	self.text = utils.stripquote(list[3])	# the text that is assigned to it
-	log.log( "<Definition>ALIAS(), ALIAS created, name '%s', text '%s'" % (self.name,self.text), 8 )
+	self.value = list[3]			# the value assigned to it
+	# convert value to int, float or string without quotes, if necessary.
+	if toktypes[3] == 'NUMBER':
+	    if string.find( self.value, '.' ) == -1:
+		self.value = int(self.value)		# integer
+	    else:
+		self.value = float(self.value)		# float
+	elif toktypes[3] == 'STRING':
+	    self.value = utils.stripquote(self.value)	# the text that is assigned to it
+	log.log( "<Definition>ALIAS(), ALIAS created: %s=%s" % (self.name,self.value), 8 )
 
 
 class N(Definition):
@@ -249,8 +252,8 @@ class N(Definition):
     	  'escalperiod':'TIME'
 	 }
 
-    def __init__(self, list):
-	apply( Definition.__init__, (self,list) )
+    def __init__(self, list, toktypes):
+	apply( Definition.__init__, (self,list, toktypes) )
 
 	# Need at least 3 tokens
 	if len(list) < 3:

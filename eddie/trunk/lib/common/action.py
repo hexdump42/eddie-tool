@@ -29,7 +29,7 @@
 import os, string, sys, log, utils
 
 # Elvin
-import eddieElvin4
+import eddieElvin4, definition
 
 # Page test
 #import snpp
@@ -79,12 +79,12 @@ class action:
 	"""
 
 	# Replace any ALIASes if needed.
-	if user in self.aliasDict.keys():
-	    user = self.aliasDict[user]
-	if msg in self.aliasDict.keys():
-	    msg = self.aliasDict[msg]
-	if msgbody in self.aliasDict.keys():
-	    msgbody = self.aliasDict[msgbody]
+#	if user in self.aliasDict.keys():
+#	    user = self.aliasDict[user]
+#	if msg in self.aliasDict.keys():
+#	    msg = self.aliasDict[msg]
+#	if msgbody in self.aliasDict.keys():
+#	    msgbody = self.aliasDict[msgbody]
 
 	# Multiple email recipients are seperated by '|'.
 	multUsers = string.split( user, '|' )
@@ -95,13 +95,25 @@ class action:
 	# Create user recipient list delimited by ','
 	users = string.join( multUsers, ',' )
 
-	try:
-	    MSG = self.getMessage(msg)
-	    subj = MSG.subject
-	    body = MSG.message
-	except (KeyError, GetMessageError):
-	    # Use msg string as the body
-	    #subj = "Eddie Alert"
+#	try:
+#	    MSG = self.getMessage(msg)
+#	    subj = MSG.subject
+#	    body = MSG.message
+#	except (KeyError, GetMessageError):
+#	    # Use msg string as the body
+#	    #subj = "Eddie Alert"
+#	    subj = msg
+#	    if msgbody == None:
+#		body = msg
+#	    else:
+#		body = msgbody
+
+	if type(msg) != type("string"):
+	    # if msg is not a string, assume it is a MSG object
+	    body = msg.message
+	    subj = msg.subject
+	else:
+	    # msg is a string
 	    subj = msg
 	    if msgbody == None:
 		body = msg
@@ -177,10 +189,6 @@ class action:
 	# cmd contains the cmd to execute
 	# TODO: can we check this cmd for security problems ??
 
-	# Replace any ALIASes if needed.
-	if cmd in self.aliasDict.keys():
-	    cmd = self.aliasDict[cmd]
-
 	# Substitute variables in string
 	cmd = parseVars( cmd, self.varDict )
 
@@ -208,10 +216,6 @@ class action:
 	# cmd is cmd to be executed with: '/etc/init.d/cmd start'.
 	# cmd should not contain any path information, hence if '/'s are found it
 	# is not executed.
-
-	# Replace any ALIASes if needed.
-	if cmd in self.aliasDict.keys():
-	    cmd = self.aliasDict[cmd]
 
 	# Substitute variables in string
 	cmd = parseVars( cmd, self.varDict )
@@ -348,26 +352,20 @@ class action:
 	    log.log( "<action.py>action.ticker(), Elvin is not available - skipping.", 7 )
 	    return 0
 
-	# Replace any ALIASes if needed.
-	if msg in self.aliasDict.keys():
-	    msg = self.aliasDict[msg]
+	if type(msg) != type("string"):
+	    # if msg is not a string, assume it is a MSG object
+	    body = msg.subject
+	else:
+	    # msg is a string
+	    body = msg
 
-	if len(msg) == 0:
-	    # msg must contain something
-	    log.log( "<action.py>action.ticker(), Error, msg is empty", 2 )
+	if len(body) == 0:
+	    # body must contain something
+	    log.log( "<action.py>action.ticker(), Error, body is empty", 2 )
 	    return
 
-	try:
-	    MSG = self.getMessage(msg)
-	    msg = MSG.message
-	    if msg == "":
-		msg = MSG.subject
-	except (KeyError, GetMessageError):
-	    # Use msg string as the message
-	    pass
-
 	# Substitute variables in string
-	msg = parseVars( msg, self.varDict )
+	body = parseVars( body, self.varDict )
 
 	try:
 	    e = eddieElvin4.elvinTicker()
@@ -375,13 +373,13 @@ class action:
 	    log.log( "<action.py>action.ticker(), Error, elvinTicker() error", 2 )
 	    return
 
-	retval = e.sendmsg( msg )
+	retval = e.sendmsg( body )
 
 	# Alert if return value != 0
 	if retval != 0:
-	    log.log( "<action.py>action.ticker(), Alert, return value for e.sendmsg('%s') is %d" % (msg,retval), 3 )
+	    log.log( "<action.py>action.ticker(), Alert, return value for e.sendmsg('%s') is %d" % (body,retval), 3 )
 	else:
-	    log.log( "<action.py>action.ticker('%s')" % (msg), 5 )
+	    log.log( "<action.py>action.ticker('%s')" % (body), 5 )
 
 
     # elvinPage()
@@ -390,30 +388,24 @@ class action:
 	    #log.log( "<action.py>action.elvin(), Elvin is not available - skipping.", 8 )
 	    return 0
 
-	# Replace any ALIASes if needed.
-	if pager in self.aliasDict.keys():
-	    pager = self.aliasDict[pager]
-	if msg in self.aliasDict.keys():
-	    msg = self.aliasDict[msg]
-
 	# send a message via Elvin message system to Pager
 	elvinServer = 'chintoo'
 	elvinPort = 5678
 
-	if len(msg) == 0:
-	    # msg must contain something
-	    log.log( "<action.py>action.elvinPage(), Error, msg is empty", 2 )
+	if type(msg) != type("string"):
+	    # if msg is not a string, assume it is a MSG object
+	    body = msg.subject
+	else:
+	    # msg is a string
+	    body = msg
+
+	if len(body) == 0:
+	    # body must contain something
+	    log.log( "<action.py>action.elvinPage(), Error, body is empty", 2 )
 	    return
 
-	try:
-	    MSG = self.getMessage(msg)
-	    msg = MSG.message
-	except (KeyError, GetMessageError):
-	    # Use msg string as the message
-	    pass
-
 	# Substitute variables in string
-	msg = parseVars( msg, self.varDict )
+	body = parseVars( body, self.varDict )
 
 	try:
 	    e = eddieElvin.elvinPage( elvinServer, elvinPort )
@@ -421,13 +413,13 @@ class action:
 	    log.log( "<action.py>action.elvinPage(), Error, eddieElvin(%s, %d) could not connect" % (elvinServer,elvinPort), 2 )
 	    return
 
-	retval = e.sendmsg(pager, msg)
+	retval = e.sendmsg(pager, body)
 
 	# Alert if return value != 0
 	if retval != 0:
-	    log.log( "<action.py>action.elvinPage(), Alert, return value for e.sendmsg('%s') is %d" % (msg,retval), 3 )
+	    log.log( "<action.py>action.elvinPage(), Alert, return value for e.sendmsg('%s') is %d" % (body,retval), 3 )
 	else:
-	    log.log( "<action.py>action.elvinPage('%s')" % (msg), 5 )
+	    log.log( "<action.py>action.elvinPage('%s')" % (body), 5 )
 
 
     # Temporary: page via email for now...
@@ -483,12 +475,6 @@ class action:
 	'col1=data1, col2=data2, col3=data3' or if data is None it will
 	use self.storedict
 	"""
-
-	# Replace any ALIASes if needed.
-	if table in self.aliasDict.keys():
-	    table = self.aliasDict[table]
-	if data in self.aliasDict.keys():
-	    data = self.aliasDict[data]
 
 	log.log( "<action.py>action.elvindb( table='%s' data='%s' )"%(table,data), 8 )
 
@@ -546,32 +532,32 @@ class action:
     # Utilities for action functions
     #
 
-    # Get a MSG object from the M-tree specified by self.msg and msg
-    def getMessage(self, msg):
-	if self.msg == None:
-	    raise GetMessageError
+#    # Get a MSG object from the M-tree specified by self.msg and msg
+#    def getMessage(self, msg):
+#	if self.msg == None:
+#	    raise GetMessageError
+#
+#	#print ".......... msg:",msg		#DEBUG
+#	#print "..... self.msg:",self.msg	#DEBUG
+#	#print "... self.MDict:",self.MDict	#DEBUG
+#
+#	msgtree = string.split( self.msg, '.' )
+#	#print ".......msgtree:",msgtree		#DEBUG
+#	M = self.MDict[msgtree[0]]
+#	#print "\n............ M:",M		#DEBUG
+#	for m in msgtree[1:]:
+#	    M = M[m]
+#	    #print "\n............ M:",M		#DEBUG
+#
+#	# Get final MSG object
+#	MSG = M[msg]
+#
+#	return MSG
 
-	#print ".......... msg:",msg		#DEBUG
-	#print "..... self.msg:",self.msg	#DEBUG
-	#print "... self.MDict:",self.MDict	#DEBUG
-
-	msgtree = string.split( self.msg, '.' )
-	#print ".......msgtree:",msgtree		#DEBUG
-	M = self.MDict[msgtree[0]]
-	#print "\n............ M:",M		#DEBUG
-	for m in msgtree[1:]:
-	    M = M[m]
-	    #print "\n............ M:",M		#DEBUG
-
-	# Get final MSG object
-	MSG = M[msg]
-
-	return MSG
 
 ##
 ## General utilities for actions
 ##
-
 
 def parseVars(text, vDict):
     """Substitute variables in vDict dictionary into text string.  Use
@@ -585,83 +571,6 @@ def parseVars(text, vDict):
     except TypeError:
 	log.log( "<action>parseVars(), TypeError exception for '%s' from string '%s' with dictionary '%s'" % (sys.exc_value, text, vDict), 3 )
 	return text
-
-
-# Parse text string replacing occurences of %var with corresponding value from
-# vDict['var'].  Return modified string.
-# If substitutions were made, recursively called itself again to make any
-# more substitutions.
-#def parseVars(text, vDict):
-#    slash = 0		# true if '\' found
-#    varcheck = 0	# true if '%' found - so look for variable name
-#    modtext = ''	# the modified text string
-#    subcount = 0	# count substitutions
-#
-#    for c in text:
-#	if varcheck == 1:
-#	    # found '%' - if text following it (up to white-space or another '%')
-#	    # is a key in vDict, then replace '%var' with the value of vDict['var'].
-#	    # TODO: also search for %{var}
-#
-#	    # build list of valid alphanumeric characters
-#	    alphanum = chrange('0','9') + chrange('a','z') + chrange('A','Z') + ['_']
-#	    if (c in alphanum):
-#
-#		# must be part of variable name
-#		varname = varname + c
-#	    else:
-#		varcheck = 0
-#		# end of variable name found
-#		if varname == '':
-#		    # no variable name - just print '%'
-#		    modtext = modtext + '%' + c
-#		else:
-#		    try:
-#			varvalue = vDict[varname]
-#			# convert any type to a string!
-#			valuestr = "%s" % varvalue
-#			modtext = modtext + valuestr + c
-#			subcount = subcount + 1
-#		    except KeyError:
-#			# not a valid variable name - just print '%varname'
-#			modtext = modtext + '%' + varname + c
-#		    varname = ''
-#	elif (c == '%') and (not slash):
-#	    # found '%' - set flag to start reading variable name.
-#	    # Note: ignore '%' with '\' before it, ie: '\%'.
-#	    varcheck = 1
-#	    varname = ''
-#	elif c == '\\':	# ' [vim bug - remove this comment later]
-#	    # if '\' found set slash flag to true.
-#	    slash=1
-#	else:
-#	    # Create modified text string
-#	    modtext = modtext + c
-#	    slash = 0
-#    
-#    if varcheck == 1:
-#	# string ended while still reading varname
-#	    if varname == '':
-#		# no variable name - just print '%'
-#		modtext = modtext + c
-#	    else:
-#		try:
-#		    varvalue = vDict[varname]
-#		    modtext = modtext + '%s'%(varvalue)
-#		    subcount = subcount + 1
-#		except KeyError:
-#		    # not a valid variable name - just print '%varname'
-#		    modtext = modtext + '%' + varname
-#
-#    # Recurse if substitutions were made.
-#    if subcount > 0:
-#	modtext = parseVars(modtext, vDict)
-#
-#    return modtext
-
-
-def chrange(first,last):
-    return map(chr,range(ord(first),ord(last)+1))
 
 
 ##

@@ -48,8 +48,8 @@ class LOGSCAN(directive.Directive):
 	negate=true	# only lines NOT matching regex will cause action
     """
 
-    def __init__(self, toklist):
-	apply( directive.Directive.__init__, (self, toklist) )
+    def __init__(self, toklist, toktypes):
+	apply( directive.Directive.__init__, (self, toklist, toktypes) )
 
 	self.filepos = 0	# position in file saved between checks
 	self.filestat = None	# stat of log file

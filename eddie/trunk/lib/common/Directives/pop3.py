@@ -193,8 +193,8 @@ class POP3TIMING(directive.Directive):
        POP3TIMING: server='hostname:port' user='username' password='password' action="<actions>"
     """
 
-    def __init__(self, toklist):
-	apply( directive.Directive.__init__, (self, toklist) )
+    def __init__(self, toklist, toktypes):
+	apply( directive.Directive.__init__, (self, toklist, toktypes) )
 
 
     def tokenparser(self, toklist, toktypes, indent):

@@ -149,10 +149,8 @@ class Config:
 	    self.NDict[obj.name] = obj
 	elif obj.type == 'M':
 	    self.MDict[obj.name] = obj
-#	elif obj.type == 'DEF':
-#	    self.defDict[obj.name] = obj.text
 	elif obj.type == 'ALIAS':
-	    self.aliasDict[obj.name] = obj.text
+	    self.aliasDict[obj.name] = obj.value
 	elif obj.type == 'CLASS':
 	    self.classDict[obj.name] = obj.hosts
 	elif obj.type in directives.keys():
@@ -196,7 +194,7 @@ class Config:
 ## The base configoption class.  Derive all config options from this base class.
 ##
 class ConfigOption:
-    def __init__(self, list):
+    def __init__(self, list, typelist):
 	self.basetype = 'ConfigOption'	# the object can know its own basetype
 	self.type = list[0]		# the config option type of this instance
 
@@ -207,9 +205,9 @@ class ConfigOption:
 
 ## SCANPERIOD - the time (in seconds) to pause between checks
 class SCANPERIOD(ConfigOption):
-    def __init__( self, list ):
+    def __init__( self, list, typelist ):
 
-	apply( ConfigOption.__init__, (self,list) )
+	apply( ConfigOption.__init__, (self,list, typelist) )
 
 	# if we don't have 3 or 4 elements ['SCANPERIOD', '=', <int>, [<char>,]] then raise an error
 	if len(list) < 3 or len(list) > 4:
@@ -232,8 +230,8 @@ class SCANPERIOD(ConfigOption):
 
 ## LOGFILE - where to store log messages
 class LOGFILE(ConfigOption):
-    def __init__( self, list ):
-	apply( ConfigOption.__init__, (self,list) )
+    def __init__( self, list, typelist ):
+	apply( ConfigOption.__init__, (self,list, typelist) )
 
 	# if we don't have 3 elements ['LOGFILE', '=', <val>] then raise an error
 	if len(list) != 3:
@@ -247,8 +245,8 @@ class LOGFILE(ConfigOption):
 
 ## LOGLEVEL - how much logging to do
 class LOGLEVEL(ConfigOption):
-    def __init__( self, list ):
-	apply( ConfigOption.__init__, (self,list) )
+    def __init__( self, list, typelist ):
+	apply( ConfigOption.__init__, (self,list, typelist) )
 
 	# if we don't have 3 elements ['LOGLEVEL', '=', <val>] then raise an error
 	if len(list) != 3:
@@ -264,8 +262,8 @@ class LOGLEVEL(ConfigOption):
 # only currently supports 1 email address
 # TODO: support more than 1 email address...
 class ADMIN(ConfigOption):
-    def __init__( self, list ):
-	apply( ConfigOption.__init__, (self,list) )
+    def __init__( self, list, typelist ):
+	apply( ConfigOption.__init__, (self,list, typelist) )
 
 	# if we don't have 3 elements ['ADMIN', '=', <str>] then
 	# raise an error
@@ -279,8 +277,8 @@ class ADMIN(ConfigOption):
 
 ## ADMINLEVEL - how much logging to send to admin
 class ADMINLEVEL(ConfigOption):
-    def __init__( self, list ):
-	apply( ConfigOption.__init__, (self,list) )
+    def __init__( self, list, typelist ):
+	apply( ConfigOption.__init__, (self,list, typelist) )
 
 	# if we don't have 3 elements ['ADMINLEVEL', '=', <val>] then
 	# raise an error
@@ -294,8 +292,8 @@ class ADMINLEVEL(ConfigOption):
 
 ## ADMIN_NOTIFY - how often to send admin-logs to admin
 class ADMIN_NOTIFY(ConfigOption):
-    def __init__( self, list ):
-	apply( ConfigOption.__init__, (self,list) )
+    def __init__( self, list, typelist ):
+	apply( ConfigOption.__init__, (self,list, typelist) )
 
 	# if we don't have 3 or 4 elements ['ADMIN_NOTIFY', '=', <int>, [<char>,]] then raise an error
 	if len(list) < 3 or len(list) > 4:
@@ -315,8 +313,8 @@ class ADMIN_NOTIFY(ConfigOption):
 
 ## INTERPRETERS - define the list of interpreters
 class INTERPRETERS(ConfigOption):
-    def __init__( self, list ):
-	apply( ConfigOption.__init__, (self,list) )
+    def __init__( self, list, typelist ):
+	apply( ConfigOption.__init__, (self,list, typelist) )
 
 	# if we don't have 3 elements ['INTERPRETERS', '=', <str>] then raise an error
 	if len(list) != 3:
@@ -329,8 +327,8 @@ class INTERPRETERS(ConfigOption):
 
 ## CLASS - define a class
 class CLASS(ConfigOption):
-    def __init__( self, list ):
-	apply( ConfigOption.__init__, (self,list) )
+    def __init__( self, list, typelist ):
+	apply( ConfigOption.__init__, (self,list, typelist) )
 
 
 	# if we don't have at least 4 elements ['CLASS', '=', <str>, [',', <str>, ...] ]
@@ -349,8 +347,8 @@ class CLASS(ConfigOption):
 
 ## ELVINURL - URL of Elvin server
 class ELVINURL(ConfigOption):
-    def __init__( self, list ):
-	apply( ConfigOption.__init__, (self,list) )
+    def __init__( self, list, typelist ):
+	apply( ConfigOption.__init__, (self,list, typelist) )
 
 	# if we don't have 3 elements ['ELVINURL', '=', <str>] then
 	# raise an error
@@ -364,8 +362,8 @@ class ELVINURL(ConfigOption):
 
 ## ELVINSCOPE - Scope of Elvin server
 class ELVINSCOPE(ConfigOption):
-    def __init__( self, list ):
-	apply( ConfigOption.__init__, (self,list) )
+    def __init__( self, list, typelist ):
+	apply( ConfigOption.__init__, (self,list, typelist) )
 
 	# if we don't have 3 elements ['ELVINSCOPE', '=', <str>] then raise an error
 	if len(list) != 3:
@@ -378,8 +376,8 @@ class ELVINSCOPE(ConfigOption):
 
 ## NUMTHREADS - limit thread creation
 class NUMTHREADS(ConfigOption):
-    def __init__( self, list ):
-	apply( ConfigOption.__init__, (self,list) )
+    def __init__( self, list, typelist ):
+	apply( ConfigOption.__init__, (self,list, typelist) )
 
 	# if we don't have 3 elements ['NUMTHREADS', '=', <int>] then raise an error
 	if len(list) != 3:
@@ -393,8 +391,8 @@ class NUMTHREADS(ConfigOption):
 class CONSOLE_PORT(ConfigOption):
     """Set the tcp port to listen on for console connections"""
 
-    def __init__( self, list ):
-	apply( ConfigOption.__init__, (self,list) )
+    def __init__( self, list, typelist ):
+	apply( ConfigOption.__init__, (self,list, typelist) )
 
 	# if we don't have 3 elements ['CONSOLE_PORT', '=', <int>] then raise an error
 	if len(list) != 3:
@@ -415,8 +413,8 @@ class CONSOLE_PORT(ConfigOption):
 
 class EMAIL_FROM(ConfigOption):
     """Set the From: address used by the email() action."""
-    def __init__( self, list ):
-	apply( ConfigOption.__init__, (self,list) )
+    def __init__( self, list, typelist ):
+	apply( ConfigOption.__init__, (self,list, typelist) )
 
 	# if we don't have 3 elements ['EMAIL_FROM', '=', <string>] then raise an error
 	if len(list) != 3:
@@ -430,8 +428,8 @@ class EMAIL_FROM(ConfigOption):
 
 class EMAIL_REPLYTO(ConfigOption):
     """Set the From: address used by the email() action."""
-    def __init__( self, list ):
-	apply( ConfigOption.__init__, (self,list) )
+    def __init__( self, list, typelist ):
+	apply( ConfigOption.__init__, (self,list, typelist) )
 
 	# if we don't have 3 elements ['EMAIL_REPLYTO', '=', <string>] then raise an error
 	if len(list) != 3:

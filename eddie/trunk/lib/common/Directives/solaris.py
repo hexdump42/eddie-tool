@@ -45,8 +45,8 @@ class CRON(directive.Directive):
 	CRON: file="/tmp/cron.touch" rule="!alive" action="email('alert', 'cron alive check failed on %(h)s')"
     """
 
-    def __init__(self, toklist):
-	apply( directive.Directive.__init__, (self, toklist) )
+    def __init__(self, toklist, toktypes):
+	apply( directive.Directive.__init__, (self, toklist, toktypes) )
 
 
     def tokenparser(self, toklist, toktypes, indent):
@@ -119,8 +119,8 @@ class METASTAT(directive.Directive):
 	METASTAT: action="email('alert', 'A metadevice requires maintenance on %(h)s.')"
     """
 
-    def __init__(self, toklist):
-	apply( directive.Directive.__init__, (self, toklist) )
+    def __init__(self, toklist, toktypes):
+	apply( directive.Directive.__init__, (self, toklist, toktypes) )
 
 
     def tokenparser(self, toklist, toktypes, indent):

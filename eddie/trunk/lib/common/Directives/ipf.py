@@ -42,8 +42,8 @@ class IPF(directive.Directive):
 	    IPF: rule="len(ipfstatin) == 0" action="email('alert', 'ipfstat has no input rules for %(h)s')"
     """
 
-    def __init__(self, toklist):
-	apply( directive.Directive.__init__, (self, toklist) )
+    def __init__(self, toklist, toktypes):
+	apply( directive.Directive.__init__, (self, toklist, toktypes) )
 
 
     def tokenparser(self, toklist, toktypes, indent):

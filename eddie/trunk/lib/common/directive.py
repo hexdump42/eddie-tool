@@ -90,7 +90,8 @@ class State:
 	    log.log( "<directive>State.stateok(), State changed to OK.  ID '%s'."%(self.ID), 6 )
 
 	    # Perform act2ok action calls if any were defined for this directive
-            thisdirective.doOkAct(Config)
+            #thisdirective.doOkAct(Config)
+            thisdirective.performAction(Config,thisdirective.args.actokList)
 
 	    #TODO: Post an EVENT about problem being resolved
 
@@ -177,7 +178,7 @@ class Args:
 class Directive:
     """The base directive class.  Derive all directives from this base class."""
 
-    def __init__(self, toklist):
+    def __init__(self, toklist, toktypes):
 	# Check toklist for valid tokens
 	if len(toklist) < 2:		# need at least 2 tokens
 	    raise ParseFailure, "Directive expected at least 2 tokens, found %d" % len(toklist)
@@ -200,7 +201,7 @@ class Directive:
 
 	self.args = Args()		# Container for arguments
 	self.args.actionList = []	# each directive will have a list of actions
-	self.args.actokList = []	# each directive will have a list of actions
+	self.args.actokList = []	# a list of actions for failed state changing to ok
 
 	# Set up informational variables - these are common to all Directives
 	#  %h = hostname
@@ -325,31 +326,54 @@ class Directive:
 	    raise 'Template'
 
 
+    def evalAction(self, actioncall):
+	"""Evaluate the given action call."""
 
-    def doAction(self, Config):
-    	"""Perform actions for a directive."""
+	log.log( "<directive>Directive.evalAction(), calling action '%s'" % (actioncall), 9 )
 
-	if self.state.checkcount < self.args.numchecks:
-	    # need to wait before re-checking
-	    # when put back in queue only wait checkwait seconds
-	    self.requeueTime = time.time()+self.args.checkwait
-	    log.log( "<directive>doAction(), scheduling for recheck in %d seconds" % self.args.checkwait, 7 )
+	# Evaluate action in environment with alias-dictionary to auto
+	# substitute any aliases
+	actionEnv = {}				# setup action environment
+	actionEnv.update(self.Action.aliasDict)	# add all aliases
+
+	if self.Action.msg:
+	    # Get M group needed for this action
+	    msgtree = string.split( self.Action.msg, '.' )
+	    M = self.Action.MDict[msgtree[0]]
+	    for m in msgtree[1:]:
+		M = M[m]
+
+	    #print "self.Action.msg:",self.Action.msg
+	    #print "self.Action.level:",self.Action.level
+	    #print "self.Action.MDict:",self.Action.MDict
+	    #print "self.Action.MDict:proc:",self.Action.MDict['proc']
+	    #print "M:",M
+
+	    actionEnv.update(M.MDict)			# add MSGs
+
+	actionEnv['_Action'] = self.Action		# add Action object
+	#print "actionEnv:",actionEnv
+	acall = "_Action.%s" % (actioncall)		# the string to be evaluated
+	try:
+	    ret = eval( acall, actionEnv )		# Call the Action
+	except:
+	    # Handle any action evaluation exceptions neatly
+	    e = sys.exc_info()
+	    tb = traceback.format_list( traceback.extract_tb( e[2] ) )
+	    log.log( "<directive>Directive.evalAction(), Error evaluating %s: %s, %s, %s; actionEnv=%s" % (acall, e[0], e[1], tb, actionEnv), 2 )
 	    return
+
+	# Update the action reports
+	self.Action.actionReports[actioncall] = ret
+	if ret == None:
+	    self.Action.varDict['actnm'] = self.Action.varDict['actnm'] + '    %s\n' % (actioncall)
+	elif ret == 0:
+	    self.Action.varDict['actnm'] = self.Action.varDict['actnm'] + '    %s - Successful\n' % (actioncall)
 	else:
-	    self.state.checkcount = 0	# performing action so reset counter
-  
-
-	# record action information
-	self.lastactiontime = time.localtime(time.time())
+	    self.Action.varDict['actnm'] = self.Action.varDict['actnm'] + '    %s - FAILED, return code %d\n' % (actioncall, ret)
 
 
-	actionList = self.args.actionList
-
-	# Replace Action definitions with the corresponding actions
-	#actionList = definition.parseList( actionList, ADict )
-
-	# Put quotes around arguments so we can use eval()
-	#actionList = utils.quoteArgs( actionList )
+    def performAction(self, Config, actionList):
 
 	# Set the 'action' variables with the expanded action list
 	self.Action.varDict['act'] = 'The following actions were attempted:\n'
@@ -370,27 +394,13 @@ class Directive:
 	    sre = re.compile( "([A-Za-z0-9_]+)\(([A-Za-z0-9_.]+),?([0-9]?)\)" )
 	    inx = sre.search( a )
 	    if inx == None:
-		#raise SyntaxError, "actionList regex error"
 		# Assume we have a simple action call (rather than a
 		# notification definition.
 		self.Action.msg = None
-		#print "calling: self.Action."+a
-		try:
-		    ret = eval( 'self.Action.'+a )
-		except:
-		    e = sys.exc_info()
-		    tb = traceback.format_list( traceback.extract_tb( e[2] ) )
-		    log.log( "<directive>doAction(), Error evaluating self.Action.%s: %s, %s, %s" % (a, e[0], e[1], tb), 2 )
-		    return
-		self.Action.actionReports[a] = ret
-		if ret == None:
-		    self.Action.varDict['actnm'] = self.Action.varDict['actnm'] + '    %s\n' % a
-		elif ret == 0:
-		    self.Action.varDict['actnm'] = self.Action.varDict['actnm'] + '    %s - Successful\n' % a
-		else:
-		    self.Action.varDict['actnm'] = self.Action.varDict['actnm'] + '    %s - FAILED, return code %d\n' % (a, ret)
+		self.evalAction( a )
 
 	    else:
+		# Using a Notification object
 		notif = inx.group(1)
 		msg = inx.group(2)
 		level = inx.group(3)
@@ -402,6 +412,7 @@ class Directive:
 		#print ">>>> level:",level
 
 		try:
+		    # Get the actions to execute from the given Level of the N object
 		    afunc = Config.NDict[notif].levels[level]
 		except KeyError:
 		    log.log( "<directive>doAction(), Error in directive.py line 371: Config.NDict[notif].levels[level], level=%s" % level, 1 )
@@ -415,98 +426,96 @@ class Directive:
 
 		    aList = utils.trickySplit( afunc[0], ',' )
 		    # Put quotes around arguments so we can use eval()
-		    aList = utils.quoteArgs( aList )
+		    #aList = utils.quoteArgs( aList )
 		    for aa in aList:
-			#try:
-			    # Call the action
-			    log.log( "<directive>Directive, calling action '%s'" % (aa), 9 )
-			    try:
-				ret = eval( 'self.Action.'+aa )
-			    except:
-				e = sys.exc_info()
-				tb = traceback.format_list( traceback.extract_tb( e[2] ) )
-				log.log( "<directive>doAction(), Error evaluating self.Action.%s: %s, %s, %s" % (aa, e[0], e[1], tb), 2 )
-				return
-			    self.Action.actionReports[aa] = ret
-			    if ret == None:
-				self.Action.varDict['actnm'] = self.Action.varDict['actnm'] + '    %s\n' % aa
-			    elif ret == 0:
-				self.Action.varDict['actnm'] = self.Action.varDict['actnm'] + '    %s - Successful\n' % aa
-			    else:
-				self.Action.varDict['actnm'] = self.Action.varDict['actnm'] + '    %s - FAILED, return code %d\n' % (aa, ret)
+			self.evalAction( aa )
 
-			#except AttributeError:
-			    # Not an action function ... error...
-		    #	log.log( "<directive>Directive, Error, 'action.%s' is not a defined action, config line follows,\n%s\n" % (a,self.raw), 2 )
-	#print "actionReports:",self.Action.actionReports
 
-    def doOkAct(self, Config):
+
+    def doAction(self, Config, actionList=None):
     	"""Perform actions for a directive."""
 
-        #print ">>>> ", self
-        #print ">>>> ", self.args
-	actionList = self.args.actokList
-        #print ">>>> actionList: ", self.args.actokList
-        #print ">>>> actionList: ", actionList
+	if self.state.checkcount < self.args.numchecks:
+	    # need to wait before re-checking
+	    # when put back in queue only wait checkwait seconds
+	    self.requeueTime = time.time()+self.args.checkwait
+	    log.log( "<directive>doAction(), scheduling for recheck in %d seconds" % self.args.checkwait, 7 )
+	    return
+	else:
+	    self.state.checkcount = 0	# performing action so reset counter
+  
 
-	# Set the 'action' variables with the expanded action list
-	self.Action.varDict['act'] = 'The following actions were attempted:\n'
-	self.Action.varDict['actnm'] = 'The following (non-email) actions were attempted:\n'
+	# record action information
+	self.lastactiontime = time.localtime(time.time())
 
-	self.Action.state = self.state
-	self.Action.aliasDict = Config.aliasDict
+	#actionList = self.args.actionList
 
-	# Perform each action
-	ret = None
-	self.Action.actionReports = {}		# dict of actions and their return status
-	for a in actionList:
-	    sre = re.compile( "([A-Za-z0-9_]+)\(([A-Za-z0-9_.]+),?([0-9]?)\)" )
-	    inx = sre.search( a )
+	self.performAction(Config, self.args.actionList)
 
-            notif = inx.group(1)
-            msg = inx.group(2)
-            level = inx.group(3)
-            if level == None or level == '':
-                level = '0'
 
-	    # print ">>>> notif:",notif
-            # print ">>>> msg:",msg
-            # print ">>>> level:",level
-
-            try:
-                afunc = Config.NDict[notif].levels[level]
-            except KeyError:
-                log.log( "<directive>doAction(), Error in directive.py line 371: Config.NDict[notif].levels[level], level=%s" % level, 1 )
-            else:
-		#print ">>>> afunc:",afunc
-
-		self.Action.notif = notif
-		self.Action.msg = msg
-		self.Action.level = level
-		self.Action.MDict = Config.MDict #TODO: move to init() ?
-
-		aList = utils.trickySplit( afunc[0], ',' )
-		# Put quotes around arguments so we can use eval()
-		aList = utils.quoteArgs( aList )
-		for aa in aList:
-		    # Call the action
-		    log.log( "<directive>Directive, calling action '%s'" % (aa), 9 )
-		    try:
-		        ret = eval( 'self.Action.'+aa )
-		    except:
-		        e = sys.exc_info()
-			tb = traceback.format_list( traceback.extract_tb( e[2] ) )
-		        log.log( "<directive>doAction(), Error evaluating self.Action.%s: %s, %s, %s" % (aa, e[0], e[1], tb), 2 )
-			return
-
-		    self.Action.actionReports[aa] = ret
-		    if ret == None:
-			self.Action.varDict['actnm'] = self.Action.varDict['actnm'] + '    %s\n' % aa
-
-	            elif ret == 0:
-			self.Action.varDict['actnm'] = self.Action.varDict['actnm'] + '    %s - Successful\n' % aa
-		    else:
-			self.Action.varDict['actnm'] = self.Action.varDict['actnm'] + '    %s - FAILED, return code %d\n' % (aa, ret)
+#    def doOkAct(self, Config):
+#    	"""Perform actions for a directive."""
+#
+#	actionList = self.args.actokList
+#
+#	# Set the 'action' variables with the expanded action list
+#	self.Action.varDict['act'] = 'The following actions were attempted:\n'
+#	self.Action.varDict['actnm'] = 'The following (non-email) actions were attempted:\n'
+#
+#	self.Action.state = self.state
+#	self.Action.aliasDict = Config.aliasDict
+#
+#	# Perform each action
+#	ret = None
+#	self.Action.actionReports = {}		# dict of actions and their return status
+#	for a in actionList:
+#	    sre = re.compile( "([A-Za-z0-9_]+)\(([A-Za-z0-9_.]+),?([0-9]?)\)" )
+#	    inx = sre.search( a )
+#
+#            notif = inx.group(1)
+#            msg = inx.group(2)
+#            level = inx.group(3)
+#            if level == None or level == '':
+#                level = '0'
+#
+#	    # print ">>>> notif:",notif
+#            # print ">>>> msg:",msg
+#            # print ">>>> level:",level
+#
+#            try:
+#                afunc = Config.NDict[notif].levels[level]
+#            except KeyError:
+#                log.log( "<directive>doAction(), Error in directive.py line 371: Config.NDict[notif].levels[level], level=%s" % level, 1 )
+#            else:
+#		#print ">>>> afunc:",afunc
+#
+#		self.Action.notif = notif
+#		self.Action.msg = msg
+#		self.Action.level = level
+#		self.Action.MDict = Config.MDict #TODO: move to init() ?
+#
+#		aList = utils.trickySplit( afunc[0], ',' )
+#		# Put quotes around arguments so we can use eval()
+#		aList = utils.quoteArgs( aList )
+#		for aa in aList:
+#		    # Call the action
+#		    log.log( "<directive>Directive, calling N ok-action '%s'" % (aa), 9 )
+#		    try:
+#		        ret = eval( 'self.Action.'+aa )
+#		    except:
+#		        e = sys.exc_info()
+#			tb = traceback.format_list( traceback.extract_tb( e[2] ) )
+#		        log.log( "<directive>doAction(), Error evaluating self.Action.%s: %s, %s, %s" % (aa, e[0], e[1], tb), 2 )
+#			return
+#
+#		    self.Action.actionReports[aa] = ret
+#		    if ret == None:
+#			self.Action.varDict['actnm'] = self.Action.varDict['actnm'] + '    %s\n' % aa
+#
+#	            elif ret == 0:
+#			self.Action.varDict['actnm'] = self.Action.varDict['actnm'] + '    %s - Successful\n' % aa
+#		    else:
+#			self.Action.varDict['actnm'] = self.Action.varDict['actnm'] + '    %s - FAILED, return code %d\n' % (aa, ret)
 
 
     def parseAction(self, toklist):
@@ -585,8 +594,8 @@ class Directive:
 ## RULE-BASED COMMANDS
 ##
 class FS(Directive):
-    def __init__(self, toklist):
-	apply( Directive.__init__, (self, toklist) )
+    def __init__(self, toklist, toktypes):
+	apply( Directive.__init__, (self, toklist, toktypes) )
 
 
     def tokenparser(self, toklist, toktypes, indent):
@@ -713,8 +722,8 @@ class FS(Directive):
 
 
 class PID(Directive):
-    def __init__(self, toklist):
-	apply( Directive.__init__, (self, toklist) )
+    def __init__(self, toklist, toktypes):
+	apply( Directive.__init__, (self, toklist, toktypes) )
 
 	self.ruleDict = { 'EX' : None,
 		          'PR' : None }
@@ -811,8 +820,8 @@ class PID(Directive):
 class PROC(Directive):
     """Process checks."""
 
-    def __init__(self, toklist):
-	apply( Directive.__init__, (self, toklist) )
+    def __init__(self, toklist, toktypes):
+	apply( Directive.__init__, (self, toklist, toktypes) )
 	self.ruleDict = { 'NR' : self.NR,
 		          'R'  : self.R,
 			  'check' : self.check }
@@ -923,8 +932,8 @@ class PROC(Directive):
 
 
 class SP(Directive):
-    def __init__(self, toklist):
-	apply( Directive.__init__, (self, toklist) )
+    def __init__(self, toklist, toktypes):
+	apply( Directive.__init__, (self, toklist, toktypes) )
 
 
     def tokenparser(self, toklist, toktypes, indent):
@@ -985,8 +994,8 @@ class SP(Directive):
 COMsemaphore = threading.Semaphore()
 
 class COM(Directive):
-    def __init__(self, toklist):
-	apply( Directive.__init__, (self, toklist) )
+    def __init__(self, toklist, toktypes):
+	apply( Directive.__init__, (self, toklist, toktypes) )
 
 
     def tokenparser(self, toklist, toktypes, indent):
@@ -1099,8 +1108,8 @@ class COM(Directive):
 
 
 class PORT(Directive):
-    def __init__(self, toklist):
-	apply( Directive.__init__, (self, toklist) )
+    def __init__(self, toklist, toktypes):
+	apply( Directive.__init__, (self, toklist, toktypes) )
 
 
     def tokenparser(self, toklist, toktypes, indent):
@@ -1216,8 +1225,8 @@ class PORT(Directive):
 class IF(Directive):
     """Network Interface directive."""
 
-    def __init__(self, toklist):
-	apply( Directive.__init__, (self, toklist) )
+    def __init__(self, toklist, toktypes):
+	apply( Directive.__init__, (self, toklist, toktypes) )
 
         self.ruleDict = { 'NE' : self.NE,
 			  'EX' : self.EX,
@@ -1333,8 +1342,8 @@ class IF(Directive):
 class NET(Directive):
     """Network Statistics directive."""
 
-    def __init__(self, toklist):
-	apply( Directive.__init__, (self, toklist) )
+    def __init__(self, toklist, toktypes):
+	apply( Directive.__init__, (self, toklist, toktypes) )
 
 
     def tokenparser(self, toklist, toktypes, indent):
@@ -1390,8 +1399,8 @@ class NET(Directive):
 class SYS(Directive):
     """System Statistics directive."""
 
-    def __init__(self, toklist):
-	apply( Directive.__init__, (self, toklist) )
+    def __init__(self, toklist, toktypes):
+	apply( Directive.__init__, (self, toklist, toktypes) )
 
 
 
@@ -1452,8 +1461,8 @@ class SYS(Directive):
 class STORE(Directive):
     """Store selected host data."""
 
-    def __init__(self, toklist):
-	apply( Directive.__init__, (self, toklist) )
+    def __init__(self, toklist, toktypes):
+	apply( Directive.__init__, (self, toklist, toktypes) )
 
 
 
