@@ -95,9 +95,17 @@ class Directive:
 	#         "The following actions were taken:" if any were taken
 	self.Action.varDict['actnm'] = '[actnm not yet defined]'
 
+	# each directive has a unique ID
+	self.ID = None
 
-    # Perform actions for a directive
+
     def doAction(self, Config):
+    	"""Perform actions for a directive."""
+
+	# record action information
+	self.lastactiontime = time.localtime(time.time())
+
+
 	actionList = self.actionList
 
 	# Replace Action definitions with the corresponding actions
@@ -215,7 +223,10 @@ class FS(Directive):
 	self.Action.varDict['fsf'] = self.filesystem
 	self.Action.varDict['fsrule'] = self.rule
 
-	log.log( "<FS> filesystem: '%s' rule: '%s' action: '%s'" % (self.filesystem, self.rule, self.actionList), 8 )
+	# define the unique ID
+	self.ID = '%s.FS.%s.%s' % (log.hostname,self.filesystem,self.rule)
+
+	log.log( "<Directive>FS, ID '%s' filesystem '%s' rule '%s' action '%s'" % (self.ID, self.filesystem, self.rule, self.actionList), 8 )
 
 
     def docheck(self, Config):
@@ -322,7 +333,10 @@ class PID(Directive):
 	#  %pidf = the PID-file
 	self.Action.varDict['pidf'] = self.pidfile
 
-	log.log( "<PID> pidfile: '%s' rule: '%s' action: '%s'" % (self.pidfile, self.rule, self.actionList), 8 )
+	# define the unique ID
+	self.ID = '%s.PID.%s.%s' % (log.hostname,self.pidfile,self.rule)
+
+	log.log( "<Directive>PID, ID '%s' pidfile '%s' rule '%s' action '%s'" % (self.ID, self.pidfile, self.rule, self.actionList), 8 )
 
 
     def docheck(self, Config):
@@ -378,7 +392,7 @@ class PID(Directive):
 
 	else:
 	    # invalid rule
-	    log.log( "<directive>PID(), Error, '%s' is not a valid PID rule, config line follows,\n%s\n" % (self.rule,self.raw), 2 )
+	    log.log( "<directive>PID, Error, '%s' is not a valid PID rule, config line follows,\n%s\n" % (self.rule,self.raw), 2 )
 
 
 class PROC(Directive):
@@ -415,7 +429,10 @@ class PROC(Directive):
 	#  %procpid = pid of process (ie: if found running for R rule)
 	self.Action.varDict['procpid'] = '[pid not yet defined]'
 
-	log.log( "<PROC> daemon: '%s' rule: '%s' action: '%s'" % (self.daemon, self.rule, self.actionList), 8 )
+	# define the unique ID
+	self.ID = '%s.PROC.%s.%s' % (log.hostname,self.name,toklist[0])
+
+	log.log( "<Directive>PROC, ID '%s' daemon '%s' rule '%s' action '%s'" % (self.ID, self.daemon, self.rule, self.actionList), 8 )
 
 
     def docheck(self, Config):
@@ -497,7 +514,10 @@ class SP(Directive):
 	self.Action.varDict['spaddr'] = self.addr
 	self.Action.varDict['spprot'] = self.proto
 
-	log.log( "<Directive>SP, proto '%s', port '%s', bind addr '%s', action '%s'" % (self.proto, self.port, self.addr, self.actionList), 8 )
+	# define the unique ID
+	self.ID = '%s.SP.%s/%s.%s' % (log.hostname,self.proto,self.port_n,self.addr)
+
+	log.log( "<Directive>SP, ID '%s' proto '%s', port '%s', bind addr '%s', action '%s'" % (self.ID, self.proto, self.port, self.addr, self.actionList), 8 )
 
 
     def docheck(self, Config):
@@ -546,7 +566,10 @@ class COM(Directive):
 	self.Action.varDict['com'] = self.command
 	self.Action.varDict['rule'] = self.rule
 
-	log.log( "<COM> command: '%s' rule: '%s' action: '%s'" % (self.command, self.rule, self.actionList), 8 )
+	# define the unique ID
+	self.ID = '%s.COM.%s.%s' % (log.hostname,self.command,self.rule)
+
+	log.log( "<Directive>COM, ID '%s' command '%s' rule '%s' action '%s'" % (self.ID, self.command, self.rule, self.actionList), 8 )
 
 
     def docheck(self, Config):
@@ -654,7 +677,10 @@ class PORT(Directive):
 	self.Action.varDict['portexpect'] = self.expect
 	self.Action.varDict['portrecv'] = ''
 
-	log.log( "<directive>PORT parsed, host: '%s' port: '%d' sendstr: '%s' expect: '%s'" % (self.host, self.port, self.sendstr, self.expect), 8 )
+	# define the unique ID
+	self.ID = '%s.PORT.%s.%s' % (log.hostname,self.host,self.port)
+
+	log.log( "<Directive>PORT, ID '%s' host '%s' port '%d' sendstr '%s' expect '%s'" % (self.ID, self.host, self.port, self.sendstr, self.expect), 8 )
 
 
     def docheck(self, Config):
@@ -750,7 +776,10 @@ class IF(Directive):
 	self.Action.varDict['ifrule'] = self.rule
 	self.Action.varDict['ifcheckstring'] = self.checkstring
 
-	log.log( "<Directive>IF, name '%s', rule '%s', checkstring '%s', action '%s'" % (self.name, self.rule, self.checkstring, self.actionList), 8 )
+	# define the unique ID
+	self.ID = '%s.IF.%s.%s' % (log.hostname,self.name,self.rule)
+
+	log.log( "<Directive>IF, ID '%s' name '%s', rule '%s', checkstring '%s', action '%s'" % (self.ID, self.name, self.rule, self.checkstring, self.actionList), 8 )
 
 
     def docheck(self, Config):
@@ -827,7 +856,10 @@ class NET(Directive):
 
 	self.Action.varDict['netrule'] = self.rulestring
 
-	log.log( "<Directive>NET, rule '%s', action '%s'" % (self.rulestring, self.actionList), 8 )
+	# define the unique ID
+	self.ID = '%s.NET.%s' % (log.hostname,self.rulestring)
+
+	log.log( "<Directive>NET, ID '%s' rule '%s', action '%s'" % (self.ID, self.rulestring, self.actionList), 8 )
 
 
     def docheck(self, Config):
@@ -875,7 +907,10 @@ class SYS(Directive):
 
 	self.Action.varDict['sysrule'] = self.rulestring
 
-	log.log( "<Directive>SYS, rule '%s', action '%s'" % (self.rulestring, self.actionList), 8 )
+	# define the unique ID
+	self.ID = '%s.SYS.%s' % (log.hostname,self.rulestring)
+
+	log.log( "<Directive>SYS, ID '%s' rule '%s' action '%s'" % (self.ID, self.rulestring, self.actionList), 8 )
 
 
     def docheck(self, Config):
@@ -923,7 +958,10 @@ class STORE(Directive):
 
 	self.Action.varDict['storerule'] = self.rulestring
 
-	log.log( "<Directive>STORE, rule '%s', action '%s'" % (self.rulestring, self.actionList), 8 )
+	# define the unique ID
+	self.ID = '%s.FS.%s' % (log.hostname,self.rulestring)
+
+	log.log( "<Directive>STORE, ID '%s' rule '%s' action '%s'" % (self.ID, self.rulestring, self.actionList), 8 )
 
 
     def docheck(self, Config):

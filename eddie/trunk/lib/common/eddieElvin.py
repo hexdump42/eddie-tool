@@ -23,8 +23,8 @@ import snpp
 UseElvin = 1	# Switch Elvin usage on by default
 
 #import Elvin, ElvinMisc
-#from Elvin import *
-import Elvin
+from Elvin import *
+#import Elvin
 
 #try:
 #	import Elvin, ElvinMisc
