@@ -157,13 +157,13 @@ LOGSCAN daemonlog:
     file='/var/log/daemonlog'	# logfile to scan
     regex='.*'			# regex to match
     scanperiod='12h'		# how often to scan
-    action=email("alert", "daemonlog %(h)s:%(file)s", "-- Logscan matched %(linecount)d lines: --\n%(lines)s")
+    action=email(ALERT_EMAIL, "daemonlog %(h)s:%(file)s", "-- Logscan matched %(linecount)d lines: --\n%(lines)s")
 
 LOGSCAN priv:
     file='/var/log/messages'	# logfile to scan
     regex='.*priv.*'		# regex to match
     scanperiod='2h'			# how often to scan
-    action=email("alert", "priv scan %(h)s:%(file)s", "-- Logscan matched %(linecount)d lines: --\n%(lines)s")
+    action=email(ALERT_EMAIL, "priv scan %(h)s:%(file)s", "-- Logscan matched %(linecount)d lines: --\n%(lines)s")
 
 
 # PING directive pings hosts and allows checks to be made on the results.  The
@@ -183,7 +183,7 @@ PING hostalive:
 # Customise the console message for this directive
 SYS loadavg5:
     rule="loadavg5 > 2.00"
-    action=email('alert', '%(h)s loadavg: %(loadavg5).02f')
+    action=email(ALERT_EMAIL, '%(h)s loadavg: %(loadavg5).02f')
     scanperiod='5m'
     excludehosts='crazy,mental'
     console="%(state)s loadavg5=%(loadavg5).02f"
@@ -203,5 +203,5 @@ FILE passwd:
     file='/etc/passwd'
     rule='md5 != lastmd5'
     scanperiod='1h'
-    action=ticker("%(file)s has changed"), email("alert","%(file)s has changed")
+    action=ticker("%(file)s has changed"), email(ALERT_EMAIL,"%(file)s has changed")
 
