@@ -99,7 +99,7 @@ class eddieElvin:
 
 	global ec
 
-	maxtries = 10			# max number of attempts to connect
+	maxtries = 3			# max number of attempts to connect
 
 	tries = 0
 	tryagain = 1
@@ -127,6 +127,18 @@ class eddieElvin:
 	    log.log( "<eddieElvin>eddieElvin.connect(), Could not connect to Elvin server", 4 )
 
 
+    def reconnect(self):
+	log.log( "<eddieElvin>eddieElvin.reconnect(), attempting to reconnect to server", 7 )
+	try:
+	    ec.elvinc.close()	# try to close connection, just in case
+	except:
+	    pass
+
+	global ec
+	ec = None
+	self.connect()
+
+
     def notify(self, msg):
         """Send an Elvin notification.  msg must be a dictionary."""
 
@@ -142,7 +154,7 @@ class eddieElvin:
 	    self.connect()
 
 	if ec:
-	    maxtries = 10			# max number of attempts to try
+	    maxtries = 3			# max number of attempts to try
 
 	    tries = 0
 	    tryagain = 1
@@ -166,14 +178,12 @@ class eddieElvin:
 
 	    if tries > maxtries:
 		log.log( "<eddieElvin>eddieElvin.notify(), too many retries - trying to reconnect", 4 )
-		ec = None
-		self.connect()
+		self.reconnect()
 		return 1
 
 	else:
 	    log.log( "<eddieElvin>eddieElvin.notify(), no connection - cannot send Elvin message", 7 )
-	    ec = None
-	    self.connect()
+	    self.reconnect()
 	    return 1
 
 	return 0
