@@ -128,13 +128,14 @@ class eddieElvin:
 
 
     def reconnect(self):
+	global ec
+
 	log.log( "<eddieElvin>eddieElvin.reconnect(), attempting to reconnect to server", 7 )
 	try:
 	    ec.elvinc.close()	# try to close connection, just in case
 	except:
 	    pass
 
-	global ec
 	ec = None
 	self.connect()
 
