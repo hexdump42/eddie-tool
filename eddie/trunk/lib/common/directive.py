@@ -276,7 +276,7 @@ class PID(Directive):
 		# pidfile not found
 		log.log( "<directive>PID(), PR, pidfile '%s' not found" % (self.pidfile), 6 )
 	    else:
-		log.log( "<directive>PID(), PR, pidfile '%s' found" % (self.pidfile), 6 )
+		log.log( "<directive>PID(), PR, pidfile '%s' found" % (self.pidfile), 8 )
 		pid = pidfile.readline()
 		pidfile.close()
 		pid = string.strip(pid)
