@@ -1,7 +1,12 @@
 #!/bin/sh
 #
-## Eddie wrapper script to make sure it keeps running!
-## Pretty basic.  Use it or write your own!
+## A simple wrapper script to help make sure that EDDIE-Tool is
+##   always running, and to re-start it if it isn't.  If EDDIE-Tool
+##   dies too many times in a row then this script will bail out.
+##   If EDDIE_ADMIN is set then this address will receive email
+##   notifications when EDDIE-Tool needs to be restarted.  The
+##   notifications will include any output (like exceptions).
+##   
 ## 19990302 Chris Miles <chris@psychofx.com>
 ##
 ########################################################################
@@ -19,15 +24,20 @@
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 ########################################################################
 
-## Address to receive restart messages
+## Address to receive restart messages.  Set to empty or comment out to
+##   disable sending messages.
 #EDDIE_ADMIN=eddie-adm@domain.name
 EDDIE_ADMIN=root
 
-## Failure to start Eddie-Tool after MAX_RETRIES in a short period of time
-## indicates a serious problem.  eddie_wrapper will then die.
+## Failure to start EDDIE-Tool after MAX_RETRIES in a short period of time
+##   indicates a serious problem.  eddie_wrapper will then die.
 MAX_TRIES=10
 
-## Set path for mail/sleep/date/...
+## Python is used to get the current time.  If it isn't in the path then
+##   set it here.
+PYTHON="python"
+
+## Set path for commands like mail/sleep/python/...
 PATH=/bin:/usr/bin:/usr/local/bin:$PATH
 export PATH
 
@@ -45,25 +55,11 @@ fi
 
 ## Find mail program
 if [ -x /bin/mailx ]; then		# Solaris
-    MAIL=/bin/mailx
+	MAIL=/bin/mailx
 elif [ -x /bin/mail ]; then		# Linux
-    MAIL=/bin/mail
+	MAIL=/bin/mail
 else
-    MAIL=mail				# dunno...
-fi
-
-## Find GNU date program - used for 'gdate "+%s"' below
-#GDATE=`which gdate 2>/dev/null | grep -v "^no "`
-GDATE=""
-which gdate >/dev/null 2>&1
-if [ "$?" = "0" ]; then
-    GDATE=`which gdate 2>/dev/null`	# Use GNU date
-else
-    GDATE=`which date 2>/dev/null`	# hopefully standard 'date' is GNU date (ie, Linux)
-fi
-if [ "$GDATE" = "" ]; then
-    echo "** Can't find date or gdate - eddie_wrapper will have problems"
-    GDATE=date			# can't find a date command
+	MAIL=mail				# dunno...
 fi
 
 ## clean up a bit
@@ -73,18 +69,18 @@ rm -f /var/run/eddie/tmp/*.out
 PGREP=`which pgrep`
 if [ "$PGREP" = "" ]
 then
-    PGREP="useps"
+	PGREP="useps"
 fi
 
 ## Find eddie/bin/
 EDDIEPATH=`dirname $0`
 if [ "$EDDIEPATH" = "" ]
 then
-    EDDIEPATH="."
+	EDDIEPATH="."
 fi
 
 
-## Start the loop to startup Eddie-Tool and try and restart it if it dies
+## Start the loop to startup EDDIE-Tool and try and restart it if it dies
 
 tries=0
 
@@ -101,14 +97,15 @@ while [ 1 ]; do
                 exit 2
         fi
 
-	start_time=`$GDATE "+%s"`
+	#start_time=`$GDATE "+%s"`
+	start_time=`$PYTHON -c "import time ; print int(time.time())"`
 
 	$EDDIEPATH/eddie.py >>$RUNFILE
 
 	retcode=$?
 	echo "eddie_wrapper: eddie died at `date` return code: $retcode" >> $RUNFILE
 
-	curtime=`$GDATE "+%s"`
+	curtime=`$PYTHON -c "import time ; print int(time.time())"`
 	restart_time=`expr $curtime - $start_time`
 	if [ $restart_time -lt 120 ]; then
 		tries=`expr $tries + 1`
@@ -119,12 +116,18 @@ while [ 1 ]; do
 	if [ $tries -gt $MAX_TRIES ]; then
 		echo "eddie_wrapper: Too many restarts ($tries) in a short time. eddie_wrapper quitting." >>$RUNFILE
 
-		$MAIL -s "Eddie output on `hostname` at `date`" $EDDIE_ADMIN < $RUNFILE
+		if [ "$EDDIE_ADMIN" != "" ]
+		then
+			$MAIL -s "Eddie output on `hostname` at `date`" $EDDIE_ADMIN < $RUNFILE
+		fi
 		rm $RUNFILE
 		exit 3
 	fi
 
-	$MAIL -s "Eddie output on `hostname` at `date`" $EDDIE_ADMIN < $RUNFILE
+	if [ "$EDDIE_ADMIN" != "" ]
+	then
+		$MAIL -s "Eddie output on `hostname` at `date`" $EDDIE_ADMIN < $RUNFILE
+	fi
 	rm -f $RUNFILE
 
 	sleep 30
