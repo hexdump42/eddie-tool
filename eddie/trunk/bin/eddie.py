@@ -218,7 +218,7 @@ def main():
 	    # check if any config/rules files have been modified
 	    # if so, re-read config
 	    if Config.checkfiles():
-		log.log( '<eddie>eddieguts(), config files modified - reloading config', 8 )
+		log.log( '<eddie>eddieguts(), config files modified - reloading config', 7 )
 		#
 		# reset config and read in config and rules
 		global Config
