@@ -136,6 +136,13 @@ class Directive:
 		print "calling: self.Action."+a
 		ret = eval( 'self.Action.'+a )
 		self.Action.actionReports[a] = ret
+		if ret == None:
+		    self.Action.varDict['actnm'] = self.Action.varDict['actnm'] + '    %s\n' % a
+		elif ret == 0:
+		    self.Action.varDict['actnm'] = self.Action.varDict['actnm'] + '    %s - Successful\n' % a
+		else:
+		    self.Action.varDict['actnm'] = self.Action.varDict['actnm'] + '    %s - FAILED, return code %d\n' % (a, ret)
+
 	    else:
 		notif = inx.group(1)
 		msg = inx.group(2)
