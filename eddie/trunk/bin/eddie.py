@@ -38,7 +38,7 @@ import re
 import threading
 
 
-print "EDDIE v%s" % (__version__)
+#print "EDDIE v%s" % (__version__)
 
 # Work out the base EDDIE directory which should contain bin/, lib/, etc...
 cwd = os.getcwd()
@@ -53,7 +53,7 @@ osname = uname[0]
 osver = uname[2]
 osarch = uname[4]
 systype = "%s/%s/%s" % (osname,osver,osarch)
-print "systype:", systype
+#print "systype:", systype
 
 oslibdirs = [ os.path.join(basedir,'lib',osname,osver,osarch),
 	      os.path.join(basedir,'lib',osname,osarch,osver),
@@ -105,8 +105,7 @@ def start_threads(sargs, cargs):
 
 
 def stop_threads():
-    """
-    Stop any threads started by start_threads().
+    """Stop any threads started by start_threads().
     """
 
     please_die.set()		# signal threads to die
@@ -120,19 +119,17 @@ def stop_threads():
 
  
 def eddieexit():
-    """
-    Exit EDDIE cleanly.
+    """Exit EDDIE cleanly.
     """
 
     log.log( '<eddie>eddieexit(): EDDIE exiting cleanly.', 5 )
     # email admin any remaining messages
     log.sendadminlog(1)
-    sys.exit()
+    sys.exit(0)
 
 
 def SigHandler( sig, frame ):
-    """
-    Handle all the signals we are interested in.
+    """Handle all the signals we are interested in.
     """
 
     if sig == signal.SIGHUP:
@@ -161,27 +158,15 @@ def SigHandler( sig, frame ):
     elif sig == signal.SIGINT:
 	# SIGINT (CTRL-c) - quit now
 	log.log( '<eddie>SigHandler(): SIGINT (KeyboardInterrupt) encountered - quitting', 1 )
-
 	log.log( '<eddie>SigHandler(): signalling scheduler thread to die', 6 )
         stop_threads()
-
-	try:
-	    print "\nEDDIE quitting ... bye bye"
-	except IOError:
-	    pass	# if tty has gone it will cause this exception
 	eddieexit()
 
     elif sig == signal.SIGTERM:
 	# SIGTERM (Terminate) - quit now
 	log.log( '<eddie>SigHandler(): SIGTERM (Terminate) encountered - quitting', 1 )
-
 	log.log( '<eddie>SigHandler(): signalling scheduler thread to die', 6 )
         stop_threads()
-
-	try:
-	    print "\nEDDIE quitting ... bye bye"
-	except IOError:
-	    pass	# if tty has gone it will cause this exception
 	eddieexit()
 
     elif sig == signal.SIGALRM:
@@ -310,8 +295,7 @@ def buildCheckQueue(q, Config):
 
 
 def doArgs(args, argflags):
-    """
-    Parse command-line arguments.
+    """Parse command-line arguments.
     """
 
     for a in args:
@@ -331,8 +315,7 @@ def doArgs(args, argflags):
 
 
 def main():
-    """
-    Startup routine - setup then start main loop.
+    """Startup routine - setup then start main loop.
     """
 
     log.version = __version__	# Make version string available to other modules
@@ -442,10 +425,6 @@ def main():
 	except KeyboardInterrupt:
 	    # CTRL-c hit - quit now
 	    log.log( '<eddie>main(): KeyboardInterrupt encountered - quitting', 1 )
-	    try:
-		print "\nEDDIE quitting ... bye bye"
-	    except IOError:
-		pass	# if tty has gone it will cause this exception
 	    eddieexit()
 
 
@@ -469,8 +448,9 @@ if __name__ == "__main__":
 	    tbstr = string.join(tb, '')
 	    log.log( "<eddie.py>: EDDIE died with exception: %s, %s\n%s" % (e[0], e[1], tbstr), 1 )
 	    log.sendadminlog()
-	    print tbstr
-	    print e[0], e[1]
+	    sys.stderr.write( "EDDIE died with exception:" )
+	    sys.stderr.write( tbstr + '\n' )
+	    sys.stderr.write( str(e[0]) + '\n' + str(e[1]) + '\n' )
 	    sys.exit(1)
 
 
