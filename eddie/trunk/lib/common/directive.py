@@ -15,7 +15,7 @@
 
 
 # Imports: Python
-import os, string, re, sys, socket, time, threading
+import os, string, re, sys, socket, time, threading, traceback
 # Imports: Eddie
 import action, definition, utils, log, ack
 
@@ -478,7 +478,8 @@ class Directive:
 	    self.docheck( Config )
 	except:
 	    e = sys.exc_info()
-	    log.log( "<Directive>safeCheck(), ID '%s', Uncaught exception: %s, %s, %s" % (self.state.ID, e[0], e[1], e[2]), 3 )
+	    tb = traceback.format_list( traceback.extract_tb( e[2] ) )
+	    log.log( "<Directive>safeCheck(), ID '%s', Uncaught exception: %s, %s, %s" % (self.state.ID, e[0], e[1], tb), 3 )
 	    return
 
 	log.log( "<Directive>safeCheck(), ID '%s', self.docheck() returned successfully" % (self.state.ID), 9 )
