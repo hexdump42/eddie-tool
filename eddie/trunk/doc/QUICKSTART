@@ -1,4 +1,4 @@
-EDDIE - Quick Start Guide
+The EDDIE-Tool Quick Start Guide
 2001-06-18 Chris Miles <chris@psychofx.com>
 
 For the impatient, here is a quickstart guide to getting EDDIE up & running.
@@ -45,39 +45,44 @@ you want to monitor before you can monitor it.
 6. Add the following lines, as they appear below between the '###'s:
 
 ######################################################
-PROC init:	procname='init'
-		rule=NR
-                action='email("root", "%(procp)s on %(h)s is not running")'
+PROC initcheck:
+    name='init'
+    rule='not exists'
+    action=email("root", "%(name)s on %(h)s is not running")
 
-FS rootfs:	fs='/'
-		rule='capac>=90'
-		action='email("root", "%(fsf)s is at %(fscapac)s%% on %(h)s")'
+FS rootfs:
+    fs='/'
+    rule='pctused >= 90'
+    action=email("root", "%(mountpt)s is at %(pctused)s%% on %(h)s")
 ######################################################
 
    These are two basic EDDIE directives.  The first is a process check which
-   will alert if the init process is not running.  'procname' defines the
-   process name, 'rule' defines the type of check (NR means "Not Running") and
-   'action' defines what to do if the rule evaluates to true.
+   will alert if the init process is not running.  'name' defines the
+   process name, 'rule' defines the check to make (in this case the check
+   evaluates true if the process name does not exist in the process list)
+   and 'action' defines what to do if the rule evaluates to true.
 
    The second directive is a filesystem check which checks if the root
    filesystem is 90% or more full.  'fs' defines the filesystem to check,
    'rule' defines the rule to evaluate, in this case it is a simple test
-   which will be executed in a Python environment;  'capac' will contain the
+   which will be executed in a Python environment;  'pctused' will contain the
    current percentage full of the filesystem in question, and so the rule
-   will be true if 'capac' is >= 90%.  The 'action', again, defines what action
-   to take if the rule is true.
+   will be true if 'pctused' is >= 90%.  The 'action', again, defines what
+   action to take if the rule is true.
 
 7. Start EDDIE running by starting bin/eddie.py
    Eg:
        $ /opt/eddie/bin/eddie.py
    You can watch the log file, at the location you defined in eddie.cf.
    In this case, if init is running and / is less than 90% full, root
-   will get no alert emails.  You can force this by changing procname
-   to some non-existence process name (say 'foo') and changing the FS
-   rule to be a lot lower, like 'capac>=1'.  If you get emails from
+   will get no alert emails.  You can force this by changing the PROC
+   name to some non-existence process name (say 'foo') and lowering the
+   threshold of the FS rule, like 'pctused >= 1'.  If you get emails from
    these tests then the basic EDDIE functionality is working.
 
 8. Customize the EDDIE configuration by examining the files in config.sample
-   and reading the other documentation.
+   and reading the User's Manual.
 
 
+-- 
+$Id$

@@ -179,9 +179,10 @@ file to see if there are problems.
 
 E.g.,
 
-    MYFS test: fsname='/var/log'
-               rule='capac > 50'
-               action='email("root", "Filesystem %(mountpt)s is over 50%% full")'
+    MYFS test:
+        fs='/var/log'
+        rule='pctused > 50'
+        action=email("root", "Filesystem %(mountpt)s is over 50%% full")
 
 
 
