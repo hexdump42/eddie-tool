@@ -104,7 +104,8 @@ class dfList(datacollect.DataCollect):
 	Collect disk usage data.
 	"""
 
-	rawList = utils.safe_popen('df -text2 -text3', 'r')
+	# Get information about all local filesystems from 'df'.
+	rawList = utils.safe_popen('df -l', 'r')
 	rawList.readline()			# skip header
  
 	self.data.datahash = {}
