@@ -30,27 +30,42 @@
   The following statistics are currently collected and made available to
   directives that request it (e.g., SYS):
 
-  loadavg1		- 1min load average (float)
-  loadavg5		- 5min load average (float)
-  loadavg15		- 15min load average (float)
-  ctr_uptime		- uptime in seconds (float)
-  ctr_uptimeidle	- idle uptime in seconds (float)
-  ctr_cpu_user		- total cpu in user space (int)
-  ctr_cpu_nice		- total cpu in user nice space (int)
-  ctr_cpu_system	- total cpu in system space (int)
-  ctr_cpu_idle		- total cpu in idle thread (long)
-  ctr_cpu%d_user	- per cpu in user space (e.g., cpu0, cpu1, etc) (int)
-  ctr_cpu%d_nice	- per cpu in user nice space (e.g., cpu0, cpu1, etc) (int)
-  ctr_cpu%d_system	- per cpu in system space (e.g., cpu0, cpu1, etc) (int)
-  ctr_cpu%d_idle	- per cpu in idle thread (e.g., cpu0, cpu1, etc) (long)
-  ctr_pages_in		- pages read in (int)
-  ctr_pages_out		- pages written out (int)
-  ctr_pages_swapin	- swap pages read in (int)
-  ctr_pages_swapout	- swap pages written out (int)
-  ctr_interrupts	- number of interrupts received (int)
-  ctr_contextswitches 	- number of context switches (float)
-  ctr_processes		- number of processes started (I think?) (int)
-  boottime		- time of boot (epoch) (int)
+  Instantaneous stats:
+   loadavg1		- 1min load average (float)
+   loadavg5		- 5min load average (float)
+   loadavg15		- 15min load average (float)
+   mem_total            - total memory, bytes (int)
+   mem_used             - memory in use, bytes (int)
+   mem_free             - memory free, bytes (int)
+   mem_shared           - memory shared, bytes (int)
+   mem_buffers          - memory used as buffers, bytes (int)
+   mem_cached           - memory cached, bytes (int)
+   swap_total           - total swap, bytes (int)
+   swap_used            - swap in use, bytes (int)
+   swap_free            - swap free, bytes (int)
+
+  System counters:
+   ctr_uptime		- uptime in seconds (float)
+   ctr_uptimeidle	- idle uptime in seconds (float)
+   ctr_cpu_user		- total cpu in user space (int)
+   ctr_cpu_nice		- total cpu in user nice space (int)
+   ctr_cpu_system	- total cpu in system space (int)
+   ctr_cpu_idle		- total cpu in idle thread (long)
+   ctr_cpu%d_user	- per cpu in user space (e.g., cpu0, cpu1, etc) (int)
+   ctr_cpu%d_nice	- per cpu in user nice space (e.g., cpu0, cpu1, etc) (int)
+   ctr_cpu%d_system	- per cpu in system space (e.g., cpu0, cpu1, etc) (int)
+   ctr_cpu%d_idle	- per cpu in idle thread (e.g., cpu0, cpu1, etc) (long)
+   ctr_pages_in		- pages read in (int)
+   ctr_pages_out	- pages written out (int)
+   ctr_pages_swapin	- swap pages read in (int)
+   ctr_pages_swapout	- swap pages written out (int)
+   ctr_interrupts	- number of interrupts received (int)
+   ctr_contextswitches 	- number of context switches (float)
+   ctr_processes	- number of processes started (I think?) (int)
+ 
+  Misc:
+   boottime		- time of boot (epoch) (int)
+
 """
 
 # Python modules
@@ -82,7 +97,7 @@ class system(datacollect.DataCollect):
 	try:
 	    fp = open( '/proc/loadavg', 'r' )
 	except IOError:
-	    log.log( "<system>system.getSystemstate(), cannot read /proc/loadavg", 5 )
+	    log.log( "<system>system.getSystemstate(): cannot read /proc/loadavg", 5 )
 	else:
 	    line = fp.read()
 	    fp.close()
@@ -95,7 +110,7 @@ class system(datacollect.DataCollect):
 	try:
 	    fp = open( '/proc/uptime', 'r' )
 	except IOError:
-	    log.log( "<system>system.getSystemstate(), cannot read /proc/uptime", 5 )
+	    log.log( "<system>system.getSystemstate(): cannot read /proc/uptime", 5 )
 	else:
 	    line = fp.read()
 	    fp.close()
@@ -107,7 +122,7 @@ class system(datacollect.DataCollect):
 	try:
 	    fp = open( '/proc/stat', 'r' )
 	except IOError:
-	    log.log( "<system>system.getSystemstate(), cannot read /proc/stat", 5 )
+	    log.log( "<system>system.getSystemstate(): cannot read /proc/stat", 5 )
 	else:
 	    line = fp.readline()
 	    while line != "":
@@ -172,6 +187,37 @@ class system(datacollect.DataCollect):
 		# any other stats are ignored.
 
 	    fp.close()
+
+	# Get memory statistics from /proc/meminfo
+	try:
+	    fp = open( '/proc/meminfo', 'r' )
+	except IOError:
+	    log.log( "<system>system.getSystemstate(): cannot read /proc/meminfo", 5 )
+	else:
+	    foo = fp.readline()		# skip header
+	    memline = fp.readline()	# read Memory stats
+	    swapline = fp.readline()	# read Swap stats
+	    fp.close()
+
+	    memline_list = string.split( memline )
+	    if memline_list[0] != "Mem:" or len(memline_list) != 7:
+		log.log( "<system>system.getSystemstate(): error parsing Memory information from /proc/meminfo", 5 )
+	    else:
+		self.data.datahash['mem_total'] = int( memline_list[1] )
+		self.data.datahash['mem_used'] = int( memline_list[2] )
+		self.data.datahash['mem_free'] = int( memline_list[3] )
+		self.data.datahash['mem_shared'] = int( memline_list[4] )
+		self.data.datahash['mem_buffers'] = int( memline_list[5] )
+		self.data.datahash['mem_cached'] = int( memline_list[6] )
+
+	    swapline_list = string.split( swapline )
+	    if swapline_list[0] != "Swap:" or len(swapline_list) != 4:
+		log.log( "<system>system.getSystemstate(): error parsing Swap information from /proc/meminfo", 5 )
+	    else:
+		self.data.datahash['swap_total'] = int( swapline_list[1] )
+		self.data.datahash['swap_used'] = int( swapline_list[2] )
+		self.data.datahash['swap_free'] = int( swapline_list[3] )
+
 
 	log.log( "<system>system.collectData(): system data collected", 7 )
 
