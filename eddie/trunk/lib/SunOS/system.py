@@ -158,7 +158,6 @@ class system:
 
     def _getSystemstate(self):
 	self.hash = {}		# dict of system data
-	print "\nempty system.hash:",self.hash
 
 	# Use of /opt/local/bin/top to get system stats is being phased out...
 	rawList = utils.safe_popen('/opt/local/bin/top -nud2 -s1', 'r')
@@ -344,16 +343,11 @@ class system:
 
 	vmstat_dict = self._getvmstat()
 	if vmstat_dict:
-	    print "vmstat_dict:",vmstat_dict
 	    self.hash.update(vmstat_dict)
 
 	uptime_dict = self._getuptime()
 	if uptime_dict:
-	    print "uptime_dict:",uptime_dict
 	    self.hash.update(uptime_dict)
-
-	#DEBUG
-	print "system.hash:",self.hash
 
 	log.log( "<system>system(), new system list created", 7 )
 
