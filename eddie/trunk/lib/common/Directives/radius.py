@@ -73,7 +73,9 @@ class RADIUS(directive.Directive):
 	self.Action.varDict['radiuspassword'] = self.args.password
 
 	# define the unique ID
-	self.ID = '%s.RADIUS.%s.%d.%s' % (log.hostname,self.host,self.port,self.args.user)
+        if self.ID == None:
+	    self.ID = '%s.RADIUS.%s.%d.%s' % (log.hostname,self.host,self.port,self.args.user)
+	self.state.ID = self.ID
 
 	log.log( "<radius>RADIUS.tokenparser(): ID '%s' host '%s' port %d secret '%s' user '%s'" % (self.ID, self.host, self.port, self.args.secret, self.args.user), 8 )
 

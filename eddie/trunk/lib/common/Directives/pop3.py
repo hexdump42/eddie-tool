@@ -217,7 +217,9 @@ class POP3TIMING(directive.Directive):
 	self.Action.varDict['pop3timingpassword'] = self.args.password
 
 	# define the unique ID
-	self.ID = '%s.POP3TIMING.%s.%d.%s' % (log.hostname,self.host,self.port,self.args.user)
+        if self.ID == None:
+	    self.ID = '%s.POP3TIMING.%s.%d.%s' % (log.hostname,self.host,self.port,self.args.user)
+	self.state.ID = self.ID
 
 	log.log( "<pop3>POP3TIMING.tokenparser(): ID '%s' host '%s' port %d user '%s'" % (self.ID, self.host, self.port, self.args.user), 8 )
 

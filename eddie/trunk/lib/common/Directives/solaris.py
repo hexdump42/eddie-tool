@@ -53,7 +53,9 @@ class CRON(directive.Directive):
 	self.Action.varDict['rule'] = self.args.rule
 
 	# define the unique ID
-	self.ID = '%s.CRON.%s' % (log.hostname,self.args.rule)
+        if self.ID == None:
+	    self.ID = '%s.CRON.%s' % (log.hostname,self.args.rule)
+	self.state.ID = self.ID
 
 	log.log( "<solaris>CRON.tokenparser(): ID '%s' rule '%s' action '%s'" % (self.ID, self.args.rule, self.args.actionList), 8 )
 
@@ -118,7 +120,9 @@ class METASTAT(directive.Directive):
 	#  rule = rule
 
 	# define the unique ID
-	self.ID = '%s.METASTAT' % (log.hostname)
+        if self.ID == None:
+	    self.ID = '%s.METASTAT' % (log.hostname)
+	self.state.ID = self.ID
 
 	log.log( "<solaris>METASTAT.tokenparser(): ID '%s' action '%s'" % (self.ID, self.args.actionList), 8 )
 

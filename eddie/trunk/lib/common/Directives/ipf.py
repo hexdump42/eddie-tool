@@ -50,7 +50,10 @@ class IPF(directive.Directive):
 	self.Action.varDict['rule'] = self.args.rule
 
 	# define the unique ID
-	self.ID = '%s.IPF.%s' % (log.hostname,self.args.rule)
+        if self.ID == None:
+	    self.ID = '%s.IPF.%s' % (log.hostname,self.args.rule)
+	self.state.ID = self.ID
+
 
 	log.log( "<ipf>IPF.tokenparser(): ID '%s' rule '%s' action '%s'" % (self.ID, self.args.rule, self.args.actionList), 8 )
 
