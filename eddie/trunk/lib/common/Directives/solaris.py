@@ -36,24 +36,17 @@ class CRON(directive.Directive):
 
 
     def tokenparser(self, toklist, toktypes, indent):
+	apply( Directive.tokenparser, (self, toklist, toktypes, indent) )
 
-	tokdict=self.parseArgs(toklist)
-
+	# test required arguments
 	try:
-	    self.touchfile = tokdict['file']	# test file touched by cronjob
-	except KeyError:
+	    self.file		# test file touched by cronjob
+	except AttributeError:
 	    raise ParseFailure, "Test File not specified"
-
 	try:
-	    self.rule = tokdict['rule']	# the rule
-	except KeyError:
+	    self.rule		# the rule
+	except AttributeError:
 	    raise ParseFailure, "Rule not specified"
-
-	try:
-	    self.actionList = self.parseAction( tokdict['action'] )
-	except KeyError:
-	    raise ParseFailure, "Action not specified"
-
 
 	# Set any FS-specific variables
 	#  rule = rule
@@ -70,7 +63,7 @@ class CRON(directive.Directive):
 
 	from stat import *				# for ST_MTIME
 	try:
-	    mtime = os.stat( self.touchfile )[ST_MTIME]
+	    mtime = os.stat( self.file )[ST_MTIME]
 	except OSError, detail:
     	    log.log( "<solaris>CRON.docheck(): stat had error %d, '%s'" % (detail[0], detail[1]), 6 )
 	    return
@@ -85,8 +78,8 @@ class CRON(directive.Directive):
 	    self.state.statefail()	# update state info for check failed
 
 	    # assign variables
-	    self.Action.varDict['crontouchfile'] = self.touchfile
-	    self.Action.varDict['crontouchfilemtime'] = str(mtime)
+	    self.Action.varDict['cronfile'] = self.file
+	    self.Action.varDict['cronfilemtime'] = str(mtime)
 
     	    log.log( "<solaris>CRON.docheck(): check failed, calling doAction()", 6 )
     	    self.doAction(Config)
@@ -114,13 +107,10 @@ class METASTAT(directive.Directive):
 
 
     def tokenparser(self, toklist, toktypes, indent):
+	apply( Directive.tokenparser, (self, toklist, toktypes, indent) )
 
-	tokdict=self.parseArgs(toklist)
-
-	try:
-	    self.actionList = self.parseAction( tokdict['action'] )
-	except KeyError:
-	    raise ParseFailure, "Action not specified"
+	# test required arguments
+	## nothing but action so far! (Already tested in Directive.tokenparser())
 
 
 	# Set any FS-specific variables

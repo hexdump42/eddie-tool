@@ -181,6 +181,33 @@ class Directive:
 	self.state = State()
 
 
+    def tokenparser(self, toklist, toktypes, indent):
+	"""Parse named arguments for directives.  All valid named
+	arguments are saved in the objects as self.argname, eg: self.rule
+	It is up to each directive to check the validity of the arguments.
+	Each directive should first call this function with:
+	    apply( Directive.tokenparser, (self, toklist, toktypes, indent) )
+	Note: toktypes and indent are not used by this function and can
+	be None.
+	"""
+
+	tokdict=self.parseArgs(toklist)
+	for t in tokdict.keys():
+	    if t == 'action':	# special handler for actions
+		self.actionList = self.parseAction( tokdict[t] )
+	    else:
+		try:
+		    exec( "self.%s = tokdict[t]" % (t) )
+		except:
+		    raise ParseFailure, "Error parsing argument '%s'" % (t)
+
+	# test for actionList which is always required
+	try:
+	    self.actionList
+	except KeyError:
+	    raise ParseFailure, "Action not specified"
+
+
     def doAction(self, Config):
     	"""Perform actions for a directive."""
 
@@ -323,43 +350,37 @@ class FS(Directive):
 
 
     def tokenparser(self, toklist, toktypes, indent):
+	apply( Directive.tokenparser, (self, toklist, toktypes, indent) )
 
-	tokdict=self.parseArgs(toklist)
-
+	# test required arguments
 	try:
-	    self.filesystem = tokdict['fs']
-	except KeyError:
+	    self.fs
+	except AttributeError:
 	    raise ParseFailure, "Filesystem not specified"
-
 	try:
-	    self.rule = tokdict['rule']
-	except KeyError:
+	    self.rule
+	except AttributeError:
 	    raise ParseFailure, "Rule not specified"
 
-	try:
-	    self.actionList = self.parseAction( tokdict['action'] )
-	except KeyError:
-	    raise ParseFailure, "Action not specified"
-
 	# Set any FS-specific variables
-	#  fsf = filesystem
+	#  fsf = fs
 	#  fsrule = rule
-	self.Action.varDict['fsf'] = self.filesystem
+	self.Action.varDict['fsf'] = self.fs
 	self.Action.varDict['fsrule'] = self.rule
 
 	# define the unique ID
 	if self.ID == None:
-	    self.ID = '%s.FS.%s' % (log.hostname,self.filesystem)
+	    self.ID = '%s.FS.%s' % (log.hostname,self.fs)
 	self.state.ID = self.ID
 
-	log.log( "<Directive>FS, ID '%s' filesystem '%s' rule '%s' action '%s'" % (self.state.ID, self.filesystem, self.rule, self.actionList), 8 )
+	log.log( "<Directive>FS, ID '%s' fs '%s' rule '%s' action '%s'" % (self.state.ID, self.fs, self.rule, self.actionList), 8 )
 
 
     def docheck(self, Config):
-	log.log( "<directive>FS(), docheck(), fs '%s', rule '%s'" % (self.filesystem,self.rule), 7 )
-	df = dlist[self.filesystem]
+	log.log( "<directive>FS(), docheck(), fs '%s', rule '%s'" % (self.fs,self.rule), 7 )
+	df = dlist[self.fs]
 	if df == None:
-	    log.log( "<directive>FS(), Error, no df with filesystem '%s'" % (self.filesystem), 2 )
+	    log.log( "<directive>FS(), Error, no df with fs '%s'" % (self.fs), 2 )
 	    return
 
 	dfenv = {}			# environment for df rules execution
@@ -456,23 +477,17 @@ class PID(Directive):
 
 
     def tokenparser(self, toklist, toktypes, indent):
+	apply( Directive.tokenparser, (self, toklist, toktypes, indent) )
 
-	tokdict=self.parseArgs(toklist)
-
+	# test required arguments
 	try:
-	    self.pidfile = tokdict['pid']
-	except KeyError:
+	    self.pid
+	except AttributeError:
 	    raise ParseFailure, "Pid not specified"
-
 	try:
-	    self.rule = tokdict['rule']
-	except KeyError:
+	    self.rule
+	except AttributeError:
 	    raise ParseFailure, "Rule not specified"
-
-	try:
-	    self.actionList = self.parseAction( tokdict['action'] )
-	except KeyError:
-	    raise ParseFailure, "Action not specified"
 
 	# Expect first token to be rule - one of self.ruleDict
 	if self.rule not in self.ruleDict.keys():
@@ -480,39 +495,39 @@ class PID(Directive):
 
 	# Set any PID-specific variables
 	#  %pidf = the PID-file
-	self.Action.varDict['pidf'] = self.pidfile
+	self.Action.varDict['pidf'] = self.pid
 
 	# define the unique ID
-	self.state.ID = '%s.PID.%s.%s' % (log.hostname,self.pidfile,self.rule)
+	self.state.ID = '%s.PID.%s.%s' % (log.hostname,self.pid,self.rule)
 
-	log.log( "<Directive>PID, ID '%s' pidfile '%s' rule '%s' action '%s'" % (self.state.ID, self.pidfile, self.rule, self.actionList), 8 )
+	log.log( "<Directive>PID, ID '%s' pid '%s' rule '%s' action '%s'" % (self.state.ID, self.pid, self.rule, self.actionList), 8 )
 
 
     def docheck(self, Config):
-	log.log( "<directive>PID(), docheck(), pidfile '%s', rule '%s'" % (self.pidfile,self.rule), 7 )
+	log.log( "<directive>PID(), docheck(), pid '%s', rule '%s'" % (self.pid,self.rule), 7 )
 	if self.rule == "EX":
 	    # Check if pidfile exists
 	    try:
-		pidfile = open( self.pidfile, 'r' )
+		pidfile = open( self.pid, 'r' )
 	    except IOError:
 		# pidfile not found
-		log.log( "<directive>PID(), EX, pidfile '%s' not found" % (self.pidfile), 6 )
+		log.log( "<directive>PID(), EX, pidfile '%s' not found" % (self.pid), 6 )
 		self.state.statefail()	# update state info for check failed
 		self.doAction(Config)
 	    else:
-		log.log( "<directive>PID(), EX, pidfile '%s' found" % (self.pidfile), 8 )
+		log.log( "<directive>PID(), EX, pidfile '%s' found" % (self.pid), 8 )
 		self.state.stateok()		# update state info for check passed
 		pidfile.close()
 
 	elif self.rule == "PR":
 	    # check if process pid found in pidfile is running - no alert if pidfile not found
 	    try:
-		pidfile = open( self.pidfile, 'r' )
+		pidfile = open( self.pid, 'r' )
 	    except IOError:
 		# pidfile not found
-		log.log( "<directive>PID(), PR, pidfile '%s' not found" % (self.pidfile), 6 )
+		log.log( "<directive>PID(), PR, pidfile '%s' not found" % (self.pid), 6 )
 	    else:
-		log.log( "<directive>PID(), PR, pidfile '%s' found" % (self.pidfile), 8 )
+		log.log( "<directive>PID(), PR, pidfile '%s' found" % (self.pid), 8 )
 		pid = pidfile.readline()
 		pidfile.close()
 		pid = string.strip(pid)
@@ -562,16 +577,16 @@ class PROC(Directive):
     def tokenparser(self, toklist, toktypes, indent):
 	"""Parse tokenized input."""
 
-	tokdict=self.parseArgs(toklist)
+	apply( Directive.tokenparser, (self, toklist, toktypes, indent) )
 
+	# test required arguments
 	try:
-	    self.daemon = tokdict['procname']
-	except KeyError:
+	    self.procname
+	except AttributeError:
 	    raise ParseFailure, "Process name not specified"
-
 	try:
-	    self.rule = tokdict['rule']
-	except KeyError:
+	    self.rule
+	except AttributeError:
 	    raise ParseFailure, "Rule name not specified"
 
 	# Expect first token to be rule
@@ -585,24 +600,22 @@ class PROC(Directive):
 	else:
 	    raise ParseFailure, "PROC found unexpected rule '%s'" % self.rule
 
-	self.actionList = self.parseAction( tokdict['action'] )
-
 	# Set any PROC-specific variables
 	#  %procp = the process name
-	self.Action.varDict['procp'] = self.daemon
+	self.Action.varDict['procp'] = self.procname
 	#  %procpid = pid of process (ie: if found running for R rule)
 	self.Action.varDict['procpid'] = '[pid not yet defined]'
 
 	# define the unique ID
-	self.state.ID = '%s.PROC.%s.%s' % (log.hostname,self.daemon,toklist[0])
+	self.state.ID = '%s.PROC.%s.%s' % (log.hostname,self.procname,toklist[0])
 
-	log.log( "<Directive>PROC, ID '%s' daemon '%s' rule '%s' action '%s'" % (self.state.ID, self.daemon, self.rule, self.actionList), 8 )
+	log.log( "<Directive>PROC, ID '%s' procname '%s' rule '%s' action '%s'" % (self.state.ID, self.procname, self.rule, self.actionList), 8 )
 
 
     def docheck(self, Config):
 	"""Perform specified check."""
 
-	log.log( "<directive>PROC(), docheck(), daemon '%s', rule '%s'" % (self.daemon,self.rule), 7 )
+	log.log( "<directive>PROC(), docheck(), procname '%s', rule '%s'" % (self.procname,self.rule), 7 )
 	self.rule(Config)
 
 	Config.q.put( (self,time.time()+self.scanperiod) )	# put self back in the Queue
@@ -611,13 +624,13 @@ class PROC(Directive):
     def NR(self,Config):
 	"""Call action if process is found to be NOT running."""
 
-	if plist.procExists( self.daemon ) == 0:
+	if plist.procExists( self.procname ) == 0:
 	    # process not running - let's sleep a bit then check again to make sure
-	    log.log( "<directive>NR(PROC) daemon not running, '%s' - sleeping before recheck..." % (self.daemon), 7 )
+	    log.log( "<directive>NR(PROC) procname not running, '%s' - sleeping before recheck..." % (self.procname), 7 )
 	    time.sleep( 30 )
 	    plist.refresh()		# force refresh of proc list
-	    if plist.procExists( self.daemon ) == 0:
-		log.log( "<directive>NR(PROC) daemon not running, '%s'" % (self.daemon), 6 )
+	    if plist.procExists( self.procname ) == 0:
+		log.log( "<directive>NR(PROC) procname not running, '%s'" % (self.procname), 6 )
 		self.state.statefail()	# update state info for check failed
 		self.doAction(Config)
 		return
@@ -628,10 +641,10 @@ class PROC(Directive):
     def R(self,Config):
 	"""Call action if process is found to BE running."""
 
-	if plist.procExists( self.daemon ) > 0:
-	    log.log( "<directive>R(PROC) daemon is running, '%s'" % (self.daemon), 6 )
+	if plist.procExists( self.procname ) > 0:
+	    log.log( "<directive>R(PROC) procname is running, '%s'" % (self.procname), 6 )
 	    # Set %procpid variable.
-	    self.Action.varDict['procpid'] = plist[self.daemon].pid
+	    self.Action.varDict['procpid'] = plist[self.procname].pid
 	    self.state.statefail()	# update state info for check failed
 	    self.doAction(Config)
 
@@ -643,11 +656,11 @@ class PROC(Directive):
 	"""Executes a check string supplied by user."""
 
 	for p in plist.getList():
-	    if p.procname == self.daemon:
+	    if p.procname == self.procname:
 		try:
 		    procenv = p.procinfo()		# get dictionary of process details
 		except AttributeError:
-		    log.log( "<directive>PROC.check() warning, no process '%s'." % (self.daemon), 8 )
+		    log.log( "<directive>PROC.check() warning, no process '%s'." % (self.procname), 8 )
 		    return
 
 		result = eval( self.checkstring, procenv )
@@ -670,61 +683,58 @@ class SP(Directive):
 
 
     def tokenparser(self, toklist, toktypes, indent):
+	apply( Directive.tokenparser, (self, toklist, toktypes, indent) )
 
-	tokdict=self.parseArgs(toklist)
-
+	# test required arguments
 	try:
-	    self.port_n = tokdict['port']
-	except KeyError:
+	    self.port
+	except AttributeError:
 	    raise ParseFailure, "Port not specified"
 	try:
-	    self.proto = tokdict['protocol']
-	except KeyError:
+	    self.protocol
+	except AttributeError:
 	    raise ParseFailure, "Protocol not specified"
 	try:
-	    self.addr = tokdict['bindaddr']
-	except KeyError:
+	    self.bindaddr
+	except AttributeError:
 	    raise ParseFailure, "Bind address not specified"
-	try:
-	    self.actionList = self.parseAction(tokdict['action'])
-	except KeyError:
-	    raise ParseFailure, "Action not specified"
+
+	self.port_n = self.port		# remember port name
 
 	# lets try resolving this service port to a number
 	try:
-	    self.port = socket.getservbyname(self.port_n, self.proto)
+	    self.port = socket.getservbyname(self.port_n, self.protocol)
 	except socket.error:
 	    self.port = self.port_n
 
 	self.Action.varDict['spport'] = self.port_n
-	self.Action.varDict['spaddr'] = self.addr
-	self.Action.varDict['spprot'] = self.proto
-	self.Action.varDict['spaddr'] = self.addr
+	self.Action.varDict['spaddr'] = self.bindaddr
+	self.Action.varDict['spprot'] = self.protocol
 
 	# define the unique ID
-	self.state.ID = '%s.SP.%s/%s.%s' % (log.hostname,self.proto,self.port_n,self.addr)
+	self.state.ID = '%s.SP.%s/%s.%s' % (log.hostname,self.protocol,self.port_n,self.bindaddr)
 
-	log.log( "<Directive>SP, ID '%s' proto '%s', port '%s', bind addr '%s', action '%s'" % (self.state.ID, self.proto, self.port, self.addr, self.actionList), 8 )
+	log.log( "<Directive>SP, ID '%s' protocol '%s', port '%s', bind addr '%s', action '%s'" % (self.state.ID, self.protocol, self.port, self.bindaddr, self.actionList), 8 )
 
 
     def docheck(self, Config):
-	log.log( "<directive>SP(), docheck(), proto '%s', port '%s', addr '%s'" % (self.proto,self.port_n,self.addr), 7 )
+	log.log( "<directive>SP(), docheck(), protocol '%s', port '%s', addr '%s'" % (self.protocol,self.port_n,self.bindaddr), 7 )
 
-	ret = nlist.portExists(self.proto, self.port, self.addr) != None
+	ret = nlist.portExists(self.protocol, self.port, self.bindaddr) != None
 	if ret != 0:
-	    log.log( "<directive>SP(), port %s/%s listener found bound to %s" % (self.proto , self.port_n, self.addr), 8 )
+	    log.log( "<directive>SP(), port %s/%s listener found bound to %s" % (self.protocol , self.port_n, self.bindaddr), 8 )
 	    self.state.stateok()	# update state info for check passed
 	else:
-	    log.log( "<directive>SP(), port %s/%s no listener found bound to %s - sleeping before recheck..." % (self.proto , self.port_n, self.addr), 7 )
+	    log.log( "<directive>SP(), port %s/%s no listener found bound to %s - sleeping before recheck..." % (self.protocol , self.port_n, self.bindaddr), 7 )
 	    time.sleep( 30 )
 	    nlist.refresh()		# force refresh of network stats
 
-	    ret = nlist.portExists(self.proto, self.port, self.addr) != None
+	    ret = nlist.portExists(self.protocol, self.port, self.bindaddr) != None
 	    if ret != 0:
-		log.log( "<directive>SP(), port %s/%s listener found bound to %s" % (self.proto , self.port_n, self.addr), 7 )
+		log.log( "<directive>SP(), port %s/%s listener found bound to %s" % (self.protocol , self.port_n, self.bindaddr), 7 )
 		self.state.stateok()	# update state info for check passed
 	    else:
-		log.log( "<directive>SP(), port %s/%s no listener found bound to %s" % (self.proto , self.port_n, self.addr), 6 )
+		log.log( "<directive>SP(), port %s/%s no listener found bound to %s" % (self.protocol , self.port_n, self.bindaddr), 6 )
 		self.state.statefail()	# update state info for check failed
 		self.doAction(Config)
 
@@ -739,41 +749,37 @@ class COM(Directive):
 
 
     def tokenparser(self, toklist, toktypes, indent):
+	apply( Directive.tokenparser, (self, toklist, toktypes, indent) )
 
-	tokdict=self.parseArgs(toklist)
-
+	# test required arguments
 	try:
-	    self.command = tokdict['cmd']
-	except KeyError:
+	    self.cmd
+	except AttributeError:
 	    raise ParseFailure, "Command (cmd) not specified"
 	try:
-	    self.rule = tokdict['rule']
-	except KeyError:
+	    self.rule
+	except AttributeError:
 	    raise ParseFailure, "Rule not specified"
-	try:
-	    self.actionList = self.parseAction(tokdict['action'])
-	except KeyError:
-	    raise ParseFailure, "Action not specified"
 
 	# Set any COM-specific variables
 	#  %com = the command
 	#  %rule = the rule
-	self.Action.varDict['com'] = self.command
-	self.Action.varDict['rule'] = self.rule
+	self.Action.varDict['COMcmd'] = self.cmd
+	self.Action.varDict['COMrule'] = self.rule
 
 	# define the unique ID
-	self.state.ID = '%s.COM.%s.%s' % (log.hostname,self.command,self.rule)
+	self.state.ID = '%s.COM.%s.%s' % (log.hostname,self.cmd,self.rule)
 
-	log.log( "<directive>COM, ID '%s' command '%s' rule '%s' action '%s'" % (self.state.ID, self.command, self.rule, self.actionList), 8 )
+	log.log( "<directive>COM, ID '%s' cmd '%s' rule '%s' action '%s'" % (self.state.ID, self.cmd, self.rule, self.actionList), 8 )
 
 
     def docheck(self, Config):
-	log.log( "<directive>COM.docheck(), command '%s', rule '%s'" % (self.command,self.rule), 7 )
-	log.log( "<directive>COM.docheck(), acquiring semaphore lock for command '%s'" % (self.command), 8 )
+	log.log( "<directive>COM.docheck(), cmd '%s', rule '%s'" % (self.cmd,self.rule), 7 )
+	log.log( "<directive>COM.docheck(), acquiring semaphore lock for cmd '%s'" % (self.cmd), 8 )
 	COMsemaphore.acquire()
-	log.log( "<directive>COM.docheck(), semaphore acquired for command '%s'" % (self.command), 8 )
+	log.log( "<directive>COM.docheck(), semaphore acquired for cmd '%s'" % (self.cmd), 8 )
 	tmpprefix = "/var/tmp/com%d" % os.getpid()
-	cmd = "{ %s ; } >%s.out 2>%s.err" % (self.command, tmpprefix, tmpprefix )
+	cmd = "{ %s ; } >%s.out 2>%s.err" % (self.cmd, tmpprefix, tmpprefix )
 	log.log( "<directive>COM.docheck(), calling system('%s')" % (cmd), 8 )
 	retval = os.system( cmd )
 	signum = None
@@ -816,7 +822,7 @@ class COM(Directive):
 		err = err[:-1]
 
 	COMsemaphore.release()
-	log.log( "<directive>COM.docheck(), released semaphore lock for command '%s'" % (self.command), 8 )
+	log.log( "<directive>COM.docheck(), released semaphore lock for cmd '%s'" % (self.cmd), 8 )
 
         log.log( "<directive>COM.docheck(), retval=%d" % retval, 8 )
         log.log( "<directive>COM.docheck(), signum=%s" % signum, 8 )
@@ -855,29 +861,29 @@ class PORT(Directive):
 
 
     def tokenparser(self, toklist, toktypes, indent):
+	apply( Directive.tokenparser, (self, toklist, toktypes, indent) )
 
-	tokdict=self.parseArgs(toklist)
-
+	# test required arguments
 	try:
-	    self.host = tokdict['host']
-	except KeyError:
+	    self.host
+	except AttributeError:
 	    raise ParseFailure, "Host not specified"
 	try:
-	    self.port = int(tokdict['port'])
-	except KeyError:
+	    self.port
+	except AttributeError:
 	    raise ParseFailure, "Port not specified"
 	try:
-	    self.sendstr = tokdict['send']
-	except KeyError:
+	    self.port = int(self.port)
+	except ValueError:
+	    raise ParseFailure, "Port is not an integer: %s" % (self.port)
+	try:
+	    self.send
+	except AttributeError:
 	    raise ParseFailure, "Send string not specified"
 	try:
-	    self.expect = tokdict['expect']
-	except KeyError:
+	    self.expect
+	except AttributeError:
 	    raise ParseFailure, "Expect string not specified"
-	try:
-	    self.actionList = self.parseAction(tokdict['action'])
-	except KeyError:
-	    raise ParseFailure, "Action not specified"
 
 	# Set any PORT-specific variables
 	#  %porthost = the host
@@ -887,22 +893,22 @@ class PORT(Directive):
 	#  %portrecv = the string received from port connection (at check time)
 	self.Action.varDict['porthost'] = self.host
 	self.Action.varDict['portport'] = self.port
-	self.Action.varDict['portsend'] = self.sendstr
+	self.Action.varDict['portsend'] = self.send
 	self.Action.varDict['portexpect'] = self.expect
 	self.Action.varDict['portrecv'] = ''
 
 	# define the unique ID
-	self.state.ID = '%s.PORT.%s.%s' % (log.hostname,self.host,self.port)
+	self.state.ID = '%s.PORT.%s.%d' % (log.hostname,self.host,self.port)
 
-	log.log( "<Directive>PORT, ID '%s' host '%s' port '%d' sendstr '%s' expect '%s'" % (self.state.ID, self.host, self.port, self.sendstr, self.expect), 8 )
+	log.log( "<Directive>PORT, ID '%s' host '%s' port '%d' send '%s' expect '%s'" % (self.state.ID, self.host, self.port, self.send, self.expect), 8 )
 
 
     def docheck(self, Config):
-	log.log( "<directive>PORT.docheck(), host '%s', port '%d', sendstr '%s', expect '%s'" % (self.host,self.port,self.sendstr,self.expect), 7 )
+	log.log( "<directive>PORT.docheck(), host '%s', port '%d', send '%s', expect '%s'" % (self.host,self.port,self.send,self.expect), 7 )
 
 	self.Action.varDict['portrecv'] = ''
 
-        if not self.isalive(host=self.host,port=self.port,send=self.sendstr,expect=self.expect):
+        if not self.isalive(host=self.host,port=self.port,send=self.send,expect=self.expect):
 	    log.log( "<directive>PORT.docheck(), isalive() failed.", 7 )
 	    self.state.statefail()	# update state info for check failed
             self.doAction(Config)
@@ -950,7 +956,6 @@ class PORT(Directive):
             return 0
 
 	return 0
-        # print isalive(host='daidyai.off.connect.com.au',port=50006,send='blah',expect='ALIVE')
 
 
 
@@ -968,21 +973,17 @@ class IF(Directive):
 
     def tokenparser(self, toklist, toktypes, indent):
 	"""Parse rest of rule (after ':')."""
+	apply( Directive.tokenparser, (self, toklist, toktypes, indent) )
 
-	tokdict=self.parseArgs(toklist)
-
+	# test required arguments
 	try:
-	    self.name = tokdict['name']
-	except KeyError:
+	    self.name
+	except AttributeError:
 	    raise ParseFailure, "Interface name not specified"
 	try:
-	    self.rule = tokdict['rule']
-	except KeyError:
+	    self.rule
+	except AttributeError:
 	    raise ParseFailure, "Rule not specified"
-	try:
-	    self.actionList = self.parseAction(tokdict['action'])
-	except KeyError:
-	    raise ParseFailure, "Action not specified"
 
 	self.checkstring = ""
 
@@ -1069,43 +1070,39 @@ class NET(Directive):
     def __init__(self, toklist):
 	apply( Directive.__init__, (self, toklist) )
 
-	self.rulestring = ''
+	self.rule = ''
 
 
     def tokenparser(self, toklist, toktypes, indent):
 	"""Parse rest of rule (after ':')."""
+	apply( Directive.tokenparser, (self, toklist, toktypes, indent) )
 
-	tokdict=self.parseArgs(toklist)
-
+	# test required arguments
 	try:
-	    self.rulestring = tokdict['rule']
-	except KeyError:
+	    self.rule
+	except AttributeError:
 	    raise ParseFailure, "Rule not specified"
-	try:
-	    self.actionList = self.parseAction(tokdict['action'])
-	except KeyError:
-	    raise ParseFailure, "Action not specified"
 
 	# Rule should be a string
-        if type(self.rulestring) != type('STRING'):
+        if type(self.rule) != type('STRING'):
 	    raise ParseFailure, "NET parse error, rule is not string."
 
-	self.Action.varDict['netrule'] = self.rulestring
+	self.Action.varDict['netrule'] = self.rule
 
 	# define the unique ID
-	self.state.ID = '%s.NET.%s' % (log.hostname,self.rulestring)
+	self.state.ID = '%s.NET.%s' % (log.hostname,self.rule)
 
-	log.log( "<Directive>NET, ID '%s' rule '%s', action '%s'" % (self.state.ID, self.rulestring, self.actionList), 8 )
+	log.log( "<Directive>NET, ID '%s' rule '%s', action '%s'" % (self.state.ID, self.rule, self.actionList), 8 )
 
 
     def docheck(self, Config):
 	"""Perform the check."""
 
-	log.log( "<directive>NET(), docheck(), rulestring '%s'" % (self.rulestring), 7 )
+	log.log( "<directive>NET(), docheck(), rule '%s'" % (self.rule), 7 )
 
 	netenv = nlist.statstable.getHash()	# get dictionary of network stats
 
-	result = eval( self.rulestring, netenv )
+	result = eval( self.rule, netenv )
 
 	if result != 0:
 	    # build varDict from netenv
@@ -1126,43 +1123,44 @@ class SYS(Directive):
     def __init__(self, toklist):
 	apply( Directive.__init__, (self, toklist) )
 
-	self.rulestring = ''
+	self.rule = ''
 
 
     def tokenparser(self, toklist, toktypes, indent):
 	"""Parse rest of rule (after ':')."""
+	apply( Directive.tokenparser, (self, toklist, toktypes, indent) )
 
-	tokdict=self.parseArgs(toklist)
-
+	# test required arguments
 	try:
-	    self.rulestring = tokdict['rule']
-	except KeyError:
+	    self.rule
+	except AttributeError:
 	    raise ParseFailure, "Rule not specified"
-	try:
-	    self.actionList = self.parseAction(tokdict['action'])
-	except KeyError:
-	    raise ParseFailure, "Action not specified"
 
 	# Rule should be a string
-        if type(self.rulestring) != type('STRING'):
+        if type(self.rule) != type('STRING'):
 	    raise ParseFailure, "SYS parse error, rule is not string."
 
-	self.Action.varDict['sysrule'] = self.rulestring
+	self.Action.varDict['sysrule'] = self.rule
 
 	# define the unique ID
-	self.state.ID = '%s.SYS.%s' % (log.hostname,self.rulestring)
+	self.state.ID = '%s.SYS.%s' % (log.hostname,self.rule)
 
-	log.log( "<Directive>SYS, ID '%s' rule '%s' action '%s'" % (self.state.ID, self.rulestring, self.actionList), 8 )
+	log.log( "<Directive>SYS, ID '%s' rule '%s' action '%s'" % (self.state.ID, self.rule, self.actionList), 8 )
 
 
     def docheck(self, Config):
 	"""Perform the check."""
 
-	log.log( "<directive>SYS(), docheck(), rulestring '%s'" % (self.rulestring), 7 )
+	log.log( "<directive>SYS(), docheck(), rule '%s'" % (self.rule), 7 )
 
 	sysenv = system.getHash()		# get dictionary of system stats
 
-	result = eval( self.rulestring, sysenv )
+	try:
+	    result = eval( self.rule, sysenv )
+	except SyntaxError:
+	    log.log( "<directive>SYS(), docheck(), SyntaxError evaluating rule '%s'" % (self.rule), 3 )
+	    return
+
 
 	if result != 0:
 	    # build varDict from sysenv
@@ -1183,61 +1181,57 @@ class STORE(Directive):
     def __init__(self, toklist):
 	apply( Directive.__init__, (self, toklist) )
 
-	self.rulestring = ''
+	self.rule = ''
 
 
     def tokenparser(self, toklist, toktypes, indent):
 	"""Parse rest of rule (after ':')."""
+	apply( Directive.tokenparser, (self, toklist, toktypes, indent) )
 
-	tokdict=self.parseArgs(toklist)
-
+	# test required arguments
 	try:
-	    self.rulestring = tokdict['rule']
-	except KeyError:
+	    self.rule
+	except AttributeError:
 	    raise ParseFailure, "Rule not specified"
-	try:
-	    self.actionList = self.parseAction(tokdict['action'])
-	except KeyError:
-	    raise ParseFailure, "Action not specified"
 
 	# Rule should be a string
-        if type(self.rulestring) != type('STRING'):
+        if type(self.rule) != type('STRING'):
 	    raise ParseFailure, "STORE parse error, rule is not string."
 
-	self.Action.varDict['storerule'] = self.rulestring
+	self.Action.varDict['storerule'] = self.rule
 
 	# define the unique ID
-	self.state.ID = '%s.FS.%s' % (log.hostname,self.rulestring)
+	self.state.ID = '%s.FS.%s' % (log.hostname,self.rule)
 
-	log.log( "<Directive>STORE, ID '%s' rule '%s' action '%s'" % (self.state.ID, self.rulestring, self.actionList), 8 )
+	log.log( "<Directive>STORE, ID '%s' rule '%s' action '%s'" % (self.state.ID, self.rule, self.actionList), 8 )
 
 
     def docheck(self, Config):
 	"""Perform the check.  In this case, the 'check' is automatically true (we always want to store)."""
 
 	self.state.stateok()	# update state info for check passed
-	log.log( "<directive>STORE(), docheck(), rulestring '%s'" % (self.rulestring), 7 )
+	log.log( "<directive>STORE(), docheck(), rule '%s'" % (self.rule), 7 )
 
 	datahash = None
 
-	# Get data as directed by rulestring.
+	# Get data as directed by rule.
 	# * this is hard-coded to a few different 'rules' atm.  This should be
 	# cleaned up later to handle any type of rule (TODO)
 
-	if self.rulestring[:6] == 'system':
+	if self.rule[:6] == 'system':
 	    datahash = system.getHash()			# get dictionary of system stats
-	elif self.rulestring[:7] == 'netstat':
+	elif self.rule[:7] == 'netstat':
 	    #datahash = nlist.statstable.getHash()		# get dictionary of network stats
 	    datahash = nlist.getNetworkStats()			# get dictionary of network stats
-	elif self.rulestring[:4] == 'proc':
+	elif self.rule[:4] == 'proc':
 	    datahash = plist.allprocs()				# get dictionary of process details
-	elif self.rulestring[:2] == 'if':
+	elif self.rule[:2] == 'if':
 	    datahash = nlist.getAllInterfaces()			# get dictionary of interface details
-	elif self.rulestring[:6] == 'iostat':
+	elif self.rule[:6] == 'iostat':
 	    datahash = iostat.getHash()			# get dictionary of iostat data
 
 	if datahash == None:
-	    log.log( "<directive>STORE(), docheck(), rulestring '%s' is invalid." % (self.rulestring), 3 )
+	    log.log( "<directive>STORE(), docheck(), rule '%s' is invalid." % (self.rule), 3 )
 	    return
 
 	# Create a new hash with 'data.' prepended to each key (as required by estored).

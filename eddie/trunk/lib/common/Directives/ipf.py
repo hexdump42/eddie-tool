@@ -37,18 +37,13 @@ class IPF(directive.Directive):
 
 
     def tokenparser(self, toklist, toktypes, indent):
+	apply( Directive.tokenparser, (self, toklist, toktypes, indent) )
 
-	tokdict=self.parseArgs(toklist)
-
+	# test required arguments
 	try:
-	    self.rule = tokdict['rule']
-	except KeyError:
+	    self.rule
+	except AttributeError:
 	    raise ParseFailure, "Rule not specified"
-
-	try:
-	    self.actionList = self.parseAction( tokdict['action'] )
-	except KeyError:
-	    raise ParseFailure, "Action not specified"
 
 	# Set any FS-specific variables
 	#  rule = rule

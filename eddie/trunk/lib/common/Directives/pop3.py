@@ -184,34 +184,28 @@ class POP3TIMING(directive.Directive):
 
 
     def tokenparser(self, toklist, toktypes, indent):
+	apply( Directive.tokenparser, (self, toklist, toktypes, indent) )
 
-	tokdict=self.parseArgs(toklist)
-
+	# test required arguments
 	try:
-	    self.hostport = tokdict['server']	# hostname:port
-        except KeyError:
+	    self.server		# hostname:port
+        except AttributeError:
             raise ParseFailure, "POP3 Server not specified"
-
 	try:
-	    self.username = tokdict['user']	# username
-        except KeyError:
+	    self.username	# username
+        except AttributeError:
             raise ParseFailure, "Username not specified"
 
 	try:
-	    self.password = tokdict['password']	# password
-        except KeyError:
+	    self.password	# password
+        except AttributeError:
             raise ParseFailure, "Password not specified"
 
-	try:
-	    self.actionList = self.parseAction( tokdict['action'] )
-        except KeyError:
-            raise ParseFailure, "Action not specified"
-
-	if ':' in self.hostport:
-	    (self.host, self.port) = string.split( self.hostport, ':' )
+	if ':' in self.server:
+	    (self.host, self.port) = string.split( self.server, ':' )
 	    self.port = int(self.port)
 	else:
-	    self.host = self.hostport
+	    self.host = self.server
 	    self.port = 110
 
 
