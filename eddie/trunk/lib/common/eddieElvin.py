@@ -41,7 +41,7 @@ ElvinError = 'ElvinError'
 class elvinConnection:
     """A shared object which maintains a single connection to the Elvin server."""
 
-    def __init__(self, host='crazy.psychofx.com', port=5678):
+    def __init__(self, host='elvin.connect.com.au', port=5678):
 	self.host = host
 	self.port = port
 
