@@ -131,8 +131,13 @@ class Config:
     # Check if any of the config or rules files have been modified
     def checkfiles(self):
 	for f in self.configfiles.keys():
-	    if os.stat(f)[8] != self.configfiles[f]:		# check mtime
-		return 1
+	    try:
+		if os.stat(f)[8] != self.configfiles[f]:		# check mtime
+		    return 1
+	    except os.error:
+		if sys.exc_value == 'Connection timed out':
+		    log.log( "<Config>Checkfiles(), Timeout while trying to stat '%s' - skipping file checks."%(f), 4 )
+		    return 0
 
 	return 0
 
