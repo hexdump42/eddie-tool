@@ -365,7 +365,7 @@ class PID(Directive):
 		# Search for pid from process list
 		if plist.pidExists( pid ) == 0:
 		    # pid not found - to make sure, let's sleep a bit then check again
-		    log.log( "<directive>PID(), PR, pid %s not in process list - sleeping and checking again..." % (pid), 8 )
+		    log.log( "<directive>PID(), PR, pid %s not in process list - sleeping and checking again..." % (pid), 7 )
 		    time.sleep( 30 )
 		    plist.refresh()		# force refresh of proc list
 		    if plist.pidExists( pid ) == 0:
@@ -373,7 +373,7 @@ class PID(Directive):
 			log.log( "<directive>PID(), PR, pid %s not in process list" % (pid), 6 )
 			self.doAction(Config)
 		    else:
-			log.log( "<directive>PID(), PR, pid %s is in process list" % (pid), 8 )
+			log.log( "<directive>PID(), PR, pid %s is in process list" % (pid), 7 )
 
 
 	else:
@@ -430,7 +430,7 @@ class PROC(Directive):
 
 	if plist.procExists( self.daemon ) == 0:
 	    # process not running - let's sleep a bit then check again to make sure
-	    log.log( "<directive>NR(PROC) daemon not running, '%s' - sleeping before recheck..." % (self.daemon), 8 )
+	    log.log( "<directive>NR(PROC) daemon not running, '%s' - sleeping before recheck..." % (self.daemon), 7 )
 	    time.sleep( 30 )
 	    plist.refresh()		# force refresh of proc list
 	    if plist.procExists( self.daemon ) == 0:
@@ -454,7 +454,7 @@ class PROC(Directive):
 	try:
 	    procenv = plist[self.daemon].procinfo()		# get dictionary of process details
 	except AttributeError:
-	    log.log( "<directive>PROC.check() warning, no process '%s'." % (self.daemon), 8 )
+	    log.log( "<directive>PROC.check() warning, no process '%s'." % (self.daemon), 7 )
 	    return
 
 	result = eval( self.checkstring, procenv )
@@ -507,13 +507,13 @@ class SP(Directive):
 	if ret != 0:
 	    log.log( "<directive>SP(), port %s/%s listener found bound to %s" % (self.proto , self.port_n, self.addr), 8 )
 	else:
-	    log.log( "<directive>SP(), port %s/%s no listener found bound to %s - sleeping before recheck..." % (self.proto , self.port_n, self.addr), 8 )
+	    log.log( "<directive>SP(), port %s/%s no listener found bound to %s - sleeping before recheck..." % (self.proto , self.port_n, self.addr), 7 )
 	    time.sleep( 30 )
 	    nlist.refresh()		# force refresh of network stats
 
 	    ret = nlist.portExists(self.proto, self.port, self.addr) != None
 	    if ret != 0:
-		log.log( "<directive>SP(), port %s/%s listener found bound to %s" % (self.proto , self.port_n, self.addr), 8 )
+		log.log( "<directive>SP(), port %s/%s listener found bound to %s" % (self.proto , self.port_n, self.addr), 7 )
 	    else:
 		self.doAction(Config)
 		log.log( "<directive>SP(), port %s/%s no listener found bound to %s" % (self.proto , self.port_n, self.addr), 6 )
@@ -581,9 +581,9 @@ class COM(Directive):
 	    if err[-1:] == '\n':
 		err = err[:-1]
 
-        log.log( "<directive>COM.docheck(), retval=%d" % retval, 8 )
-	log.log( "<directive>COM.docheck(), stdout='%s'" % out, 8 )
-	log.log( "<directive>COM.docheck(), stderr='%s'" % err, 8 )
+        log.log( "<directive>COM.docheck(), retval=%d" % retval, 7 )
+	log.log( "<directive>COM.docheck(), stdout='%s'" % out, 7 )
+	log.log( "<directive>COM.docheck(), stderr='%s'" % err, 7 )
 
 	# save values in variable dictionary
 	self.Action.varDict['comout'] = out
@@ -683,10 +683,10 @@ class PORT(Directive):
 		    sendlist = string.split(send, '\n')		# split each line
 		    # send each line - only compare last output received
 		    for line in sendlist:
-			log.log( "<directive>PORT.isalive(): sending '%s'" % (line), 8 )
+			log.log( "<directive>PORT.isalive(): sending '%s'" % (line), 7 )
 			s.send(line+'\n')
 			data=s.recv(1024)
-			log.log( "<directive>PORT.isalive(): received '%s'" % (data), 8 )
+			log.log( "<directive>PORT.isalive(): received '%s'" % (data), 7 )
 
                     self.Action.varDict['portrecv'] = data
 
@@ -784,7 +784,7 @@ class IF(Directive):
 
 	i = nlist.getInterface(self.name)
 	if i == None:
-	    log.log( "<directive>IF.check() warning, no interface '%s'." % (self.name), 8 )
+	    log.log( "<directive>IF.check() warning, no interface '%s'." % (self.name), 7 )
 	    return		# ignore if this interface doesn't exist
 
 	ifenv = i.ifinfo()	# get dictionary of interface details

@@ -333,7 +333,7 @@ class CLASS(ConfigOption):
 	hosts = utils.stripquote(hosts)	# in case the arguments are in quotes (optional)
 	self.hosts = string.split(hosts, ',')	# finally, split into list of hosts
 
-	log.log( "<Config>CLASS(), class created %s:%s." % (self.name,self.hosts), 6 )
+	log.log( "<Config>CLASS(), class created %s:%s." % (self.name,self.hosts), 8 )
 
 
 ##

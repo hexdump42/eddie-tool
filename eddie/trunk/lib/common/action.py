@@ -80,7 +80,7 @@ class action:
 	tmp.close()
 
 	if not log.log( "<action>email(), email sent to '%s', subject '%s', body '%s'" % (u,subj,body), 9 ):
-	    log.log( "<action>email(%s, '%s')" % (u,subj) ,5 )
+	    log.log( "<action>email('%s', '%s', '%s')" % (u,subj,body[:20]) ,5 )
 	
 	#e = eddieElvin.eddieElvin()
 	#e.sendmsg( subj )
