@@ -4,6 +4,8 @@
 ##
 ## $Id$
 ##
+# chkconfig: 345 99 1
+# description: EDDIE-Tool monitoring agent
 
 # Source function library.
 . /etc/rc.d/init.d/functions
