@@ -54,7 +54,7 @@ ElvinError = 'ElvinError'
 class elvinConnection:
     """A shared object which maintains a single connection to the Elvin server."""
 
-    def __init__(self, url=ELVINURL, scope=ELVINSCOPE):
+    def __init__(self, url, scope):
 	self.url = url
 	self.scope = scope
 
@@ -91,7 +91,7 @@ class eddieElvin:
 	if UseElvin:
 	    self.connect()		# make an Elvin connection
 	else:
-	    log.log( "<eddieElvin>eddieElvin.__init__(), Elvin functionality disabled - probably because modules do not exist", 3 )
+	    log.log( "<eddieElvin4>eddieElvin.__init__(), Elvin functionality disabled - probably because modules do not exist", 3 )
 
 
     def connect(self):
@@ -111,10 +111,10 @@ class eddieElvin:
 
 	    try:
 		if ec == None:		# if not set, try to connect
-		    ec = elvinConnection()
-		    log.log( "<eddieElvin>eddieElvin.connect(), Connected to Elvin server", 6 )
+		    ec = elvinConnection( url=ELVINURL, scope=ELVINSCOPE )
+		    log.log( "<eddieElvin4>eddieElvin.connect(), Connected to Elvin server, url='%s' scope='%s'" % (ELVINURL, ELVINSCOPE), 6 )
 	    except elvin.errors.ElvinConnectNotReady:
-		log.log( "<eddieElvin>eddieElvin.connect(), received ElvinConnectNotReady -trying again", 8 )
+		log.log( "<eddieElvin4>eddieElvin.connect(), received ElvinConnectNotReady - trying again", 8 )
 		tryagain = 1
 		time.sleep(5)
 	    except:
@@ -124,13 +124,13 @@ class eddieElvin:
 		return 1
 
 	if not ec:
-	    log.log( "<eddieElvin>eddieElvin.connect(), Could not connect to Elvin server", 4 )
+	    log.log( "<eddieElvin4>eddieElvin.connect(), Could not connect to Elvin server", 4 )
 
 
     def reconnect(self):
 	global ec
 
-	log.log( "<eddieElvin>eddieElvin.reconnect(), attempting to reconnect to server", 7 )
+	log.log( "<eddieElvin4>eddieElvin.reconnect(), attempting to reconnect to server", 7 )
 	try:
 	    ec.elvinc.close()	# try to close connection, just in case
 	except:
@@ -146,12 +146,12 @@ class eddieElvin:
 	global ec
 
 	if UseElvin == 0:
-	    log.log( "<eddieElvin>eddieElvin.notify(), Elvin is disabled - request ignored", 7 )
+	    log.log( "<eddieElvin4>eddieElvin.notify(), Elvin is disabled - request ignored", 7 )
 	    return 2
 
 	if not ec:
 	    # if not connected to Elvin, try to connect again
-	    log.log( "<eddieElvin>eddieElvin.notify(), not connected - calling connect()", 7 )
+	    log.log( "<eddieElvin4>eddieElvin.notify(), not connected - calling connect()", 7 )
 	    self.connect()
 
 	if ec:
@@ -168,22 +168,22 @@ class eddieElvin:
 		try:
 		    ec.elvinc.notify( nfn=msg )
 		except elvin.errors.ElvinConnectNotReady:
-		    log.log( "<eddieElvin>eddieElvin.notify(), received ElvinConnectNotReady - trying again", 8 )
+		    log.log( "<eddieElvin4>eddieElvin.notify(), received ElvinConnectNotReady - trying again", 8 )
 		    tryagain = 1
 		    time.sleep(5)
 		except:
 		    e = sys.exc_info()
 		    tb = traceback.format_list( traceback.extract_tb( e[2] ) )
-		    log.log( "<eddieElvin>eddieElvin.notify(), notify failed: %s, %s, %s." % (e[0], e[1], tb), 3 )
+		    log.log( "<eddieElvin4>eddieElvin.notify(), notify failed: %s, %s, %s." % (e[0], e[1], tb), 3 )
 		    return 1
 
 	    if tries > maxtries:
-		log.log( "<eddieElvin>eddieElvin.notify(), too many retries - trying to reconnect", 4 )
+		log.log( "<eddieElvin4>eddieElvin.notify(), too many retries - trying to reconnect", 4 )
 		self.reconnect()
 		return 1
 
 	else:
-	    log.log( "<eddieElvin>eddieElvin.notify(), no connection - cannot send Elvin message", 7 )
+	    log.log( "<eddieElvin4>eddieElvin.notify(), no connection - cannot send Elvin message", 7 )
 	    self.reconnect()
 	    return 1
 
@@ -229,11 +229,11 @@ class elvinTicker(eddieElvin):
 	r = self.notify( elvinmsg )	# Send Elvin message
 
 	if r != 0:
-	    log.log( "<eddieElvin>elvinTicker.sendmsg(), notify failed, msg '%s'" % (msg), 4 )
+	    log.log( "<eddieElvin4>elvinTicker.sendmsg(), notify failed, msg '%s'" % (msg), 4 )
 	    return r	# failed
 
 	else:
-	    log.log( "<eddieElvin>elvinTicker.sendmsg(), notify successful, msg '%s'" % (msg), 8 )
+	    log.log( "<eddieElvin4>elvinTicker.sendmsg(), notify successful, msg '%s'" % (msg), 8 )
 	    return r	# succeeded
 
 
@@ -282,11 +282,11 @@ class elvindb(eddieElvin):
 	r = self.notify( edict )	# Send Elvin message
 
 	if r != 0:
-	    log.log( "<eddieElvin>elvinTicker.elvindb(), notify failed, table %s" % (table), 4 )
+	    log.log( "<eddieElvin4>elvinTicker.elvindb(), notify failed, table %s" % (table), 4 )
 	    return r	# failed
 
 	else:
-	    log.log( "<eddieElvin>elvinTicker.elvindb(), notify successful table %s" % (table), 8 )
+	    log.log( "<eddieElvin4>elvinTicker.elvindb(), notify successful table %s" % (table), 8 )
 	    return r	# succeeded
 
 
@@ -310,11 +310,11 @@ class elvinrrd(eddieElvin):
 	r = self.notify( edict )	# Send Elvin message
 
 	if r != 0:
-	    log.log( "<eddieElvin>elvinTicker.elvinrrd(), notify failed, key %s" % (key), 4 )
+	    log.log( "<eddieElvin4>elvinTicker.elvinrrd(), notify failed, key %s" % (key), 4 )
 	    return r	# failed
 
 	else:
-	    log.log( "<eddieElvin>elvinTicker.elvinrrd(), notify successful, key %s" % (key), 8 )
+	    log.log( "<eddieElvin4>elvinTicker.elvinrrd(), notify successful, key %s" % (key), 8 )
 	    return r	# succeeded
 
 ##
