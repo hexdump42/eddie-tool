@@ -43,8 +43,11 @@ if systype == '':
     osarch = uname[4]
     print "systype: %s/%s/%s" % (osname,osver,osarch)
     oslibdirs = [ os.path.join(basedir,'lib',osname,osver,osarch),
+                  os.path.join(basedir,'lib',osname,osarch,osver),
                   os.path.join(basedir,'lib',osname,osver),
+                  os.path.join(basedir,'lib',osname,osarch),
 		  os.path.join(basedir,'lib',osname) ]
+    print "oslibdirs:",oslibdirs
 
 
 commonlibdir = os.path.join(basedir, 'lib/common')
