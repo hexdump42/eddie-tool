@@ -73,11 +73,14 @@ class Pinger:
 	self.sock = PingSocket(addr)
 	self.pid = os.getpid()
 	self.addr = addr
-	name, aliases, ipaddr = socket.gethostbyaddr(addr)
-	if aliases:
-	    self.destinfo = (aliases[0], ipaddr[0])
-	else:
-	    self.destinfo = (name, ipaddr[0])
+	try:
+	    name, aliases, ipaddr = socket.gethostbyaddr(addr)
+	    if aliases:
+		self.destinfo = (aliases[0], ipaddr[0])
+	    else:
+		self.destinfo = (name, ipaddr[0])
+	except socket.herror:
+	    self.destinfo = ("", addr)
 
     def send_packet(self):
 	pkt = icmp.Packet()
