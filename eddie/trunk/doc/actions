@@ -55,6 +55,11 @@ syslog( "<text>" )
     Logs <text> to syslog.
     Relevant Directives: ALL
 
+elvin( "<text>" )
+    Sends <text> to Elvin messaging system, group "Otto".
+    Relevant Directives: ALL
+
+
 
                   HOW TO ADD AN ACTION
                   ====================
