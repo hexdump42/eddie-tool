@@ -16,7 +16,8 @@
 
 import time, types, os, sys, thread, signal, getopt
 import log
-#sys.path = ['/import/src/bin/elvin/dstc/lib/python', '/import/src/bin/elvin/dstc/sparc-sun-solaris2.5/lib'] + sys.path
+import snpp
+sys.path = ['/import/src/bin/elvin/dstc/lib/python', '/import/src/bin/elvin/dstc/sparc-sun-solaris2.5/lib'] + sys.path
 try:
 	import Elvin, ElvinMisc
 except ImportError:
@@ -26,12 +27,15 @@ except ImportError:
 ################################################################
 ElvinError = 'ElvinError'
 
+#
+# TODO make 2 new classes derrived from eddieElvin, elvinTicker and elvinPage
+# rtelford (980418)
+#
+
 
 class eddieElvin:
 
-    def __init__(self, host, port):
-	#self.host = 'chintoo'
-	#self.port = 5678
+    def __init__(self, host='elvin', port=5678):
 	self.host = host
 	self.port = port
 
@@ -45,20 +49,10 @@ class eddieElvin:
 	else:
 	    self.connected = 1
 
-
+    # must override this method
     def sendmsg(self,msg):
-	if self.connected:
-	    self.elvin.notify( { 'TICKERTAPE' : 'Eddie',
-	                         'TICKERTEXT' : msg,
-				       'USER' : log.hostname,
-				    'TIMEOUT' : 10, 
-				  'MIME_TYPE' : 'x-elvin/slogin',
-				  'MIME_ARGS' : log.hostname } )
-	    return 0
+	return 1
 
-	else:
-	    #sys.stderr.write("Not connected when at notify time\n")
-	    return 1
 
     def _exit(self):
 	"""Exit routine. Because the thing that created us is
@@ -109,10 +103,60 @@ def _cleanup(sig, stackframe):
     ElvinMisc.ElvinRemovePidFile(pidname)
     sys.exit(0)
 
+class elvinTicker(eddieElvin):
+
+    def sendmsg(self,msg):
+	if self.connected:
+	    self.elvin.notify( { 'TICKERTAPE' : 'Eddie',
+	                         'TICKERTEXT' : msg,
+				       'USER' : log.hostname,
+				    'TIMEOUT' : 10, 
+				  'MIME_TYPE' : 'x-elvin/slogin',
+				  'MIME_ARGS' : log.hostname } )
+	    return 0
+
+	else:
+	    return 1
+
+class elvinPage(eddieElvin):
+
+    def sendmsg(self,pager, msg):
+	if self.connected:
+	    self.elvin.notify( { 'ELVINPAGE'  : pager,
+	                              'MESS'  : msg    } )
+	    return 0
+
+	else:
+	    return 1
+
+    def subscribe(self):
+	
+	self.subscription = 'exists(ELVINPAGE)'
+        if self.connected:
+            self.elvin.subscribe(self.subscription, self._notify_cb)
+        else:
+            sys.stderr.write("Not connected when at notify time\n")
+
+    def _notify_cb(self, sub_id, d_not):
+ 
+        p = snpp.level1(self.host)
+ 
+        p.pager(d_not['ELVINPAGE'])
+        p.message(d_not['MESS'])
+ 
+        try:
+            p.send()
+        except SNPPpageFail:
+            print SNPPpageFail
+
+
+
+
+
 if __name__ == "__main__":
 
-    e = eddieElvin()
-    e.sendmsg("blah")
+    e = elvinPage()
+    e.sendmsg("sysadm", "blah")
 
     sys.exit(0)
 

@@ -348,7 +348,7 @@ def elvin(msg):
     msg = parseVars( msg, varDict )
 
     try:
-	e = eddieElvin.eddieElvin( elvinServer, elvinPort )
+	e = eddieElvin.elvinTicker( elvinServer, elvinPort )
     except eddieElvin.ElvinError:
 	log.log( "<action>elvin(), Error, eddieElvin(%s, %d) could not connect" % (elvinServer,elvinPort), 2 )
 	return
@@ -360,6 +360,35 @@ def elvin(msg):
 	log.log( "<action>elvin(), Alert, return value for e.sendmsg('%s') is %d" % (msg,retval), 3 )
     else:
 	log.log( "<action>elvin('%s')" % (msg), 5 )
+
+# elvinPage()
+def elvinPage(pager, msg):
+    # send a message via Elvin message system
+    elvinServer = 'chintoo'
+    elvinPort = 5678
+
+    if len(msg) == 0:
+	# msg must contain something
+	log.log( "<action>elvinPage(), Error, msg is empty", 2 )
+	return
+
+    # Substitute variables in string
+    msg = parseVars( msg, varDict )
+
+    try:
+	e = eddieElvin.elvinPage( elvinServer, elvinPort )
+    except eddieElvin.ElvinError:
+	log.log( "<action>elvinPage(), Error, eddieElvin(%s, %d) could not connect" % (elvinServer,elvinPort), 2 )
+	return
+
+    retval = e.sendmsg(pager, msg)
+
+    # Alert if return value != 0
+    if retval != 0:
+	log.log( "<action>elvinPage(), Alert, return value for e.sendmsg('%s') is %d" % (msg,retval), 3 )
+    else:
+	log.log( "<action>elvinPage('%s')" % (msg), 5 )
+
 
 # page()
 def page(pager, msg):
