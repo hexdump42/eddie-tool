@@ -95,21 +95,16 @@ class action:
 	    else:
 		body = msgbody
 
-	# run thru parseVars() to substitute variables from varDict
-	users = parseVars( users, self.varDict )
-	subj = parseVars( subj, self.varDict )
-	#subj = parseVars( subj, self.varDict )	# twice to substitute substituted variables!!
-	body = parseVars( body, self.varDict )
-	#body = parseVars( body, self.varDict )	# twice to substitute substituted variables!!
-
-	# Show problem age and other statistics if this is not the first time
+	# Create problem age and other statistics if this is not the first time
 	# the problem was found.
+	# Stored in %(problemage)s and %(problemfirstdetect)s
+	self.varDict['problemage'] = ''
+	self.varDict['problemfirstdetect'] = ''
 	t = self.state.faildetecttime
 	tl = self.state.lastfailtime
 	if tl != t:
-	    body = body + "\n\n------Problem Stats-----\n"
 	    tage = self.state.age()
-	    agestr = ""
+	    agestr = "Problem age: "
 	    if tage[0] > 0:
 		agestr = agestr + " %d year" % tage[0]
 		if tage[0] > 1:
@@ -135,9 +130,16 @@ class action:
 		if tage[5] > 1:
 		    agestr = agestr + "s"
 	    if agestr != "":
-		body = body + "Problem age:" + agestr
-	    body = body + "\nProblem first detected: %04d/%02d/%02d %d:%02d:%02d" % (t[0], t[1], t[2], t[3], t[4], t[5])
+		self.varDict['problemage'] = agestr
+	    self.varDict['problemfirstdetect'] = "First detected: %04d/%02d/%02d %d:%02d:%02d" % (t[0], t[1], t[2], t[3], t[4], t[5])
 
+
+	# run thru parseVars() to substitute variables from varDict
+	users = parseVars( users, self.varDict )
+	subj = parseVars( subj, self.varDict )
+	#subj = parseVars( subj, self.varDict )	# twice to substitute substituted variables!!
+	body = parseVars( body, self.varDict )
+	#body = parseVars( body, self.varDict )	# twice to substitute substituted variables!!
 
 	#tmp = os.popen('/usr/lib/sendmail -t', 'w')
 	tmp = utils.safe_popen('/usr/lib/sendmail -t', 'w')
