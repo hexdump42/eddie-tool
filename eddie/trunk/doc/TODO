@@ -2,10 +2,8 @@ Things TODO for Eddie!
 
 y Multi-threaded checks
 y Add NUMTHREADS as a config variable
-
-- Change directive syntax to be "DIRECTIVE 'name': etc etc"
-
-- Add scanperiod argument to directives
+y Change directive syntax to be "DIRECTIVE 'name': etc etc"
+y Add scanperiod argument to directives
 
 - Double checking for Port directive - or ALL directives with keyword
 
@@ -48,7 +46,7 @@ y Add NUMTHREADS as a config variable
 
 BUGS:
  - Unknown directives are not handled properly.
+ - Directives spanning multiple lines not parsed properly.
 
  - core dumps from iostat/kstat library sometimes...
-
 
