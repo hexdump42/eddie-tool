@@ -8,6 +8,9 @@
 # Source function library.
 . /etc/rc.d/init.d/functions
 
+# Set EDDIE_ADMIN to receive Eddie restart/exception notifications from eddie_wrapper
+#EDDIE_ADMIN=me@mydomain.com
+#export EDDIE_ADMIN
 
 EDDIERUN=/opt/eddie/bin/eddie_wrapper
 

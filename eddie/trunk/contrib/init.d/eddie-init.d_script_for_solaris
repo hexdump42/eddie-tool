@@ -5,6 +5,10 @@
 ## $Id$
 ##
 
+# Set this to receive Eddie restart/exception notifications from eddie_wrapper
+#EDDIE_ADMIN=me@mydomain.com
+#export EDDIE_ADMIN
+
 EDDIEBASE=/opt/eddie
 EDDIERUN=./eddie_wrapper
 
