@@ -33,6 +33,8 @@ class State:
 	self.faildetecttime = None	# first time failure was detected for current problem
 	self.ack = ack.ack()		# ack object to track acknowledgements
 	self.status = "ok"		# status of most recent check: "ok" or "fail"
+	self.checkcount = 0		# count number of checks/re-checks
+
 
     def ack(self, user=None, details=None):
 	"""Record a user acknowledgement for current problem."""
@@ -53,7 +55,9 @@ class State:
 	self.status = "fail"
 	self.lastfailtime = timenow
 
-	log.log( "<directive>State.statefail(), ID '%s' status '%s' lastfailtime %s faildetecttime %s"%(self.ID, self.status, self.lastfailtime, self.faildetecttime), 6 )
+	self.checkcount = self.checkcount + 1
+
+	log.log( "<directive>State.statefail(), ID '%s' status '%s' checkcount %d lastfailtime %s faildetecttime %s"%(self.ID, self.status, self.checkcount, self.lastfailtime, self.faildetecttime), 6 )
 
 	#TODO: Post an EVENT about this failure...
 	#      EVENTS are either: new failure/problem detected
@@ -69,6 +73,8 @@ class State:
 	    pass
 
 	self.status = "ok"
+
+	self.checkcount = 0	# reset check counter
 
 	log.log( "<directive>State.stateok(), ID '%s' status '%s'"%(self.ID, self.status), 8 )
 
@@ -180,6 +186,11 @@ class Directive:
 	# directives keep state information about themselves
 	self.state = State()
 
+	self.requeueTime = None	# specific requeue time can be specified
+
+	self.numchecks = 1	# perform only 1 check at a time by default
+	self.checkwait = 0	# time to wait in between multiple checks
+
 
     def __str__( self ):
 	return "<%s Directive %s>" % (self.type, self.ID)
@@ -215,12 +226,38 @@ class Directive:
 	try:
 	    if type(self.scanperiod) != type(1):
 		self.scanperiod = utils.val2secs( self.scanperiod )
-	except AttributeError:
-	    pass	# scanperiod isn't setup, which is fine
+	except:
+	    raise ParseFailure, "scanperiod argument has incorrect value '%s'"%(self.scanperiod)
+
+	# test numchecks argument is integer and >= 0
+	if type(self.numchecks) != type(1):
+	    try:
+		self.numchecks = int(self.numchecks)
+	    except ValueError:
+		raise ParseFailure, "numchecks argument is not integer '%s'"%(self.numchecks)
+	if self.numchecks < 0:
+	    raise ParseFailure, "numchecks argument must be > 0 '%s'"%(self.numchecks)
+
+	# convert scanperiod to integer seconds if not already
+	try:
+	    if type(self.checkwait) != type(1):
+		self.checkwait = utils.val2secs( self.checkwait )
+	except:
+	    raise ParseFailure, "checkwait argument has incorrect value '%s'"%(self.checkwait)
 
 
     def doAction(self, Config):
     	"""Perform actions for a directive."""
+
+	if self.state.checkcount < self.numchecks:
+	    # need to wait before re-checking
+	    # when put back in queue only wait checkwait seconds
+	    self.requeueTime = time.time()+self.checkwait
+	    log.log( "<directive>doAction(), scheduling for recheck in %d seconds" % self.checkwait, 7 )
+	    return
+	else:
+	    self.state.checkcount = 0	# performing action so reset counter
+  
 
 	# record action information
 	self.lastactiontime = time.localtime(time.time())
@@ -351,6 +388,19 @@ class Directive:
 	return argdict
 
 
+    def putInQueue( self, q ):
+	"""Put this directive back into the scheduler queue."""
+
+	if self.requeueTime:
+	    # a specific requeueTime has been requested
+	    q.put( (self,self.requeueTime) )
+	    self.requeueTime = None
+	    log.log( "<directive>putInQueue(), %s re-queued by requeueTime" % (self), 8)
+
+	else:
+	    # reschedule in scanperiod seconds
+	    q.put( (self,time.time()+self.scanperiod) )
+	    log.log( "<directive>putInQueue(), %s re-queued by scanperiod (%d secs)" % (self,self.scanperiod), 8)
 
 
 
@@ -440,7 +490,7 @@ class FS(Directive):
     	    log.log( "<directive>FS(), rule '%s' was false, calling doAction()" % (self.rule), 6 )
     	    self.doAction(Config)
 
-	Config.q.put( (self,time.time()+self.scanperiod) )	# put self back in the Queue
+	self.putInQueue( Config.q )	# put self back in the Queue
 
 
     # Parse the rule line and replace/remove certain characters
@@ -570,7 +620,7 @@ class PID(Directive):
 			log.log( "<directive>PID(), PR, pid %s is in process list" % (pid), 7 )
 			self.state.stateok()		# update state info for check passed
 
-	    Config.q.put( (self,time.time()+self.scanperiod) )	# put self back in the Queue
+	    self.putInQueue( Config.q )	# put self back in the Queue
 
 	else:
 	    # invalid rule
@@ -620,7 +670,7 @@ class PROC(Directive):
 	self.Action.varDict['procpid'] = '[pid not yet defined]'
 
 	# define the unique ID
-	self.state.ID = '%s.PROC.%s.%s' % (log.hostname,self.procname,toklist[0])
+	self.state.ID = '%s.PROC.%s' % (log.hostname,self.procname)
 
 	log.log( "<Directive>PROC, ID '%s' procname '%s' rule '%s' action '%s'" % (self.state.ID, self.procname, self.rule, self.actionList), 8 )
 
@@ -631,22 +681,20 @@ class PROC(Directive):
 	log.log( "<directive>PROC(), docheck(), procname '%s', rule '%s'" % (self.procname,self.rule), 7 )
 	self.rule(Config)
 
-	Config.q.put( (self,time.time()+self.scanperiod) )	# put self back in the Queue
+	self.putInQueue( Config.q )	# put self back in the Queue
 
 
     def NR(self,Config):
 	"""Call action if process is found to be NOT running."""
 
+	if self.state.checkcount > 0:
+	    plist.refresh()	# force refresh of proc list if re-checking
+
 	if plist.procExists( self.procname ) == 0:
-	    # process not running - let's sleep a bit then check again to make sure
-	    log.log( "<directive>NR(PROC) procname not running, '%s' - sleeping before recheck..." % (self.procname), 7 )
-	    time.sleep( 30 )
-	    plist.refresh()		# force refresh of proc list
-	    if plist.procExists( self.procname ) == 0:
-		log.log( "<directive>NR(PROC) procname not running, '%s'" % (self.procname), 6 )
-		self.state.statefail()	# update state info for check failed
-		self.doAction(Config)
-		return
+	    log.log( "<directive>NR(PROC) procname not running, '%s'" % (self.procname), 6 )
+	    self.state.statefail()	# update state info for check failed
+	    self.doAction(Config)
+	    return
 
 	self.state.stateok()	# update state info for check passed
 
@@ -751,7 +799,7 @@ class SP(Directive):
 		self.state.statefail()	# update state info for check failed
 		self.doAction(Config)
 
-	Config.q.put( (self,time.time()+self.scanperiod) )	# put self back in the Queue
+	self.putInQueue( Config.q )	# put self back in the Queue
 
 
 COMsemaphore = threading.Semaphore()
@@ -865,7 +913,7 @@ class COM(Directive):
 	else:
 	    self.state.stateok()	# update state info for check passed
 
-	Config.q.put( (self,time.time()+self.scanperiod) )	# put self back in the Queue
+	self.putInQueue( Config.q )	# put self back in the Queue
 
 
 class PORT(Directive):
@@ -928,7 +976,7 @@ class PORT(Directive):
 	else:
 	    self.state.stateok()	# update state info for check passed
 
-	Config.q.put( (self,time.time()+self.scanperiod) )	# put self back in the Queue
+	self.putInQueue( Config.q )	# put self back in the Queue
 
 
     def isalive(self,host,port,send="",expect=""):
@@ -1028,7 +1076,7 @@ class IF(Directive):
 
 	self.rule(Config)
 
-	Config.q.put( (self,time.time()+self.scanperiod) )	# put self back in the Queue
+	self.putInQueue( Config.q )	# put self back in the Queue
 
 
     def NE(self, Config):
@@ -1126,7 +1174,7 @@ class NET(Directive):
 	else:
 	    self.state.stateok()	# update state info for check passed
 
-	Config.q.put( (self,time.time()+self.scanperiod) )	# put self back in the Queue
+	self.putInQueue( Config.q )	# put self back in the Queue
 
 
 
@@ -1184,7 +1232,7 @@ class SYS(Directive):
 	else:
 	    self.state.stateok()	# update state info for check passed
 
-	Config.q.put( (self,time.time()+self.scanperiod) )	# put self back in the Queue
+	self.putInQueue( Config.q )	# put self back in the Queue
 
 
 
@@ -1199,7 +1247,7 @@ class STORE(Directive):
 
     def tokenparser(self, toklist, toktypes, indent):
 	"""Parse rest of rule (after ':')."""
-	apply( Directive.tokenparser, (self, toklist, toktypes, indent) )
+	Apply( Directive.tokenparser, (self, toklist, toktypes, indent) )
 
 	# test required arguments
 	try:
@@ -1222,7 +1270,6 @@ class STORE(Directive):
     def docheck(self, Config):
 	"""Perform the check.  In this case, the 'check' is automatically true (we always want to store)."""
 
-	self.state.stateok()	# update state info for check passed
 	log.log( "<directive>STORE(), docheck(), rule '%s'" % (self.rule), 7 )
 
 	datahash = None
@@ -1254,9 +1301,12 @@ class STORE(Directive):
 #	    storeenv['data.'+i] = datahash[i]
 
 	self.Action.storedict = datahash
-	self.doAction(Config)
 
-	Config.q.put( (self,time.time()+self.scanperiod) )	# put self back in the Queue
+	self.state.statefail()	# state should be fail before doAction() called
+	self.doAction(Config)
+	self.state.stateok()	# reset state
+
+	self.putInQueue( Config.q )	# put self back in the Queue
 
 
 

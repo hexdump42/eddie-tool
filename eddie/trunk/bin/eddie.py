@@ -199,9 +199,13 @@ def scheduler(q, Config, die_event):
 
 	(c,t) = q.get(block=1)	# retrieve next object from queue
 
-	# start check in a new thread
-	log.log( "<eddie>scheduler(), Starting new thread for %s, %s" % (c,t), 8 )
-	threading.Thread(group=None, target=c.docheck, name=None, args=(Config,), kwargs={}).start()
+	if c.numchecks > 0:
+	    # start check in a new thread
+	    log.log( "<eddie>scheduler(), Starting new thread for %s, %s" % (c,t), 8 )
+	    threading.Thread(group=None, target=c.docheck, name=None, args=(Config,), kwargs={}).start()
+	else:
+	    # when numchecks == 0 we don't do any checks at all...
+	    log.log( "<eddie>scheduler(), Not scheduling checks for %s when numchecks=%d" % (c,c.numchecks), 7 )
 
     log.log( "<eddie>scheduler(), die_event received, scheduler exiting", 5 )
 
