@@ -63,8 +63,8 @@ class eddieElvin:
     # must override this method
     def sendmsg(self,msg):
 	if self.connected:
-	    #self.elvin.notify( { 'TICKERTAPE' : 'Eddie',
-	    self.elvin.notify( { 'TICKERTAPE' : 'EddieTest',
+	    #self.elvin.notify( { 'TICKERTAPE' : 'EddieTest',
+	    self.elvin.notify( { 'TICKERTAPE' : 'Eddie',
 	                         'TICKERTEXT' : msg,
 				       'USER' : log.hostname,
 				    'TIMEOUT' : 10, 
