@@ -36,12 +36,16 @@ PROJECT PLAN:
 		netstat class				Rod
 		DEF substition				Chris	100%
 		History:
-			fs				Chris	0%
+			fs				Chris	90%
 			proc
 			netstat
+		ADMIN stuff
+			- ADMIN
+			- ADMINLEVEL
+			- admin emailing
 	Directives:
 		D					Chris	100%
-		FS					Chris	50%
+		FS					Chris	90%
 		PID					Chris	100%
 		SP					Rod
 	Actions:
