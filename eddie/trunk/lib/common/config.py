@@ -250,6 +250,7 @@ class LOGLEVEL(ConfigOption):
 
 	# ok, value is 3rd list element
 	log.loglevel = string.atoi(list[2])		# set the config option
+	log.log( "<config>LOGLEVEL(), loglevel set to %d" % (log.loglevel), 6 )
 
 
 

@@ -181,6 +181,10 @@ class Directive:
 	self.state = State()
 
 
+    def __str__( self ):
+	return "<%s Directive %s>" % (self.type, self.ID)
+
+
     def tokenparser(self, toklist, toktypes, indent):
 	"""Parse named arguments for directives.  All valid named
 	arguments are saved in the objects as self.argname, eg: self.rule
@@ -204,8 +208,15 @@ class Directive:
 	# test for actionList which is always required
 	try:
 	    self.actionList
-	except KeyError:
+	except AttributeError:
 	    raise ParseFailure, "Action not specified"
+
+	# convert scanperiod to integer seconds if not already
+	try:
+	    if type(self.scanperiod) != type(1):
+		self.scanperiod = utils.val2secs( self.scanperiod )
+	except AttributeError:
+	    pass	# scanperiod isn't setup, which is fine
 
 
     def doAction(self, Config):
@@ -337,6 +348,7 @@ class Directive:
 		raise ParseFailure, "Error parsing directive arguments"
 
 	return argdict
+
 
 
 
