@@ -6,7 +6,20 @@ y Change directive syntax to be "DIRECTIVE 'name': etc etc"
 y Add scanperiod argument to directives
 y Add ALIAS definition type for action argument aliases, etc
 
-- Double checking for Port directive - or ALL directives with keyword
+- Double checking for directives: use arguments checks= and checkwait= eg:
+  crond': checks=2 checkwait=30 procname='crond' rule='NR' action="..."
+  means perform 2 checks total (only perform the second check if the
+  first one fails) and wait 30seconds between checks.
+  The directive is actually re-scheduled in the scheduler queue for 30seconds
+  time.
+
+- Directive template creation, eg:
+    PROC 'template1':	template=self	scanperiod='5m'	checks=2	checkwait=30
+    PROC 'cron':	template='template1'	procname='crond'	action="..."
+  special template=self means this directive is a template and not to
+  schedule it.
+  Can use other working directives as templates also.
+  Template must be same directive type as directive using it.
 
 - rule dependencies
 
