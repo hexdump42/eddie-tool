@@ -16,8 +16,17 @@
 # Standard Python modules
 import sys, os, time, signal
 
+# Work out the base Eddie directory which should contain bin/, lib/, etc...
+cwd = os.getcwd()
+ewd = os.path.split(sys.argv[0])[0]
+fullp = os.path.join(cwd, ewd)
+basedir = os.path.join(fullp, '..')
+
+commonlibdir = os.path.join(basedir, 'lib/common')
+oslibdir = os.path.join(basedir, 'lib/sparc-sun-solaris2.5')
+
 # TODO : determine OS type dynamically...
-sys.path = ['../lib/common', '../lib/sparc-sun-solaris2.5'] + sys.path
+sys.path = [commonlibdir, oslibdir] + sys.path
 
 # Python common modules
 import parseConfig
@@ -34,7 +43,8 @@ import df
 import netstat
 
 # Main config file - this file INCLUDEs all other config files
-config_file = '../config/eddie.cf'
+configdir = os.path.join(basedir, 'config')
+config_file = configdir + '/eddie.cf'
 
 
 # Exit Eddie cleanly
