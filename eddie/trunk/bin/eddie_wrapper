@@ -62,9 +62,9 @@ else
 fi
 
 # Find GNU date program - used for 'gdate "+%s"' below
-GDATE=`which gdate 2>/dev/null`
+GDATE=`which gdate 2>/dev/null | grep -v "^no "`
 if [ "$GDATE" = "" ]; then
-    GDATE=`which date`
+    GDATE=`which date`		# hopefully standard 'date' is GNU date (ie, Linux)
 fi
 
 
