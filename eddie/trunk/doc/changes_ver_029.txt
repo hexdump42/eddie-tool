@@ -27,7 +27,7 @@ below.
 
 PROC:
  Arguments:
-     procname= -> name=
+     procname -> name
  Rules:
      NR -> 'not exists'
      R => 'exists'
@@ -35,6 +35,8 @@ PROC:
      procp -> name
 
 PID:
+ Arguments:
+     pid -> pidfile
  Rules:
      EX -> 'not exists'
      PR -> 'exists and not running'

@@ -13,11 +13,11 @@ group host5:
 			checkwait='30s'		# wait 30 secs between 2nd check
 			action=COMMONALERT(commonmsg.proc,2)
 
-    PID named1:		pid='/var/run/named.pid'
+    PID named1:		pidfile='/var/run/named.pid'
 			rule='not exists'
 			scanperiod='30m'	# only check every 30min
 			action=COMMONALERT(commonmsg.pid,0)
-    PID named2:		pid='/var/run/named.pid'
+    PID named2:		pidfile='/var/run/named.pid'
 			rule='exists and not running'
 			scanperiod='30m'	# only check every 30min
 			action=COMMONALERT(commonmsg.pidpr,1)
@@ -42,11 +42,11 @@ group host6:
 			checkwait='30s'		# wait 30 secs between 2nd check
 			action=COMMONALERT(commonmsg.proc,2)
 
-    PID syslog1:	pid='/var/run/syslog.pid'
+    PID syslog1:	pidfile='/var/run/syslog.pid'
 			rule='not exists'
 			scanperiod='30m'	# only check every 30min
 			action=COMMONALERT(commonmsg.pid,0)
-    PID syslog1:	pid='/var/run/syslog.pid'
+    PID syslog1:	pidfile='/var/run/syslog.pid'
 			rule='exists and not running'
 			scanperiod='30m'	# only check every 30min
 			action=COMMONALERT(commonmsg.pidpr,1)

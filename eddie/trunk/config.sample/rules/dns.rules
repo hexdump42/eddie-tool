@@ -33,16 +33,16 @@ group dns:
 			rule='pctused >= 90'
 			action=COMMONALERT(commonmsg.fs,2)
 
-    PID named1:		pid='/var/run/named.pid'
+    PID named1:		pidfile='/var/run/named.pid'
 			rule='not exists'
 			action=COMMONALERT(commonmsg.pid,0)
-    PID named2:		pid='/var/run/named.pid'
+    PID named2:		pidfile='/var/run/named.pid'
 			rule='exists and not running'
 			action=COMMONALERT(commonmsg.pidpr,1)
-    PID sendmail1:	pid='/etc/mail/sendmail.pid'
+    PID sendmail1:	pidfile='/etc/mail/sendmail.pid'
 			rule='not exists'
 			action=COMMONALERT(commonmsg.pid,0)
-    PID sendmail2:	pid='/etc/mail/sendmail.pid'
+    PID sendmail2:	pidfile='/etc/mail/sendmail.pid'
 			rule='exists and not running'
 			action=COMMONALERT(commonmsg.pidpr,1)
 

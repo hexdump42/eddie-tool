@@ -119,9 +119,9 @@ class PID(directive.Directive):
 
 	# test required arguments
 	try:
-	    self.args.pid
+	    self.args.pidfile
 	except AttributeError:
-	    raise directive.ParseFailure, "Pid not specified"
+	    raise directive.ParseFailure, "pidfile argument not specified"
 	try:
 	    self.args.rule
 	except AttributeError:
@@ -129,14 +129,15 @@ class PID(directive.Directive):
 
 	# Set any PID-specific variables
 	#  %pidf = the PID-file
-	self.defaultVarDict['pidfile'] = self.args.pid
+	self.defaultVarDict['pidfile'] = self.args.pidfile
+	self.defaultVarDict['rule'] = self.args.rule
 
 	# define the unique ID
 	if self.ID == None:
-	    self.ID = '%s.PID.%s.%s' % (log.hostname,self.args.pid,self.args.rule)
+	    self.ID = '%s.PID.%s.%s' % (log.hostname,self.args.pidfile,self.args.rule)
 	self.state.ID = self.ID
 
-	log.log( "<directive>PID.tokenparser(): ID '%s' pid '%s' rule '%s'" % (self.state.ID, self.args.pid, self.args.rule), 8 )
+	log.log( "<directive>PID.tokenparser(): ID '%s' pid '%s' rule '%s'" % (self.state.ID, self.args.pidfile, self.args.rule), 8 )
 
 
     def getData(self):
@@ -149,7 +150,7 @@ class PID(directive.Directive):
 
 	# Check if pidfile exists
 	try:
-	    pidfile = open( self.args.pid, 'r' )
+	    pidfile = open( self.args.pidfile, 'r' )
 	except IOError:
 	    # pidfile not found
 	    data['exists'] = 0		# false

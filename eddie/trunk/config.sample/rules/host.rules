@@ -18,10 +18,10 @@ group host1:
 		rule='pctused >= 95'
 		action=COMMONALERT(commonmsg.fs,2)
 
-    PID namedex:pid='/var/run/named.pid'
+    PID namedex:pidfile='/var/run/named.pid'
 		rule='not exists'
 		action=COMMONALERT(commonmsg.pid,0)
-    PID namedpr:pid='/var/run/named.pid'
+    PID namedpr:pidfile='/var/run/named.pid'
 		rule='exists and not running'
 		action=COMMONALERT(commonmsg.pidpr,1)
 

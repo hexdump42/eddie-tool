@@ -1136,7 +1136,7 @@
     <br><br>
     PID-specific Arguments:
     <ul>
-     <li> <b>pid=&lt;pidfile&gt;</b> <i>(required)</i>:
+     <li> <b>pidfile=&lt;pidfile&gt;</b> <i>(required)</i>:
 	  <br>
 	  - specifies the pid file to perform checks on.  The directive expects
 	  the pid to be the first number found in the file.  It ignores anything
@@ -1145,7 +1145,7 @@
           (e.g., "/var/run/sshd.pid").
           <i>Example:</i>
 	  <pre>
-	  pid="/var/run/syslog.pid"</pre>
+	  pidfile="/var/run/syslog.pid"</pre>
     </ul><br>
 
     Rule Variables:
@@ -1180,13 +1180,13 @@
     <pre>
         # alert if the sshd pid file doesn't exist
         PID sshdpid1:
-            pid='/var/run/sshd.pid'
+            pidfile='/var/run/sshd.pid'
 	    rule='not exists'
             action=email("alert", "sshd pid file not found on %(h)s")
 
         # alert if the sshd pid doesn't match the process table
         PID sshdpid2:
-            pid='/var/run/sshd.pid'
+            pidfile='/var/run/sshd.pid'
 	    rule='exists and not running'
             action=email("alert", "sshd pid not a valid process on %(h)s")
     </pre>

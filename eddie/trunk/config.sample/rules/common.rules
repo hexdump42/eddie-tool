@@ -113,10 +113,10 @@ FS var:		fs='/var'
 
 
 # PID directives use pidfiles to perform checks.
-PID sshd1:	pid='/var/run/sshd.pid'
+PID sshd1:	pidfile='/var/run/sshd.pid'
 		rule='not exists'
 		action=COMMONALERT(commonmsg.pid,0)
-PID sshd2:	pid='/var/run/sshd.pid'
+PID sshd2:	pidfile='/var/run/sshd.pid'
 		rule='exists and not running'
 		action=COMMONALERT(commonmsg.pidpr,1)
 
