@@ -255,7 +255,7 @@ class action:
 	    return 0
 
 	# send a message via Elvin message system
-	elvinServer = 'koro'
+	elvinServer = 'elvin'
 	elvinPort = 5678
 
 	#print "ELVIN: elvinServer:",elvinServer
