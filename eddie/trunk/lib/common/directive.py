@@ -306,7 +306,7 @@ class PID(Directive):
 class D(Directive):
     def __init__(self, *arg):
 	apply( Directive.__init__, (self,) + arg )
-	self.regexp = 'D[\t \n]+\([a-zA-Z0-9_]+\)[\t \n]+\([a-zA-Z0-9_]+\)[\t \n]+\(.*\)'
+	self.regexp = 'D[\t \n]+\([a-zA-Z0-9_-]+\)[\t \n]+\([a-zA-Z0-9_]+\)[\t \n]+\(.*\)'
 	fields = self.parseRaw()
 	self.daemon = fields[0]			# the daemon to check for
 	self.rule = fields[1]			# the rule (NR or R)
