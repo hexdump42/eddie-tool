@@ -110,7 +110,7 @@ class dfList:
     def _refresh(self):
 	"""Refresh disk usage data."""
 
-	rawList = utils.safe_popen('df -text2', 'r')
+	rawList = utils.safe_popen('df -text2 -text3', 'r')
 	self.dfheader = rawList.readline()	# header
  
 	self.list = []
