@@ -649,7 +649,7 @@ def showHost( hostname, start, cfg ):
     cfg.readDirConfigs()
     # chris 2003-05-26: get hosts to make selection list and next/previous links
     hosts = cfg.getAllHosts()
-    hostselect = "<select name='hostname' onChange=selecthost.submit()>"
+    hostselect_options = ""		# build list of hosts as <option>s
     if cfg.settings['ho'] == 'a':
 	# sort by aliases
 	hosts.sort(cfg.aliasSort)
@@ -657,13 +657,13 @@ def showHost( hostname, start, cfg ):
 	    selected = ''
 	    if h == hostname:
 		selected = 'selected'
-	    hostselect += "<option value='%s' %s>" % (h,selected)
+	    hostselect_options += "<option value='%s' %s>" % (h,selected)
 	    if h in cfg.aliases.keys():
-		hostselect += "%s" % (cfg.aliases[h])
-		hostselect += " (%s)"%(h)
+		hostselect_options += "%s" % (cfg.aliases[h])
+		hostselect_options += " (%s)"%(h)
 	    else:
-		hostselect += "%s"%(h)
-	    hostselect += "</option>"
+		hostselect_options += "%s"%(h)
+	    hostselect_options += "</option>"
     else:
 	# sort by hostnames
 	hosts.sort(nocaseSort)
@@ -671,11 +671,14 @@ def showHost( hostname, start, cfg ):
 	    selected = ''
 	    if h == hostname:
 		selected = 'selected'
-	    hostselect += "<option value='%s' %s>%s" % (h,selected,h)
+	    hostselect_options += "<option value='%s' %s>%s" % (h,selected,h)
 	    if h in cfg.aliases:
-		hostselect += " (%s)"%(cfg.aliases[h])
-	    hostselect += "</option>"
-    hostselect += "</select>"
+		hostselect_options += " (%s)"%(cfg.aliases[h])
+	    hostselect_options += "</option>"
+    hostselect_options += "</select>"
+
+    hostselect_top = "<select name='hostname' onChange=selecthost.submit()>" + hostselect_options
+    hostselect_bot = "<select name='hostname' onChange=selecthostbot.submit()>" + hostselect_options
 
     prev = ''
     next = ''
@@ -702,7 +705,7 @@ def showHost( hostname, start, cfg ):
 	    </font></td>
 	<td align="center" width="40%%"><b>%s%s</b></td>
 	<td align="right" valign="middle" width="30%%">%s&nbsp;%s&nbsp;%s</td>
-	</tr></Table>""" % (cursettings,hostname,alias,prev,hostselect,next)
+	</tr></Table>""" % (cursettings,hostname,alias,prev,hostselect_top,next)
     print "</form>"
 
     cursettings = cfg.keepSettings( type='get', exclude=('start',) )
@@ -731,6 +734,8 @@ def showHost( hostname, start, cfg ):
 
     showTypes( hostname, start, cfg.filter )
 
+    print "<form name='selecthostbot' action='%s' method=GET>" % (os.environ['SCRIPT_NAME'])
+    print cfg.keepSettings(type='form')		# pass settings as hidden fields
     print """<Table width="100%%"><tr>
 	<td align="left" width="30%%">
 	    <font size="-1">
@@ -738,7 +743,8 @@ def showHost( hostname, start, cfg ):
 	    </font></td>
 	<td align="center" width="40%%"><b>%s%s</b></td>
 	<td align="right" valign="middle" width="30%%">%s&nbsp;%s&nbsp;%s</td>
-	</tr></Table>""" % (cursettings,hostname,alias,prev,hostselect,next)
+	</tr></Table>""" % (cursettings,hostname,alias,prev,hostselect_bot,next)
+    print "</form>"
 
     print "</BODY>"
 
@@ -797,13 +803,19 @@ def main():
     cfg.parseGlobalConfig(GLOBAL_CONFIG)
     cfg.parseForm(form)
 
-    if 'hostname' in form.keys():
+    hostname = None
+    if 'hostname1' in form.keys():
+	hostname = form['hostname1'].value
+    elif 'hostname' in form.keys():
+	hostname = form['hostname'].value
+
+    if hostname:
 	if 'start' in form.keys():
 	    start = form['start'].value
 	else:
 	    start = "-151200"		# default to daily
 	filter = cfg.getFilter( form )		# get groups/datatypes to filter by
-	showHost( form['hostname'].value, start, cfg )
+	showHost( hostname, start, cfg )
     else:
         controlPanel(cfg)
 #    else:
