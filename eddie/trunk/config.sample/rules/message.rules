@@ -228,6 +228,15 @@ Actually received: %(recv)s
     ## Common notification messages for PING directives
     ##
     M ping:
+	MSG WARN: "%(host)s FAILED Ping"
+	    """Warning: %(host)s has failed ping.
+
+%(problemage)s
+%(problemfirstdetect)s
+"""
+
+	MSG WARN_P: "%(host)s FAILED Ping %(problemage)s" ""
+
 	MSG ALERT: "%(host)s FAILED Ping"
 	    """Alert: %(host)s has failed ping.
 
