@@ -6,6 +6,8 @@
 while [ 1 ]; do
 	cd /opt/eddie/bin
 	./eddie.py >/tmp/.eddie$$.out 2>&1
+	retcode=$?
+	echo "eddie_wrapper: eddie died at `date` return code: $retcode" >> /tmp/.eddie$$.out
 	/usr/bin/mailx -s "Eddie output on `hostname` at `date`" cmiles@connect.com.au < /tmp/.eddie$$.out
 	/usr/bin/sleep 30
 	echo "eddie_wrapper: restarting Eddie at `date`."
