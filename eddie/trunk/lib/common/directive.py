@@ -150,9 +150,9 @@ class Directive:
 		if level == None or level == '':
 		    level = '0'
 
-		print ">>>> notif:",notif
-		print ">>>> msg:",msg
-		print ">>>> level:",level
+		#print ">>>> notif:",notif
+		#print ">>>> msg:",msg
+		#print ">>>> level:",level
 
 		try:
 		    afunc = Config.NDict[notif].levels[level]

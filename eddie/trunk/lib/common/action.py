@@ -378,13 +378,13 @@ class action:
 	if self.msg == None:
 	    raise GetMessageError
 
-	print ".......... msg:",msg		#DEBUG
-	print "..... self.msg:",self.msg	#DEBUG
-	print "... self.MDict:",self.MDict	#DEBUG
+	#print ".......... msg:",msg		#DEBUG
+	#print "..... self.msg:",self.msg	#DEBUG
+	#print "... self.MDict:",self.MDict	#DEBUG
 
 	msgtree = string.split( self.msg, '.' )
 	M = self.MDict[msgtree[0]]
-	print "............ M:",M		#DEBUG
+	#print "............ M:",M		#DEBUG
 	for m in msgtree[1:]:
 	    M = M[m]
 
