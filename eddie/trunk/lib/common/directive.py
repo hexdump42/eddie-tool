@@ -358,6 +358,8 @@ class PID(Directive):
 		# Get rid of any other junk after pid
 		pid = string.split(pid)[0]
 
+		pid = int(pid)		# want it as an integer
+
 		self.Action.varDict['pid'] = pid
 
 		# Search for pid from process list
@@ -387,17 +389,24 @@ class PROC(Directive):
 	self.name = utils.stripquote(toklist[1])			# the daemon to check for
 	self.daemon = utils.stripquote(toklist[1])		# the daemon to check for
 	self.ruleDict = { 'NR' : self.NR,
-		          'R'  : self.R }
+		          'R'  : self.R,
+			  'check' : self.check }
 
 
     def tokenparser(self, toklist, toktypes, indent):
 	"""Parse tokenized input."""
 
-	# Expect first token to be rule - one of self.ruleDict
-	if toklist[0] not in self.ruleDict.keys():
+	# Expect first token to be rule
+	if toklist[0] in self.ruleDict.keys():
+	    # - either one of self.ruleDict
+	    self.rule = self.ruleDict[toklist[0]]	# Set the rule
+	elif toktypes[0] == 'STRING':
+	    # - or a string containing a special check
+	    self.rule = self.ruleDict['check']
+	    self.checkstring = utils.stripquote(toklist[0])
+	else:
 	    raise ParseFailure, "PROC found unexpected rule '%s'" % toklist[0]
 
-	self.rule = self.ruleDict[toklist[0]]	# Set the rule
 	self.actionList = self.parseAction(toklist[1:])
 
 	# Set any PROC-specific variables
@@ -434,8 +443,26 @@ class PROC(Directive):
 
 	if plist.procExists( self.daemon ) > 0:
 	    log.log( "<directive>R(PROC) daemon is running, '%s'" % (self.daemon), 6 )
-	    # Set %pid variable.
-	    self.Action.varDict['pid'] = plist[self.daemon].pid
+	    # Set %procpid variable.
+	    self.Action.varDict['procpid'] = plist[self.daemon].pid
+	    self.doAction(Config)
+
+
+    def check(self,Config):
+	"""Executes a check string supplied by user."""
+
+	try:
+	    procenv = plist[self.daemon].procinfo()		# get dictionary of process details
+	except AttributeError:
+	    log.log( "<directive>PROC.check() warning, no process '%s'." % (self.daemon), 8 )
+	    return
+
+	result = eval( self.checkstring, procenv )
+
+	if result != 0:
+	    # build varDict from procenv
+	    for i in procenv.keys():
+		self.Action.varDict['proc%s'%(i)] = procenv[i]
 	    self.doAction(Config)
 
 

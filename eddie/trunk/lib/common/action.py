@@ -457,7 +457,7 @@ def parseVars(text, vDict):
 	    else:
 		try:
 		    varvalue = vDict[varname]
-		    modtext = modtext + varvalue
+		    modtext = modtext + '%s'%(varvalue)
 		    subcount = subcount + 1
 		except KeyError:
 		    # not a valid variable name - just print '%varname'
