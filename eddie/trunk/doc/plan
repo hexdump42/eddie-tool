@@ -40,7 +40,7 @@ PROJECT PLAN:
 		SP
 	Actions:
 		email()					Chris	100%
-		system()
+		system()				Chris	100%
 		restart()
 		nice()
 		log()
