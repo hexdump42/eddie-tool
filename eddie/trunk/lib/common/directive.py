@@ -357,22 +357,26 @@ class Directive:
 	be None.
 	"""
 
+	# Get all directive arguments
 	tokdict=self.parseArgs(toklist)
-	for t in tokdict.keys():
-	    if t == 'template':	# special handler for templates
-		self.args.template = tokdict[t]	# template name
-		if self.args.template != 'self':
-		    tpldirective = self.findDirective(self.args.template, self.Config)
-		    if tpldirective == None:
-			raise ParseFailure, "template '%s' not found." % (self.args.template)
-		    else:
-			# copy template directive arguments
-			for t in dir(tpldirective.args):
-			    if t != 'template':
-				exec( 'self.args.%s = tpldirective.args.%s' % (t,t) )
 
+	# Process template arg first to inherit template arguments
+	if 'template' in tokdict.keys():
+	    self.args.template = tokdict['template']	# template name
+	    del tokdict['template']
+	    if self.args.template != 'self':
+		tpldirective = self.findDirective(self.args.template, self.Config)
+		if tpldirective == None:
+		    raise ParseFailure, "template '%s' not found." % (self.args.template)
+		else:
+		    # copy template directive arguments
+		    for t in dir(tpldirective.args):
+			if t != 'template':
+			    exec( 'self.args.%s = tpldirective.args.%s' % (t,t) )
+
+	for t in tokdict.keys():
 	    # Use action parser for any of the action lists
-	    elif t == 'act2ok':
+	    if t == 'act2ok':
                 self.args.act2okList = self.parseAction( tokdict[t] )
 	    elif t == 'actelse':
 		self.args.actelseList = self.parseAction( tokdict[t] )
@@ -380,6 +384,8 @@ class Directive:
 		self.args.actionList = self.parseAction( tokdict[t] )
 
 	    else:
+		# Not an action, so build directive argument list
+		# to be parsed below.
 		try:
 		    exec( "self.args.%s = tokdict[t]" % (t) )
 		except:
