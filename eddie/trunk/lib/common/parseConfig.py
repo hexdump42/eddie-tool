@@ -13,7 +13,7 @@
 ##
 
 # Python specific modules
-import os, string, regex, tokenize
+import sys, os, string, regex, tokenize
 # Eddie specific modules
 import directive, definition, config, log, utils
 
@@ -44,136 +44,172 @@ class State:
     #   to create the configuration information.
     #
     def tokeneater(self, type, token, (srow, scol), (erow, ecol), line):
-	# The type of token
-	toktype = tokenize.tok_name[type]
+	try:
+	    # The type of token
+	    toktype = tokenize.tok_name[type]
 
-	#DEBUG:
-	#print "%d,%d-%d,%d:\t%s\t%s" % \
-	#    (srow, scol, erow, ecol, toktype, repr(token))
+	    #DEBUG:
+	    #print "%d,%d-%d,%d:\t%s\t%s" % \
+	    #    (srow, scol, erow, ecol, toktype, repr(token))
 
-	# Handle indentation/dedentations...
-	if toktype == "INDENT":
-	    self.indent = self.indent + 1
-	    self.direcStack.push(self.direc)	# Keep track of direc's
-	    self.reset()		# reset state
-	    return
-	elif toktype == "DEDENT":
-	    self.indent = self.indent - 1
-	    if self.indent < 0:
-		print "INDENT ERROR!!!! TODO"
-		raise 'Indent Error...'
-	    self.prevdirec = self.direcStack.pop()	# Restore previous direc
-	    if self.direc.type == 'Config':
-		self.Config = self.groupStack.pop()
-	    #elif self.prevdirec != self.direc:
-		#print "@@@@@ Giving direc to:",self.prevdirec
-		#self.prevdirec.give(self.direc)
+	    # Handle indentation/dedentations...
+	    if toktype == "INDENT":
+		self.indent = self.indent + 1
+		self.direcStack.push(self.direc)	# Keep track of direc's
+		self.reset()		# reset state
+		return
+	    elif toktype == "DEDENT":
+		self.indent = self.indent - 1
+		if self.indent < 0:
+		    print "INDENT ERROR!!!! TODO"
+		    raise 'Indent Error...'
+		self.prevdirec = self.direcStack.pop()	# Restore previous direc
+		if self.direc.type == 'Config':
+		    self.Config = self.groupStack.pop()
+		#elif self.prevdirec != self.direc:
+		    #print "@@@@@ Giving direc to:",self.prevdirec
+		    #self.prevdirec.give(self.direc)
 
-	    self.direc = self.prevdirec
-	    self.reset()		# reset state
-	    return
-	elif toktype == "ERRORTOKEN" and token == '$':
-	    # Special case for '$' symbols which the standard Python parser
-	    # tokenizes as an error token but we will actually use it to
-	    # indicate a variable-name following it.
-	    self.toklist.append(token)
-	    self.toktypes.append("DOLLAR")	# make up new token type !
-	elif toktype == "ERRORTOKEN" and (token == ' ' or token == '\011'):
-	    # ERRORTOKEN's which are spaces or tabs can be ignored for now.
-	    # They are probably found before a '$'...
-	    return
-	elif toktype == "ERRORTOKEN":
-	    # Raise a ParseFailure for any other ERRORTOKEN
-	    raise config.ParseFailure, "ERRORTOKEN found."
-	elif toktype != "COMMENT":
-	    # If token not a comment, indent or dedent then add to our list of
-	    # tokens.
-	    self.toklist.append(token)
-	    self.toktypes.append(toktype)
+		self.direc = self.prevdirec
+		self.reset()		# reset state
+		return
+	    elif toktype == "ERRORTOKEN" and token == '$':
+		# Special case for '$' symbols which the standard Python parser
+		# tokenizes as an error token but we will actually use it to
+		# indicate a variable-name following it.
+		self.toklist.append(token)
+		self.toktypes.append("DOLLAR")	# make up new token type !
+	    elif toktype == "ERRORTOKEN" and (token == ' ' or token == '\011'):
+		# ERRORTOKEN's which are spaces or tabs can be ignored for now.
+		# They are probably found before a '$'...
+		return
+	    elif toktype == "ERRORTOKEN":
+		# Raise a ParseFailure for any other ERRORTOKEN
+		raise config.ParseFailure, "Illegal characters in config."
+	    elif toktype != "COMMENT":
+		# If token not a comment, indent or dedent then add to our list of
+		# tokens.
+		self.toklist.append(token)
+		self.toktypes.append(toktype)
 
-	# Substitute $VAR variables for DEF's
-	if len(self.toklist) > 1 and self.toktypes[-2] == "DOLLAR":
-	    if toktype != "NAME":
-		# '$' must be followed by a "NAME" toktype
-		raise config.ParseFailure, "'$' followed by illegal characters."
-	    else:
-		# Replace last two tokens with variable substitution
+	    # Substitute $VAR variables for DEF's
+	    if len(self.toklist) > 1 and self.toktypes[-2] == "DOLLAR":
+		if toktype != "NAME":
+		    # '$' must be followed by a "NAME" toktype
+		    raise config.ParseFailure, "'$' followed by illegal characters."
+		else:
+		    # Replace last two tokens with variable substitution
+		    try:
+			del self.toklist[-2:]
+			self.toklist.append(self.Config.defDict[token])
+		    except KeyError:
+			raise config.ParseFailure, "Variable substitution error for $%s" % token
+		    del self.toktypes[-2:]
+		    self.toktypes.append("NAME")
+	    # Only continue if the last token is a ':' or CR
+	    if len(self.toklist) < 1 or (self.toklist[-1] != ':' and self.toklist[-1] != '\012'):
+		return
+
+	    # If the only token is a CR, throw it away and continue
+	    if len(self.toklist) == 1 and self.toklist[0] == '\012':
+		self.reset()
+		return
+
+	    # See if we can do anything with the current list of tokens.
+
+	    if self.toklist[0] == 'INCLUDE':
+		# recursively read the INCLUDEd file
+		file = utils.stripquote(self.toklist[1])
+		log.log( "<parseConfig>tokeneater(), reading INCLUDEd file '%s'" % file, 8 )
+
+		newstate = State(self.Config)
+		newstate.filename = file
+
+		# Start parsing the INCLUDEd file.
+		if file[0] ==  '/':
+		    readFile(file, newstate)
+		else:
+		    readFile(self.dir+file, newstate)
+
+		# Reset state and token lists
+		self.reset()		# reset state
+		return
+
+	    elif self.toklist[0] in ('group', 'Group', 'GROUP'):
+		# Create new rule group
 		try:
-		    del self.toklist[-2:]
-		    self.toklist.append(self.Config.defDict[token])
-		except KeyError:
-		    raise config.ParseFailure, "Variable substitution error for $%s" % token
-		del self.toktypes[-2:]
-		self.toktypes.append("NAME")
-	# Only continue if the last token is a ':' or CR
-	if len(self.toklist) < 1 or (self.toklist[-1] != ':' and self.toklist[-1] != '\012'):
-	    return
+		    newgrp = self.Config.newgroup(self.toklist, self.toktypes, self.Config)
+		except config.ParseNotcomplete:
+		    pass
+		else:
+		    self.reset()		# reset state
+		    self.direc = newgrp
+		    self.groupStack.push(self.Config)
+		    self.Config = newgrp
+		return
 
-	# If the only token is a CR, throw it away and continue
-	if len(self.toklist) == 1 and self.toklist[0] == '\012':
-	    self.reset()
-	    return
+	    elif config.keywords.has_key(self.toklist[0]):
+		try:
+		    direc = config.keywords[self.toklist[0]](self.toklist)
+		except config.ParseNotcomplete:
+		    pass
+#		except config.ParseFailure, msg:
+#		    parseFailure( msg, (srow, scol), (erow, ecol), line, self.filename )
+#		    #print "PARSEFAILURE: ",msg,(srow, scol), (erow, ecol), line
+#		    ## TODO: probably should return to top level properly...?
+#		    sys.exit(-1)
+		else:
+		    if direc != None:
+			self.prevdirec = self.direcStack.top()
+			self.prevdirec.give(direc)
 
-	# See if we can do anything with the current list of tokens.
+		    self.reset()		# reset state
+		    self.direc = direc	# current directive
+		return
 
-	if self.toklist[0] == 'INCLUDE':
-	    # recursively read the INCLUDEd file
-	    file = utils.stripquote(self.toklist[1])
-	    log.log( "<parseConfig>tokeneater(), reading INCLUDEd file '%s'" % file, 8 )
-
-	    newstate = State(self.Config)
-
-	    # Start parsing the INCLUDEd file.
-	    if file[0] ==  '/':
-		readFile(file, newstate)
-	    else:
-		readFile(self.dir+file, newstate)
-
-	    # Reset state and token lists
-	    self.reset()		# reset state
-	    return
-
-	elif self.toklist[0] in ('group', 'Group', 'GROUP'):
-	    # Create new rule group
-	    try:
-		newgrp = self.Config.newgroup(self.toklist, self.toktypes, self.Config)
-	    except config.ParseNotcomplete:
-		pass
-#	    except config.ParseFailure:
-#		print "PARSEFAILURE from newgroup() !!! TODO"
-	    else:
+	    elif self.direc != None:
+		self.direc.tokenparser(self.toklist, self.toktypes, self.indent)
 		self.reset()		# reset state
-		self.direc = newgrp
-		self.groupStack.push(self.Config)
-		self.Config = newgrp
-	    return
+		return
 
-	elif config.keywords.has_key(self.toklist[0]):
-	    try:
-		print "!!! creating new directive:",self.toklist[0]
-		direc = config.keywords[self.toklist[0]](self.toklist)
-	    except config.ParseNotcomplete:
-		pass
-#	    except config.ParseFailure:
-#		print "PARSEFAILURE !!! TODO"
 	    else:
-		if direc != None:
-		    self.prevdirec = self.direcStack.top()
-		    self.prevdirec.give(direc)
-
+		raise "PARSE FAILURE! toklist: %s" % toklist
 		self.reset()		# reset state
-		self.direc = direc	# current directive
-	    return
 
-	elif self.direc != None:
-	    print "...passing toklist to tokenparser() of:",self.direc
-	    self.direc.tokenparser(self.toklist, self.toktypes, self.indent)
-	    self.reset()		# reset state
-	    return
+	except config.ParseFailure, msg:
+	    parseFailure( msg, (srow, scol), (erow, ecol), line, self.filename )
+	    #print "PARSEFAILURE: ",msg,(srow, scol), (erow, ecol), line
+	    ## TODO: probably should return to top level properly...?
+	    sys.exit(-1)
 
-	else:
-	    raise "PARSE FAILURE! toklist: %s" % toklist
-	    self.reset()		# reset state
+
+###
+### parseFailure( message, (start-row, start-col), (end-row, end-col), linestr, filename )
+###  Display error message caused by a parsing failure while parsing the
+###  config file.
+###
+### Returns: nothing
+###
+def parseFailure( msg, (srow, scol), (erow, ecol), line, filename ):
+    print "Parse Failure:",msg
+    print "  File: '%s'" % (filename),
+    if srow == erow:
+	print " line: %d" % (srow),
+    else:
+	print " lines: %d-%d" % (srow,erow)
+
+    if scol == ecol:
+	print " col: %d" % (scol),
+    else:
+	print " col: %d-%d" % (scol,ecol),
+
+    print "  line follows:"
+
+    if line[-1] == '\n':
+	line = line[:-1]
+    print line
+    print " " * (scol-1) + "^" * (ecol-scol+1)
+
 
 
 ###
@@ -187,17 +223,14 @@ def readConf(file, Config):
 
     # Instantiate a State object to track the current state of tokenization.
     state = State(Config)
+    state.filename = file
 
     # Start reading the config file
     readFile(file, state)
 
     #DEBUG: view the config!
-    print "------------------Config Follows------------------"
-    print Config
-
-    #DEBUG: exit
-    #import sys
-    #sys.exit(-1)
+    #print "------------------Config Follows------------------"
+    #print Config
 
 
 ###

@@ -27,9 +27,16 @@ import eddieElvin
 # Page test
 import snpp
 
+
 #### CONSTANTS ####
 
 DEFAULTSUBJ='Message from Eddie'
+
+
+#### Exceptions ####
+
+GetMessageError = 'GetMessageError'
+
 
 #### DEFINE ALL THE ACTIONS AVAILABLE ####
 
@@ -52,7 +59,7 @@ class action:
 	    MSG = self.getMessage(msg)
 	    subj = MSG.subject
 	    body = MSG.message
-	except KeyError:
+	except (KeyError, GetMessageError):
 	    # Use msg string as the body
 	    subj = "Eddie Alert"
 	    body = msg
@@ -61,11 +68,7 @@ class action:
 	subj = parseVars( subj, self.varDict )
 	body = parseVars( body, self.varDict )
 
-	print "    ACTION: email - recip:"+users+", subj:'"+subj+"', body:'"+body+"'"
-	#print " varDict is ",self.varDict
-
 	tmp = os.popen('/usr/lib/sendmail -t', 'w')
-	#tmp = open('sendmail.tmp', 'w')
 	tmp.write( 'To: '+users+'\n' )
 	tmp.write( 'From: "Eddie" <eddie@connect.com.au>\n' )
 	tmp.write( 'Reply-To: systems@connect.com.au\n' )
@@ -250,8 +253,8 @@ class action:
 	elvinServer = 'koro'
 	elvinPort = 5678
 
-	print "ELVIN: elvinServer:",elvinServer
-	print "ELVIN: elvinPort:",elvinPort
+	#print "ELVIN: elvinServer:",elvinServer
+	#print "ELVIN: elvinPort:",elvinPort
 
 	if len(msg) == 0:
 	    # msg must contain something
@@ -261,7 +264,7 @@ class action:
 	try:
 	    MSG = self.getMessage(msg)
 	    msg = MSG.message
-	except KeyError:
+	except (KeyError, GetMessageError):
 	    # Use msg string as the message
 	    pass
 
@@ -297,7 +300,7 @@ class action:
 	try:
 	    MSG = self.getMessage(msg)
 	    msg = MSG.message
-	except KeyError:
+	except (KeyError, GetMessageError):
 	    # Use msg string as the message
 	    pass
 
@@ -319,8 +322,15 @@ class action:
 	    log.log( "<action>elvinPage('%s')" % (msg), 5 )
 
 
+    # Temporary: page via email for now...
     # page()
     def page(self, pager, msg):
+	self.email(pager, msg)
+
+    # Paging via SNPP to paging server
+    # page()
+    #def page(self, pager, msg):
+    def snpp_page(self, pager, msg):
 	# send a page via SNPP
 	pageServer = 'chintoo'
 
@@ -332,7 +342,7 @@ class action:
 	try:
 	    MSG = self.getMessage(msg)
 	    msg = MSG.message
-	except KeyError:
+	except (KeyError, GetMessageError):
 	    # Use msg string as the message
 	    pass
 
@@ -358,17 +368,16 @@ class action:
 
     # Get a MSG object from the M-tree specified by self.msg and msg
     def getMessage(self, msg):
-	print "//// MDict:",self.MDict
+	if self.msg == None:
+	    raise GetMessageError
+
 	msgtree = string.split( self.msg, '.' )
 	M = self.MDict[msgtree[0]]
-	print "///// M:",M
 	for m in msgtree[1:]:
 	    M = M[m]
-	    print "///// M:",M
 
 	# Get final MSG object
 	MSG = M[msg]
-	print "//// MSG:",MSG
 
 	return MSG
 

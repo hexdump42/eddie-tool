@@ -12,6 +12,7 @@
 ## $Id$
 ##
 
+EDDIE_VER='0.20'
 
 # Standard Python modules
 import sys, os, time, signal, thread
@@ -102,9 +103,28 @@ def check(Config):
 	list = Config.ruleList[d]
 	if list != None:
 	    for i in list:
+		log.log( "<eddie>check(), checking %s" % (i), 8 )
 		i.docheck(Config)
 	else:
-	    log.log( "<eddie>eddieguts(), ourList['%s'] is empty" % (d), 4 )
+	    log.log( "<eddie>check(), Config.ruleList['%s'] is empty" % (d), 4 )
+
+
+# Parse command-line arguments
+def doArgs(args, argflags):
+    for a in args:
+	if a == '-v' or a == '--version':
+	    print "Eddie (c) Chris Miles and Rod Telford 1998"
+	    print "  cmiles@connect.com.au / rtelford@connect.com.au"
+	    print "  Version: %s" % EDDIE_VER
+	    eddieexit()
+	elif a == '-h' or a == '--help' or a == '-?':
+	    print "Eddie: help not yet available..."
+	    eddieexit()
+	elif a == '-sc' or a == '--showconfig':
+	    argflags['showconfig'] = 1
+	else:
+	    print "Eddie: bad argument '%s'" % a
+	    eddieexit()
 
 
 # The guts of the Eddie program - sets up the lists, reads config info, gets
@@ -152,6 +172,11 @@ def main():
     signal.signal( signal.SIGINT, SigHandler )
     signal.signal( signal.SIGTERM, SigHandler )
 
+    argflags = {}			# dict of argument flags
+
+    # Parse command-line arguments
+    doArgs(sys.argv[1:], argflags)	# parse arg-list (not program name)
+
     #    TODO: Is there a simpler Python-way of getting hostname ??
     tmp = os.popen('uname -n', 'r')
     hostname = tmp.readline()
@@ -166,6 +191,12 @@ def main():
 
     # read in config and rules
     parseConfig.readConf(config_file, Config)
+
+    if 'showconfig' in argflags.keys() and argflags['showconfig'] == 1:
+	# Just display the configuration and exit
+	print "---Displaying Eddie Configuration---"
+	print Config
+	eddieexit()
 
     #directive.ADict = ADict		# make ADict viewable in directive module
     #action.MDict = MDict		# make MDict viewable in action module

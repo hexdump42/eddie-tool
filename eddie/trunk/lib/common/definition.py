@@ -79,13 +79,35 @@ class MSG(Definition):
     def __init__(self, toklist):
 	apply( Definition.__init__, (self, toklist) )
 	self.name = toklist[1]
-	self.subject = ""
-	self.message = ""
+	self.subject = None
+	self.message = None
+	self.indent = 0		# used during parsing only
 	log.log( "<Definition>MSG(), M created, name '%s'" % (self.name), 9 )
 
+
     def tokenparser(self, toklist, toktypes, indent):
-	self.subject = toklist[0]
-	self.message = toklist[1]
+	toklist = toklist[:-1]		# lose CR
+	toktypes = toktypes[:-1]	# lose CR
+
+	for t in toklist:
+	    if self.subject == None:
+		self.subject = utils.stripquote(t)
+	    elif self.message == None:
+		self.message = utils.stripquote(t)
+	    else:
+		# tokens left and subject/message already defined
+		raise ParseFailure, "Parse error during MSG definition"
+
+	#if self.indent == 0:
+	#    self.subject = utils.stripquote(toklist[0])
+	#    if len(toklist) > 1:
+	#	self.message = utils.stripquote(toklist[1])
+	#    self.indent = indent
+	#elif indent > self.indent:
+	#    self.message = utils.stripquote(toklist[0])
+	#else:
+	#    raise ParseFailure, "Indentation error parsing MSG definition"
+
 
     def __str__(self):
 	str = "<MSG name='%s' subject='%s' message='%s'>" % (self.name, self.subject, self.message)
@@ -116,8 +138,9 @@ class M(Definition):
 	return self.MDict[item]
 
 
-    def tokenparser(iself, toklist, toktypes, indent):
-        print "(*) M.tokenparser() -> NOTHING TO DO"
+    def tokenparser(self, toklist, toktypes, indent):
+	## M doesn't need to parse any tokens.
+	log.log( "<Definition>M(), Warning, M shouldn't see tokens, toklist: %s" % (toklist), 3 )
 	return
 
 
@@ -147,6 +170,7 @@ class DEF(Definition):
 	# if we don't have 5 elements ['DEF', <str>, '=', <str>, '012'] then
 	# raise an error
 	if len(list) != 5:
+	    print "..DEF list:",list
 	    raise ParseFailure, "DEF definition has %d tokens when expecting 5" % len(list)
 
 	# OK, grab values
@@ -184,7 +208,6 @@ class N(Definition):
 	self.configIndent = 0
 
 	log.log( "<Definition>N(), N created, name '%s'" % (self.name), 8 )
-	print "<Definition>N(), N created, name '%s'" % (self.name) #DEBUG
 
 
     def __str__(self):

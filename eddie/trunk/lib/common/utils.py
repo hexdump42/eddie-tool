@@ -143,15 +143,17 @@ def charpresent( s, chars ):
 
 ##
 ## stripquote( s ) - strips start & end of string s of whitespace then
-##   strips " or ' from start & end of string if found
+##   strips " or ' from start & end of string if found - repeats stripping
+##   " and ' until none left.
 ##
 def stripquote( s ):
     s = string.strip( s )
 
-    if s[0] == "'" or s[0] == '"':
-	s = s[1:]
-    if s[-1] == "'" or s[-1] == '"':
-	s = s[:-1]
+    while len(s) > 0 and (s[0] in ["'", '"'] and s[-1] in ["'", '"']):
+	if s[0] == "'" or s[0] == '"':
+	    s = s[1:]
+	if s[-1] == "'" or s[-1] == '"':
+	    s = s[:-1]
 
     return s
 

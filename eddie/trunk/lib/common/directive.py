@@ -15,7 +15,7 @@
 
 import os
 import string
-import regex
+import re
 import sys
 import socket
 import action
@@ -82,8 +82,9 @@ class Directive:
 	self.type = toklist[0]		# the directive type of this instance
 
 	self.Action = action.action()	# create new action instance
-	self.Action.actionList = ''	# each directive will have an action
 	self.Action.varDict = {}	# dictionary of variables used for emails etc
+
+	self.actionList = []		# each directive will have an action
 
 	# Set up informational variables - these are common to all Directives
 	#  %h = hostname
@@ -104,11 +105,7 @@ class Directive:
 
     # Perform actions for a directive
     def doAction(self, Config):
-	# split comma-seperated list of actions
-	print ">>> 1 actionList:",self.actionList
-	#actionList = utils.trickySplit( self.actionList, ',' )
 	actionList = self.actionList
-	print ">>> 2 actionList:",actionList
 
 	# Replace Action definitions with the corresponding actions
 	#actionList = definition.parseList( actionList, ADict )
@@ -127,18 +124,18 @@ class Directive:
 
 	# Perform each action
 	for a in actionList:
-	    print ">>>> a:",a
-	    sre = regex.compile( "\([A-Za-z0-9_]+\)(\([A-Za-z0-9_.]+\),?\([0-9]?\))" )
+	    sre = re.compile( "([A-Za-z0-9_]+)\(([A-Za-z0-9_.]+),?([0-9]?)\)" )
 	    inx = sre.search( a )
-	    if inx == -1:
+	    if inx == None:
 		#raise SyntaxError, "actionList regex error"
 		# Assume we have a simple action call (rather than a
 		# notification definition.
+		self.Action.msg = None
 		eval( 'self.Action.'+a )
 	    else:
-		notif = sre.group(1)
-		msg = sre.group(2)
-		level = sre.group(3)
+		notif = inx.group(1)
+		msg = inx.group(2)
+		level = inx.group(3)
 		if level == None:
 		    level = 0
 
@@ -161,7 +158,6 @@ class Directive:
 		    #try:
 			# Call the action
 			log.log( "<directive>Directive, calling action '%s'" % (aa), 9 )
-			print "<directive>Directive, calling action '%s'" % (aa)
 			eval( 'self.Action.'+aa )
 		    #except AttributeError:
 			# Not an action function ... error...
@@ -201,7 +197,6 @@ class FS(Directive):
 	self.Action.varDict['fsf'] = self.filesystem
 	self.Action.varDict['fsrule'] = self.rule
 
-	print "<FS> filesystem: '%s' rule: '%s' action: '%s'" % (self.filesystem, self.rule, self.actionList)
 	log.log( "<FS> filesystem: '%s' rule: '%s' action: '%s'" % (self.filesystem, self.rule, self.actionList), 8 )
 
 
@@ -309,7 +304,6 @@ class PID(Directive):
 	#  %pidf = the PID-file
 	self.Action.varDict['pidf'] = self.pidfile
 
-	print "<PID> pidfile: '%s' rule: '%s' action: '%s'" % (self.pidfile, self.rule, self.actionList)
 	log.log( "<PID> pidfile: '%s' rule: '%s' action: '%s'" % (self.pidfile, self.rule, self.actionList), 8 )
 
 
@@ -381,12 +375,11 @@ class PROC(Directive):
 	self.actionList = self.parseAction(toklist[1:])
 
 	# Set any PROC-specific variables
-	#  %dproc = the process name
-	self.Action.varDict['dproc'] = self.daemon
-	#  %pid = pid of process (ie: if found running for R rule)
-	self.Action.varDict['pid'] = '[pid not yet defined]'
+	#  %procp = the process name
+	self.Action.varDict['procp'] = self.daemon
+	#  %procpid = pid of process (ie: if found running for R rule)
+	self.Action.varDict['procpid'] = '[pid not yet defined]'
 
-	print "<PROC> daemon: '%s' rule: '%s' action: '%s'" % (self.daemon, self.rule, self.actionList)
 	log.log( "<PROC> daemon: '%s' rule: '%s' action: '%s'" % (self.daemon, self.rule, self.actionList), 8 )
 
 
@@ -433,11 +426,10 @@ class SP(Directive):
 	except socket.error:
 	    self.port = self.port_n
 
-	self.Action.varDict['port'] = self.port_n
-	self.Action.varDict['addr'] = self.addr
-	self.Action.varDict['prot'] = self.proto
+	self.Action.varDict['spport'] = self.port_n
+	self.Action.varDict['spaddr'] = self.addr
+	self.Action.varDict['spprot'] = self.proto
 
-	print "<Directive>SP, proto '%s', port '%s', bind addr '%s', action '%s'" % (self.proto, self.port, self.addr, self.actionList)
 	log.log( "<Directive>SP, proto '%s', port '%s', bind addr '%s', action '%s'" % (self.proto, self.port, self.addr, self.actionList), 8 )
 
 
@@ -456,11 +448,22 @@ class COM(Directive):
     def __init__(self, toklist):
 	apply( Directive.__init__, (self, toklist) )
 	self.command = utils.stripquote(toklist[1])	# the command
+	self.rule = None
 
 
     def tokenparser(self, toklist, toktypes, indent):
-	self.rule = utils.stripquote(toklist[0])	# the rule
-	self.actionList = self.parseAction(toklist[1:])	# the action
+	toklist = toklist[:-1]		# lose CR
+	toktypes = toktypes[:-1]	# lose CR
+
+	if self.rule == None:
+	    self.rule = utils.stripquote(toklist[0])
+	    toklist = toklist[1:]
+
+	if len(toklist) > 0:
+	    self.actionList = self.actionList + self.parseAction(toklist)
+
+	#self.rule = utils.stripquote(toklist[0])	# the rule
+	#self.actionList = self.parseAction(toklist[1:])	# the action
 
 	# Set any PID-specific variables
 	#  %com = the command
@@ -468,7 +471,6 @@ class COM(Directive):
 	self.Action.varDict['com'] = self.command
 	self.Action.varDict['rule'] = self.rule
 
-	print "<COM> command: '%s' rule: '%s' action: '%s'" % (self.command, self.rule, self.actionList)
 	log.log( "<COM> command: '%s' rule: '%s' action: '%s'" % (self.command, self.rule, self.actionList), 8 )
 
 
@@ -509,9 +511,9 @@ class COM(Directive):
 	log.log( "<directive>COM.docheck(), stderr='%s'" % err, 9 )
 
 	# save values in variable dictionary
-	self.Action.varDict['out'] = out
-	self.Action.varDict['err'] = err
-	self.Action.varDict['ret'] = retval
+	self.Action.varDict['comout'] = out
+	self.Action.varDict['comerr'] = err
+	self.Action.varDict['comret'] = retval
 
         comenv = {}                      # environment for com rules execution
         comenv['out'] = out
@@ -522,6 +524,99 @@ class COM(Directive):
 	if result != 0:
 	    self.doAction(Config)
 
+
+class PORT(Directive):
+    def __init__(self, toklist):
+	apply( Directive.__init__, (self, toklist) )
+
+	# Expect only 3 tokens: ( 'PORT', <host>, ':' )
+	if len(toklist) > 3:
+	    raise ParseFailure, "Too many tokens for PORT directive"
+
+	self.host = utils.stripquote(toklist[1])	# the host
+	self.port = None
+	self.sendstr = None
+	self.expect = None
+
+
+    def tokenparser(self, toklist, toktypes, indent):
+	toklist = toklist[:-1]		# lose CR
+	toktypes = toktypes[:-1]	# lose CR
+
+	while len(toklist) > 0:
+	    if self.port == None:
+		try:
+		    self.port = int(utils.stripquote(toklist[0]))
+		except ValueError:
+		    raise ParseFailure, "Port should be integer, found '%s'" % toklist[0]
+    		toklist = toklist[1:]
+	    elif self.sendstr == None:
+		self.sendstr = utils.stripquote(toklist[0])
+    		toklist = toklist[1:]
+	    elif self.expect == None:
+		self.expect = utils.stripquote(toklist[0])
+    		toklist = toklist[1:]
+	    else:
+		self.actionList = self.actionList + self.parseAction(toklist)
+    		toklist = []
+
+	# Set any PORT-specific variables
+	#  %porthost = the host
+	#  %portport = the port
+	#  %portsend = the send string
+	#  %portexpect = the expect string
+	#  %portrecv = the string received from port connection (at check time)
+	self.Action.varDict['porthost'] = self.host
+	self.Action.varDict['portport'] = self.port
+	self.Action.varDict['portsend'] = self.sendstr
+	self.Action.varDict['portexpect'] = self.expect
+	self.Action.varDict['portrecv'] = ''
+
+	log.log( "<directive>PORT parsed, host: '%s' port: '%d' sendstr: '%s' expect: '%s'" % (self.host, self.port, self.sendstr, self.expect), 8 )
+
+
+    def docheck(self, Config):
+	log.log( "<directive>PORT.docheck(), host '%s', port '%d', sendstr '%s', expect '%s'" % (self.host,self.port,self.sendstr,self.expect), 7 )
+
+	self.Action.varDict['portrecv'] = ''
+
+        if not self.isalive(host=self.host,port=self.port,send=self.sendstr,expect=self.expect):
+	    log.log( "<directive>PORT.docheck(), isalive() failed.", 7 )
+            self.doAction(Config)
+
+    def isalive(self,host,port,send="",expect=""):
+        """ Connects to host:port, sends send,
+            receives input, compares it to expect
+            and returns TRUE or FALSE accordingly """
+        #print "Trying to connect to %s:%d send:'%s' exp:'%s'" % (host,port,send,expect)   #DEBUG
+        try:
+            try:
+                s = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+                s.connect(host,port)
+                if expect == "":
+                    s.close()
+                    return 1    # port connection ok
+                else:
+                    exec( "send='%s'" % send )
+                    s.send(send)
+                    data=s.recv(111024)
+                    self.Action.varDict['portrecv'] = data
+
+                    if data==expect or re.search( '.*' + expect + '.*', data, ) != None:
+                        s.close()
+                        return 1
+                    else:
+                        return 0
+            finally:
+                try:
+                    s.close()
+                except: 
+                    pass
+        except:
+            return 0
+
+	return 0
+        # print isalive(host='daidyai.off.connect.com.au',port=50006,send='blah',expect='ALIVE')
 
 ##
 ## END - directive.py

@@ -47,10 +47,10 @@ class eddieElvin:
 	self.port = port
 
 	try:
-	    print "Trying Elvin connection to %s:%d" % (self.host, self.port)
+	    #print "Trying Elvin connection to %s:%d" % (self.host, self.port)
 	    self.elvin = Elvin.Elvin(Elvin.EC_NAMEDHOST, self.host, self.port,
 				     None, self._error_cb)
-	    print "Made Elvin connection..."
+	    #print "Made Elvin connection..."
 	except:
 	    #sys.stderr.write("Connection to elvin failed\nIs there an elvin server running at %s:%d\n" %(self.host, self.port))
 	    #self._exit()
@@ -58,7 +58,7 @@ class eddieElvin:
 	else:
 	    self.connected = 1
 
-	print "Elvin connection succeeded."
+	#print "Elvin connection succeeded."
 
     # must override this method
     def sendmsg(self,msg):
@@ -118,7 +118,8 @@ class elvinTicker(eddieElvin):
 
     def sendmsg(self,msg):
 	if self.connected:
-	    self.elvin.notify( { 'TICKERTAPE' : 'Eddie',
+	    #self.elvin.notify( { 'TICKERTAPE' : 'Eddie',
+	    self.elvin.notify( { 'TICKERTAPE' : 'EddieTest',
 	                         'TICKERTEXT' : msg,
 				       'USER' : log.hostname,
 				    'TIMEOUT' : 10, 

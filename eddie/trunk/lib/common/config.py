@@ -56,6 +56,24 @@ class Config:
 	    self.NDict.update(parent.NDict)
 	    # TODO: copy ruleList and MDict too ?
 
+    # Display Config in readable format (ie: for debugging)
+    def __str__(self):
+	str = "<Config name='%s' type='%s'" % (self.name, self.type)
+	str = str + "\n\n ruleList: %s" % self.ruleList
+	str = str + "\n\n groups:"
+	for i in self.groups:
+	    str = str + " %s" % i
+	str = str + "\n\n MDict:"
+	for i in self.MDict.keys():
+	    str = str + " %s" % self.MDict[i]
+	str = str + "\n\n defDict: %s" % self.defDict
+        str = str + "\n\n NDict:"
+	for i in self.NDict.keys():
+	    str = str + " %s" % self.NDict[i]
+        str = str + "\n\n classDict: %s" % self.classDict
+        str = str + "\n>"
+	return str
+
     # Add new rules group
     def newgroup(self, toklist, toktypes, parent=None):
 	# Require 3 tokens, ('group', <str>, ':')
@@ -76,8 +94,6 @@ class Config:
 	# Add to group list
 	self.groups.append(newgroup)
 
-	print " ()() self.groups:",self.groups	# DEBUG
-
 	return newgroup
 
 
@@ -85,42 +101,19 @@ class Config:
     def give(self, obj):
 	if obj.type == 'N':
 	    self.NDict[obj.name] = obj
-	    print "@-@-@ self.NDict:",self.NDict
 	elif obj.type == 'M':
 	    self.MDict[obj.name] = obj
-	    print "@-@-@ self.MDict:",self.MDict
 	elif obj.type == 'DEF':
 	    self.defDict[obj.name] = obj.text
-	    print "@-@-@ self.defDict:",self.defDict
 	elif obj.type == 'CLASS':
 	    self.classDict[obj.name] = obj.hosts
-	    print "@-@-@ self.classDict:",self.classDict
 	elif obj.type in directives.keys():
 	    # add Rule to ruleList...
 	    self.ruleList = self.ruleList + obj
-	    print "@-@-@ ruleList:",self.ruleList
 	else:
 	    #raise "Config.give(): Unknown object type %s" % obj
 	    # Don't want any object that doesn't match above
 	    return
-
-    # Display Config in readable format (ie: for debugging)
-    def __str__(self):
-	str = "<Config name='%s' type='%s'" % (self.name, self.type)
-	str = str + "\nruleList: %s" % self.ruleList
-	str = str + "\ngroups:"
-	for i in self.groups:
-	    str = str + " %s" % i
-	str = str + "\nMDict:"
-	for i in self.MDict.keys():
-	    str = str + " %s" % self.MDict[i]
-	str = str + "\ndefDict: %s" % self.defDict
-        str = str + "\nNDict:"
-	for i in self.NDict.keys():
-	    str = str + " %s" % self.NDict[i]
-        str = str + "\nclassDict: %s" % self.classDict
-        str = str + "\n>"
-	return str
 
 
 
@@ -166,7 +159,6 @@ class SCANPERIOD(ConfigOption):
 	    global scanperiod
 	    scanperiod = value			# set the config option
 	log.log( "<Config>SCANPERIOD(), scanperiod set to %s (%d seconds)." % (scanperiodraw, scanperiod), 6 )
-	print "!!! scanperiod:",scanperiod
 
 
 ## LOGFILE - where to store log messages
@@ -188,7 +180,6 @@ class LOGFILE(ConfigOption):
 	log.logfile = utils.stripquote(list[2])			# set the config option
 	log.log( "<Config>LOGFILE(), logfile set to '%s'." % (log.logfile), 6 )
 
-	print "!!! log.logfile:",log.logfile
 
 
 ## LOGLEVEL - how much logging to do
@@ -208,7 +199,6 @@ class LOGLEVEL(ConfigOption):
 
 	# ok, value is 3rd list element
 	log.loglevel = string.atoi(list[2])		# set the config option
-	print "!!! log.loglevel:",log.loglevel
 
 
 
@@ -232,7 +222,6 @@ class ADMIN(ConfigOption):
 	# ok, value is 3rd list element
 	log.adminemail = utils.stripquote(list[2])		# set the config option
 	log.log( "<Config>ADMIN(), admin set to '%s'." % (log.adminemail), 6 )
-	print "!!! log.adminemail:",log.adminemail
 
 
 ## ADMINLEVEL - how much logging to send to admin
@@ -253,7 +242,6 @@ class ADMINLEVEL(ConfigOption):
 	# ok, value is 3rd list element
 	log.adminlevel = string.atoi(list[2])		# set the config option
 	log.log( "<Config>ADMINLEVEL(), adminlevel set to '%d'." % (log.adminlevel), 6 )
-	print "!!! log.adminlevel:",log.adminlevel
 
 
 ## ADMIN_NOTIFY - how often to send admin-logs to admin
@@ -281,7 +269,6 @@ class ADMIN_NOTIFY(ConfigOption):
 	if value > 0:
 	    log.admin_notify = value		# set the config option
 	log.log( "<Config>ADMIN_NOTIFY(), admin_notify set to %s (%d seconds)." % (rawval, log.admin_notify), 6 )
-	print "!!! log.admin_notify:",log.admin_notify
 
 
 ## INTERPRETERS - define the list of interpreters
@@ -302,7 +289,6 @@ class INTERPRETERS(ConfigOption):
 	value = utils.stripquote(list[2])
 	proc.interpreters = string.split(value, ',')
 	log.log( "<Config>INTERPRETERS(), interpreters defined as '%s'." % (proc.interpreters), 6 )
-	print "!!! proc.interpreters:",proc.interpreters
 
 
 ## CLASS - define a class
@@ -320,7 +306,6 @@ class CLASS(ConfigOption):
 	if len(list) < 4:
 	    raise ParseFailure, "INTERPRETERS definition has %d tokens when expecting 4" % len(list)
 
-	print "!!! CLASS list:",list
 	self.name = list[1]
 	hosts = list[3:-1]			# pull hosts out
 	hosts = string.join(hosts, '')		# join all arguments
@@ -328,7 +313,7 @@ class CLASS(ConfigOption):
 	self.hosts = string.split(hosts, ',')	# finally, split into list of hosts
 
 	log.log( "<Config>CLASS(), class created %s:%s." % (self.name,self.hosts), 6 )
-	print "!!! created class:%s:%s" % (self.name,self.hosts)
+
 
 ##
 ## This is a list of known keywords we accept in Eddie config/rules files
@@ -342,6 +327,7 @@ directives = {
 	  	"PID"		: directive.PID,
 	  	"COM"		: directive.COM,
 		"PROC"		: directive.PROC,
+		"PORT"		: directive.PORT,
              }
 
 ## Just the definitions
