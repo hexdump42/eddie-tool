@@ -687,10 +687,10 @@ class COM(Directive):
 	    if err[-1:] == '\n':
 		err = err[:-1]
 
-        log.log( "<directive>COM.docheck(), retval=%d" % retval, 7 )
-        log.log( "<directive>COM.docheck(), signum=%s" % signum, 7 )
-	log.log( "<directive>COM.docheck(), stdout='%s'" % out, 7 )
-	log.log( "<directive>COM.docheck(), stderr='%s'" % err, 7 )
+        log.log( "<directive>COM.docheck(), retval=%d" % retval, 8 )
+        log.log( "<directive>COM.docheck(), signum=%s" % signum, 8 )
+	log.log( "<directive>COM.docheck(), stdout='%s'" % out, 8 )
+	log.log( "<directive>COM.docheck(), stderr='%s'" % err, 8 )
 
 	# save values in variable dictionary
 	self.Action.varDict['comout'] = out
@@ -705,7 +705,6 @@ class COM(Directive):
 	try:
 	    result = eval( self.rule, comenv )
 	except:
-	    #print "COM.docheck() : an error occured with rule '%s' - env was: %s"%(self.rule,comenv)
 	    log.log( "<directive>COM.docheck() : an error occured with rule '%s' exception type: '%s' exception value: '%s' - env was: %s"%(self.rule,sys.exc_type,sys.exc_value,comenv), 3 )
 	    return
 
