@@ -21,10 +21,12 @@ import definition
 import log
 import utils
 
+# Elvin test...
+import ottoElvin
+
 #### CONSTANTS ####
 
 DEFAULTSUBJ='Message from Otto'
-
 
 #### DEFINE ALL THE ACTIONS AVAILABLE ####
 
@@ -88,6 +90,9 @@ def email(user,*arg):
 
 	if not log.log( "<action>email(), email sent to '%s', subject '%s', body '%s'" % (u,subj,body), 9 ):
 	    log.log( "<action>email(%s, '%s')" % (u,subj) ,5 )
+	
+	#e = ottoElvin.ottoElvin()
+	#e.sendmsg( subj )
 
 
 # Parse text string replacing occurences of %var with corresponding value from
@@ -323,6 +328,35 @@ def ottolog(*arg):
     if retval != 1:
 	log.log( "<action>log(), Alert, return value for log.log( '%s', %d ) is %d" % (logstr,loglevel,retval), 3 )
 
+
+
+# elvin()
+def elvin(msg):
+    # send a message via Elvin message system
+    elvinServer = 'chintoo'
+    elvinPort = 5678
+
+    if len(msg) == 0:
+	# msg must contain something
+	log.log( "<action>elvin(), Error, msg is empty", 2 )
+	return
+
+    # Substitute variables in string
+    msg = parseVars( msg, varDict )
+
+    try:
+	e = ottoElvin.ottoElvin( elvinServer, elvinPort )
+    except ottoElvin.ElvinError:
+	log.log( "<action>elvin(), Error, ottoElvin(%d, %d) could not connect" % (elvinServer,elvinPort), 2 )
+	return
+
+    retval = e.sendmsg( msg )
+
+    # Alert if return value != 0
+    if retval != 0:
+	log.log( "<action>elvin(), Alert, return value for e.sendmsg('%s') is %d" % (msg,retval), 3 )
+    else:
+	log.log( "<action>elvin(), e.sendmsg('%s') succeeded" % (msg), 8 )
 
 ##
 ## END - action.py
