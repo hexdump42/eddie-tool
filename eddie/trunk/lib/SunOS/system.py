@@ -1,7 +1,7 @@
 ## 
 ## File		: system.py
 ## 
-## Author       : Chris Miles  <chris@psychofx.com>
+## Author(s)    : Chris Miles  <chris@psychofx.com>
 ##                Rod Telford  <rtelford@psychofx.com>
 ## 
 ## Start Date	: 19990520
@@ -11,7 +11,7 @@
 ## $Id$
 ##
 ########################################################################
-## (C) Chris Miles 2001-2002
+## (C) Chris Miles 2001-2004
 ##
 ## The author accepts no responsibility for the use of this software and
 ## provides it on an ``as is'' basis without express or implied warranty.
@@ -37,9 +37,12 @@
 
 
 # Python modules
-import string, re
+import string
+import re
 # Eddie modules
-import datacollect, log, utils
+import datacollect
+import log
+import utils
 
 
 class system(datacollect.DataCollect):
@@ -250,14 +253,26 @@ class system(datacollect.DataCollect):
 
 	uptime_dict = {}
 
+	# uptime_re matches standard /usr/bin/uptime output such as:
+	#   2:06pm  up 490 day(s), 10:46,  4 users,  load average: 0.62, 0.59, 0.71
 	uptime_re = ".+up (?P<uptime>.+),\s*(?P<users>[0-9]+) users?,\s+ load average:\s+(?P<loadavg1>[0-9.]+),\s*(?P<loadavg5>[0-9.]+),\s*(?P<loadavg15>[0-9.]+)"
 	inx = re.compile( uptime_re )
 	sre = inx.search( output )
 	if sre:
 	    uptime_dict = sre.groupdict()
 	else:
-	    log.log( "<system>system._getuptime(): could not parse uptime output '%s'"%(output), 5 )
-	    return None
+	    # chris 20040923: Sometimes the "day(s)" section is missing (usually if
+	    # wtmpx rotated more often than the system boot, thus losing the last
+	    # 'reboot' entry) # so try a second regexp for output such as:
+	    #  2:05pm  5 users,  load average: 1.78, 5.57, 5.39
+	    uptime2_re = ".+[0-9:apm]+\s*(?P<users>[0-9]+) users?,\s+ load average:\s+(?P<loadavg1>[0-9.]+),\s*(?P<loadavg5>[0-9.]+),\s*(?P<loadavg15>[0-9.]+)"
+	    inx = re.compile( uptime2_re )
+	    sre = inx.search( output )
+	    if sre:
+	        uptime_dict = sre.groupdict()
+	    else:
+	        log.log( "<system>system._getuptime(): could not parse uptime output '%s'"%(output), 5 )
+	        return None
 
 	# convert types
 	uptime_dict['users'] = int(uptime_dict['users'])
