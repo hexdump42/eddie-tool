@@ -1,6 +1,58 @@
 Eddie CHANGES
 (reverse chronological order)
 
+Eddie-0.26 (1-Oct-2001)
+ - Changed elvinrrd() action call arguments slightly.  It is now:
+   elvinrrd( 'rrdkey', 'arg1=val1', 'arg2=val2', ... )
+   The first argument must be the RRD database name to store data into.
+   All arguments following that (one or more) are "variable=data" strings
+   where variable is the name of the variable in the RRD db and data is
+   the data to store in that variable.  RRD dbs can have multiple variables
+   so this allows some or all of them to be updated in one action call.
+ - Wrapped the critical calls in safe_popen(), safe_pclose() and
+   safe_getstatusoutput() in try/except clauses, so that any exceptions are
+   intercepted and the semaphore locks are released (exceptions are then
+   raised again to be handled as normal).  This stops threads being blocked
+   on semaphore acquires which used up the thread pool quickly and was
+   obviously bad.
+ - Added elvinrrd action which is used to send data samples over Elvin to a
+   consumer which stores that data into an RRD database.
+ - Updated elvindb() action and elvindb() Elvin function to support Elvin4.
+   elvindb actions are now working again.
+ - Directive states now transition from "ok" to "failinitial" to "fail".
+   "ok" indicates the directive is fine;
+   "failinitial" indicates the directive is current transitioning to the "fail"
+    state or is waiting on a re-check;
+   "fail" indicates the directive has definitely failed.
+ - Fixed a small bug where a directive performing multiple checks (numchecks>1)
+   which fails one of the first checks but passes a subsequent re-check still
+   performs the act2ok action, which it should not do.
+ - Directive threads are named, for easier debugging.  The name they are given
+   is the ID of the directive they are executing.
+ - Cleaned up ALIAS code to support being passed in action calls properly.
+ - Cleaned up action calling code.  Actions called from action and act2ok now
+   use the same action evaluation function, whether actions are called
+   directly as a function or from Notification objects.  Thus actions can be
+   called directly or Notification objects used from both action and act2ok
+   arguments, and can even be combined.
+ - Added a rule argument to RADIUS directive so rules can be written to test
+   radius auths.  The variable passed is set in the rule environment and is
+   set to either 0 for failed or 1 for passed.
+ - FILE directive now makes the file statistics from the previous check
+   available so rules can compare the current statistics against the previous
+   statistics to see if files or file metadata have changed over time.
+   Variables are same but prepended by 'last', e.g.: rule='md5 != lastmd5'
+ - Fixed bug: Connection not being closed in all cases for PORT isalive()
+   function.
+ - Added new directive, FILE, allowing tests to be made on a file based on
+   standard file statistics (size, mode, ownerships, etc) and md5 hashes.
+ - Update lastfailtime in stateok function so any actions called by act2ok
+   will know the full age of the problem.
+ - Added PING directive to provide network ping checking of hosts.
+ - Added initial HP-UX support.
+ - Fixed bug in PROC R() check.
+
+
 Eddie-0.25 (6-Jul-2001)
  - Changed where varDict action variables are set in some directives so that
    they are available for act2ok action calls.
