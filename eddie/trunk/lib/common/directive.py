@@ -633,18 +633,18 @@ class FS(Directive):
 
 	result = eval( self.args.rule, dfenv )
 
+	# assign variables
+	self.Action.varDict['fsused'] = df.getUsed()
+	self.Action.varDict['fsavail'] = df.getAvail()
+	self.Action.varDict['fscapac'] = df.getPctused()
+	self.Action.varDict['fssize'] = df.getSize()
+	self.Action.varDict['fsdf'] = "%s%s" % (dlist.dfheader,df)
+
 	if result == 0:
 	    self.state.stateok(self, Config)	# update state info for check passed
 
 	else:
 	    self.state.statefail()	# update state info for check failed
-
-	    # assign variables
-	    self.Action.varDict['fsused'] = df.getUsed()
-	    self.Action.varDict['fsavail'] = df.getAvail()
-	    self.Action.varDict['fscapac'] = df.getPctused()
-	    self.Action.varDict['fssize'] = df.getSize()
-	    self.Action.varDict['fsdf'] = "%s%s" % (dlist.dfheader,df)
 
 	    # get '%fsls' details for this filesystem
     	    #fsls = os.popen("ls -l %s" % (df.mountpt), 'r')
@@ -900,10 +900,11 @@ class PROC(Directive):
 
 		result = eval( self.checkstring, procenv )
 
+		# build varDict from procenv
+		for i in procenv.keys():
+		    self.Action.varDict['proc%s'%(i)] = procenv[i]
+
 		if result != 0:
-		    # build varDict from procenv
-		    for i in procenv.keys():
-			self.Action.varDict['proc%s'%(i)] = procenv[i]
 		    self.state.statefail()	# update state info for check failed
 		    self.doAction(Config)
 
@@ -1308,10 +1309,11 @@ class IF(Directive):
 
 	result = eval( self.checkstring, ifenv )
 
+	# build varDict from ifenv
+	for i in ifenv.keys():
+	    self.Action.varDict['if%s'%(i)] = ifenv[i]
+
 	if result != 0:
-	    # build varDict from ifenv
-	    for i in ifenv.keys():
-		self.Action.varDict['if%s'%(i)] = ifenv[i]
 	    self.state.statefail()	# update state info for check failed
 	    self.doAction(Config)
 	else:
@@ -1361,10 +1363,11 @@ class NET(Directive):
 
 	result = eval( self.args.rule, netenv )
 
+	# build varDict from netenv
+	for i in netenv.keys():
+	    self.Action.varDict['net%s'%(i)] = netenv[i]
+
 	if result != 0:
-	    # build varDict from netenv
-	    for i in netenv.keys():
-		self.Action.varDict['net%s'%(i)] = netenv[i]
 	    self.state.statefail()	# update state info for check failed
 	    self.doAction(Config)
 	else:
@@ -1422,11 +1425,11 @@ class SYS(Directive):
 	    log.log( "<directive>SYS(), docheck(), SyntaxError evaluating rule '%s'" % (self.args.rule), 3 )
 	    return
 
+	# build varDict from sysenv
+	for i in sysenv.keys():
+	    self.Action.varDict['sys%s'%(i)] = sysenv[i]
 
 	if result != 0:
-	    # build varDict from sysenv
-	    for i in sysenv.keys():
-		self.Action.varDict['sys%s'%(i)] = sysenv[i]
 	    self.state.statefail()	# update state info for check failed
 	    self.doAction(Config)
 	else:
