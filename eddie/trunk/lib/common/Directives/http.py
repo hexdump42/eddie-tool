@@ -154,16 +154,15 @@ class HTTP(directive.Directive):
 	    data['failed'] = 1
 	    return data
 
-	time_end = time.time()
-	data['time'] = time_end - time_start
-
 	try:
 	    r = conn.getresponse()
 	except:
+	    time_end = time.time()
 	    e = sys.exc_info()
 	    data['exception'] = e[0]
 	    data['errno'] = e[1][0]
 	    data['errstr'] = e[1][1]
+	    data['time'] = time_end - time_start
 	    data['failed'] = 1
 	    conn.close()
 	    return data
@@ -173,9 +172,16 @@ class HTTP(directive.Directive):
 	data['length'] = r.length
 	data['version'] = r.version
 	data['header'] = str(r.msg)
-	data['body'] = r.read()
+	try:	# cmiles 2003-04-02: httplib can fail when reading body sometimes
+	    data['body'] = r.read()
+	except:
+	    data['body'] = ""
 
 	conn.close()
+
+	# cmiles - 2003-04-02: moved time_end from before getresponse() to after close()
+	time_end = time.time()
+	data['time'] = time_end - time_start
 
 	# Set an ok if status is 2xx or 3xx
 	if r.status >= 200 and r.status < 400:
