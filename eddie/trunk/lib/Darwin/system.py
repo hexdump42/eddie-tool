@@ -125,25 +125,25 @@ class system(datacollect.DataCollect):
 
 	for l in string.split( output, '\n' ):
 	    if string.find( l, 'Pages free:' ) != -1:
-		vmstat_dict['pages_free'] = long(string.split(l)[-1][0:-2])
+		vmstat_dict['pages_free'] = long(string.split(l)[-1][:-1])
 	    elif string.find( l, 'Pages active:' ) != -1:
-		vmstat_dict['pages_active'] = long(string.split(l)[-1][0:-2])
+		vmstat_dict['pages_active'] = long(string.split(l)[-1][:-1])
 	    elif string.find( l, 'Pages inactive:' ) != -1:
-		vmstat_dict['pages_inactive'] = long(string.split(l)[-1][0:-2])
+		vmstat_dict['pages_inactive'] = long(string.split(l)[-1][:-1])
 	    elif string.find( l, 'Pages wired down:' ) != -1:
-		vmstat_dict['pages_wired_down'] = long(string.split(l)[-1][0:-2])
+		vmstat_dict['pages_wired_down'] = long(string.split(l)[-1][:-1])
 	    elif string.find( l, 'Translation faults' ) != -1:
-		vmstat_dict['ctr_translation_faults'] = long(string.split(l)[-1][0:-2])
+		vmstat_dict['ctr_translation_faults'] = long(string.split(l)[-1][:-1])
 	    elif string.find( l, 'Pages copy-on-write:' ) != -1:
-		vmstat_dict['ctr_pages_copyonwrite'] = long(string.split(l)[-1][0:-2])
+		vmstat_dict['ctr_pages_copyonwrite'] = long(string.split(l)[-1][:-1])
 	    elif string.find( l, 'Pages zero filled:' ) != -1:
-		vmstat_dict['ctr_pages_zero_filled'] = long(string.split(l)[-1][0:-2])
+		vmstat_dict['ctr_pages_zero_filled'] = long(string.split(l)[-1][:-1])
 	    elif string.find( l, 'Pages reactivated:' ) != -1:
-		vmstat_dict['ctr_pages_reactivated'] = long(string.split(l)[-1][0:-2])
+		vmstat_dict['ctr_pages_reactivated'] = long(string.split(l)[-1][:-1])
 	    elif string.find( l, 'Pageins:' ) != -1:
-		vmstat_dict['ctr_pageins'] = long(string.split(l)[-1][0:-2])
+		vmstat_dict['ctr_pageins'] = long(string.split(l)[-1][:-1])
 	    elif string.find( l, 'Pageouts:' ) != -1:
-		vmstat_dict['ctr_pageouts'] = long(string.split(l)[-1][0:-2])
+		vmstat_dict['ctr_pageouts'] = long(string.split(l)[-1][:-1])
 
 	return vmstat_dict
 
