@@ -283,6 +283,8 @@ def parseFailure( msg, (srow, scol), (erow, ecol), line, filename ):
     print line
     print " " * (scol-1) + "^" * (ecol-scol+1)
 
+    log.log( "<parseConfig>parseFailure(), '%s' File:%s row:%d Line:\n%s" % (msg, filename, srow, line), 1 )
+
 
 
 ###
