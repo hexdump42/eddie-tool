@@ -1,4 +1,196 @@
 Eddie CHANGES
+(reverse chronological order)
+
+Eddie-0.25 (6-Jul-2001)
+ - Changed where varDict action variables are set in some directives so that
+   they are available for act2ok action calls.
+ - Improved error handling in directive.py
+ - Fixed problem with DF list not refreshing itself properly.
+ - Changed CONSPORT config option to CONSOLE_PORT.
+   I find more verbose to be much user-friendlier than less.
+ - Added two new config settings:
+    EMAIL_FROM='emailaddress'
+    EMAIL_REPLYTO='emailaddress'
+   so the From: and Reply-To: fields in the email action can be set.
+   If these are not set, they default to the current USER for the From: field,
+   and '' for the Reply-To: field.
+ - Cleaned up PORT directive isalive() handling Connection Refused exceptions.
+ - Create a QUICKSTART text document to give the impatient a quick way to
+   get Eddie running.
+ - sockets.py: handle port already in use by exiting and signalling the other
+   non-daemon threads to exit.  If the port is in use the whole program should
+   exit cleanly with an appropriate error message now.
+   Similarly, exit cleanly (and signal other threads to exit) if too many
+   socket errors.
+ - config.py: Improved error handling; if CONSPORT is not a positive integer a
+   ParseFailure is raised.
+ - The console server thread will not be started if CONSPORT=0.  This allows
+   the console feature to be disabled if required.
+ - Main thread will now also exit if please_die Event is set.  This allows
+   other threads to signal that the program should exit.
+ - Added act2ok param - allows you to specify a Notification object
+   to use when Check goes from bad to good
+ - Log accepted connections with remote IP:port, for security or whatever.
+ - directive.py: made directive string representation tidier.
+ - sockets.py: Handle "Interrupted system call" (from CTRL-C) nicely.
+ - Chaged eddie.py - changes include cleaning up the way threads
+   are started and stoped, there is now start_threads() and
+   stop_threads().  I did this so that both the scheduler thread
+   and the console socket thread can be started and stop easily
+   when the config changes.
+ - Added config var CONSPORT - this is the port to listen to
+   console connections on.  The default is 33343.
+ - Added sockets.py - A sockets interface to the current state of
+   all eddie checks, this will be used for a console like interface.
+ - Removed DEFs and replaced by ALIASes which are now used to define string
+   aliases to be substituted during config parsing, or during action argument
+   parsing.  '$' signs are not used anymore, giving a much nicer Python
+   look-and-feel.
+ - Added %(problemage)s %(problemfirstdetect)s to sample MSGs to demonstrate
+   usage.  These are substituted for the age of the current directing being
+   false and the time the first false was detected respectively; or empty
+   strings ("") if the problem age is currently 0.
+ - Added more detailed logging of thread usage, making thread problems easier
+   to track.
+ - Added a utils.safe_getstatusoutput() as a thread-safe wrapper around
+   commands.getstatusoutput().
+   The IPF directive now uses this to avoid deadlocks.
+ - Problem age and First time detected variables are now substitutable values
+   within an email message body, %(problemage)s and %(problemfirstdetect)s,
+   instead of automatically being appended to the bottom of every email.
+   Note, these variables are empty ("") if the problem age is zero.
+ - Changed all os.popen() calls to use the thread-safe utils.safe_popen().
+   This should prevent deadlocks when multiple directives are gathering info.
+ - Added 'negate' option to LOGSCAN - will match lines which do NOT match the
+   regex.
+ - Added formatted exception traceback to safeCheck() logging.
+ - Fixed socket connect() call in pop3.py to support Python 2.1
+ - Email admin logs when exiting due to config parse failure.
+ - Added LOGSCAN examples.
+ - Updated sample rules to reflect new config layout and features.
+ - Log Eddie version and systype.
+   Also log when configuration parsing complete.
+ - Cleaned up pop3.py imports.
+ - Added LOGSCAN directive for monitoring logfiles.
+ - Fixed PROC custom rules setting.
+ - Fixed directives setting their own ID only if none set in config.
+ - parseFailure() logs problem to logfile as well as printing to stdout.
+ - Cleaned up sample eddie.cf and added verbose comments.
+ - Catch any uncaught exceptions around main() so they are logged and displayed
+   nicely, making it easier for the Eddie admin to see and act on them.
+   Hence eddie doesn't have to be run from eddie_wrapper with stderr captured
+   (which didn't really work properly anyway).
+ - Fixed socket connect() call in PORT directive to use tuple as argument
+   rather than two arguments.  This changed in Python-2.1 (but works with
+   older versions).
+ - Removed the old snpp code which wasn't being used.  This should be replaced
+   with updated code.
+ - Elvin config parameters have changed from ELVINHOST and ELVINPORT to
+   ELVINURL and ELVINSCOPE to support Elvin4 properly.
+ - The Elvin tickertape action is now called ticker() [it was just called
+   elvin() before].
+ - Updated Elvin code to support Elvin4 and moved to new file eddieElvin4.py.
+   Elvin3 will no longer be supported.
+ - Replaced any use of old regex module with new re module (using regex causes
+   warnings with Python-2.1).
+ - Tested under Python-2.1.  Had to modify some of the globals to avoid new
+   warnings under 2.1.
+ - Updated system.py to handle 'top' under Solaris 8.
+ - Directive threads are started with safeCheck() which wraps up docheck()
+   in try/except so all un-caught exceptions within that thread will be caught
+   and the thread can exit cleanly.
+ - Cleaned up parsing of 'top' a bit more, so it works better under Solaris 8.
+ - Added support for directive templates.  A directive can be created to be
+   only used as a template for other directives, supplying default settings;
+   as well as standard directives can also be used as templates for other
+   directives.
+   Directive template creation, eg:
+       PROC 'template1':   template=self   scanperiod='5m' checks=2 checkwait=30
+       PROC 'cron':        template='template1'    procname='crond' action="..."
+  special template=self means this directive is a template and not to
+  schedule it.
+  Can use other working directives as templates also.
+  Template should be same directive type as directive using it - but this is
+  not enforced because it shouldn't hurt.... directives ignore any arguments
+  they don't need.
+ - Added support for new Directive arguments:
+    numchecks=<int>
+    checkwait=<time>
+   numchecks specifies how many checks a directive should perform before
+   calling its actions.  By default this will be 1.  Setting this to 2
+   will force 2 checks before actions are called.  It can be set to any
+   positive integer, include 0.  0 is a special case which indicates that
+   this directive will not perform any checks.  This could be used to
+   temporarily disabled a directive, for example.
+   checkwait specifies how long the directive will wait before performing
+   its next re-check if numchecks>1.  Its value is a standard time specification
+   eg: '5' = 5 seconds; '5s' = 5 seconds; '2m' = 2 minutes; '5h' = 5 hours.
+   By default checkwait is 0 which means the next re-check will run instantly.
+   checkwait should normally be set to a meaningful value if numchecks>1.
+ - Added ALIAS definition.  Similar to DEFs but ALIASes are replaced inside
+   action calls, etc.  Whereas DEFs are only translated during config file
+   parsing time.
+   Note: DEFs break the Python-like look&feel of the config file and may
+   disappear in the future if they can be replaced neatly.
+ - Cleaned up logging in config.py.  LOGFILE should be the first option
+   in eddie.cf so logs end up in the right place.
+ - Handle scanperiod argument in directives so scanperiod can be overrided
+   for each directive.
+ - Signals received during a time.sleep() under Linux cause an IOError
+   exception so just catch these and move on.  Main thread should be
+   handling the shutdown cleanly anyway.
+ - Cleaned up directive tokenparsing so base Directive class does as
+   much of the work as possible and user-written directive objects
+   only have to test existance of arguments and setup.
+ - New config format, which is not compatable with old format.
+   All arguments to a directive are now named arguments.
+ - Max number of threads to use can be limited in eddie.cf with the
+   NUMTHREADS variable now.  Should be set > 5 for normal use.
+   If set too low checks will never be allowed to run.
+ - Created Radius auth checking directive.
+ - Added clean exiting code to SIGINT, same as SIGTERM.
+ - Cleaned up exiting on SIGTERM signal.  The scheduler thread is signalled to
+   die and the main thread will wait for the scheduler thread to receive the
+   signal and exit before exiting cleanly itself.  All "worker" threads are
+   ignored and should die of their own accord.
+ - Put semaphores around COM checks which do os.system() calls.
+   Only one COM check will execute at a time.
+ - Made proc.py thread-friendly.
+ - timeQueue is the queueing class derived from Python's Queue class.  It is as
+   thread-friendly as Queue, the major difference being objects are inserted
+   into the queue based on a given time.  Objects with the lowest times are
+   closest to the front of the queue.
+   To support this, objects have to be added along with their time, so a
+   2-tuple must be added, eg: q.put( (obj, time) ).  Similarly q.get()
+   returns the same 2-tuple.
+   An extra public method has been added, over what Queue offers, q.head().
+   This method returns the item (and time) from the front of the queue,
+   exactly as q.get(), but does not remove it from the queue.
+ - To support the new queueing of jobs, all directives must end by submitting
+   themselves back into the queue.  A
+   Config.q.put(self,time.time()+self.scanperiod) will submit itself back
+   into the queue and schedule itself to be run in self.scanperiod seconds.
+   If a directive does not put itself back into the queue it will not be
+   called again (this can be useful if there is some sort of error and the
+   directive should not be called again).
+ - os.popen() appears to cause problems when used by multiple threads at once,
+   so all such calls now use a wrapper, utils.safe_popen() which performs
+   a semaphore lock around os.popen().  utils.safe_pclose() _MUST_ be called
+   after the pipe has been finished with or the semaphore will not be released
+   and all other calls will be blocked forever.
+ - Core of Eddie is now multi-threaded using a scheduler thread to run each
+   check in its own thread.  Thread usage is limited so things don't get out
+   of control.
+   The scheduler tracks jobs with a derivative of Python's Queue class which
+   orders items by time, so that the job to be started soonest will be at the
+   front of the queue.  This will now allow directives to specify their own
+   scanperiod and execute as often or as little as desired, indepentently of
+   other directives.
+   Modified config files are still automatically detected (sometime within a 10
+   minute period by the "Housecleaning" thread (main process)) which causes the
+   scheduler to be signalled to exit and then the configs are re-read and a new
+   scheduler will be started up.
+
 
 Eddie-0.24 (1-Oct-2000)
  - Added custom disksuite check to alert if any metadevices require
