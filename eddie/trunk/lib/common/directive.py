@@ -219,7 +219,8 @@ class Directive:
 
 
     def __str__( self ):
-	return "<%s Directive %s>" % (self.type, self.ID)
+	#return "<%s Directive %s>" % (self.type, self.ID)
+	return "%s.%s" % (self.type, self.ID)
 
 
     def getDirective( self, ID, Config ):

@@ -29,7 +29,7 @@
 
 
 
-import sys,os,socket,string,select,time,threading
+import sys,os,socket,string,select,time,threading,traceback
 import log
 
 # class wrapper for socket
@@ -88,9 +88,23 @@ def listen(s, Config, die_event):
 
     while not die_event.isSet():
         # Select timeout 1 second
-        r,w,e=select.select([s],[s],[s], 1.0)
+	try:
+	    r,w,e=select.select([s],[s],[s], 1.0)
+	except:
+            e = sys.exc_info()
+            tb = traceback.format_list( traceback.extract_tb( e[2] ) )
+
+	    if e[1][0] == 4:	# Interrupted system call, caused by CTRL-C,
+				# which is already being handled
+		log.log( "<sockets>listen(), Interrupted system call, ignored.", 8 )
+		continue
+	    else:
+		log.log( "<sockets>listen(), exception in select(): %s, %s, %s" % (e[0], e[1], tb), 3 )
+		break
+
         if r:
             ccsock, addr = s.accept()
+	    print "connection:",addr
 
             ccsock.send('Eddie Console Gateway - eddie v%s CodeFX 2001\n' % "0.25")
 
