@@ -692,6 +692,99 @@ class PORT(Directive):
 	return 0
         # print isalive(host='daidyai.off.connect.com.au',port=50006,send='blah',expect='ALIVE')
 
+
+
+class IF(Directive):
+    """Network Interface directive."""
+
+    def __init__(self, toklist):
+	apply( Directive.__init__, (self, toklist) )
+
+	# Must be 3 tokens to make up: ['SP', 'ifname', ':']
+	if len(toklist) != 3:
+	    raise ParseError, "IF parse error, expected 3 tokens, found %d" % (len(toklist))
+	if toklist[2] != ':':
+	    raise ParseError, "IF parse error, no colon"
+
+	self.name = utils.stripquote(toklist[1])		# the interface name
+	self.rule = None
+	self.checkstring = ''
+
+        self.ruleDict = { 'NE' : self.NE,
+			  'EX' : self.EX,
+			  'check' : self.check }
+
+
+
+    def tokenparser(self, toklist, toktypes, indent):
+	"""Parse rest of rule (after ':')."""
+
+	# Expect first token to be rule
+        if toklist[0] in self.ruleDict.keys():
+            # - either one of self.ruleDict
+            self.rule = self.ruleDict[toklist[0]]       # Set the rule
+        elif toktypes[0] == 'STRING':
+            # - or a string containing a special check
+            self.rule = self.ruleDict['check']
+            self.checkstring = utils.stripquote(toklist[0])
+        else:
+            raise ParseFailure, "IF found unexpected rule '%s'" % toklist[0]
+
+	self.actionList = self.parseAction(toklist[1:])
+
+	self.Action.varDict['ifname'] = self.name
+	self.Action.varDict['ifrule'] = self.rule
+	self.Action.varDict['ifcheckstring'] = self.checkstring
+
+	log.log( "<Directive>IF, name '%s', rule '%s', checkstring '%s', action '%s'" % (self.name, self.rule, self.checkstring, self.actionList), 8 )
+
+
+    def docheck(self, Config):
+	"""Perform the check."""
+
+	log.log( "<directive>IF(), docheck(), name '%s', check '%s', checkstring '%s'" % (self.name,self.check,self.checkstring), 7 )
+
+	self.rule(Config)
+
+
+    def NE(self, Config):
+	"""Check that an interface currently does not exist."""
+
+	if nlist.getInterface(self.name) == None:
+	    # interface doesn't exist
+	    log.log( "<directive>IF.NE() interface '%s' does not exist" % (self.name), 6 )
+	    self.doAction(Config)
+
+
+    def EX(self, Config):
+	"""Check that an interface currently exists."""
+
+	if nlist.getInterface(self.name) != None:
+	    # interface exists
+	    log.log( "<directive>IF.EX() interface '%s' exists" % (self.name), 6 )
+	    self.doAction(Config)
+
+
+    def check(self, Config):
+	"""Execute a check supplied by the user as a string."""
+
+	i = nlist.getInterface(self.name)
+	if i == None:
+	    log.log( "<directive>IF.check() warning, no interface '%s'." % (self.name), 8 )
+	    return		# ignore if this interface doesn't exist
+
+	ifenv = i.ifinfo()	# get dictionary of interface details
+
+	result = eval( self.checkstring, ifenv )
+
+	if result != 0:
+	    # build varDict from ifenv
+	    for i in ifenv.keys():
+		self.Action.varDict['if%s'%(i)] = ifenv[i]
+	    self.doAction(Config)
+	
+
+
 ##
 ## END - directive.py
 ##

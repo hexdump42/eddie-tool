@@ -349,6 +349,7 @@ directives = {
 	  	"COM"		: directive.COM,
 		"PROC"		: directive.PROC,
 		"PORT"		: directive.PORT,
+                "IF"		: directive.IF,
              }
 
 ## Just the definitions
