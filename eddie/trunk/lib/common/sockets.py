@@ -77,6 +77,8 @@ def printState(Config, ccsock):
 	if d.args.template != 'self' and d.console_output != None:
 	    try:
 		cstr = d.console_str()
+	    except KeyError:
+		cstr = "<directive not ready>"
 	    except:
 		e = sys.exc_info()
 		tb = traceback.format_list( traceback.extract_tb( e[2] ) )
