@@ -534,7 +534,7 @@ class PROC(Directive):
 	try:
 	    procenv = plist[self.daemon].procinfo()		# get dictionary of process details
 	except AttributeError:
-	    log.log( "<directive>PROC.check() warning, no process '%s'." % (self.daemon), 7 )
+	    log.log( "<directive>PROC.check() warning, no process '%s'." % (self.daemon), 5 )
 	    return
 
 	result = eval( self.checkstring, procenv )
