@@ -836,7 +836,7 @@ class Directive:
 	    if failed_deps:
     	        log.log( "<directive>Directive.docheck(): dependencies %s failed, %s not calling actions" % (failed_deps, self.ID), 7 )
 	    else:
-		if self.actionmaxcalls != None and self.Action.runcount > self.actionmaxcalls:
+		if self.actionmaxcalls != None and self.Action.runcount >= self.actionmaxcalls:
 		    log.log( "<directive>Directive.docheck(): actionmaxcalls reached (%d) - actions skipped" % (self.actionmaxcalls), 7 )
 		    self.putInQueue( Config.q )	# put self back in the Queue
 		    return
