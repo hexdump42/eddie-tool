@@ -47,19 +47,18 @@ class eddieElvin:
 	self.host = host
 	self.port = port
 
-#	try:
-	print "Trying Elvin connection to %s:%d" % (self.host, self.port)
-	self.elvin = Elvin.Elvin(Elvin.EC_NAMEDHOST, self.host, self.port,
+	try:
+	    print "Trying Elvin connection to %s:%d" % (self.host, self.port)
+	    self.elvin = Elvin.Elvin(Elvin.EC_NAMEDHOST, self.host, self.port,
 				     None, self._error_cb)
-	print "Made Elvin connection..."
-#	except:
-#	    sys.stderr.write("Connection to elvin failed\nIs there an elvin server running at %s:%d\n" %(self.host, self.port))
-#	    #self._exit()
-#	    raise ElvinError, "Connection failed to %s:%d" % (self.host,self.port)
-#	else:
-	self.connected = 1
+	    print "Elvin connection succeeded."
+	except:
+	    sys.stderr.write("Connection to elvin failed\nIs there an elvin server running at %s:%d\n" %(self.host, self.port))
+	    #self._exit()
+	    raise ElvinError, "Connection failed to %s:%d" % (self.host,self.port)
+	else:
+	    self.connected = 1
 
-	print "Elvin connection succeeded."
 
     # must override this method
     def sendmsg(self,msg):
