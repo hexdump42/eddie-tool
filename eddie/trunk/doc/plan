@@ -29,17 +29,22 @@ PROJECT PLAN:
 	Group	Task					By	Complete
 	-----	----					--	--------
 	Core code:
-		Logging - log all actions, etc.
-		Variables - %sys, %act, %actnm
+		Logging - log all actions, etc.		Chris	95%
+			- still defining log levels
+		Variables - %sys, %act, %actnm		Chris	66%
+			- %sys not done
 	Directives:
-		D					Chris	80%
+		D					Chris	100%
 		FS
 		PID
 		SP
 	Actions:
-		mail()					Chris	90%
+		email()					Chris	100%
 		system()
-
+		restart()
+		nice()
+		log()
+		syslog()
 
 
 DIRECTIVES:
@@ -99,8 +104,11 @@ RESPONSE FUNCTIONS
 	- email( address, MSGNAME, ALERTLEVEL )
 		- ALERTLEVEL means ?
 	- page( MSGNAME )
-	- restart( COMMAND_TO_RESTART )   <-+ same ?
-	- system( SYSTEM_COMMAND )        <-+ same ?
+	- restart( COMMAND_TO_RESTART )
+		- will execute: "/etc/init.d/COMMAND_TO_RESTART start"
+	- system( SYSTEM_COMMAND )
+		- execute: system( "SYSTEM_COMMAND" )
+		- ...security issues ????
 	- nice( NICE_LEVEL )
 	- log( MSGNAME )
 		- logs extra message to OTTO logfile
