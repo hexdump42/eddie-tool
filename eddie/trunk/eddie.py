@@ -1,13 +1,13 @@
 #!/opt/local/bin/python
 ## 
-## File         : otto.py 
+## File         : eddie.py 
 ## 
 ## Author       : Rod Telford  <rtelford@connect.com.au>
 ##                Chris Miles  <cmiles@connect.com.au>
 ## 
 ## Date         : 971204 
 ## 
-## Description  : Otto main program
+## Description  : Eddie main program
 ##
 ## $Id$
 ##
@@ -29,11 +29,11 @@ import log
 import history
 
 # Main config file - this file INCLUDEs all other config files
-config_file = 'config/otto.cf'
+config_file = 'config/eddie.cf'
 
 
-# Exit Otto cleanly
-def ottoexit():
+# Exit Eddie cleanly
+def eddieexit():
     # email admin any remaining messages
     log.sendadminlog(1)
     sys.exit()
@@ -48,7 +48,7 @@ def SigHandler( sig, frame ):
 
     if sig == signal.SIGHUP:
 	# SIGHUP (Hangup) - reload config
-	log.log( '<otto>SigHandler(), SIGHUP encountered - reloading config', 2 )
+	log.log( '<eddie>SigHandler(), SIGHUP encountered - reloading config', 2 )
 	#
 	# reset lists and read in config and rules
 	ourList = directive.Rules()
@@ -61,24 +61,24 @@ def SigHandler( sig, frame ):
 
     elif sig == signal.SIGINT:
 	# SIGINT (CTRL-c) - quit now
-	log.log( '<otto>SigHandler(), SIGINT (KeyboardInterrupt) encountered - quitting', 2 )
-	print "\nOtto quitting ... bye bye"
-	ottoexit()
+	log.log( '<eddie>SigHandler(), SIGINT (KeyboardInterrupt) encountered - quitting', 2 )
+	print "\nEddie quitting ... bye bye"
+	eddieexit()
 
     elif sig == signal.SIGTERM:
 	# SIGTERM (Terminate) - quit now
-	log.log( '<otto>SigHandler(), SIGTERM (Terminate) encountered - quitting', 2 )
-	print "\nOtto quitting ... bye bye"
-	ottoexit()
+	log.log( '<eddie>SigHandler(), SIGTERM (Terminate) encountered - quitting', 2 )
+	print "\nEddie quitting ... bye bye"
+	eddieexit()
 
     else:
 	# un-handled signal - log & ignore it
-	log.log( '<otto>SigHandler(), unknown signal received, %d - ignoring' % sig, 2 )
+	log.log( '<eddie>SigHandler(), unknown signal received, %d - ignoring' % sig, 2 )
 
 
-# The guts of the Otto program - sets up the lists, reads config info, gets
+# The guts of the Eddie program - sets up the lists, reads config info, gets
 # system information, then performs the checking.
-def ottoguts(ottoHistory):
+def eddieguts(eddieHistory):
 
     #print "M: ",ourList['M']
     #print "D: ",ourList['D']
@@ -88,11 +88,11 @@ def ottoguts(ottoHistory):
 
 
     # instantiate a process list
-    log.log( "<otto>ottoguts(), creating process list", 8 )
+    log.log( "<eddie>eddieguts(), creating process list", 8 )
     directive.plist = proc.procList()
 
     # instantiate a disk usage list
-    log.log( "<otto>ottoguts(), creating df list", 8 )
+    log.log( "<eddie>eddieguts(), creating df list", 8 )
     directive.dlist = df.dfList()
 
     ## debugging ##
@@ -108,7 +108,7 @@ def ottoguts(ottoHistory):
 
     # Now do all the checking
     # note ... directive order is not defined (we don't currently care do we?)
-    log.log( "<otto>ottoguts(), beginning checks", 8 )
+    log.log( "<eddie>eddieguts(), beginning checks", 8 )
 
     ## debugging - test with 'D' directive for now ##
     for d in ourList.keylist():
@@ -118,10 +118,10 @@ def ottoguts(ottoHistory):
 	    for i in list:
 		i.docheck()
 	else:
-	    log.log( "<otto>ottoguts(), ourList['%s'] is empty" % (d), 6 )
+	    log.log( "<eddie>eddieguts(), ourList['%s'] is empty" % (d), 6 )
 
     # Save history (debug.. FS only for now...)
-    ottoHistory.save('FS',directive.dlist)
+    eddieHistory.save('FS',directive.dlist)
 
 
 
@@ -144,7 +144,7 @@ def main():
     tmp.close()
 
     # New history object
-    history.ottoHistory = history.history()
+    history.eddieHistory = history.history()
 
     # initialise our global lists/dicts
     ourList = directive.Rules()
@@ -161,14 +161,14 @@ def main():
     # Main Loop
     while 1:
 	try:
-	    # perform guts of Otto
-	    ottoguts(history.ottoHistory)
+	    # perform guts of Eddie
+	    eddieguts(history.eddieHistory)
 
 	    # email admin the adminlog if required
 	    log.sendadminlog()
 
 	    # sleep for set period - only quits with CTRL-c
-	    log.log( '<otto>main(), sleeping for %d secs' % (config.scanperiod), 6 )
+	    log.log( '<eddie>main(), sleeping for %d secs' % (config.scanperiod), 6 )
 	    #print 'Press CTRL-C to quit'
 
 	    # Sleep by setting SIGALRM to go off in scanperiod seconds
@@ -178,8 +178,8 @@ def main():
 
 	except KeyboardInterrupt:
 	    # CTRL-c hit - quit now
-	    log.log( '<otto>main(), KeyboardInterrupt encountered - quitting', 2 )
-	    print "\nOtto quitting ... bye bye"
+	    log.log( '<eddie>main(), KeyboardInterrupt encountered - quitting', 2 )
+	    print "\nEddie quitting ... bye bye"
 	    break
 
 
@@ -191,5 +191,5 @@ if __name__ == "__main__":
     log.sendadminlog()
 
 ###
-### END otto.py
+### END eddie.py
 ###

@@ -7,7 +7,7 @@
 ## 
 ## Date		: 971211 
 ## 
-## Description	: Otto Software Config
+## Description	: Eddie Software Config
 ##
 ## $Id$
 ##
@@ -101,7 +101,7 @@ class LOGLEVEL(ConfigOption):
 	#log.log( "<Config>LOGLEVEL(), loglevel set to '%d'." % (log.loglevel), 6 )
 
 
-## ADMIN - email address of Otto administrator
+## ADMIN - email address of Eddie administrator
 # only currently supports 1 email address
 # TODO: support more than 1 email address...
 class ADMIN(ConfigOption):
@@ -144,7 +144,7 @@ class INTERPRETERS(ConfigOption):
 	log.log( "<Config>INTERPRETERS(), interpreters defined as '%s'." % (proc.interpreters), 6 )
 
 ##
-## This is a list of known directives we accept in otto config/rules files
+## This is a list of known directives we accept in Eddie config/rules files
 ##
 
 directives = {  "SCANPERIOD"	: SCANPERIOD,			\

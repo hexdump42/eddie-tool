@@ -7,7 +7,7 @@
 ## 
 ## Date         : 971204 
 ## 
-## Description  : Parses otto configuration files
+## Description  : Parses Eddie configuration files
 ##
 ## $Id$
 ##

@@ -1,7 +1,8 @@
-      OTTO - The Automated Administrator!
-      Chris Miles <cmiles@connect.com.au>
-     Rod Telford <rtelford@connect.com.au>
-     -------------------------------------
+
+      Eddie - Essential Distributed Diagnostic and Information Engine
+                  Chris Miles <cmiles@connect.com.au>
+                 Rod Telford <rtelford@connect.com.au>
+                 -------------------------------------
 
                   Config Options
                   ==============
@@ -15,11 +16,11 @@ INCLUDE <filename>
 	quotes.
 
 LOGFILE <logfile>
-      -	the file where Otto will write standard log messages.  Note that
+      -	the file where Eddie will write standard log messages.  Note that
        	<logfile> must be enclosed by single (') or double (") quotes.
 
 LOGLEVEL <loglevel>
-      -	the amount of detail Otto will log (to <logfile>).  The levels
+      -	the amount of detail Eddie will log (to <logfile>).  The levels
        	are defined as follows:
 		0 - no logging at all
 		1 - log serious problems - problems which may crash program
@@ -46,9 +47,9 @@ SCANPERIOD <time>[s|m|h|d|w|c|y]
 		w - weeks
 		c - calendar months
 		y - years
-	Otto will actually sleep for <time> seconds between each check
+	Eddie will actually sleep for <time> seconds between each check
 	which means that the full interval between checks will be greater
-	than <time> [ie: <otto execution time>+<time>].
+	than <time> [ie: <eddie execution time>+<time>].
 
 
                   HOW TO ADD A CONFIG

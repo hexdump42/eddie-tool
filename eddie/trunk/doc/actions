@@ -1,8 +1,8 @@
 
-      OTTO - The Automated Administrator!
-      Chris Miles <cmiles@connect.com.au>
-     Rod Telford <rtelford@connect.com.au>
-     -------------------------------------
+      Eddie - Essential Distributed Diagnostic and Information Engine
+                  Chris Miles <cmiles@connect.com.au>
+                 Rod Telford <rtelford@connect.com.au>
+                 -------------------------------------
 
                   Actions
                   =======
@@ -44,10 +44,10 @@ nice( <incr>, <val> )
     Relevant Directives: D, PC, PID
 
 
-ottolog( "<text>" )
-ottolog( "<text>", <loglevel> )
-    Logs <text> to Otto logfile.  If <loglevel> is supplied then <text> is
-    only logged if <loglevel> <= Otto-loglevel.
+eddielog( "<text>" )
+eddielog( "<text>", <loglevel> )
+    Logs <text> to Eddie logfile.  If <loglevel> is supplied then <text> is
+    only logged if <loglevel> <= Eddie-loglevel.
     Relevant Directives: ALL
 
 
@@ -56,7 +56,7 @@ syslog( "<text>" )
     Relevant Directives: ALL
 
 elvin( "<text>" )
-    Sends <text> to Elvin messaging system, group "Otto".
+    Sends <text> to Elvin messaging system, group "Eddie".
     Relevant Directives: ALL
 
 

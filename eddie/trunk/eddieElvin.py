@@ -1,4 +1,16 @@
 #!/opt/local/bin/python
+## 
+## File         : eddieElvin.py 
+## 
+## Author       : Rod Telford  <rtelford@connect.com.au>
+##                Chris Miles  <cmiles@connect.com.au>
+## 
+## Date         : 980407
+## 
+## Description  : Elvin messaging interface
+##
+## $Id$
+##
 
 ################################################################
 
@@ -11,7 +23,7 @@ import Elvin, ElvinMisc
 ElvinError = 'ElvinError'
 
 
-class ottoElvin:
+class eddieElvin:
 
     def __init__(self, host, port):
 	#self.host = 'chintoo'
@@ -32,7 +44,7 @@ class ottoElvin:
 
     def sendmsg(self,msg):
 	if self.connected:
-	    self.elvin.notify( { 'TICKERTAPE' : 'Otto',
+	    self.elvin.notify( { 'TICKERTAPE' : 'Eddie',
 	                         'TICKERTEXT' : msg,
 				       'USER' : log.hostname,
 				    'TIMEOUT' : 10, 
@@ -95,7 +107,7 @@ def _cleanup(sig, stackframe):
 
 if __name__ == "__main__":
 
-    e = ottoElvin()
+    e = eddieElvin()
     e.sendmsg("blah")
 
     sys.exit(0)

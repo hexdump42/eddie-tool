@@ -7,7 +7,7 @@
 ## 
 ## Date		: 980107 
 ## 
-## Description	: Otto Software Logfile stuff
+## Description	: Eddie Software Logfile stuff
 ##
 ## $Id$
 ##
@@ -18,7 +18,7 @@ import os
 ##
 ## Logfile & Log level (defaults)
 ##
-logfile = "/var/log/otto.log"
+logfile = "/var/log/eddie.log"
 loglevel = 2
 
 adminemail = 'root'
@@ -90,11 +90,11 @@ def sendadminlog( override=0 ):
 
     tmp = os.popen('/usr/lib/sendmail -t', 'w')
     tmp.write( 'To:'+adminemail+'\n' )
-    tmp.write( 'From:otto@connect.com.au\n' )
+    tmp.write( 'From:eddie@connect.com.au\n' )
     tmp.write( 'Reply-To:systems@connect.com.au\n' )
-    tmp.write( 'Subject: [%s] Otto Admin Messages\n' % hostname )
+    tmp.write( 'Subject: [%s] Eddie Admin Messages\n' % hostname )
     tmp.write( '\n' )
-    tmp.write( "Greetings Otto Admin '%s', the following log messages are\n" % adminemail )
+    tmp.write( "Greetings Eddie Admin '%s', the following log messages are\n" % adminemail )
     tmp.write( 'being delivered to you for your perusal.  Enjoy.\n\n' )
     tmp.write( "[Host:%s LogLevel=%d AdminLevel=%d AdminNotify=%s secs]\n" % (hostname,loglevel, adminlevel, admin_notify) )
     tmp.write( '------------------------------------------------------------------------------\n' )

@@ -80,7 +80,7 @@ class df:
 	self.pctused = self.raw[4][:-1]	# Percentage Used
 	self.mountpt = self.raw[5]	# Mount point
 
-	prevdf = history.ottoHistory.list('FS')
+	prevdf = history.eddieHistory.list('FS')
 	if prevdf == []:
 	    # No history - deltas are 0
 	    self.usedDelta = "0"

@@ -7,7 +7,7 @@
 ## 
 ## Date         : 980209 
 ## 
-## Description  : Otto history handler
+## Description  : Eddie history handler
 ##
 ## $Id$
 ##

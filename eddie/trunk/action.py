@@ -22,11 +22,11 @@ import log
 import utils
 
 # Elvin test...
-import ottoElvin
+import eddieElvin
 
 #### CONSTANTS ####
 
-DEFAULTSUBJ='Message from Otto'
+DEFAULTSUBJ='Message from Eddie'
 
 #### DEFINE ALL THE ACTIONS AVAILABLE ####
 
@@ -80,7 +80,7 @@ def email(user,*arg):
 	tmp = os.popen('/usr/lib/sendmail -t', 'w')
 	#tmp = open('sendmail.tmp', 'w')
 	tmp.write( 'To:'+u+'\n' )
-	tmp.write( 'From: "Otto" <otto@connect.com.au>\n' )
+	tmp.write( 'From: "Eddie" <eddie@connect.com.au>\n' )
 	tmp.write( 'Reply-To: systems@connect.com.au\n' )
 	tmp.write( 'Subject: ['+log.hostname+'] '+subj+'\n' )
 	tmp.write( '\n' )
@@ -91,7 +91,7 @@ def email(user,*arg):
 	if not log.log( "<action>email(), email sent to '%s', subject '%s', body '%s'" % (u,subj,body), 9 ):
 	    log.log( "<action>email(%s, '%s')" % (u,subj) ,5 )
 	
-	#e = ottoElvin.ottoElvin()
+	#e = eddieElvin.eddieElvin()
 	#e.sendmsg( subj )
 
 
@@ -238,7 +238,7 @@ def nice(*arg):
     # and val is relative offset.
     # %pid should contain the pid of the process who's priority is being
     # modified.
-    # Note that Otto must be running as Super-User to set a negative nice
+    # Note that Eddie must be running as Super-User to set a negative nice
     # level.
 
     # Min & max nice values.
@@ -295,8 +295,8 @@ def nice(*arg):
     log.log( "<action>nice(), cmd '%s', return value %d" % (cmd,retval), 5 )
 
 
-# ottolog()
-def ottolog(*arg):
+# eddielog()
+def eddielog(*arg):
     # if one argument supplied, this text is logged with a loglevel of 0
     # if two arguments, first is text to log, second is log level.
 
@@ -345,9 +345,9 @@ def elvin(msg):
     msg = parseVars( msg, varDict )
 
     try:
-	e = ottoElvin.ottoElvin( elvinServer, elvinPort )
-    except ottoElvin.ElvinError:
-	log.log( "<action>elvin(), Error, ottoElvin(%d, %d) could not connect" % (elvinServer,elvinPort), 2 )
+	e = eddieElvin.eddieElvin( elvinServer, elvinPort )
+    except eddieElvin.ElvinError:
+	log.log( "<action>elvin(), Error, eddieElvin(%d, %d) could not connect" % (elvinServer,elvinPort), 2 )
 	return
 
     retval = e.sendmsg( msg )
