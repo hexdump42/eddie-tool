@@ -116,6 +116,14 @@ class Directive:
 	# Put quotes around arguments so we can use eval()
 	actionList = utils.quoteArgs( actionList )
 
+	# Set the 'action' variables with the expanded action list
+	self.varDict['act'] = 'The following actions are being taken:\n'
+	self.varDict['actnm'] = 'The following (non-mail) actions are being taken:\n'
+	for a in actionList:
+	    self.varDict['act'] = self.varDict['act'] + '\t' + a + '\n'
+	    if a[:4] != 'mail':
+		self.varDict['actnm'] = self.varDict['actnm'] + '\t' + a + '\n'
+
 	# Setup current varDict in action module
 	action.varDict = self.varDict
 
@@ -148,6 +156,10 @@ class PID(Directive):
 	self.rule = fields[1]			# the rule (EX or PR)
 	self.action = fields[2]			# the action
 	#print "<PID> pidfile: '%s' rule: '%s' action: '%s'" % (self.pidfile, self.rule, self.action)
+
+	# Set any PID-specific variables
+	#  %pidf = the PID-file
+	self.varDict['pidf'] = self.pidfile
 
     def docheck(self):
 	print "PID directive doing checking......"
