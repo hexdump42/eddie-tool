@@ -105,12 +105,26 @@ class HTTP(directive.Directive):
 	if self.file == None:
 	    self.file = '/'
 
+	# cmiles 2004-07-13: option to set the timeout for the socket when making the HTTP request
+	try:
+	    self.args.request_timeout
+        except AttributeError:
+	    self.request_timeout = None		# no timeout specified by default
+	else:
+	    try:
+		self.request_timeout = float(self.args.request_timeout)
+	    except ValueError, msg:
+		raise directive.ParseFailure, "%s: request_timeout (%s) is not a valid floating-point number" %(self.ID,self.args.request_timeout)
+	    if self.request_timeout < 0.0:
+		raise directive.ParseFailure, "%s: request_timeout (%s) cannot be negative" %(self.ID,self.args.request_timeout)
+
 	# Set variables for Actions to use
 	self.defaultVarDict['url'] = self.args.url
 	self.defaultVarDict['rule'] = self.args.rule
 	self.defaultVarDict['hostname'] = self.hostname
 	self.defaultVarDict['port'] = self.port
 	self.defaultVarDict['file'] = self.file
+	self.defaultVarDict['request_timeout'] = self.request_timeout
 
 	# define the unique ID
         if self.ID == None:
@@ -131,6 +145,7 @@ class HTTP(directive.Directive):
 	    time_connect  (float) - elapsed time to connect to server
 	    time_request  (float) - elapsed time to send HTTP/S request to server
 	    time_response (float) - elapsed time to retrieve the server response (and close connection)
+	    timedout	(boolean) - true if request timed out
 
 	    if failed:
 		exception (string) - exception type
@@ -161,6 +176,7 @@ class HTTP(directive.Directive):
 	data['time_connect'] = ""
 	data['time_request'] = ""
 	data['time_response'] = ""
+	data['timedout'] = 0		# boolean; is true if received socket.timeout exception
 
 	e = None
 
@@ -231,6 +247,10 @@ class HTTP(directive.Directive):
 
 	# Send request to server
 	log.log( "<http>HTTP.getData(): Sending request: %s"%(self.file), 7 )
+	# cmiles 2004-07-13: set a socket timeout if one is specified
+	if self.request_timeout != None:
+	    conn.sock.settimeout( self.request_timeout )
+	    log.log( "<http>HTTP.getData(): socket timeout set to %f"%(self.request_timeout), 8 )
 	time_request_start = time.time()
 	try:
 	    conn.request( "GET", self.file, None, extra_headers )
@@ -238,8 +258,13 @@ class HTTP(directive.Directive):
 	    time_request_end = time.time()
 	    e = sys.exc_info()
 	    data['exception'] = e[0]
-	    data['errno'] = e[1][0]
-	    data['errstr'] = e[1][1]
+	    if data['exception'] == socket.timeout:
+		data['errno'] = 0
+		data['errstr'] = str(e[1])
+		data['timedout'] = 1
+	    else:
+		data['errno'] = e[1][0]
+		data['errstr'] = e[1][1]
 	    data['time_request'] = time_request_end - time_request_start
 	    data['time'] = time_request_end - time_start
 	    data['failed'] = 2
@@ -262,8 +287,13 @@ class HTTP(directive.Directive):
 	    time_response_end = time.time()
 	    e = sys.exc_info()
 	    data['exception'] = e[0]
-	    data['errno'] = e[1][0]
-	    data['errstr'] = e[1][1]
+	    if data['exception'] == socket.timeout:
+		data['errno'] = 0
+		data['errstr'] = str(e[1])
+		data['timedout'] = 1
+	    else:
+		data['errno'] = e[1][0]
+		data['errstr'] = e[1][1]
 	    data['time_response'] = time_response_end - time_response_start
 	    data['time'] = time_response_end - time_start
 	    data['failed'] = 3
