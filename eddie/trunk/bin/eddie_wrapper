@@ -61,6 +61,12 @@ else
     MAIL=mail				# dunno...
 fi
 
+# Find GNU date program - used for 'gdate "+%s"' below
+GDATE=`which gdate 2>/dev/null`
+if [ "$GDATE" = "" ]; then
+    GDATE=`which date`
+fi
+
 
 # clean up a bit
 rm -f /var/run/eddie/tmp/*.out
@@ -68,13 +74,13 @@ rm -f /var/run/eddie/tmp/*.out
 tries=0
 
 while [ 1 ]; do
-	pid=`/usr/bin/ps -ef | /usr/bin/grep \.\*python\.\*eddie.py  | grep -v grep | awk '{ print $2 }'`
+	pid=`ps -ef | grep \.\*python\.\*eddie.py  | grep -v grep | awk '{ print $2 }'`
         if [ "${pid}" != "" ]; then
                 echo "Error: Eddie is already running."
                 exit 2
         fi
 
-	start_time=`gdate "+%s"`
+	start_time=`$GDATE "+%s"`
 
 	cd /opt/eddie/bin
 	./eddie.py >$RUNFILE
@@ -83,7 +89,7 @@ while [ 1 ]; do
 	echo "eddie_wrapper: eddie died at `date` return code: $retcode" >> $RUNFILE
 	$MAIL -s "Eddie output on `hostname` at `date`" $EDDIE_ADMIN < $RUNFILE
 
-	curtime=`gdate "+%s"`
+	curtime=`$GDATE "+%s"`
 	restart_time=`expr $curtime - $start_time`
 	if [ $restart_time -lt 120 ]; then
 		tries=`expr $tries + 1`
@@ -91,7 +97,7 @@ while [ 1 ]; do
 		tries=0
 	fi
 
-	if [ $tries > $MAX_TRIES ]; then
+	if [ $tries -gt $MAX_TRIES ]; then
 		echo "Too many restarts ($tries) in a short time. eddie_wrapper quitting." | $MAIL -s "eddie_wrapper on `hostname`: Too many restarts ($tries) in a short time." $EDDIE_ADMIN
 		exit 3
 	fi

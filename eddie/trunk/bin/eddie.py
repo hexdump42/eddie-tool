@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/opt/python2/bin/python
 ##
 ## File         : eddie.py 
 ## 
@@ -225,10 +225,19 @@ def scheduler(q, Config, die_event):
 
     while not die_event.isSet():
 
+	loop_start = time.time()	# get time when loop started
 	while threading.activeCount() > config.num_threads:
 	    # do nothing while we have no active threads to play with
 	    # TODO: if we wait too long, something is probably wrong, so do something about it...
 	    log.log( "<eddie>scheduler(), active thread count is %d - waiting till < %d" % (threading.activeCount(),config.num_threads), 8 )
+	    if time.time() - loop_start > 30*60:
+		# if this loop has been running for over 30 mins, then all
+		# threads are locked badly and something is wrong.  Force an
+		# exit...
+		# (there is no ability to kill threads in current Python implementation)
+		log.log( "<eddie>scheduler(), active thread count has been %d for over %d mins - forcing exit" % (threading.activeCount(),time.time() - loop_start), 1 )
+		eddieexit()
+
 	    try:
 		time.sleep(1)
 	    except IOError:
