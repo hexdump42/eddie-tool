@@ -177,6 +177,7 @@ class HTTP(directive.Directive):
 	data['time_request'] = ""
 	data['time_response'] = ""
 	data['timedout'] = 0		# boolean; is true if received socket.timeout exception
+	data['ip'] = ""
 
 	e = None
 
