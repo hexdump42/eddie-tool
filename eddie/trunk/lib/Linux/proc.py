@@ -10,7 +10,7 @@
 ## $Id$
 ##
 ########################################################################
-## (C) Chris Miles 2001
+## (C) Chris Miles 2001-2005
 ##
 ## The author accepts no responsibility for the use of this software and
 ## provides it on an ``as is'' basis without express or implied warranty.
@@ -37,7 +37,9 @@
 # Python modules
 import string
 # Eddie modules
-import datacollect, log, utils
+import datacollect
+import log
+import utils
 
 
 # This fetches data by parsing system calls of common commands.  This was done because
@@ -145,7 +147,8 @@ class procList(datacollect.DataCollect):
 	    p = proc(line)
 	    self.data.proclist.append(p)
 	    self.data.datahash[p.pid] = p
-	    self.data.nameHash[string.split(p.comm, '/')[-1]] = p
+	    #self.data.nameHash[string.split(p.comm, '/')[-1]] = p
+	    self.data.nameHash[string.split(p.procname, '/')[-1]] = p
 
 	utils.safe_pclose( rawList )
 
@@ -211,12 +214,15 @@ class proc:
 
 	    # Actual 'command' name with no path or interpreter - Eddie will mainly use this
 	    self.procname = string.split(self.comm, '/')[-1]
+#	    print "DEBUG: self.procname:",self.procname
 	    if self.procname in interpreters:
+#		print "DEBUG: is in interpreters"
 		# this command is an interpreter (eg: 'perl', 'python', etc)
 		# let's set procname to the name of the script (if there is a script)
 		if len(fields) > 32:
 		    i = 32
 		    self.procname = string.split(fields[i], '/')[-1]
+#		    print "DEBUG: Try procname:",self.procname
 		    # ignore arguments (strings starting with '-')
 		    try:
 		        while self.procname[0] == '-':
@@ -225,6 +231,7 @@ class proc:
                     except IndexError:
 			# can't determine procname.....
 			self.procname = ''
+#	    print "DEBUG: Chose procname:",self.procname
 
 
     def __str__(self):
