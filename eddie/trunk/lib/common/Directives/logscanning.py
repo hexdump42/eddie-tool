@@ -159,7 +159,7 @@ class LOGSCAN(directive.Directive):
 			self.state.statefail()	# set state to fail before calling doAction()
 			self.doAction(Config)
 		    else:
-			self.state.stateok()	# reset state info
+			self.state.stateok(self, Config)	# reset state info
 
         self.putInQueue( Config.q )     # put self back in the Queue
 

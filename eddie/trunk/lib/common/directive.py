@@ -77,13 +77,13 @@ class State:
 	#                     or: repeating failure
 
 
-    def stateok(self):
+    def stateok(self, thisdirective, Config):
 	"""Update state info for check succeeding."""
 
 	if self.status != "ok":
 	    log.log( "<directive>State.stateok(), State changed to OK.  ID '%s'."%(self.ID), 6 )
 	    #TODO: Post an EVENT about problem being resolved
-	    pass
+            thisdirective.doOkAct(Config)
 
 	self.status = "ok"
 
@@ -191,6 +191,7 @@ class Directive:
 
 	self.args = Args()		# Container for arguments
 	self.args.actionList = []	# each directive will have a list of actions
+	self.args.actokList = []	# each directive will have a list of actions
 
 	# Set up informational variables - these are common to all Directives
 	#  %h = hostname
@@ -264,8 +265,12 @@ class Directive:
 				#print 'self.args.%s'%t,
 				#exec( "print self.args.%s" % (t) )
 
+	    elif t == 'act2ok':	# special handler for actions
+                self.args.actokList = self.parseAction( tokdict[t] )
+
 	    elif t == 'action':	# special handler for actions
 		self.args.actionList = self.parseAction( tokdict[t] )
+
 	    else:
 		try:
 		    exec( "self.args.%s = tokdict[t]" % (t) )
@@ -279,6 +284,7 @@ class Directive:
 	except AttributeError:
 	    if self.args.template != 'self':
 		raise ParseFailure, "Action not specified"
+
 
 	try:
 	    self.args.scanperiod
@@ -308,6 +314,7 @@ class Directive:
 	if self.args.template == 'self':
 	    # jump out of token parsing if this is a template only
 	    raise 'Template'
+
 
 
     def doAction(self, Config):
@@ -425,6 +432,75 @@ class Directive:
 			    # Not an action function ... error...
 		    #	log.log( "<directive>Directive, Error, 'action.%s' is not a defined action, config line follows,\n%s\n" % (a,self.raw), 2 )
 	#print "actionReports:",self.Action.actionReports
+
+    def doOkAct(self, Config):
+    	"""Perform actions for a directive."""
+
+        print ">>>> ", self
+        print ">>>> ", self.args
+	actionList = self.args.actokList
+        print ">>>> actionList: ", self.args.actokList
+        print ">>>> actionList: ", actionList
+
+	# Set the 'action' variables with the expanded action list
+	self.Action.varDict['act'] = 'The following actions were attempted:\n'
+	self.Action.varDict['actnm'] = 'The following (non-email) actions were attempted:\n'
+
+	self.Action.state = self.state
+	self.Action.aliasDict = Config.aliasDict
+
+	# Perform each action
+	ret = None
+	self.Action.actionReports = {}		# dict of actions and their return status
+	for a in actionList:
+	    sre = re.compile( "([A-Za-z0-9_]+)\(([A-Za-z0-9_.]+),?([0-9]?)\)" )
+	    inx = sre.search( a )
+
+            notif = inx.group(1)
+            msg = inx.group(2)
+            level = inx.group(3)
+            if level == None or level == '':
+                level = '0'
+
+	    # print ">>>> notif:",notif
+            # print ">>>> msg:",msg
+            # print ">>>> level:",level
+
+            try:
+                afunc = Config.NDict[notif].levels[level]
+            except KeyError:
+                log.log( "<directive>doAction(), Error in directive.py line 371: Config.NDict[notif].levels[level], level=%s" % level, 1 )
+            else:
+		#print ">>>> afunc:",afunc
+
+		self.Action.notif = notif
+		self.Action.msg = msg
+		self.Action.level = level
+		self.Action.MDict = Config.MDict #TODO: move to init() ?
+
+		aList = utils.trickySplit( afunc[0], ',' )
+		# Put quotes around arguments so we can use eval()
+		aList = utils.quoteArgs( aList )
+		for aa in aList:
+		    # Call the action
+		    log.log( "<directive>Directive, calling action '%s'" % (aa), 9 )
+		    try:
+		        ret = eval( 'self.Action.'+aa )
+		    except:
+		        e = sys.exc_info()
+		        log.log( "<directive>doAction(), Error evaluating self.Action.%s: %s, %s, %s" % (aa, e[0], e[1], e[2]), 1 )
+		        import traceback
+			traceback.print_exc()
+			return
+
+		    self.Action.actionReports[aa] = ret
+		    if ret == None:
+			self.Action.varDict['actnm'] = self.Action.varDict['actnm'] + '    %s\n' % aa
+
+	            elif ret == 0:
+			self.Action.varDict['actnm'] = self.Action.varDict['actnm'] + '    %s - Successful\n' % aa
+		    else:
+			self.Action.varDict['actnm'] = self.Action.varDict['actnm'] + '    %s - FAILED, return code %d\n' % (aa, ret)
 
 
     def parseAction(self, toklist):
@@ -561,7 +637,7 @@ class FS(Directive):
 	result = eval( self.args.rule, dfenv )
 
 	if result == 0:
-	    self.state.stateok()	# update state info for check passed
+	    self.state.stateok(self, Config)	# update state info for check passed
 
 	else:
 	    self.state.statefail()	# update state info for check failed
@@ -681,7 +757,7 @@ class PID(Directive):
 		self.doAction(Config)
 	    else:
 		log.log( "<directive>PID(), EX, pidfile '%s' found" % (self.args.pid), 8 )
-		self.state.stateok()		# update state info for check passed
+		self.state.stateok(self, Config)		# update state info for check passed
 		pidfile.close()
 
 	elif self.args.rule == "PR":
@@ -715,7 +791,7 @@ class PID(Directive):
 		    self.doAction(Config)
 		else:
 		    log.log( "<directive>PID(), PR, pid %s is in process list" % (pid), 7 )
-		    self.state.stateok()		# update state info for check passed
+		    self.state.stateok(self, Config)		# update state info for check passed
 
 
 	else:
@@ -797,7 +873,7 @@ class PROC(Directive):
 	    self.doAction(Config)
 	    return
 
-	self.state.stateok()	# update state info for check passed
+	self.state.stateok(self, Config)	# update state info for check passed
 
 
     def R(self,Config):
@@ -811,7 +887,7 @@ class PROC(Directive):
 	    self.doAction(Config)
 
 	else:
-	    self.state.stateok()	# update state info for check passed
+	    self.state.stateok(self, Config)	# update state info for check passed
 
 
     def check(self,Config):
@@ -835,7 +911,7 @@ class PROC(Directive):
 		    self.doAction(Config)
 
 		else:
-		    self.state.stateok()	# update state info for check passed
+		    self.state.stateok(self, Config)	# update state info for check passed
 
 
 
@@ -890,7 +966,7 @@ class SP(Directive):
 	ret = nlist.portExists(self.args.protocol, self.port, self.args.bindaddr) != None
 	if ret != 0:
 	    log.log( "<directive>SP(), port %s/%s listener found bound to %s" % (self.args.protocol , self.port_n, self.args.bindaddr), 8 )
-	    self.state.stateok()	# update state info for check passed
+	    self.state.stateok(self, Config)	# update state info for check passed
 	else:
 	    log.log( "<directive>SP(), port %s/%s no listener found bound to %s" % (self.args.protocol , self.port_n, self.args.bindaddr), 6 )
 	    self.state.statefail()	# update state info for check failed
@@ -1010,7 +1086,7 @@ class COM(Directive):
 	    self.state.statefail()	# update state info for check failed
 	    self.doAction(Config)
 	else:
-	    self.state.stateok()	# update state info for check passed
+	    self.state.stateok(self, Config)	# update state info for check passed
 
 	self.putInQueue( Config.q )	# put self back in the Queue
 
@@ -1075,7 +1151,7 @@ class PORT(Directive):
 	    self.state.statefail()	# update state info for check failed
             self.doAction(Config)
 	else:
-	    self.state.stateok()	# update state info for check passed
+	    self.state.stateok(self, Config)	# update state info for check passed
 
 	self.putInQueue( Config.q )	# put self back in the Queue
 
@@ -1197,7 +1273,7 @@ class IF(Directive):
 	    self.state.statefail()	# update state info for check failed
 	    self.doAction(Config)
 	else:
-	    self.state.stateok()	# update state info for check passed
+	    self.state.stateok(self, Config)	# update state info for check passed
 
 
     def EX(self, Config):
@@ -1212,7 +1288,7 @@ class IF(Directive):
 	    self.state.statefail()	# update state info for check failed
 	    self.doAction(Config)
 	else:
-	    self.state.stateok()	# update state info for check passed
+	    self.state.stateok(self, Config)	# update state info for check passed
 
 
     def check(self, Config):
@@ -1237,7 +1313,7 @@ class IF(Directive):
 	    self.state.statefail()	# update state info for check failed
 	    self.doAction(Config)
 	else:
-	    self.state.stateok()	# update state info for check passed
+	    self.state.stateok(self, Config)	# update state info for check passed
 
 
 class NET(Directive):
@@ -1290,7 +1366,7 @@ class NET(Directive):
 	    self.state.statefail()	# update state info for check failed
 	    self.doAction(Config)
 	else:
-	    self.state.stateok()	# update state info for check passed
+	    self.state.stateok(self, Config)	# update state info for check passed
 
 	self.putInQueue( Config.q )	# put self back in the Queue
 
@@ -1352,7 +1428,7 @@ class SYS(Directive):
 	    self.state.statefail()	# update state info for check failed
 	    self.doAction(Config)
 	else:
-	    self.state.stateok()	# update state info for check passed
+	    self.state.stateok(self, Config)	# update state info for check passed
 
 	self.putInQueue( Config.q )	# put self back in the Queue
 
@@ -1427,7 +1503,7 @@ class STORE(Directive):
 
 	self.state.statefail()	# state should be fail before doAction() called
 	self.doAction(Config)
-	self.state.stateok()	# reset state
+	self.state.stateok(self, Config)	# reset state
 
 	self.putInQueue( Config.q )	# put self back in the Queue
 
