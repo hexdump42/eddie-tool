@@ -390,8 +390,9 @@ class NUMTHREADS(ConfigOption):
 	num_threads = int(list[2])		# set the config option
 	log.log( "<config>NUMTHREADS, num_threads set to '%d'." % (num_threads), 6 )
 
-## CONSPORT - which port to listed for console connections
 class CONSPORT(ConfigOption):
+    """Set the tcp port to listen on for console connections"""
+
     def __init__( self, list ):
 	apply( ConfigOption.__init__, (self,list) )
 
@@ -410,6 +411,40 @@ class CONSPORT(ConfigOption):
 	    raise ParseFailure, "CONSPORT must be a positive integer, %d" % (consport)
 
 	log.log( "<config>CONSPORT, consport set to '%d'." % (consport), 6 )
+
+
+class EMAIL_FROM(ConfigOption):
+    """Set the From: address used by the email() action."""
+    def __init__( self, list ):
+	apply( ConfigOption.__init__, (self,list) )
+
+	# if we don't have 3 elements ['EMAIL_FROM', '=', <string>] then raise an error
+	if len(list) != 3:
+	    raise ParseFailure, "EMAIL_FROM definition has %d tokens when expecting 3" % len(list)
+
+        import action
+	action.action.EMAIL_FROM = utils.stripquote(list[2])	# set value in action class
+
+	log.log( "<config>EMAIL_FROM, email From: set to '%s'" % (action.action.EMAIL_FROM), 6 )
+
+
+class EMAIL_REPLYTO(ConfigOption):
+    """Set the From: address used by the email() action."""
+    def __init__( self, list ):
+	apply( ConfigOption.__init__, (self,list) )
+
+	# if we don't have 3 elements ['EMAIL_REPLYTO', '=', <string>] then raise an error
+	if len(list) != 3:
+	    raise ParseFailure, "EMAIL_REPLYTO definition has %d tokens when expecting 3" % len(list)
+
+        import action
+	action.action.EMAIL_REPLYTO = utils.stripquote(list[2])	# set value in action class
+
+	log.log( "<config>EMAIL_REPLYTO, email From: set to '%s'" % (action.action.EMAIL_REPLYTO), 6 )
+
+
+
+
 
 def loadExtraDirectives( directivedir ):
     """Load extra directives from given directory.  Each file
@@ -478,6 +513,8 @@ settings = {
 		"ELVINSCOPE"	: ELVINSCOPE,
 		"NUMTHREADS"	: NUMTHREADS,
 		"CONSPORT"	: CONSPORT,
+		"EMAIL_FROM"	: EMAIL_FROM,
+		"EMAIL_REPLYTO"	: EMAIL_REPLYTO,
            }
 
 ## Join all the above dictionaries to make the total keywords dictionary

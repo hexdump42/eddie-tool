@@ -68,6 +68,11 @@ y logfile checking
 - allow MSG strings to be included from separate files, so instead of a string
   in the MSG def, it would have file:procwarn.
 
+- extra args for PROC: matchre='.*': match on regular expression
+    user="username": match on user
+    notuser="username": match not owned by user, and allow multiple entries
+    allow userid matches in rule.
+
 
 BUGS:
  - Unknown directives are not handled properly.

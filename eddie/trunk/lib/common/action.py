@@ -49,7 +49,20 @@ GetMessageError = 'GetMessageError'
 
 class action:
     def __init__(self):
-	pass
+	# define a default From: address for email action
+	try:
+	    self.EMAIL_FROM	# do nothing if already set by config
+	except:
+	    self.EMAIL_FROM = os.getenv("USER")
+	    if self.EMAIL_FROM == None:
+		self.EMAIL_FROM = 'root'
+
+	# define a default Reply-To: address for email action
+	try:
+	    self.EMAIL_REPLYTO	# do nothing if already set by config
+	except:
+	    self.EMAIL_REPLYTO = ''
+
 
     def email(self, user, msg, msgbody=None):
 	"""The standard email action.
@@ -144,9 +157,8 @@ class action:
 	#tmp = os.popen('/usr/lib/sendmail -t', 'w')
 	tmp = utils.safe_popen('/usr/lib/sendmail -t', 'w')
 	tmp.write( 'To: '+users+'\n' )
-	##TODO: make headers changable !!
-	tmp.write( 'From: "Eddie" <eddie@connect.com.au>\n' )
-	tmp.write( 'Reply-To: systems\n' )
+	tmp.write( 'From: %s\n' % (self.EMAIL_FROM) )
+	tmp.write( 'Reply-To: %s\n' % (self.EMAIL_REPLYTO) )
 	tmp.write( 'Subject: ['+log.hostname+'] '+subj+'\n' )
 	tmp.write( 'X-Generated-By: %s:%s\n' % (os.uname()[1], sys.argv[0]) )
 	tmp.write( '\n' )

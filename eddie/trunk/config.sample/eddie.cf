@@ -74,6 +74,16 @@ SCANPERIOD=10m          # by default scan every 10 minutes
 #CONSPORT=33343
 
 
+# EMAIL_FROM, EMAIL_REPLYTO
+#  Define the From: and Reply-To: fields used by the email action.
+#  If not set, default values will be used.
+#  Use: EMAIL_FROM='emailaddress'
+#       EMAIL_REPLYTO='emailaddress'
+
+#EMAIL_FROM='root@my.domain'
+#EMAIL_REPLYTO='sysadmins@my.domain'
+
+
 # ELVINURL, ELVINSCOPE
 #  Specifies how to connect to an Elvin4 server.  See Elvin docs
 #  at http://elvin.dstc.edu.au/
