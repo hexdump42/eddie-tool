@@ -515,6 +515,7 @@ def parseVars(text, vDict):
     try:
 	return text % vDict
     except KeyError:
+	log.log( "<action.py>parseVars(), KeyError exception for '%s' from string '%s' with dictionary '%s'" % (sys.exc_value, text, vDict), 3 )
 	return text
 
 
