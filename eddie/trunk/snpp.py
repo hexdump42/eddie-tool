@@ -52,7 +52,7 @@ class level1:
  	    raise SNPPpageFail, "%s" % ret
 
 	# Send the Page ID
-	s.send('PAGE %d\n' % self.page)
+	s.send('PAGE %s\n' % self.page)
 	ret = s.recv(1024)
 	rc = string.split(ret)[0]
 
