@@ -62,6 +62,28 @@ class socketstate:
             return None
 
 
+
+def printState(Config, ccsock):
+    # Get the name of this Config object
+    cname = Config.name + "."
+    if cname == "__main__.":
+	cname = ""		# root Config has no name
+
+    # Loop the active config and print the state of each rule
+    for d in Config.ruleList.keys():
+	list = Config.ruleList[d]
+	if list != None:
+	    for i in list:
+		# if directive template is 'self', do not schedule it
+		if i.args.template != 'self':
+		    ccsock.send("%s%s - %s\n" % (cname, i, i.state.status))
+
+    for c in Config.groups:
+	if c.name == log.hostname or (c.name in Config.classDict.keys() and log.hostname in Config.classDict[c.name]):
+	    printState(c, ccsock)
+
+
+
 def listen(s, Config, die_event):
 
     while not die_event.isSet():
@@ -72,15 +94,8 @@ def listen(s, Config, die_event):
 
             ccsock.send('Eddie Console Gateway - eddie v%s CodeFX 2001\n' % "0.25")
 
-            # Loop the active config and print the state of each rule
-            for d in Config.ruleList.keys():
-                list = Config.ruleList[d]
-                if list != None:
-                    for i in list:
-                        # if directive template is 'self', do not schedule it
-                        if i.args.template != 'self':
-                            ccsock.send("%s - %s\n" % (i, i.state.status))
-			
+	    printState( Config, ccsock )
+
             ccsock.close()
 
 
