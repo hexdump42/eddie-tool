@@ -18,6 +18,7 @@ import string
 import regex
 import sys
 import definition
+import log
 
 #### CONSTANTS ####
 
@@ -79,6 +80,8 @@ def mail(user,*arg):
 	tmp.write( body+'\n' )
 	tmp.write( '.\n' )
 	tmp.close()
+
+	log.log( "mail sent to '"+u+"' subject '"+subj+"' body '"+body+"'" )
 
 
 # Parse text string replacing occurences of %var with corresponding value from

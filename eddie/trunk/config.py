@@ -16,6 +16,7 @@ import directive
 import definition
 import string
 import regex
+import log
 
 
 ## Define exceptions
@@ -25,12 +26,6 @@ ParseFailure = 'ParseFailure'
 ## Scan Period in seconds (default is 10 minutes)
 ##
 scanperiod = 10*60
-
-##
-## Logfile & Log level (defaults)
-##
-logfile = "/var/log/otto.log"
-loglevel = 9
 
 ##
 ## The base configoption class.  Derive all config options from this base class.
@@ -97,9 +92,8 @@ class LOGFILE(ConfigOption):
 	apply( ConfigOption.__init__, (self,) + arg )
 	self.regexp = 'LOGFILE[\t ]+["\']\([a-zA-Z0-9/._=-]+\)["\'][\t \n]*'
 	value = self.parseRaw()
-	global scanperiod 		# how do I access global scanperiod that already exists?
-	logfile = value			# set the config option
-	print "<LOGFILE> logfile set to '%s'." % (logfile)
+	log.logfile = value			# set the config option
+	print "<LOGFILE> logfile set to '%s'." % (log.logfile)
 
 
 ## LOGLEVEL - how much logging to do
@@ -108,9 +102,8 @@ class LOGLEVEL(ConfigOption):
 	apply( ConfigOption.__init__, (self,) + arg )
 	self.regexp = 'LOGLEVEL[\t ]+\([0-9]+\)[\t \n]*'
 	value = self.parseRaw()
-	global loglevel 		# how do I access global scanperiod that already exists?
-	loglevel = string.atoi(value)		# set the config option
-	print "<LOGLEVEL> loglevel set to %d." % (loglevel)
+	log.loglevel = string.atoi(value)		# set the config option
+	print "<LOGLEVEL> loglevel set to %d." % (log.loglevel)
 
 ##
 ## This is a list of known directives we accept in otto config/rules files
