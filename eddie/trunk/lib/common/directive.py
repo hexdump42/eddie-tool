@@ -645,7 +645,9 @@ class PID(Directive):
 	self.Action.varDict['pidf'] = self.args.pid
 
 	# define the unique ID
-	self.state.ID = '%s.PID.%s.%s' % (log.hostname,self.args.pid,self.args.rule)
+	if self.ID == None:
+	    self.ID = '%s.PID.%s.%s' % (log.hostname,self.args.pid,self.args.rule)
+	self.state.ID = self.ID
 
 	log.log( "<Directive>PID, ID '%s' pid '%s' rule '%s' action '%s'" % (self.state.ID, self.args.pid, self.args.rule, self.args.actionList), 8 )
 
@@ -740,8 +742,8 @@ class PROC(Directive):
 	    self.args.rule = self.ruleDict[self.args.rule]       # Rule is a function
 	elif type(self.args.rule) == type('STRING'):
 	    # - or a string containing a special check
-	    self.args.rule = self.ruleDict['check']
 	    self.checkstring = utils.stripquote(self.args.rule)
+	    self.args.rule = self.ruleDict['check']
 	else:
 	    raise ParseFailure, "PROC found unexpected rule '%s'" % self.args.rule
 
@@ -752,7 +754,9 @@ class PROC(Directive):
 	self.Action.varDict['procpid'] = '[pid not yet defined]'
 
 	# define the unique ID
-	self.state.ID = '%s.PROC.%s' % (log.hostname,self.args.procname)
+	if self.ID == None:
+	    self.ID = '%s.PROC.%s' % (log.hostname,self.args.procname)
+	self.state.ID = self.ID
 
 	log.log( "<Directive>PROC, ID '%s' procname '%s' rule '%s' action '%s'" % (self.state.ID, self.args.procname, self.args.rule, self.args.actionList), 8 )
 
@@ -855,7 +859,9 @@ class SP(Directive):
 	self.Action.varDict['spprot'] = self.args.protocol
 
 	# define the unique ID
-	self.state.ID = '%s.SP.%s/%s.%s' % (log.hostname,self.args.protocol,self.port_n,self.args.bindaddr)
+	if self.ID == None:
+	    self.ID = '%s.SP.%s/%s.%s' % (log.hostname,self.args.protocol,self.port_n,self.args.bindaddr)
+	self.state.ID = self.ID
 
 	log.log( "<Directive>SP, ID '%s' protocol '%s', port '%s', bind addr '%s', action '%s'" % (self.state.ID, self.args.protocol, self.port, self.args.bindaddr, self.args.actionList), 8 )
 
@@ -905,7 +911,9 @@ class COM(Directive):
 	self.Action.varDict['COMrule'] = self.args.rule
 
 	# define the unique ID
-	self.state.ID = '%s.COM.%s.%s' % (log.hostname,self.args.cmd,self.args.rule)
+	if self.ID == None:
+	    self.ID = '%s.COM.%s.%s' % (log.hostname,self.args.cmd,self.args.rule)
+	self.state.ID = self.ID
 
 	log.log( "<directive>COM, ID '%s' cmd '%s' rule '%s' action '%s'" % (self.state.ID, self.args.cmd, self.args.rule, self.args.actionList), 8 )
 
@@ -1035,7 +1043,9 @@ class PORT(Directive):
 	self.Action.varDict['portrecv'] = ''
 
 	# define the unique ID
-	self.state.ID = '%s.PORT.%s.%d' % (log.hostname,self.args.host,self.args.port)
+	if self.ID == None:
+	    self.ID = '%s.PORT.%s.%d' % (log.hostname,self.args.host,self.args.port)
+	self.state.ID = self.ID
 
 	log.log( "<Directive>PORT, ID '%s' host '%s' port '%d' send '%s' expect '%s'" % (self.state.ID, self.args.host, self.args.port, self.args.send, self.args.expect), 8 )
 
@@ -1140,7 +1150,9 @@ class IF(Directive):
 	self.Action.varDict['ifcheckstring'] = self.checkstring
 
 	# define the unique ID
-	self.state.ID = '%s.IF.%s.%s' % (log.hostname,self.args.name,self.rule)
+	if self.ID == None:
+	    self.ID = '%s.IF.%s.%s' % (log.hostname,self.args.name,self.rule)
+	self.state.ID = self.ID
 
 	log.log( "<Directive>IF, ID '%s' name '%s', rule '%s', checkstring '%s', action '%s'" % (self.state.ID, self.args.name, self.rule, self.checkstring, self.args.actionList), 8 )
 
@@ -1234,7 +1246,9 @@ class NET(Directive):
 	self.Action.varDict['netrule'] = self.args.rule
 
 	# define the unique ID
-	self.state.ID = '%s.NET.%s' % (log.hostname,self.args.rule)
+	if self.ID == None:
+	    self.ID = '%s.NET.%s' % (log.hostname,self.args.rule)
+	self.state.ID = self.ID
 
 	log.log( "<Directive>NET, ID '%s' rule '%s', action '%s'" % (self.state.ID, self.args.rule, self.args.actionList), 8 )
 
@@ -1289,7 +1303,9 @@ class SYS(Directive):
 	self.Action.varDict['sysrule'] = self.args.rule
 
 	# define the unique ID
-	self.state.ID = '%s.SYS.%s' % (log.hostname,self.args.rule)
+	if self.ID == None:
+	    self.ID = '%s.SYS.%s' % (log.hostname,self.args.rule)
+	self.state.ID = self.ID
 
 	log.log( "<Directive>SYS, ID '%s' rule '%s' action '%s'" % (self.state.ID, self.args.rule, self.args.actionList), 8 )
 
@@ -1349,7 +1365,9 @@ class STORE(Directive):
 	self.Action.varDict['storerule'] = self.args.rule
 
 	# define the unique ID
-	self.state.ID = '%s.FS.%s' % (log.hostname,self.args.rule)
+	if self.ID == None:
+	    self.ID = '%s.STORE.%s' % (log.hostname,self.args.rule)
+	self.state.ID = self.ID
 
 	log.log( "<Directive>STORE, ID '%s' rule '%s' action '%s'" % (self.state.ID, self.args.rule, self.args.actionList), 8 )
 
