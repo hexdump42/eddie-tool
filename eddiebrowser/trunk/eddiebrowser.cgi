@@ -570,6 +570,10 @@ def showHost( hostname, start, cfg ):
 		next = hosts[i+1]
 		next = '<a href="%s?hostname=%s&%s">--&gt;</a>' % (os.environ['SCRIPT_NAME'], hosts[i+1], cursettings)
 
+    if hostname in cfg.aliases.keys():
+	alias = " (%s)" % (cfg.aliases[hostname])
+    else:
+	alias = ""
 
     print "<center>"
     print "<form name='selecthost' action='%s' method=GET>" % (os.environ['SCRIPT_NAME'])
@@ -579,9 +583,9 @@ def showHost( hostname, start, cfg ):
 	    <font size="-1">
 	    [<a href="./eddiebrowser.cgi?%s">Control Panel</a>]
 	    </font></td>
-	<td align="center" width="40%%"><b>%s</b></td>
+	<td align="center" width="40%%"><b>%s%s</b></td>
 	<td align="right" valign="middle" width="30%%">%s&nbsp;%s&nbsp;%s</td>
-	</tr></Table>""" % (cursettings,hostname,prev,hostselect,next)
+	</tr></Table>""" % (cursettings,hostname,alias,prev,hostselect,next)
     print "</form>"
 
     cursettings = cfg.keepSettings( type='get', exclude=('start',) )
