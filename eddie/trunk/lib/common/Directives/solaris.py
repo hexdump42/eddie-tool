@@ -85,6 +85,8 @@ class METASTAT(directive.Directive):
 	evaluating the directive rule.
 	"""
 
+	data = {}
+
         # where to find the metastat command
 	metastat_list = [ "/usr/opt/SUNWmd/sbin/metastat", "/usr/sbin/metastat" ]
 
