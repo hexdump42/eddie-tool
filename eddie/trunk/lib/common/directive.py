@@ -833,9 +833,52 @@ class NET(Directive):
 
 
 
-##
-## END - directive.py
-##
+class SYS(Directive):
+    """System Statistics directive."""
+
+    def __init__(self, toklist):
+	apply( Directive.__init__, (self, toklist) )
+
+	# Must be 2 tokens to make up: ['SYS', ':']
+	if len(toklist) != 2:
+	    raise ParseError, "SYS parse error, expected 2 tokens, found %d" % (len(toklist))
+	if toklist[1] != ':':
+	    raise ParseError, "SYS parse error, no colon"
+
+	self.rulestring = ''
+
+
+    def tokenparser(self, toklist, toktypes, indent):
+	"""Parse rest of rule (after ':')."""
+
+	# Expect first token to be rule (a string)
+        if toktypes[0] != 'STRING':
+	    raise ParseError, "SYS parse error, rule is not string."
+
+	self.rulestring = utils.stripquote(toklist[0])
+
+	self.actionList = self.parseAction(toklist[1:])
+
+	self.Action.varDict['sysrule'] = self.rulestring
+
+	log.log( "<Directive>SYS, rule '%s', action '%s'" % (self.rulestring, self.actionList), 8 )
+
+
+    def docheck(self, Config):
+	"""Perform the check."""
+
+	log.log( "<directive>SYS(), docheck(), rulestring '%s'" % (self.rulestring), 7 )
+
+	sysenv = syslist.getHash()		# get dictionary of system stats
+
+	result = eval( self.rulestring, sysenv )
+
+	if result != 0:
+	    # build varDict from sysenv
+	    for i in sysenv.keys():
+		self.Action.varDict['sys%s'%(i)] = sysenv[i]
+	    self.doAction(Config)
+
 
 
 ##

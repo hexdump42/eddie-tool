@@ -351,6 +351,7 @@ directives = {
 		"PORT"		: directive.PORT,
                 "IF"		: directive.IF,
                 "NET"		: directive.NET,
+                "SYS"		: directive.SYS,
              }
 
 ## Just the definitions
