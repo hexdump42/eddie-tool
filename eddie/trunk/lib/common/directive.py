@@ -658,6 +658,8 @@ class COM(Directive):
 	elif (retval & 0xff) == 0177:
 	    # child process stopped with WSTOPFLG (0177) set
 	    signum = retval & 0xff00
+
+        out = ""
 	try:
 	    outf = open( tmpprefix + ".out", 'r' )
 	except IOError:
@@ -671,6 +673,7 @@ class COM(Directive):
 	    if out[-1:] == '\n':
 		out = out[:-1]
 
+        err = ""
 	try:
 	    errf = open( tmpprefix + ".err", 'r' )
 	except IOError:
