@@ -100,12 +100,22 @@ def main():
     # Main Loop
     while 1:
 	try:
+	    # perform guts of Otto
 	    ottoguts(history.ottoHistory)
 
+	    # email admin the adminlog if required
+	    log.sendadminlog()
+
+	    # reset adminlog
+	    log.adminlog = []
+
+	    # sleep for set period - only quits with CTRL-c
 	    log.log( '<otto>main(), sleeping for %d secs' % (config.scanperiod), 6 )
 	    print 'Press CTRL-C to quit'
 	    time.sleep( config.scanperiod )
+
 	except KeyboardInterrupt:
+	    # CTRL-c hit - quit now
 	    log.log( '<otto>main(), KeyboardInterrupt encountered - quitting', 2 )
 	    print "\nOtto quitting ... bye bye"
 	    break
@@ -114,6 +124,9 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+    # email admin anything else...
+    log.sendadminlog()
 
 ###
 ### END otto.py

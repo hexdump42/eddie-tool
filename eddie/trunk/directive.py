@@ -347,7 +347,7 @@ class COM(Directive):
 	self.command = utils.stripquote(fields[0])	# the command
 	self.rule = utils.stripquote(fields[1])	# the rule
 	self.action = fields[2]			# the action
-	print "<COM> command: '%s' rule: '%s' action: '%s'" % (self.command, self.rule, self.action)
+	#print "<COM> command: '%s' rule: '%s' action: '%s'" % (self.command, self.rule, self.action)
 
 	# Set any PID-specific variables
 	#  %com = the command
@@ -360,7 +360,6 @@ class COM(Directive):
 	cmd = "%s >%s.out 2>%s.err" % (self.command, tmpprefix, tmpprefix )
 	log.log( "<directive>COM.docheck(), calling system('%s')" % (cmd), 8 )
 	retval = os.system( cmd )
-	print "<COM> pid=%d retval=%d" % (os.getpid(), retval)
 	try:
 	    outf = open( tmpprefix + ".out", 'r' )
 	except IOError:
@@ -387,7 +386,6 @@ class COM(Directive):
 	    if err[-1:] == '\n':
 		err = err[:-1]
 	
-	print "<COM> out='%s'  err='%s'" % (out,err)
 	# save values in variable dictionary
 	self.varDict['out'] = out
 	self.varDict['err'] = err
@@ -398,7 +396,6 @@ class COM(Directive):
         comenv['err'] = err
         comenv['ret'] = retval
 	result = eval( self.rule, comenv )
-	print "<COM> result=%d" % (result)
 	if result != 0:
 	    self.doAction()
 

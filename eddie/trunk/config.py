@@ -109,6 +109,28 @@ class LOGLEVEL(ConfigOption):
 	log.loglevel = string.atoi(value)		# set the config option
 	#log.log( "<Config>LOGLEVEL(), loglevel set to '%d'." % (log.loglevel), 6 )
 
+
+## ADMIN - email address of Otto administrator
+# only currently supports 1 email address
+# TODO: support more than 1 email address...
+class ADMIN(ConfigOption):
+    def __init__( self, *arg ):
+	apply( ConfigOption.__init__, (self,) + arg )
+	self.regexp = 'ADMIN[\t ]+\([a-zA-Z0-9._@-]+\)[\t \n]*'
+	value = self.parseRaw()
+	log.adminemail = value
+	log.log( "<Config>ADMIN(), admin set to '%s'." % (log.adminemail), 6 )
+
+
+## ADMINLEVEL - how much logging to send to admin
+class ADMINLEVEL(ConfigOption):
+    def __init__( self, *arg ):
+	apply( ConfigOption.__init__, (self,) + arg )
+	self.regexp = 'ADMINLEVEL[\t ]+\([0-9]+\)[\t \n]*'
+	value = self.parseRaw()
+	log.adminlevel = string.atoi(value)		# set the config option
+	log.log( "<Config>ADMINLEVEL(), adminlevel set to '%d'." % (log.adminlevel), 6 )
+
 ##
 ## This is a list of known directives we accept in otto config/rules files
 ##
@@ -116,6 +138,8 @@ class LOGLEVEL(ConfigOption):
 directives = {  "SCANPERIOD"	: SCANPERIOD,			\
 		"LOGFILE"	: LOGFILE,			\
 		"LOGLEVEL"	: LOGLEVEL,			\
+		"ADMIN"		: ADMIN,			\
+		"ADMINLEVEL"	: ADMINLEVEL,			\
 		"M"		: definition.M,			\
 		"DEF"		: definition.DEF,		\
 		"A"		: definition.A,			\
