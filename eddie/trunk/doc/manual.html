@@ -411,6 +411,7 @@
 
    <i>Network Monitoring:</i>
    <ul>
+    <li> <b><a href="#HTTP">HTTP</a></b> - perform remote HTTP/HTTPS tests.
     <li> <b><a href="#PING">PING</a></b> - network host ping testing.
     <li> <b><a href="#POP3TIMING">POP3TIMING</a></b> - time & check on POP3 connections.
     <li> <b><a href="#PORT">PORT</a></b> - remote TCP port checking rule.
@@ -638,7 +639,7 @@
 	##   0,15,30,45 * * * * /bin/touch /var/run/eddie/cron.test
 	FILE cron_test:
 	    file='/var/run/eddie/cron.test'
-	    rule='exists and mtime < (now-15*60)'  # file modified within last 15 minutes
+	    rule='exists and mtime &gt; (now-15*60)'  # file modified within last 15 minutes
 	    action=email("alert", "Cron test failed.", "%(file)s mtime=%(mtime)s now=%(now)s")
     </pre>
     </p>
@@ -718,6 +719,114 @@
             action=email("alert", "%(mountpt)s has only %(avail)dkB free on %(h)s")
     </pre>
    </p>
+
+
+
+   <p>
+    <b><a name="HTTP">HTTP</a></b><br>
+
+    This is a directive for performing remote HTTP and HTTPS tests against
+    web servers.
+    <br><br>
+    The elapsed connection time is recorded, and all related
+    connection variables are made available, such as response code, headers and
+    returned message body, as well as error information if the connection
+    failed.
+    <br><br>
+    SSL-support must be compiled into Python for HTTPS connections.
+    <br><br>
+    The POST method is not yet supported.
+
+    <br><br>
+    HTTP-specific Arguments:
+    <ul>
+     <li> <b>url=&lt;URL&gt;</b> <i>(required)</i>:
+	  <br>
+	  - the URL to fetch.
+    </ul><br>
+
+    Rule Variables:
+    <ul>
+     <li> <b>failed</b> (boolean)
+	  <br>
+	  - will be 1 (true) if the connection failed; and 0 (false) if not.
+     <li> <b>time</b> (float)
+	  <br>
+	  - the elapsed time of the connection (whether or not if failed).
+     <p>
+     <i>If failed:</i>
+     <li> <b>exception</b> (string)
+	  <br>
+	  - the exception type.
+     <li> <b>errno</b> (integer)
+	  <br>
+	  - error code of failure.
+     <li> <b>errstr</b> (string)
+	  <br>
+	  - error message.
+     <p>
+     <i>If not failed:</i>
+     <li> <b>status</b> (integer)
+	  <br>
+	  - HTTP response status (e.g., 200, 404, etc)
+     <li> <b>reason</b> (string)
+	  <br>
+	  - HTTP response status message (e.g., "OK", "Not Found", etc)
+     <li> <b>ok</b> (boolean)
+	  <br>
+	  - true if status is 2xx or 3xx.
+     <li> <b>length</b> (integer)
+	  <br>
+	  - length of message body.
+     <li> <b>version</b> (integer)
+	  <br>
+	  - HTTP version used (10 = HTTP/1.0; 11 = HTTP/1.1)
+     <li> <b>header</b> (string)
+	  <br>
+	  - the response header.
+     <li> <b>body</b> (string)
+	  <br>
+	  - contains HTTP message body.
+    </ul>
+
+    Action Variables:
+    <ul>
+     <li> <b>url</b> (string)
+	  <br>
+	  - the value of the url argument.
+     <li> <b>hostname</b> (string)
+	  <br>
+	  - the hostname part of the URL.
+     <li> <b>file</b> (string)
+	  <br>
+	  - the file part of the URL.
+     <li> Plus all the rule variables as usual.
+    </ul>
+
+    <i>Directive Examples:</i>
+    <pre>
+	# Check our web site is up.
+	HTTP website:
+	    url='http://www.my.domain.name/index.html'
+	    rule='failed'
+	    action=email('alert', '%(url)s failed', 'exception: %(exception)s\nerrno: %(errno)s\nerrstr: %(errstr)s')
+
+	# Check a certain page hasn't disappeared.
+	HTTP mypage:
+	    url='http://www.my.domain.name/~fred/fred.html'
+	    rule='failed or not ok'
+	    action=email('fred', '%(url)s failed')
+
+	# Store web site response time in RRD db.
+	HTTP web_time:
+            url='http://our.website.com/'
+	    rule='not failed'
+	    scanperiod='5m'
+	    action=elvinrrd('http-%(h)s_%(hostname)s', 'time=%(time)f')
+	    actelse=email('alert', 'Connection failed to %(url)s')
+    </pre>
+    </p>
+
 
 
    <p>
