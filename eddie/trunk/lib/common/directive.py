@@ -4,7 +4,7 @@
 ## Author       : Rod Telford  <rtelford@psychofx.com>
 ##                Chris Miles  <chris@psychofx.com>
 ## 
-## Date		: 971205 
+## Start Date	: 19971205 
 ## 
 ## Description	: 
 ##
@@ -90,12 +90,15 @@ class State:
 
 
     def stateok(self, Config):
-	"""Update state info for check succeeding."""
+	"""Update state info for check succeeding.
+	Perform actions depending on previous state."""
 
 	if self.status == "fail":
 	    # This is a state change from "fail" to "ok".
-	    # If state was "failinitial" then check never really failed
-	    # properly so allow change back to "ok" silently.
+	    # This is when the 'act2ok' actions should be performed.
+	    #
+	    # (If state was "failinitial" then check never really failed
+	    #  properly so allow change back to "ok" silently.)
 
 	    # Mark the lastfailtime as now, as state has been failed up until
 	    # this point in time.
@@ -104,9 +107,14 @@ class State:
 
 	    log.log( "<directive>State.stateok(), State changed to OK.  ID '%s'."%(self.ID), 7 )
 
-	    self.thisdirective.performAction(Config,self.thisdirective.args.actokList)
+	    self.thisdirective.performAction(Config,self.thisdirective.args.act2okList)
 
 	    #TODO: Post an EVENT about problem being resolved
+
+	else:
+	    # If state wasn't previously failed then it is still ok.
+	    # This is when the 'actelse' actions should be performed.
+	    self.thisdirective.performAction(Config,self.thisdirective.args.actelseList)
 
 	self.status = "ok"
 
@@ -214,7 +222,8 @@ class Directive:
 
 	self.args = Args()		# Container for arguments
 	self.args.actionList = []	# each directive will have a list of actions
-	self.args.actokList = []	# a list of actions for failed state changing to ok
+	self.args.act2okList = []	# a list of actions for failed state changing to ok
+	self.args.actelseList = []	# a list of actions for state remaining ok
 
 	# Set up informational variables - these are common to all Directives
 	#  %h = hostname
@@ -288,10 +297,12 @@ class Directive:
 				#print 'self.args.%s'%t,
 				#exec( "print self.args.%s" % (t) )
 
-	    elif t == 'act2ok':	# special handler for actions
-                self.args.actokList = self.parseAction( tokdict[t] )
-
-	    elif t == 'action':	# special handler for actions
+	    # Use action parser for any of the action lists
+	    elif t == 'act2ok':
+                self.args.act2okList = self.parseAction( tokdict[t] )
+	    elif t == 'actelse':
+		self.args.actelseList = self.parseAction( tokdict[t] )
+	    elif t == 'action':
 		self.args.actionList = self.parseAction( tokdict[t] )
 
 	    else:
