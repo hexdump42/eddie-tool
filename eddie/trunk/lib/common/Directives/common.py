@@ -11,7 +11,7 @@
 ##
 ##
 ########################################################################
-## (C) Chris Miles 2002
+## (C) Chris Miles 2002-2004
 ##
 ## The author accepts no responsibility for the use of this software and
 ## provides it on an ``as is'' basis without express or implied warranty.
@@ -26,10 +26,24 @@
 ########################################################################
 
 
-# Imports: Python
-import os, string, sys, socket, time, threading, traceback, errno
-# Imports: Eddie
-import directive, log
+##
+## Imports: Python
+##
+import os
+import string
+import sys
+import socket
+import time
+import threading
+import traceback
+import errno
+
+##
+## Imports: Eddie
+##
+import directive
+import log
+import utils
 
 
 ##
@@ -318,10 +332,6 @@ class SP(directive.Directive):
 
 
 
-# This semaphore might have to be shared with system call semaphore in the
-# utils module.... (TODO)
-COMsemaphore = threading.Semaphore()
-
 class COM(directive.Directive):
     """
     COM allows simply system commands to be executed and the results/output
@@ -360,9 +370,9 @@ class COM(directive.Directive):
 
 
     def getData(self):
-	log.log( "<directive>COM.getData(): acquiring semaphore lock for cmd '%s'" % (self.args.cmd), 9 )
-	COMsemaphore.acquire()
-	log.log( "<directive>COM.getData(): semaphore acquired for cmd '%s'" % (self.args.cmd), 9 )
+	log.log( "<directive>COM.getData(): acquiring systemcall_semaphore for cmd '%s'" % (self.args.cmd), 9 )
+	utils.systemcall_semaphore.acquire()
+	log.log( "<directive>COM.getData(): systemcall_semaphore acquired for cmd '%s'" % (self.args.cmd), 9 )
 	tmpprefix = "/var/tmp/com%d" % os.getpid()
 	cmd = "{ %s ; } >%s.out 2>%s.err" % (self.args.cmd, tmpprefix, tmpprefix )
 	log.log( "<directive>COM.getData(): calling system('%s')" % (cmd), 7 )
@@ -402,8 +412,8 @@ class COM(directive.Directive):
 	    os.remove( tmpprefix + ".err" )
 	    err = string.strip(err)
 
-	COMsemaphore.release()
-	log.log( "<directive>COM.getData(): released semaphore lock for cmd '%s'" % (self.args.cmd), 9 )
+	utils.systemcall_semaphore.release()
+	log.log( "<directive>COM.getData(): released systemcall_semaphore for cmd '%s'" % (self.args.cmd), 9 )
 
         log.log( "<directive>COM.getData(): retval=%d" % retval, 7 )
         log.log( "<directive>COM.getData(): signum=%s" % signum, 9 )
