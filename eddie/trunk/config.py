@@ -140,7 +140,7 @@ class INTERPRETERS(ConfigOption):
 	self.regexp = 'INTERPRETERS[\t ]+\(.*\)[\t \n]*'
 	value = self.parseRaw()
 	proc.interpreters = string.split(value, ',')
-	log.log( "<Config>INTERPRETERS(), defined as '%s'." % (proc.interpreters), 6 )
+	log.log( "<Config>INTERPRETERS(), interpreters defined as '%s'." % (proc.interpreters), 6 )
 
 ##
 ## This is a list of known directives we accept in otto config/rules files
