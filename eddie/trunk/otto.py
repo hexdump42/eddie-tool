@@ -19,14 +19,16 @@ import parseConfig
 import directive
 import config
 
+# main config file - this file INCLUDEs all other config files
 config_file = 'config/otto.cf'
 
 def main():
 
+    # global list of all directives
     global ourList
     ourList = directive.Rules()
  
-    file = config.rules
+    # read in config and rules
     parseConfig.readFile(config_file, ourList)
  
     print "M: ",ourList['M']
@@ -36,13 +38,29 @@ def main():
     print "SP: ",ourList['SP']
 
     
-    # instansiate a process list
+    # instantiate a process list
     p = proc.procList()
-#   print p
+    #print p
 
-    # instansiate a disk usage list
+    # instantiate a disk usage list
     d = df.dfList()
-#   print d
+    #print d
+
+    # Parse all configuration options
+    # (... and remove them from the Rules List ...)
+    # !! TODO !!
+    config.parseConfig( ourList );
+
+    # Define Messages (M-directives)
+    # (... and remove them from the Rules List ...)
+    # !! TODO !!
+    ourList.delete( 'M' )
+
+    # Now do all the checking
+    # note ... directive order is not defined (we don't currently care do we?)
+    for d in ourList.keylist():
+	print "d = ",d
+	#eval('directive.'+d+'.docheck()')
 
 if __name__ == "__main__":
     main()

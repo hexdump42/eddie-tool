@@ -31,6 +31,17 @@ directives = {  "INCLUDE"	: directive.INCLUDE,		\
 ##
 rules = 'config/fs.rules'
 
+##
+## Scan Period in seconds (default is 10 minutes)
+##
+scanperiod = 10*60
+
+##
+## Parse rule-list and pull out Config commands.
+##
+def parseConfig( ruleList ):
+    #directive.SCANPERIOD.setConfig( ruleList['SCANPERIOD'].value() )
+    ruleList.delete( 'SCANPERIOD' )
 
 ##
 ## END - config.py
