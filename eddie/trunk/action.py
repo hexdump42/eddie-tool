@@ -24,6 +24,9 @@ import utils
 # Elvin test...
 import eddieElvin
 
+# Page test
+import snpp
+
 #### CONSTANTS ####
 
 DEFAULTSUBJ='Message from Eddie'
@@ -357,6 +360,32 @@ def elvin(msg):
 	log.log( "<action>elvin(), Alert, return value for e.sendmsg('%s') is %d" % (msg,retval), 3 )
     else:
 	log.log( "<action>elvin('%s')" % (msg), 5 )
+
+# page()
+def page(pager, msg):
+    # send a page via SNPP
+    pageServer = 'chintoo'
+
+    if len(msg) == 0:
+	# msg must contain something
+	log.log( "<action>page(), Error, msg is empty", 2 )
+	return
+
+    # Substitute variables in string
+    msg = parseVars( msg, varDict )
+
+    p = snpp.level1(pageServer)
+    p.pager(pager)
+    p.message(msg)
+
+
+    try:
+	p.send()
+    except snpp.SNPPpageFail:
+	log.log( "<action>page(), Error, %s, returned %s" % (pageServer,snpp.SNPPpageFail), 2 )
+	return
+
+    log.log( "<action>page('%s')" % (msg), 5 )
 
 ##
 ## END - action.py
