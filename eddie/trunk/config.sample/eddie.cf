@@ -3,36 +3,121 @@
 # $Id$
 #
 
-			# LOG* should be before other configs so that logging
-			# is setup properly (and LOGLEVEL should go first).
-			# ADMINLEVEL should preferably go straight after
-			# LOGLEVEL.
+# LOGFILE
+#  Specifies the file that Eddie logs to.  Log detail is defined by
+#  LOGLEVEL.  LOGFILE should always be defined first.
+#  Use: LOGFILE="<filename>"
 
-LOGLEVEL=8		# log levels: see doc/config
-ADMINLEVEL=5		# Admin inform level
-LOGFILE="/var/log/eddie.log"	# logging details go into this folder
-ADMIN="eddie-adm@domain.name"	# The Eddie Admin
-ADMIN_NOTIFY=1d		# Send Admin summaries only once a day
+LOGFILE="/var/log/eddie.log"
 
-			# approximate minimum scan period - Eddie will sleep for SCANPERIOD
-#SCANPERIOD=20		# scan every 20 seconds
-#SCANPERIOD=60s		# scan every 60 seconds
-SCANPERIOD=10m		# scan every 10 minutes
-#SCANPERIOD=1h		# scan every 1 hour
-#SCANPERIOD=2d		# scan every 2 days
-#SCANPERIOD=3w		# scan every 3 weeks
-#SCANPERIOD=4c		# scan every 4 months (calender month)
-#SCANPERIOD=5y		# scan every 5 years
 
-INTERPRETERS='sh,bash,perl,perl5.001,perl5.003,perl5.004,python,python1.4,python1.5'
+# LOGLEVEL
+#  LOGLEVEL specifies how much detail is logged to the file
+#  specified by LOGFILE.  The value should be between 0 and
+#  9.  The higher the value, the more detail is logged.  Set
+#  to 0 to not log anything.
+#  Use: LOGLEVEL=<int 0-9>
+
+LOGLEVEL=6
+
+
+# ADMIN
+#  Specifies an email address for logs to be emailed to.  The level
+#  of detail is defined by ADMINLEVEL.  The frequency of emails is
+#  defined by ADMIN_NOTIFY.
+#  Use: ADMIN="<email address>"
+
+ADMIN="eddie-adm@domain.name"
+
+
+# ADMINLEVEL
+#  The value for ADMINLEVEL means the same as for LOGLEVEL, however
+#  this settings specifies how much detail is logged and emailed to
+#  the administrator (defined by ADMIN).
+#  Use: ADMINLEVEL=<int 0-9>
+
+ADMINLEVEL=3
+
+
+# ADMIN_NOTIFY
+#  Specifies how often logs are emailed to ADMIN.
+#  Use: ADMIN_NOTIFY=<int>[smhdwcy]
+
+ADMIN_NOTIFY=1d         # Send Admin summaries only once a day
+
+
+# NUMTHREADS
+#  Define the maximum number of threads Eddie should attempt to limit itself to
+#  using.  All directives are executed in their own thread so they do not hold
+#  up other directives scheduled for the same time.  A recommended minimum is
+#  about 5 (although there is no checking yet so be careful).  A good setting
+#  is probably 10 to 20.  
+
+NUMTHREADS=20
+
+
+# SCANPERIOD
+#  Defines the default scanperiod for every directive.  This is the amount of
+#  time a directive waits between executing.  This setting can be overridden
+#  when defining the directive.
+#  Use: SCANPERIOD=<int>[smhdwcy]
+
+SCANPERIOD=10m          # by default scan every 10 minutes
+
+
+# ELVINURL, ELVINSCOPE
+#  Specifies how to connect to an Elvin4 server.  See Elvin docs
+#  at http://elvin.dstc.edu.au/
+#  These settings (and the use of Elvin) are optional.
+#  Use: ELVINURL='<elvin server url>'
+#       ELVINSCOPE='<elvin server scope>'
+
+ELVINURL='elvin://elvin.dstc.edu.au'
+ELVINSCOPE='Elvin'
+
+
+# INTERPRETERS
+#  Defines processes which are "interpreters", where the first argument will be
+#  the real name of the process when examining the process table.  This only
+#  effects the PROC directive and means you can look for a process called
+#  "test.py" which looks like "/usr/bin/python /export/util/test.py" in the
+#  process table.  Eddie is smart enough to ignore the first part,
+#  "/usr/bin/python" and treat the second part as the actual process name
+#  (which is normally what you want).
+#  Use: INTERPRETERS='<name>[,<name> ...]'
+
+INTERPRETERS='sh,bash,perl,perl5.001,perl5.003,perl5.004,python,python1.4,python1.5,python1.5.2'
+
+
+# CLASS
+#  Define classes of hosts which share the same Eddie config.  The name of the
+#  class will match the name of a "group" definition.  Each host whose hostname
+#  is listed in the CLASS definition will use the equivalent "group" of the
+#  same name.
+#  Use: CLASS <name>=<hostname>[,<hostname> ...]
 
 CLASS news=perki,merki
 CLASS dns=yarrina,warrane
 CLASS dnscache=yalumba,yulp
 CLASS cache=myeah,myponga,myangup,myalla,myoon
 
+
+# DEF
+#  Define some aliases which can appear in the config at any time as $NAME.
+#  These are expanded when the config is parsed.
+#  (Warn: these may disappear at a later stage as they break the Python
+#  look-and-feel of the config.)
+#  Use: DEF <name>="<string>"
+
 DEF ALERT="alert@domain.name"
 DEF SYSSUP="syssup@domain.name"
+
+
+# INCLUDE
+#  Continue parsing the file named after INCLUDE.  This allows the
+#  configuration to be split into multiple files.  Eddie rules and directives
+#  are usually defined in separate files to keep things tidy.
+#  Use: INCLUDE '<filename>'
 
 INCLUDE 'rules/common.rules'
 INCLUDE 'rules/host.rules'
