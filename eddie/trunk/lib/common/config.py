@@ -13,7 +13,7 @@
 ##
 
 # Python specific modules
-import string, regex, os
+import sys, string, regex, os
 
 # Eddie specific modules
 import directive, definition, log, proc, utils
