@@ -185,6 +185,18 @@ class FS(Directive):
 	    self.varDict['fssize'] = df.getSize()
 	    self.varDict['fsdf'] = "%s%s" % (dlist.dfheader,df)
 
+	    # get '%fsls' details for this filesystem
+    	    fsls = os.popen("ls -l %s" % (df.mountpt), 'r')
+ 
+	    fsls_output = ""
+    	    for line in fsls.readlines():
+		fsls_output = fsls_output + line
+	    
+	    fsls.close()
+	    self.varDict['fsls'] = fsls_output
+	
+
+
     	    log.log( "<directive>FS(), rule '%s' was false, calling doAction()" % (self.rule), 6 )
     	    self.doAction()
 
