@@ -11,7 +11,6 @@ y Double checking for directives: use arguments checks= and checkwait= eg:
     first one fails) and wait 30seconds between checks.
     The directive is actually re-scheduled in the scheduler queue for 30seconds
     time.
-
 y Directive template creation, eg:
     PROC 'template1':	template=self	scanperiod='5m'	checks=2	checkwait=30
     PROC 'cron':	template='template1'	procname='crond'	action="..."
@@ -21,8 +20,8 @@ y Directive template creation, eg:
   Template should be same directive type as directive using it - but this is
     not enforced because it shouldn't hurt.... directives ignore any arguments
     they don't need.
-
 y Directives spanning multiple lines not parsed properly.
+y Problem age/ack details variable for messages, eg: %(probage)s, etc.
 
 - See DEF problems/changes in BUGS
 
@@ -32,7 +31,6 @@ y Directives spanning multiple lines not parsed properly.
 
 - Fix doArgs to use standard Python args.
 
-- Problem age/ack details variable for messages, eg: %(probage)s, etc.
 
 - Fix history object.
 
