@@ -1193,6 +1193,7 @@ class PORT(Directive):
                         s.close()
                         return 1
                     else:
+                        s.close()
                         return 0
             except socket.error:
 		e = sys.exc_info()
