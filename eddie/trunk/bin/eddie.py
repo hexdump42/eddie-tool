@@ -179,40 +179,6 @@ def doArgs(args, argflags):
 	    eddieexit()
 
 
-# The guts of the Eddie program - sets up the lists, reads config info, gets
-# system information, then performs the checking.
-def eddieguts(Config, eddieHistory):
-
-    # instantiate a process list
-    log.log( "<eddie>eddieguts(), creating process object", 8 )
-    directive.plist = proc.procList()
-
-    # instantiate a disk usage list
-    log.log( "<eddie>eddieguts(), creating df object", 8 )
-    directive.dlist = df.dfList()
-
-    # instantiate a netstat list
-    log.log( "<eddie>eddieguts(), creating netstat object", 8 )
-    directive.nlist = netstat.netstat()
-
-    # instantiate a system object
-    log.log( "<eddie>eddieguts(), creating system object", 8 )
-    directive.system = system.system()
-
-    if module_iostat:
-        # instantiate an iostat object
-        log.log( "<eddie>eddieguts(), creating iostat object", 8 )
-        directive.iostat = iostat.iostat()
-
-    # Now do all the checking
-    log.log( "<eddie>eddieguts(), beginning checks", 7 )
-    check(Config)
-
-    # Save history (debug.. FS only for now...)
-    eddieHistory.save('FS',directive.dlist)
-
-
-
 def main():
     """Startup routine - setup then start main loop."""
 
@@ -246,6 +212,28 @@ def main():
 	print Config
 	eddieexit()
 
+    # instantiate a process list
+    log.log( "<eddie>eddieguts(), creating process object", 7 )
+    directive.plist = proc.procList()
+
+    # instantiate a disk usage list
+    log.log( "<eddie>eddieguts(), creating df object", 7 )
+    directive.dlist = df.dfList()
+
+    # instantiate a netstat list
+    log.log( "<eddie>eddieguts(), creating netstat object", 7 )
+    directive.nlist = netstat.netstat()
+
+    # instantiate a system object
+    log.log( "<eddie>eddieguts(), creating system object", 7 )
+    directive.system = system.system()
+
+    if module_iostat:
+        # instantiate an iostat object
+        log.log( "<eddie>eddieguts(), creating iostat object", 7 )
+        directive.iostat = iostat.iostat()
+
+
     # Main Loop
     while 1:
 	try:
@@ -258,7 +246,7 @@ def main():
 	    # if so, re-read config
 	    if Config.checkfiles():
 		log.log( '<eddie>eddieguts(), config files modified - reloading config', 7 )
-		#
+
 		# reset config and read in config and rules
 		global Config
 		Config = config.Config( '__main__' )
@@ -266,8 +254,12 @@ def main():
 		# read in config and rules
 		parseConfig.readConf(config_file, Config)
 
-	    # perform guts of Eddie
-	    eddieguts(Config, history.eddieHistory)
+	    # Now do all the checking
+	    log.log( "<eddie>main(), beginning checks", 7 )
+	    check(Config)
+
+	    # Save history (debug.. FS only for now...)
+	    history.eddieHistory.save('FS',directive.dlist)
 
 	    # email admin the adminlog if required
 	    log.sendadminlog()
