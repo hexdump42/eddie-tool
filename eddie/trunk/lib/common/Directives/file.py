@@ -166,9 +166,9 @@ class FILE(directive.Directive):
 	    data['mtime'] = s[8]
 	    data['ctime'] = s[9]
 	    data['md5'] = ''
-	    data['perm'] = s[0] & 0777		# extract permission bits only
-	    data['sticky'] = s[0] & 07000	# extract sticky/setuid/setgid bits only
-	    data['type'] = s[0] & 0170000	# extract file type bits only
+	    data['perm'] = s[0] & 0777			# extract permission bits only
+	    data['sticky'] = (s[0] & 07000) >>9)	# extract sticky/setuid/setgid bits only
+	    data['type'] = (s[0] & 0170000) >>12)	# extract file type bits only
 	    # shorthand isfile booleans
 	    data['issocket'] = data['type'] & 0140000 == 0140000
 	    data['issymlink'] = data['type'] & 0120000 == 0120000
