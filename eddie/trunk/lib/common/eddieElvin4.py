@@ -197,7 +197,7 @@ class Elvin:
 
 	try:
 	    self.connection.open()
-	except ElvinConnectMaxRetries, msg:
+	except elvin.ElvinConnectMaxRetries, msg:
 	    log.log("<eddieElvin4>Elvin.connect(): Elvin could not connect, ElvinConnectMaxRetries '%s'" %(msg), 5)
 	else:
 	    log.log("<eddieElvin4>Elvin.connect(): Connected to Elvin, '%s'" %(self.connect_str), 5)
