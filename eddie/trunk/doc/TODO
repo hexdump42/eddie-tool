@@ -24,6 +24,8 @@ y Directive template creation, eg:
 
 y Directives spanning multiple lines not parsed properly.
 
+- See DEF problems/changes in BUGS
+
 - rule dependencies
 
 - make os-dependent data collectors thread-safe, as Linux/proc.py
@@ -72,5 +74,10 @@ BUGS:
 
  - Bus Error/core dump from iostat/kstat library sometimes when
    collecting iostat data.
+
+ - parsing $DEFN sometimes not working when DEF defined inside group, or
+   sometimes also above group... not sure!
+   -> change defs to just parse DEFN instead of $DEFN - when a "NAME" type
+   token is found, see if in DEF dictionary...
 
 
