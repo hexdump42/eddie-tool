@@ -49,12 +49,13 @@ class iostat(datastore.DataStore):
 		    self.snaptimes[name] = snaptime
 		except AttributeError:
 		    print "Error with kstat list: '%s'.  k.ks_name='%s'" % (sys.exc_value,k.ks_name)
-		    log.log( "<iostat>iostat(), Error with kstat list: '%s'. k.ks_name='%s'" % (sys.exc_value,ks.ks_name), 3 )
+		    log.log( "<iostat>iostat(), Error with kstat list: '%s'. k.ks_name='%s'" % (sys.exc_value,k.ks_name), 3 )
 
 	    k = k.getnext()
 
 
 	log.log( "<iostat>iostat(), new iostat data collected", 7 )
+	khead.close()		# close kstat
 
 
 
