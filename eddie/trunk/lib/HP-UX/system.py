@@ -165,13 +165,13 @@ class system:
 
 	vmstat_cmd = "/usr/bin/vmstat -s"
 
+	vmstat_dict = {}
+
 	(retval, output) = utils.safe_getstatusoutput( vmstat_cmd )
 
 	if retval != 0:
 	    log.log( "<system>system._getvmstat(): error calling '%s'"%(vmstat_cmd), 5 )
 	    return None
-
-	vmstat_dict = {}
 
 	for l in string.split( output, '\n' ):
 	    if string.find( l, 'swap ins' ) != -1:
@@ -258,6 +258,8 @@ class system:
 	"""Get system statistics from the output of the 'uptime' command."""
 
 	uptime_cmd = "/usr/bin/uptime"
+
+	uptime_dict = {}
 
 	(retval, output) = utils.safe_getstatusoutput( uptime_cmd )
 
