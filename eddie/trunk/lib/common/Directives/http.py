@@ -292,7 +292,8 @@ class HTTP(directive.Directive):
 	    time_response_end = time.time()
 	    e = sys.exc_info()
 	    data['exception'] = e[0]
-	    if data['exception'] == socket.timeout:
+	    # cmiles 2004-07-19: check for socket.timeout exception (but only if Python >= 2.3)
+	    if (sys.version_info[0] > 2 or (sys.version_info[0] == 2 and sys.version_info[1] >= 3)) and data['exception'] == socket.timeout:
 		data['errno'] = 0
 		data['errstr'] = str(e[1])
 		data['timedout'] = 1
@@ -310,10 +311,13 @@ class HTTP(directive.Directive):
 	    data['body'] = r.read()
 	except:
 	    e = sys.exc_info()
-	    if e[0] == socket.timeout:
+	    # cmiles 2004-07-19: check for socket.timeout exception (but only if Python >= 2.3)
+	    if (sys.version_info[0] > 2 or (sys.version_info[0] == 2 and sys.version_info[1] >= 3)) and e[0] == socket.timeout:
 		log.log( "<http>HTTP.getData(): response read failed with timeout, exception=%s, errstr=%s"%(e[0],str(e[1])), 7 )
 	    else:
-		log.log( "<http>HTTP.getData(): response read failed, exception=%s, errno=%s, errstr=%s"%(e[0],e[1][0],e[1][1]), 7 )
+		# cmiles 2004-07-19: some Exceptions were breaking string substitution
+		#log.log( "<http>HTTP.getData(): response read failed, exception=%s, errno=%s, errstr=%s"%(e[0],e[1][0],e[1][1]), 7 )
+		log.log( "<http>HTTP.getData(): response read failed, exception=%s, errstr=%s"%(e[0],e[1]), 7 )
 	    data['body'] = "<read failed>"
 
 	data['status'] = r.status
