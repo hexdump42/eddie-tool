@@ -42,11 +42,11 @@ class CRON(directive.Directive):
 	try:
 	    self.args.file		# test file touched by cronjob
 	except AttributeError:
-	    raise ParseFailure, "Test File not specified"
+	    raise directive.ParseFailure, "Test File not specified"
 	try:
 	    self.args.rule		# the rule
 	except AttributeError:
-	    raise ParseFailure, "Rule not specified"
+	    raise directive.ParseFailure, "Rule not specified"
 
 	# Set any FS-specific variables
 	#  rule = rule

@@ -45,11 +45,11 @@ class LOGSCAN(directive.Directive):
 	try:
 	    self.args.file		# filename
         except AttributeError:
-            raise ParseFailure, "Filename not specified"
+            raise directive.ParseFailure, "Filename not specified"
 	try:
 	    self.args.regex		# regular expression
         except AttributeError:
-            raise ParseFailure, "Regex not specified"
+            raise directive.ParseFailure, "Regex not specified"
 
 	# Set variables for Actions to use
 	self.Action.varDict['logscanfile'] = self.args.file
@@ -137,5 +137,5 @@ class LOGSCAN(directive.Directive):
 
 
 ##
-## END - pop3.py
+## END - logscanning.py
 ##

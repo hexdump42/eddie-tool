@@ -190,16 +190,16 @@ class POP3TIMING(directive.Directive):
 	try:
 	    self.args.server		# hostname:port
         except AttributeError:
-            raise ParseFailure, "POP3 Server not specified"
+            raise directive.ParseFailure, "POP3 Server not specified"
 	try:
 	    self.args.user		# username
         except AttributeError:
-            raise ParseFailure, "Username not specified"
+            raise directive.ParseFailure, "Username not specified"
 
 	try:
 	    self.args.password	# password
         except AttributeError:
-            raise ParseFailure, "Password not specified"
+            raise directive.ParseFailure, "Password not specified"
 
 	if ':' in self.args.server:
 	    (self.host, self.port) = string.split( self.server, ':' )

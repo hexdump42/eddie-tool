@@ -43,19 +43,19 @@ class RADIUS(directive.Directive):
 	try:
 	    self.args.server		# hostname:port
 	except AttributeError:
-	    raise ParseFailure, "Server not specified"
+	    raise directive.ParseFailure, "Server not specified"
 	try:
 	    self.args.secret		# secret
 	except AttributeError:
-	    raise ParseFailure, "Secret not specified"
+	    raise directive.ParseFailure, "Secret not specified"
 	try:
 	    self.args.user		# username
 	except AttributeError:
-	    raise ParseFailure, "Username not specified"
+	    raise directive.ParseFailure, "Username not specified"
 	try:
 	    self.args.password	# password
 	except AttributeError:
-	    raise ParseFailure, "Password not specified"
+	    raise directive.ParseFailure, "Password not specified"
 
 	if ':' in self.args.server:
 	    (self.host, self.port) = string.split( self.args.server, ':' )

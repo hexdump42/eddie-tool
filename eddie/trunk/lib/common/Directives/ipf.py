@@ -18,10 +18,6 @@ import sys, os, commands, time
 import log, directive, utils
 
 
-# Define exceptions
-ParseFailure = 'ParseFailure'
-
-
 
 class IPF(directive.Directive):
     """Eddie directive for performing ipfilter checks.
@@ -43,7 +39,7 @@ class IPF(directive.Directive):
 	try:
 	    self.args.rule
 	except AttributeError:
-	    raise ParseFailure, "Rule not specified"
+	    raise directive.ParseFailure, "Rule not specified"
 
 	# Set any FS-specific variables
 	#  rule = rule
