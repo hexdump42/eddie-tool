@@ -723,6 +723,13 @@ class Directive:
 
 	log.log( "<directive>Directive.safeCheck(): ID '%s', calling self.docheck()" % (self.state.ID), 7 )
 
+	try:
+	    if self.args.disabled:
+	        log.log( "<directive>Directive.safeCheck(): ID '%s', disabled" % (self.state.ID), 5 )
+		return
+	except:
+	    pass
+
 	self.last_check_time = time.localtime(time.time())	# note time of last check
 
 	try:
