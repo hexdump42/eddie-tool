@@ -1,5 +1,25 @@
 Eddie CHANGES
 
+Eddie-0.24 (1-Oct-2000)
+ - Added custom disksuite check to alert if any metadevices require
+   maintenance.  Skips checking if /usr/opt/SUNWmd/sbin/metastat not found.
+ - Separate system.py for Solaris 5.8 because of differences.
+ - Better logging of problem states for debugging.  Problem states track
+   the current "state" of a problem (ok, failed, etc), and the time when
+   the problem was first detected.
+ - Email action now includes the age of the problem and when the problem was
+   first detected (if not the first time) in the email.
+ - Added handler for when pop3 connections are failing or not authing.
+ - Fixed bug with parsing config when indentations are incorrect.
+   Handles it better now by raising a ParseFailure exception and pointing
+   out the error line in the config file.
+ - Changed string variable substitution method from %variable to Python's
+   format %(variable)s.  This lets us use Python's built-in variable
+   substitution on strings and makes the implementation much simpler.
+ - Log parsing failures in parseVars()
+ - Fixed small bug with pop3 error checking.
+
+
 Eddie-0.23 (19-Jun-2000)
  - cleaned up Solaris x86 support (still fairly untested).
  - changed Linux system.py to get statistics from /proc rather than

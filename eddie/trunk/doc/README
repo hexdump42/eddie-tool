@@ -4,9 +4,11 @@ It is still very much in development but is working in its current
 form and has been working for 3 years (it is our primary monitoring
 and alerting tool at Connect).
 
-Documentation is currently limited.  You should create a config directory
-where config.sample is located and create an eddie.cf config file and
-rules files.  See config.sample for examples.
+Documentation is online at http://www.codefx.com.au/eddie/doc/
+
+You need to create a config directory where config.sample is located
+and create an eddie.cf config file and rules files.  See config.sample
+for examples.
 
 See http://www.codefx.com.au/eddie/ for more information.
 Email chris@codefx.com.au for information/help/tips/comments/etc.

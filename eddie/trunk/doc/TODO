@@ -18,6 +18,10 @@ Things TODO for Eddie!
 
 - check inode usage
 
+- Multi-threaded checks
+
+- Problem age/ack details variable for messages, eg: %(probage)s, etc.
+
 BUGS:
  - Solaris 8:
      top: /dev/ksyms is not a 32-bit kernel namelist
