@@ -46,6 +46,7 @@ class procList:
         return(self.hash.keys())
 
     def procExists(self, procname):
+	print "DEBUG: Searching for",procname
 	count = 0		# count number of occurrences of 'procname'
 	for i in self.list:
 	    if i.command == procname:

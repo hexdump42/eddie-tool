@@ -115,14 +115,26 @@ class D(Directive):
 	self.daemon = fields[0]			# the daemon to check for
 	self.rule = fields[1]			# the rule (NR or R)
 	self.action = fields[2]			# the action
+	
+	self.ruleDict = { 'NR' : self.NR,
+	                  'R'  : self.R	}
 	#print "<D> daemon: '%s' rule: '%s' action: '%s'" % (self.daemon, self.rule, self.action)
 
     def docheck(self):
-	print "D directive doing checking...... daemon: %s rule: '%s' action: '%s'" % (self.daemon,self.rule,self.action)
-	if plist.procExists > 0:
-	    print " ...",self.daemon,"is running."
+	#print "D directive doing checking...... daemon: %s rule: '%s' action: '%s'" % (self.daemon,self.rule,self.action)
+	self.ruleDict[ self.rule ]()
+
+    def NR(self):
+	if plist.procExists( self.daemon ) > 0:
+	    print " NR: ...",self.daemon,"is running."
 	else:
-	    print " ...",self.daemon,"is NOT running."
+	    print " NR: ...",self.daemon,"is NOT running."
+
+    def R(self):
+	if plist.procExists( self.daemon ) > 0:
+	    print " R: ...",self.daemon,"is running."
+	else:
+	    print " R: ...",self.daemon,"is NOT running."
 
 
 class SP(Directive):
