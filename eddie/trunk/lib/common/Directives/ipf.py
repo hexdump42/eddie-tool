@@ -54,6 +54,8 @@ class IPF(directive.Directive):
 	except os.error, detail:
 	    # no ipfstat
 	    ipfstat = None
+	    ipfstatin = None
+	    ipfstatout = None
 	    log.log( "<ipf.py>IPF, docheck(): ipfstat not found, stat returned error %d, '%s'" % (detail[0], detail[1]), 8)
 	else:
 	    (r, ipfstat) = commands.getstatusoutput("/opt/local/sbin/ipfstat")
