@@ -29,6 +29,8 @@ stop() {
 	echo -n $"Stopping Eddie: "
 	killproc eddie.py
 	echo
+    else
+        echo "Eddie not running"
     fi
 
     sleep 1
@@ -37,6 +39,8 @@ stop() {
         echo -n $"Stopping eddie_wrapper: "
 	killproc eddie_wrapper
 	echo
+    else
+        echo "eddie_wrapper not running"
     fi
 
     RETVAL=$?
@@ -44,6 +48,21 @@ stop() {
     return $RETVAL
 }
 
+restart() {
+    # kill eddie and rely on eddie_wrapper to restart it
+    echo -n $"Restarting Eddie: "
+    if test "x`pidof -x eddie.py`" != x; then
+	killproc eddie.py
+	echo
+    else
+        echo "Eddie not running"
+    fi
+
+    if test "x`pidof -x eddie_wrapper`" = x; then
+        echo "eddie_wrapper not running - performing full startup"
+	start
+    fi
+}
 
 case "$1" in
         start)
@@ -59,13 +78,11 @@ case "$1" in
             status eddie_wrapper
             ;;
         restart)
-            stop
-            start
+            restart
             ;;
         condrestart)
             if test "x`pidof -x eddie_wrapper`" != x; then
-                stop
-                start
+                restart
             fi
             ;;
         
