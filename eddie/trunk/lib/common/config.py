@@ -350,6 +350,7 @@ directives = {
 		"PROC"		: directive.PROC,
 		"PORT"		: directive.PORT,
                 "IF"		: directive.IF,
+                "NET"		: directive.NET,
              }
 
 ## Just the definitions

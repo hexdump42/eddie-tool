@@ -66,7 +66,7 @@ class Rules:
 class Directive:
     def __init__(self, toklist):
 	# Check toklist for valid tokens
-	if len(toklist) < 3:		# need at least 3 tokens
+	if len(toklist) < 2:		# need at least 2 tokens
 	    raise ParseFailure, "Directive expected at least 3 tokens, found %d" % len(toklist)
 	if toklist[-1] != ':':		# last token should be a ':'
 	    raise ParseFailure, "Directive expected ':' but didn't find one"
@@ -126,7 +126,7 @@ class Directive:
 		# Assume we have a simple action call (rather than a
 		# notification definition.
 		self.Action.msg = None
-		print "calling: self.Action."+a
+		#print "calling: self.Action."+a
 		ret = eval( 'self.Action.'+a )
 		self.Action.actionReports[a] = ret
 		if ret == None:
@@ -179,7 +179,7 @@ class Directive:
 			#except AttributeError:
 			    # Not an action function ... error...
 		    #	log.log( "<directive>Directive, Error, 'action.%s' is not a defined action, config line follows,\n%s\n" % (a,self.raw), 2 )
-	print "actionReports:",self.Action.actionReports
+	#print "actionReports:",self.Action.actionReports
 
 
     ##
@@ -783,6 +783,59 @@ class IF(Directive):
 		self.Action.varDict['if%s'%(i)] = ifenv[i]
 	    self.doAction(Config)
 	
+
+
+class NET(Directive):
+    """Network Statistics directive."""
+
+    def __init__(self, toklist):
+	apply( Directive.__init__, (self, toklist) )
+
+	# Must be 2 tokens to make up: ['NET', ':']
+	if len(toklist) != 2:
+	    raise ParseError, "NET parse error, expected 2 tokens, found %d" % (len(toklist))
+	if toklist[1] != ':':
+	    raise ParseError, "NET parse error, no colon"
+
+	self.rulestring = ''
+
+
+    def tokenparser(self, toklist, toktypes, indent):
+	"""Parse rest of rule (after ':')."""
+
+	# Expect first token to be rule (a string)
+        if toktypes[0] != 'STRING':
+	    raise ParseError, "NET parse error, rule is not string."
+
+	self.rulestring = utils.stripquote(toklist[0])
+
+	self.actionList = self.parseAction(toklist[1:])
+
+	self.Action.varDict['netrule'] = self.rulestring
+
+	log.log( "<Directive>NET, rule '%s', action '%s'" % (self.rulestring, self.actionList), 8 )
+
+
+    def docheck(self, Config):
+	"""Perform the check."""
+
+	log.log( "<directive>NET(), docheck(), rulestring '%s'" % (self.rulestring), 7 )
+
+	netenv = nlist.statstable.hash	# get dictionary of network stats
+
+	result = eval( self.rulestring, netenv )
+
+	if result != 0:
+	    # build varDict from netenv
+	    for i in netenv.keys():
+		self.Action.varDict['net%s'%(i)] = netenv[i]
+	    self.doAction(Config)
+
+
+
+##
+## END - directive.py
+##
 
 
 ##
