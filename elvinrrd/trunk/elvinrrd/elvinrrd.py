@@ -15,7 +15,7 @@ __version__ = """2.1b"""
 ################################################################
 
 import sys, traceback, re, string, os, getopt, time
-import RRDtool	# requires PyRRDtool from http://cvsweb.extreme-ware.com/cvsweb.cgi/PyRRDtool/
+import RRDtool	# requires PyRRDtool from http://freshmeat.net/projects/pyrrdtool/
 import elvin	# requires Elvin4 modules from http://elvin.dstc.edu.au/projects/pe4/index.html
 
 # Default Elvin URL and SCOPE
