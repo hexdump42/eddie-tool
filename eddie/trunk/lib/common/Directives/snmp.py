@@ -48,13 +48,24 @@ import log, directive
 class SNMP(directive.Directive):
     """SNMP directive.
 
-       Sample rule:
-       SNMP foo: host="alt1.domain.name"
-       		 oid="1.3.6.1.4.1.1872.2.1.1.6.0"
-		 community=private
-		 rule='response>0'
-		 maxretry=10
-                 action="email('alert', 'Head for the lifeboats: %(snmpresponse)s')"
+       Sample rules:
+
+       SNMP foo:
+	   host='alt1.domain.name'
+	   oid='1.3.6.1.4.1.1872.2.1.1.6.0'
+	   community='private'
+	   rule='response > 0'
+	   maxretry=10
+           action=email('alert', 'Head for the lifeboats: %(snmpresponse)s')
+
+    SNMP router_traffic:
+	scanperiod='5m'
+        host='10.0.0.1'
+        oid='1.3.6.1.2.1.2.2.1.10.2, 1.3.6.1.2.1.2.2.1.16.2'
+        community='special'
+        rule='not failed'
+        maxretry=10
+        action=elvinrrd("net-router_BRI01", "ibytes=%(response1)s", "obytes=%(response2)s")
     """
 
     ############################################################################
