@@ -648,13 +648,23 @@ class COM(Directive):
 	cmd = "%s >%s.out 2>%s.err" % (self.command, tmpprefix, tmpprefix )
 	log.log( "<directive>COM.docheck(), calling system('%s')" % (cmd), 8 )
 	retval = os.system( cmd )
+	signum = None
+	if (retval & 0xff) == 0:
+	    # call terminated from standard exit()
+	    retval = retval >> 8
+	elif (retval & 0xff00) == 0:
+	    # call terminated due to a signal
+	    signum = retval & 0xff
+	elif (retval & 0xff) == 0177:
+	    # child process stopped with WSTOPFLG (0177) set
+	    signum = retval & 0xff00
 	try:
 	    outf = open( tmpprefix + ".out", 'r' )
 	except IOError:
 	    # stdout tmp file not found
 	    log.log( "<directive>COM.docheck(), Error, could not open '%s'" % (tmpprefix + ".out"), 2 )
 	else:
-	    out = outf.readline()
+	    out = outf.read()
 	    outf.close()
 	    os.remove( tmpprefix + ".out" )
 	    out = string.strip(out)
@@ -667,7 +677,7 @@ class COM(Directive):
 	    # stderr tmp file not found
 	    log.log( "<directive>COM.docheck(), Error, could not open '%s'" % (tmpprefix + ".err"), 2 )
 	else:
-	    err = errf.readline()
+	    err = errf.read()
 	    errf.close()
 	    os.remove( tmpprefix + ".err" )
 	    err = string.strip(err)
@@ -675,6 +685,7 @@ class COM(Directive):
 		err = err[:-1]
 
         log.log( "<directive>COM.docheck(), retval=%d" % retval, 7 )
+        log.log( "<directive>COM.docheck(), signum=%s" % signum, 7 )
 	log.log( "<directive>COM.docheck(), stdout='%s'" % out, 7 )
 	log.log( "<directive>COM.docheck(), stderr='%s'" % err, 7 )
 

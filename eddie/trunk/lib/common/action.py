@@ -45,7 +45,7 @@ class action:
 	pass
 
     # email()
-    def email(self, user, msg):
+    def email(self, user, msg, msgbody=None):
 	# Multiple email recipients are seperated by '|'.
 	multUsers = string.split( user, '|' )
 
@@ -63,7 +63,10 @@ class action:
 	    # Use msg string as the body
 	    #subj = "Eddie Alert"
 	    subj = msg
-	    body = msg
+	    if msgbody == None:
+		body = msg
+	    else:
+		body = msgbody
 
 	# run thru parseVars() to substitute variables from varDict
 	users = parseVars( users, self.varDict )
