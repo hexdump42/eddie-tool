@@ -107,6 +107,9 @@ class FILE(directive.Directive):
 	data['mtime'] = None
 	data['ctime'] = None
 	data['md5'] = None
+	data['perm'] = None
+	data['sticky'] = None
+	data['type'] = None
 	data['now'] = None
 
 	data['lastmode'] = None
@@ -120,6 +123,9 @@ class FILE(directive.Directive):
 	data['lastmtime'] = None
 	data['lastctime'] = None
 	data['lastmd5'] = None
+	data['lastperm'] = None
+	data['laststicky'] = None
+	data['lasttype'] = None
 
 	data['now'] = time.time()	# get current time for comparing with file times
 
@@ -146,6 +152,9 @@ class FILE(directive.Directive):
 	    data['mtime'] = s[8]
 	    data['ctime'] = s[9]
 	    data['md5'] = ''
+	    data['perm'] = s[0] & 0777		# extract permission bits only
+	    data['sticky'] = s[0] & 07000	# extract sticky/setuid/setgid bits only
+	    data['type'] = s[0] & 0170000	# extract file type bits only
 
 	    # md5 the file too if necessary and if md5 module available
 	    if string.find(self.args.rule, 'md5') != -1:
@@ -181,6 +190,9 @@ class FILE(directive.Directive):
 		self.lastmtime = data['mtime']
 		self.lastctime = data['ctime']
 		self.lastmd5 = data['md5']
+		self.lastperm = data['perm']
+		self.laststicky = data['sticky']
+		self.lasttype = data['type']
 
 	    data['lastmode'] = self.lastmode
 	    data['lastino'] = self.lastino
@@ -193,6 +205,9 @@ class FILE(directive.Directive):
 	    data['lastmtime'] = self.lastmtime
 	    data['lastctime'] = self.lastctime
 	    data['lastmd5'] = self.lastmd5
+	    data['lastperm'] = self.lastperm
+	    data['laststicky'] = self.laststicky
+	    data['lasttype'] = self.lasttype
 
 	    return data
 
@@ -215,6 +230,9 @@ class FILE(directive.Directive):
 	    self.lastmtime = data['mtime']
 	    self.lastctime = data['ctime']
 	    self.lastmd5 = data['md5']
+	    self.lastperm = data['perm']
+	    self.laststicky = data['sticky']
+	    self.lasttype = data['type']
 
 
 
