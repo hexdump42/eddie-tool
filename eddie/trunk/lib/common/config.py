@@ -39,6 +39,7 @@ class Config:
 
 	self.name = name
 	self.type = "Config"
+	self.display = 0	# flag to indicate if we have displayed some info about the config (ie: only display it once)
 
     	# initialise our config lists/dicts
        	self.ruleList = directive.Rules()	# object which holds all rule definitions
