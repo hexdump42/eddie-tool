@@ -223,12 +223,12 @@ class IntTable(datacollect.DataCollect):
 	self.data.numinterfaces = 0
 
 	# get the interface stats
-	rawList = utils.safe_popen('netstat -in', 'r')
+	rawList = utils.safe_popen('netstat -ind', 'r')
 
 	for line in rawList.readlines():
 	    f = string.split(line)
 
-	    if len(f) != 9:
+	    if len(f) != 10:
 		continue		# should be 9 fields per line
 
 	    # only want lines where Address is a valid IP address
@@ -253,7 +253,7 @@ class interface:
 
     def __init__(self, fields):
 
-	if len(fields) != 9:
+	if len(fields) != 10:
 	    raise "Netstat Parse Error", "interface class requires 9 fields, not %d" % (len(fields))
 
 	# interface name address
@@ -283,6 +283,9 @@ class interface:
 	# collisions
 	self.collis = long(fields[8])
 
+	# drops
+	self.drops = long(fields[9])
+
 
 
     def ifinfo(self):
@@ -298,6 +301,7 @@ class interface:
 	info['ierrs'] = self.ierrs
 	info['oerrs'] = self.oerrs
 	info['collis'] = self.collis
+	info['drops'] = self.drops
 
 	return info
 
