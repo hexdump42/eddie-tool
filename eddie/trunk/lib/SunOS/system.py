@@ -42,25 +42,12 @@ class system:
 
 	The names of all the stats collected by the system class are:
 
-	    System stats from '/opt/local/bin/top':
-		processes	- (int)
-		sleeping	- (int)
-		zombie		- (int)
-		running		- (int)
-		stopped		- (int)
-		oncpu		- (int)
-		cpu_idle	- (float)
-		cpu_user	- (float)
-		cpu_kernel	- (float)
-		cpu_iowait	- (float)
-		cpu_swap	- (float)
-
 	    System stats from '/usr/bin/uptime':
-		uptime		- (string)
-		users		- (int)
-		loadavg1	- (float)
-		loadavg5	- (float)
-		loadavg15	- (float)
+		uptime		- time since last boot (string)
+		users		- number of logged on users (int)
+		loadavg1	- 1 minute load average (float)
+		loadavg5	- 5 minute load average (float)
+		loadavg15	- 15 minute load average (float)
 
 	    System counters from '/usr/bin/vmstat -s' (see vmstat(1M)):
 		ctr_swap_ins				- (long)
@@ -95,6 +82,26 @@ class system:
 		ctr_system_cpu				- (long)
 		ctr_idle_cpu				- (long)
 		ctr_wait_cpu				- (long)
+
+	    Process/memory stats from '/usr/bin/vmstat' (see vmstat(1M)):
+	        procs_running	- number of processes running (int)
+	        procs_blocked	- number of processes blocked (int)
+	        procs_waiting	- number of processes waiting (int)
+	        mem_swapfree	- amount of free swap (kB) (int)
+	        mem_free	- amount of free RAM (kB) (int)
+
+	    System stats from '/opt/local/bin/top' (phasing out):
+		processes	- total number of processes (int)
+		sleeping	- number of processes in sleeping state (int)
+		zombie		- number of processes in zombie state (int)
+		running		- number of processes in running state (int)
+		stopped		- number of processes in stopped state (int)
+		oncpu		- number of processes on cpus (int)
+		cpu_idle	- percentage of cpu in idle thread (float)
+		cpu_user	- percentage of cpu in user mode (float)
+		cpu_kernel	- percentage of cpu in kernel mode (float)
+		cpu_iowait	- percentage of cpu blocked on iowait (float)
+		cpu_swap	- percentage of cpu blocked on swap (float)
     """
 
     # refresh_rate : amount of time current information will be cached before
