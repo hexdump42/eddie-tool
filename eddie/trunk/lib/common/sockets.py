@@ -129,10 +129,9 @@ def console_server_thread(Config, die_event, consport):
             if s == None:
                 s=socketstate(socket.AF_INET,socket.SOCK_STREAM)
                 s.bind( ('', consport) )
+                log.log( "<sockets>console_server_thread(), Bind to port %d successful" % (consport), 5 )
 
             s.listen(50)
-
-            log.log( "<sockets>console_server_thread(), Bind to port %d successful" % (consport), 5 )
 
             # main loop
             listen(s, Config, die_event)
@@ -142,21 +141,27 @@ def console_server_thread(Config, die_event, consport):
         except socket.error:
             e = sys.exc_info()
 
-            socketerrors = socketerrors + 1
-            s.close()
-            s = None
-
             if e[1][0] == errno.EADDRINUSE:		# address already in use
                 log.log("<sockets>console_server_thread(), Port %d already in use - exiting" % (consport), 3 )
 		sys.stderr.write( "Eddie: port %d already in use, quitting\n" % (consport) )
                 die_event.set()		# signal other threads to exit
+                s.close()
+                s = None
 		return
 
-            if e[1][0] == errno.ECONNRESET:         # 'Connection reset by peer'
+            if e[1][0] == errno.ECONNRESET:	# 'Connection reset by peer'
                 log.log( "<sockets>console_server_thread(), Connection reset by peer - continuing.", 7 )
                 continue
 
+            if e[1][0] == errno.EPIPE:		# 'Broken Pipe'
+                log.log( "<sockets>console_server_thread(), Broken pipe - continuing.", 8 )
+                continue
+
             log.log( "<sockets>console_server_thread(), Socket error - resetting socket and continuing: %s, %s" % (e[1][0],e[1][1]), 5 )
+
+            socketerrors = socketerrors + 1
+            s.close()
+            s = None
 
             if socketerrors > 100:
                 log.log( "<sockets>console_server_thread(), Too many socket errors - exiting.", 3 )
