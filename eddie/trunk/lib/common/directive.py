@@ -137,32 +137,37 @@ class Directive:
 		notif = inx.group(1)
 		msg = inx.group(2)
 		level = inx.group(3)
-		if level == None:
+		if level == None or level == '':
 		    level = 0
 
-		#print ">>>> notif:",notif
-		#print ">>>> msg:",msg
-		#print ">>>> level:",level
+		print ">>>> notif:",notif
+		print ">>>> msg:",msg
+		print ">>>> level:",level
 
-		afunc = Config.NDict[notif].levels[level]
-		#print ">>>> afunc:",afunc
+		try:
+		    afunc = Config.NDict[notif].levels[level]
+		except KeyError:
+		    print "Eddie: Error in directive.py line 148: Config.NDict[notif].levels[level] - level=%d" % level
+		    log.log( "<directive>doAction(), Error in directive.py line 148: Config.NDict[notif].levels[level] - level=%d" % level, 1 )
+		else:
+		    #print ">>>> afunc:",afunc
 
-		self.Action.notif = notif
-		self.Action.msg = msg
-		self.Action.level = level
-		self.Action.MDict = Config.MDict #TODO: move to init() ?
+		    self.Action.notif = notif
+		    self.Action.msg = msg
+		    self.Action.level = level
+		    self.Action.MDict = Config.MDict #TODO: move to init() ?
 
-		aList = utils.trickySplit( afunc[0], ',' )
-		# Put quotes around arguments so we can use eval()
-		aList = utils.quoteArgs( aList )
-		for aa in aList:
-		    #try:
-			# Call the action
-			log.log( "<directive>Directive, calling action '%s'" % (aa), 9 )
-			eval( 'self.Action.'+aa )
-		    #except AttributeError:
-			# Not an action function ... error...
-		#	log.log( "<directive>Directive, Error, 'action.%s' is not a defined action, config line follows,\n%s\n" % (a,self.raw), 2 )
+		    aList = utils.trickySplit( afunc[0], ',' )
+		    # Put quotes around arguments so we can use eval()
+		    aList = utils.quoteArgs( aList )
+		    for aa in aList:
+			#try:
+			    # Call the action
+			    log.log( "<directive>Directive, calling action '%s'" % (aa), 9 )
+			    eval( 'self.Action.'+aa )
+			#except AttributeError:
+			    # Not an action function ... error...
+		    #	log.log( "<directive>Directive, Error, 'action.%s' is not a defined action, config line follows,\n%s\n" % (a,self.raw), 2 )
 
 
     ##
@@ -520,7 +525,13 @@ class COM(Directive):
         comenv['out'] = out
         comenv['err'] = err
         comenv['ret'] = retval
-	result = eval( self.rule, comenv )
+	result=None
+	try:
+	    result = eval( self.rule, comenv )
+	except:
+	    print "COM.docheck() : an error occured with rule '%s' - env was: %s"%(self.rule,comenv)
+	    log.log( "<directive>COM.docheck() : an error occured with rule '%s' - env was: %s"%(self.rule,comenv), 3 )
+
         log.log( "<directive>COM.docheck(), eval:'%s', result='%s'" % (self.rule,result), 9 )
 	if result != 0:
 	    self.doAction(Config)

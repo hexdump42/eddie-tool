@@ -172,6 +172,7 @@ def main():
     print "[DEBUG] hostname:",log.hostname
 
     # instantiate global Config object
+    global Config
     Config = config.Config( '__main__' )
 
     # New history object
