@@ -11,7 +11,7 @@
 ##
 ##
 ########################################################################
-## (C) Chris Miles 2001
+## (C) Chris Miles 2001-2004
 ##
 ## The author accepts no responsibility for the use of this software and
 ## provides it on an ``as is'' basis without express or implied warranty.
@@ -34,6 +34,10 @@
 
 Uses ICMP ECHO_REQEST messages to measure the delay between two
 Internet hosts.
+
+Uses current thread object's address for icmp_id to allow multiple threads
+to use Pinger objects simultaneously.  If threading module is not available
+it falls back to using os.getpid() for icmp_id.
 """
 
 import icmp, ip
@@ -71,7 +75,18 @@ class Pinger:
 	self.times = {}
 	self.deltas = []
 	self.sock = PingSocket(addr)
-	self.pid = os.getpid()
+
+	# chris 2004-10-21: if threading available, compute icmp id from current thread
+	#	object address to enable multiple threads to use this class simultaneously.
+	#	This is not fool-proof, but best method I've come up with for now.
+	try:
+	    import threading
+	except ImportError:
+	    self.pid = os.getpid()
+	else:
+	    # derive id from address of current thread, limit to short int
+	    self.pid = id(threading.currentThread()) % 32767
+
 	self.addr = addr
 	try:
 	    name, aliases, ipaddr = socket.gethostbyaddr(addr)
