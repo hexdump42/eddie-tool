@@ -63,11 +63,17 @@ FUTURE TODO:
 email() : want email actions to be performed last so that results of other
 actions can be summarized in the email.
 
-fs : '%fsls' - want a list directories under the examined fs 'ls -ld $fs'.
-
 MAINT : Check "Maintenance" file to ignore certain checks.
 
 ADMIN_INTERVAL : only send OTTOADMIN messages at certain intervals (ie: daily).
+
+D : Processes hogging CPU, eg:
+	# Process CPU usage: alert if process hogging too much CPU
+	#
+	#   host    daemon  Thresholds  Action
+	#   ------  ------  ----------  -------------------------------------
+	PC  wawura  named   50          mail(alert,RUNAWAY,ALERT),page(RUNAWAYP)
+
 
 
 
