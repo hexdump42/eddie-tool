@@ -99,22 +99,12 @@ class INCLUDE(Directive):
 ##
 class M(Directive):
     def __init__(self, *arg):
-	self.raw = arg[0]
-
-	# get the object type and the name of this message
-	lines = string.split(self.raw, "\n")
-	fl = string.split(lines[0])
-	self.type = fl[0]
-	self.name = fl[1]
-
-	# define regexp for extracting the subject for the email
-	sre = regex.compile("\"\(.*\)\"")
-	inx  = sre.search(lines[0])
-	self.subject = sre.group(1)
-
-	# now get the message body
-	lines.remove(lines[0])
-	self.message = string.join(lines, "\n")
+	apply( Directive.__init__, (self,) + arg )
+	self.regexp = 'M[\t ]+\([a-zA-Z0-9_/\.]+\)[\t ]+\"\(.*\)\"[\t \n]+\([^\005]*\)'
+	fields = self.parseRaw()
+	self.name = fields[0]
+	self.subject = fields[1]
+	self.message = fields[2]
 
     def docheck(self):
 	print "M directive doing checking......"
