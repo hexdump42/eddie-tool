@@ -147,7 +147,7 @@ class tcptable:
 
 	    self.numsockets = self.numsockets + 1	# count number of tcp sockets
 
-	rawList.close()
+	utils.safe_pclose( rawList )
 
 
     def __getitem__(self, key):
@@ -227,7 +227,7 @@ class udptable:
 
 	    self.numsockets = self.numsockets + 1	# count number of tcp sockets
 
-	rawList.close()
+	utils.safe_pclose( rawList )
 
 
     def __getitem__(self, key):
@@ -285,7 +285,7 @@ class iftable:
 
 	    self.numinterfaces = self.numinterfaces + 1		# count number of interfaces
 
-	rawList.close()
+	utils.safe_pclose( rawList )
 
 
     def __getitem__(self, key):
@@ -384,7 +384,7 @@ class statstable:
 		self.hash[inx.group(1)] = long(inx.group(2))
 		line = inx.group(3)
 
-	rawList.close()
+	utils.safe_pclose( rawList )
 
 
     def __getitem__(self, key):

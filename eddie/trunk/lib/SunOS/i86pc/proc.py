@@ -79,7 +79,7 @@ class procList:
 	    self.hash[p.pid] = p
 	    self.nameHash[string.split(p.comm, '/')[-1]] = p
 
-	rawList.close()
+	utils.safe_pclose( rawList )
 
 	log.log( "<proc>procList(), new proc list created", 7 )
 

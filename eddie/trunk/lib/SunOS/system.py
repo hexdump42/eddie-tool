@@ -192,7 +192,7 @@ class system:
             self.mem_swapfree = 0
 
 
-	rawList.close()
+	utils.safe_pclose( rawList )
 
 	#print "system debug:"
 	#print " - lastpid:",self.lastpid

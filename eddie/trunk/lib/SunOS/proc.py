@@ -185,7 +185,6 @@ class procList:
 	    #self.nameHash[string.split(p.comm, '/')[-1]] = p
 	    self.nameHash[p.procname] = p
 
-	#rawList.close()
 	utils.safe_pclose( rawList )
 
 	log.log( "<proc>_procList(), new proc list created", 7 )

@@ -56,7 +56,7 @@ class dfList:
 	    self.hash[fields[0]] = p		# dict of filesystem devices
 	    self.mounthash[fields[5]] = p	# dict of mount points
 
-	rawList.close()
+	utils.safe_pclose( rawList )
 
 
     def __str__(self):
