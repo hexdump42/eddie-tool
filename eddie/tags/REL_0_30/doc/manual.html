@@ -1,0 +1,2177 @@
+<HTML>
+ <Head>
+  <Title>The EDDIE-Tool User's Manual</Title>
+ </Head>
+
+ <Body bgcolor=white>
+  <Center>
+   <H2>The EDDIE-Tool User's Manual</H2>
+   <H3>(For EDDIE-Tool version 0.29 onwards)</H3>
+  </Center>
+
+  <p>
+   <b>Contents:</b>
+   <ul>
+    <li> <a href="#introduction">Introduction</a>
+    <li> <a href="#installation">Installation</a>
+     <ul>
+      <li> <a href="#downloading">Downloading</a>
+      <li> <a href="#installing">Installing</a>
+     </ul>
+    <li> <a href="#configuration">Configuration</a>
+     <ul>
+      <li> <a href="#config_files">Config Files</a>
+      <li> <a href="#globals">Global Configurables</a>
+      <li> <a href="#config_format">Configuration Format</a>
+      <li> <a href="#simple_config">Simple Configuration</a>
+      <li> <a href="#directives">Directives</a>
+      <ul>
+	  <li> <a href="#commondirectiveargs">Common Directive Arguments</a>
+	  <li> <a href="#rule_format">Rule Format</a>
+	  <li> <a href="#builtindirectives">Built-in Directives</a>
+	  <li> <a href="#directivedetails">Directive Details</a>
+      </ul>
+      <li> <a href="#builtindirectives">Built-in Directives</a>
+      <li> <a href="#notif_msg_objects">Notification and Message objects</a>
+     </ul>
+    <li> <a href="#other_features">Other Features</a>
+     <ul>
+      <li> <a href="#console">Console</a>
+     </ul>
+   </ul>
+  </p>
+
+  <hr>
+
+  <p>
+   <H3><a name="introduction">Introduction</a></H3>
+  </p>
+  <p>
+   The EDDIE-Tool (commonly just called EDDIE)
+   is an agent for system, network and security monitoring.
+   It is highly customizable and easily extendable.
+   It has been designed to be as platform-independent as possible, with
+   platform-specific code limited to a small group of modules, making it
+   easily portable to new platforms.
+   It is fully written in <a href="http://www.python.org/">Python</a> and
+   the configuration has a Python "look-and-feel" to it, although no Python
+   or coding skills are necessary to configure it.
+  </p><p>
+   This user's manual is specific for EDDIE-Tool versions 0.29 and above,
+   as some significant changes were made to improve the configuration.
+   These changes can be <a href="changes_ver_029.txt">read here</a>.
+   The user's manual for earlier versions can be
+   <a href="manual-pre-029.html">read here</a>.
+  </p>
+
+  <hr>
+
+  <p>
+   <H3><a name="installation">Installation</a></H3>
+   <H4><a name="downloading">Downloading</a></H4>
+  </p>
+  <p>
+   You need to download the following:
+   <ul>
+    <li> <b>Required:</b>
+    <ul>
+     <li> EDDIE - <a href="http://eddie-tool.net//download/">http://eddie-tool.net/download/</a>
+     <li> Python 1.6+ - <a href="http://www.python.org/">http://www.python.org/</a> (must support threads) - Tested with Python versions 1.6.1 through to 2.2.1.
+    </ul>
+    <li> <b>Optional:</b>
+     <ul>
+      <li> Elvin 4 - <a href="http://elvin.dstc.edu.au/">http://elvin.dstc.edu.au/</a> - Elvin is the message system supported by EDDIE and some of its related
+      tools to pass alerts, collected data, etc between them.  It is not
+      required for basic monitoring.
+      <li> elvinrrd - <a href="http://www.psychofx.com/elvinrrd/">http://www.psychofx.com/elvinrrd/</a> -
+      the daemon for storing EDDIE-collected data into RRD databases.
+      <li> estored - <i>available soon</i> -
+      the daemon for storing EDDIE-collected data into databases.
+    </ul>
+   </ul>
+  </p>
+
+  <p>
+   <H4><a name="installing">Installing</a></H4>
+  </p>
+    Follow the <a href="QUICKSTART.txt">QUICKSTART</a> document
+         (also located in the eddie/doc/ directory) or continue with
+         the steps below.
+  <p>
+   <ul>
+    <li> Python - first install Python by following the instructions
+    included in the Python distribution.  EDDIE is written in Python
+    and will not work if Python is not available.  Python must have
+    been compiled with thread support as EDDIE is fully threaded.
+    EDDIE has been tested with Python versions 1.6.1 through to 2.2.1
+    under Linux, Solaris and HP-UX.
+    <li> EDDIE - un-tar EDDIE into your favorite directory, eg: /opt
+     <dir> <b>$ cd /opt</b> </dir>
+     <dir> <b>$ gtar xvzf eddie-0.xx.tgz</b> </dir>
+     Edit the main EDDIE file, eddie.py in the bin directory
+     <dir> <b>$ vi eddie-0.xx/bin/eddie.py</b> </dir>
+     and change the first line to point to your Python interpreter, eg:
+     <dir> <b>#!/opt/python/bin/python</b> </dir>
+     Note: DO NOT remove the special '#!' characters.
+    <li> That should be all that is needed to get EDDIE up & running.
+     You can test that EDDIE will work by
+     running it, eg:
+     <dir> <b>$ /installdir/eddie-0.xx/bin/eddie.py</b> </dir>
+     You should see the version of EDDIE and your system type, eg:
+     <dir> <b>EDDIE v0.30<br>systype: Linux/2.2.5-15/i586</b> </dir>
+     You can see what systems are supported by EDDIE by looking in the
+     eddie/lib/ directory.  Besides common, the other directories will
+     be specific to different operating systems (e.g., 'Linux', 'SunOS').
+     If your system is not supported yet you will have to wait for a
+     port of EDDIE to your system or contact the developers to see about
+     porting it yourself.
+    <li> If you see the above output with no major error messages then
+     EDDIE is working.  However, without any configuration it will
+     not be doing anything.  Now the hard^H^H^H^Hfun part,
+     building the configuration.
+     (Press [CTRL]-C to stop it.)
+   </ul>
+
+
+  <hr>
+
+  <p>
+   <H3><a name="configuration">Configuration</a></H3>
+
+   <H4><a name="config_files">Config files</a></H4>
+  </p>
+   <ul>
+    <li> The EDDIE config files should be in /installdir/eddie-0.xx/config.
+     EDDIE begins by looking for an eddie.cf file in this directory, ie:
+     <dir> <b>/installdir/eddie-0.xx/config/eddie.cf</b> </dir>
+    <li> EDDIE is distributed with a config.sample directory containing
+     example configuration files.  You should look over these to get
+     an idea of how the configuration works.
+    <li> You must first create a config directory, if one isn't there already, eg:
+     <dir> <b>$ mkdir /installdir/eddie-0.xx/config</b> </dir>
+     then create an eddie.cf file in this new directory.  You can copy
+     and change the config.sample/eddie.cf file if you like.
+    <li> It is common for the EDDIE Directives (the rules which EDDIE
+     uses to collect data and perform actions) to be written in
+     separate rules files.  These are then INCLUDEd in the main eddie.cf
+     config file.  The rules files can be in the same directory as eddie.cf
+     or can be in subdirectories under it.  It is common for a complex
+     setup to split the rules into multiple files grouped by commonality.
+   </ul>
+
+  <p>
+   <H4><a name="globals">Global Configurables</a></H4>
+  </p>
+  <p>
+   The global configurables are usually in eddie.cf and are listed below:
+   <ul>
+    <li> <b>LOGFILE</b> - the file to log to (this should be the first thing set so that
+         any problems are logged to the right place).
+    <li> <b>LOGLEVEL</b> - how much detail to log to the above logfile.
+    <li> <b>ADMIN</b> - the administrator's email address.
+    <li> <b>ADMINLEVEL</b> - how much log detail to send to the admin.
+    <li> <b>ADMIN_NOTIFY</b> - how often to send admin log emails.
+    <li> <b>NUMTHREADS</b> - the maximum number of threads (including supporting threads
+         and directive threads) EDDIE will attempt to limit itself to using.  This
+         should be a minimum of 5.
+    <li> <b><a name="SCANPERIOD">SCANPERIOD</a></b>
+         - the default time to wait between checks; can be overridden by
+         each directive.
+	 See <a href="#timedef">Time Definition</a> for definition of time format.
+    <li> <b>CONSOLE_PORT</b> - defines the tcp port EDDIE binds to to provide a console interface
+         to the directive states; this defaults to 33343, and can be set to 0 to disable
+         this feature (see <a href="#console">Console</a>).
+    <li> <b>EMAIL_FROM</b> - the From: address to be used by the email action.  Will default to the user EDDIE is run as.
+    <li> <b>EMAIL_REPLYTO</b> - the Reply-To: address to be used by the email action.  Defaults to empty string, "".
+    <li> <b>SENDMAIL</b> - the location of the sendmail binary which EDDIE uses to send all emails.  Is usually '/usr/lib/sendmail' (Solaris) or '/usr/sbin/sendmail' (Redhat Linux).  Defaults to '/usr/lib/sendmail'.
+    <li> <b>ELVINURL</b> - the URL of an Elvin server (if required).
+    <li> <b>ELVINSCOPE</b> - the scope of an Elvin server (if required).
+    <li> <b><a name="#INTERPRETERS">INTERPRETERS</a></b>
+	 - commands classed as "interpreters" by process checking rules
+	 (see the <a href="#PROC">PROC</a> directive).
+    <li> <b>CLASS</b> - a grouping of hosts which share the same directives.
+    <li> <b>ALIAS</b> - global aliases can be set here, if required.
+    <li> <b>INCLUDE</b> - include another configuration file; it is common to split the rules
+         into different files in a large installation.
+   </ul>
+     eddie.cf is well documented, so read through the file and modify the
+     settings to suit your environment.
+  </p>
+
+  <p>
+   <H4><a name="config_format">Configuration Format</a></H4>
+  </p>
+  <p>
+   The EDDIE configuration follows the standard Python code format.
+   Where methods or child objects of an object are indicated by
+   indenting them beneath the parent object definition, sub-objects
+   or parameters of a directive object are similarly indicated by indenting
+   them beneath the parent object definition.  For example, a part of the
+   configuration may look like:
+	 <pre>
+    group testing:
+        PING testping:
+            host="10.0.0.1"
+            numpings=10
+            rule="not alive"
+            action=email("chris", "%(host)s failed ping")
+
+    FILE file1:
+        file='/tmp/file1.tmp'
+        scanperiod='2m'
+        rule='not exists'
+        action=ticker("%(file)s does not exist", timeout=1)
+        act2ok=ticker("%(file)s now exists", timeout=1)
+         </pre>
+
+     A config group called "testing" is defined, then the PING
+     directive "testping" is configured inside this group because
+     it is indented.  Similarly, all testping's arguments are
+     indented as they belong to the PING directive configuration.
+     The second directive, FILE called "file1", is at the same
+     indentation level as the group definition (i.e., not indented)
+     and is therefore a global directive.  Thus, all hosts using
+     this example config would execute the FILE directive, but only
+     those hosts in the "testing" group would execute the PING
+     directive.
+     <br><br>
+
+     If you are used to Python coding this will be second nature to you.
+     If you are not, it will not be hard to pick up.
+     <br><br>
+
+     The above example also introduces the format of directive
+     definitions.  Directives are the rules which do "something".
+     More often than not, they will perform system or network checks
+     of some sort.  But they are very flexible and could be configured
+     to do more than simple checks.
+     <br><br>
+
+     In any case, the format of directive definitions is:
+         <pre>
+             DIRECTIVE name:
+                 argument1=value1
+                 [argument2=value2
+                 ...]
+         </pre>
+
+     where "DIRECTIVE" is the directive name, like PROC or FS, and
+     "name" is the user-defined, unqie name of this directive object.  The
+     arguments customize the directive appropriately.  Some arguments
+     are directive-specific while others are common to all directives.
+     <br><br>
+
+     Example:
+         <pre>
+             PROC test:
+                name='syslogd'
+                rule='not exists'
+                scanperiod='30s'
+                action=email("alert@my.domain","syslogd is not running")
+         </pre>
+     This is an example definition of a PROC directive, called 'test'.
+     It contains the PROC-specific argument, 'name'. 'rule',
+     'scanperiod' and 'action' are arguments which are common to all
+     directives.  Some arguments are optional while others are required,
+     and errors will be raised if they are missing.  In this example
+     'name' and 'rule' are required.  'scanperiod' and 'action' are optional.
+  </p>
+
+  <p>
+   <H4><a name="simple_config">Simple Configuration</a></H4>
+  </p>
+  <p>
+   An EDDIE configuration can be simple to get basic monitoring started
+   quickly and made as complicated as required to perform advanced operations.
+   A simple example rules file is shown below to monitor basic services on a host.
+   This rules file, named simple.rules, would be placed in the same directory
+   as eddie.cf and eddie.cf would contain the entry
+     <dir> INCLUDE 'simple.rules' </dir>
+   The file simple.rules contains
+   <pre>
+        # Process checks
+	PROC syslogd:
+            name='syslogd'
+            rule='not exists'
+            action=email('root', '%(name)s is not running on %(h)s')
+	PROC inetd:
+            name='inetd'
+            rule='not exists'
+            action=email('root', '%(name)s is not running on %(h)s')
+	PROC sshd:
+            name='sshd'
+            rule='not exists'
+            action=email('root', '%(name)s is not running on %(h)s')
+
+	# Filesystem checks
+	FS root:
+            fs='/'
+            rule='pctused > 90'
+            action=email('root', '%(mountpt)s over 90%% on %(h)s')
+	FS varlog:
+            fs='/var/log'
+            rule='pctused > 90'
+            action=email('root', '%(mountpt)s over 90%% on %(h)s')
+
+        # Service Port checks
+	SP smtp_port:
+            port='smtp'
+            protocol='tcp'
+            bindaddr='0.0.0.0'
+	    rule='not exists'
+            action=email('root', '%(protocol)s/%(port)s on %(h)s is not listening')
+	SP http_port:
+            port='http'
+            protocol='tcp'
+            bindaddr='0.0.0.0'
+	    rule='not exists'
+            action=email('root', '%(protocol)s/%(port)s on %(h)s is not listening')
+
+        # System statistics checks
+	SYS loadaverage:
+            rule="loadavg1 > 3.00"
+            scanperiod='1m'
+            action=email('root', '%(h)s load-average > 3.00')
+   </pre>
+  </p>
+
+
+  <p>
+   <H4><a name="directives">Directives</a></H4>
+  </p>
+   The directives are the configuration commands which tell EDDIE
+   what to do.
+   They are of the form:
+   <pre>
+    DIRECTIVE name:
+        arg1=value1
+	arg2=value2
+	argn=valuen </pre>
+   Where "DIRECTIVE" is the name of the directive itself (see
+   <a href="#builtindirectives">Built-in Directives</a>);
+   "name" is a user-defined name of the directive definition (the directive ID is usually
+   constructed as "DIRECTIVE.name", e.g., "FS.root", and will appear in the logs, console,
+   etc);
+   "args" are arguments to define what the directive should do and how it should do it.
+   Some arguments are common to all directives and others are
+   specific to that type of directive.
+
+  <p>
+   <H5><a name="commondirectiveargs">Common Directive Arguments</a></H5>
+  </p>
+    <ul>
+     <li> <b><a name="rule">rule=&lt;rule string&gt;</a></b>
+	  - a string defining a rule that will be evaluated
+	  (in a Python environment) using variables specific to the current directive.
+	  The rule should evaluate to 1 (true) or 0 (false).  If the rule is true, the
+	  directive state will be set to "fail" and the <a href="#action">action</a>
+	  (if any) will be executed.
+	  If false, the state will be "ok" and the <a href="#actelse">actelse</a>
+	  (if any) will
+	  be executed.  The rule argument may be optional to some directives if they
+	  provide a default rule.
+     <li> <b><a name="scanperiod">scanperiod=&lt;time&gt;</a></b>
+	  - this changes how often the directive will be run
+	  (the default is the time period specified by <a href="#SCANPERIOD">SCANPERIOD</a>
+	  in eddie.cf). See
+	  <a href="#timedef">Time Definition</a> for formats of &lt;time&gt;.
+     <li> <b><a name="numchecks">numchecks=&lt;integer&gt;</a></b>
+	  - the number of checks to perform before the
+	  state will be set to fail and actions called. The time between these "re-checks"
+	  is set by the <a href="#checkwait">checkwait</a> argument.
+     <li> <b><a name="checkwait">checkwait=&lt;time&gt;</a></b>
+	  - the time between "re-checks" if the <a href="#numchecks">numchecks</a> argument
+	  is greater than 1.  See <a href="#timedef">Time Definition</a> for formats of &lt;time&gt;.
+     <li> <b><a name="action">action=&lt;actionlist&gt;</a></b>
+	  - this is a list of actions (see <a href="#actions">Actions</a>)
+	  to be performed if the directive enters the failed state. i.e., if the directive
+	  is performing a check and the check fails, these actions will be called.
+     <li> <b><a name="act2ok">act2ok=&lt;actionlist&gt;</a></b>
+	  - this is a list of actions (see <a href="#actions">Actions</a>)
+	  to be performed when the directive state changes from failed to ok.
+     <li> <b><a name="actelse">actelse=&lt;actionlist&gt;</a></b>
+	  - this is a list of actions (see <a href="#actions">Actions</a>)
+	  to be performed when the directive state was ok and is still ok after running
+	  any checks.
+     <li> <b><a name="console_arg">console=&lt;display_string&gt;</a></b> - define what is output to
+          <a href="#console">EDDIE Console</a> connections for the current directive.
+          Set to None to hide this directive from the Console.
+    </ul>
+   </p>
+
+
+  <p>
+   <H5><a name="rule_format">Rule Format</a></H5>
+  </p>
+
+  The format of rules is very simple.
+  For those familiar with Python, rules are simply Python expressions
+  which are evaluated on-the-fly with the variables set by the directive
+  at the time.
+  For those unfamiliar with Python, the expressions are almost English-like
+  using operators such as: not, and, or; and mathematical operators such as:
+  ==, !=, &gt;, &lt;, &gt;=, &lt;=.
+  Use these operators to evaluate the variables you are interested in.
+  The whole expression should evaluate to 1 (i.e., true) if the actions
+  set by the
+  <a href="#action">action</a>
+  argument should be executed.  If it evaluates to 0
+  (i.e., false) only the actions set by the
+  <a href="#actelse">actelse</a> argument are executed.
+
+  <p>
+  As rule expressions are evaluated in a Python environment, links to
+  related Python documentation is provided below.
+  <li> <a href="http://www.python.org/doc/current/lib/boolean.html">Boolean Operations</a>
+  <li> <a href="http://www.python.org/doc/current/lib/comparisons.html">Comparisons</a>
+  <li> <a href="http://www.python.org/doc/current/lib/string-methods.html">String Methods</a>
+  </p>
+
+
+  <p>
+   <H5><a name="builtindirectives">Built-in Directives</a></H5>
+  </p>
+   The built-in directives are grouped roughly into categories and are as follows:
+  <p>
+   <i>System Monitoring:</i>
+   <ul>
+    <li> <b><a href="#COM">COM</a></b> - define custom rules.
+    <li> <b><a href="#FS">FS</a></b> - perform filesystem checks.
+    <li> <b><a href="#IF">IF</a></b> - perform checks on local network interfaces.
+    <li> <b><a href="#METASTAT">METASTAT</a></b> - some tests for Solaris Disksuite.
+    <li> <b><a href="#NET">NET</a></b> - define a network statistics rule.
+    <li> <b><a href="#PID">PID</a></b> - perform checks on PID-files.
+    <li> <b><a href="#PROC">PROC</a></b> - perform checks on active processes.
+    <li> <b><a href="#SP">SP</a></b> - define a local service port checking rule.
+    <li> <b><a href="#STORE">STORE</a></b> - define a data storage rule.
+    <li> <b><a href="#SYS">SYS</a></b> - perform system statistics checks.
+   </ul>
+
+   <i>Network Monitoring:</i>
+   <ul>
+    <li> <b><a href="#HTTP">HTTP</a></b> - perform remote HTTP/HTTPS tests.
+    <li> <b><a href="#PING">PING</a></b> - network host ping testing.
+    <li> <b><a href="#POP3TIMING">POP3TIMING</a></b> - time & check POP3 connections.
+    <li> <b><a href="#PORT">PORT</a></b> - remote TCP port checking rule.
+    <li> <b><a href="#RADIUS">RADIUS</a></b> - perform radius authentication tests.
+    <li> <b><a href="#SNMP">SNMP</a></b> - retrieve and test SNMP data from remote hosts and devices.
+   </ul>
+
+   <i>Security Monitoring:</i>
+   <ul>
+    <li> <b><a href="#FILE">FILE</a></b> - for testing file stats or changes.
+    <li> <b><a href="#LOGSCAN">LOGSCAN</a></b> - define a log scanning rule.
+   </ul>
+
+   Note that there may be many more directives depending on the version
+   of EDDIE or any new or optional directives which may have been added
+   to the distribution.  See the EDDIE-Tool developer's guide for more
+   information on creating new directives.
+  </p>
+
+
+  <p>
+   <H5><a name="directivedetails">Directive Details</a></H5>
+  </p>
+
+
+   <p>
+    <b><a name="COM">COM</a></b><br>
+
+    COM is a generic directive used to perform custom
+    checks that other directives are not available for.  It simply executes the
+    given command in a sub-shell, and captures the stdout/stderr and
+    return value for testing by the directive rule.
+    <br><br>
+    Security note: if EDDIE is run as root, the config files should not
+    be world-writable as obviously directives like COM can execute any
+    commands on the system.
+
+    <br><br>
+    COM-specific Arguments:
+    <ul>
+     <li> <b>cmd=&lt;command&gt;</b> <i>(required)</i>:
+	  <br>
+	  - specifies the command to be executed in a sub-shell.
+	  <br><br>
+          <i>Example:</i>
+	  <pre>
+	  cmd="/bin/ls /tmp/*.tmp | wc -l"</pre>
+    </ul><br>
+
+    Rule Variables:
+    <ul>
+     <li> <b>out</b> (string)
+	  <br>
+	  - the out variable contains the standard output (stdout) of the executed
+	  command string.
+     <li> <b>outfield<i>n</i></b> (string)
+	  <br>
+	  - the standard output is also split (by whitespace) and stored in variables
+	  outfield1, outfield2, etc, to simplify rule creation.
+     <li> <b>err</b> (string)
+	  <br>
+	  - the err variable contains the standard error (stderr) of the executed
+	  command string.
+     <li> <b>ret</b> (int)
+	  <br>
+	  - the ret variable contains the return code of the executed command string.
+	  <br><br>
+     <li> <i>Examples:</i>
+	  <pre>
+          rule='out == "test"'          # true if stdout is just "test"
+          rule='out.find("test")'       # true if stdout contains "test"
+          rule='int(out) &gt; 5'           # true if out (converted to an integer) is &gt; 5
+	  rule='int(ret) != 0'          # true if return value of the cmd is not 0
+	  rule='int(outfield1) != 0'    # true if stdout field 3 is not 0
+    </ul>
+
+    Action Variables:
+    <ul>
+     <li> <b>cmd</b> (string)
+	  <br>
+	  - the command string as specified by the cmd argument.
+     <li> Plus all the rule variables as usual.
+     <li> <i>Examples:</i>
+	  <pre>
+          action=email("alert", "the command '%(cmd)s' failed.")
+    </ul>
+
+    Directive Examples:</i>
+    <pre>
+        # Check load average (the hard way, without using SYS)
+        COM loadavg:
+            cmd="uptime | cut -d, -f4 | awk '{print $3}'"
+            rule="float(out) &gt; 6.0"
+            action=email("alert", "Load on %(h)s is &gt; 6.0")
+
+        # Check number of netscapes running
+        COM count_ns:
+            cmd="ps -ef | grep netscape | wc -l"
+	    rule="int(out) &gt; 3.0"
+            action=email("alert", "There are %(out)s netscapes running on %(h)s")
+
+	# A variation on checking load average, using 'outfield' variables
+	COM loadavg:
+	    cmd="uptime | cut -d, -f4"
+	    rule="float(outfield3) &gt; 6.0"
+	    action=ticker("Load on %(h)s is %(outfield3)s", timeout=1)
+    </pre>
+   </p>
+
+
+
+   <p>
+    <b><a name="FILE">FILE</a></b><br>
+
+    This is a directive for performing checks on files or changes to files.
+    Rules can be written based on any changes to the file metadata, like
+    modification date, size, ownership, permissions, etc.  It can also
+    pick up changes to the file itself, which can be useful as a security
+    check.
+
+    <br><br>
+    FILE-specific Arguments:
+    <ul>
+     <li> <b>file=&lt;file name&gt;</b> <i>(required)</i>:
+	  <br>
+	  - the file to be checked.
+    </ul><br>
+
+    Rule Variables:
+    <ul>
+     <li> <b>exists</b> (boolean)
+	  <br>
+	  - will be 1 (true) if the file exists; and 0 (false) if not.
+     <li> <b>mode</b> (integer)
+	  <br>
+	  - the mode (permissions) of the file.
+     <li> <b>ino</b> (long integer)
+	  <br>
+	  - pointer to the inode of the file.
+     <li> <b>dev</b> (long integer)
+	  <br>
+	  - pointer to the device the file resides on.
+     <li> <b>nlink</b> (integer)
+	  <br>
+	  - the number of links this file has.
+     <li> <b>uid</b> (integer)
+	  <br>
+	  - the uid of the file.
+     <li> <b>gid</b> (integer)
+	  <br>
+	  - the gid of the file.
+     <li> <b>size</b> (long integer)
+	  <br>
+	  - the file size.
+     <li> <b>atime</b> (long integer)
+	  <br>
+	  - time of last access.
+     <li> <b>mtime</b> (long integer)
+	  <br>
+	  - time of last modification.
+     <li> <b>ctime</b> (long integer)
+	  <br>
+	  - time of last status change.
+     <li> <b>md5</b> (string)
+	  <br>
+	  - md5 hex digest of file contents.
+
+     <li> <b>lastmode</b> (integer)
+	  <br>
+	  - mode from previous check.
+     <li> <b>lastino</b> (long integer)
+	  <br>
+	  - ino from previous check.
+     <li> <b>lastdev</b> (long integer)
+	  <br>
+	  - dev from previous check.
+     <li> <b>lastnlink</b> (integer)
+	  <br>
+	  - nlink from previous check.
+     <li> <b>lastuid</b> (integer)
+	  <br>
+	  - uid from previous check.
+     <li> <b>lastgid</b> (integer)
+	  <br>
+	  - gid from previous check.
+     <li> <b>lastsize</b> (long integer)
+	  <br>
+	  - size from previous check.
+     <li> <b>lastatime</b> (long integer)
+	  <br>
+	  - atime from previous check.
+     <li> <b>lastmtime</b> (long integer)
+	  <br>
+	  - mtime from previous check.
+     <li> <b>lastctime</b> (long integer)
+	  <br>
+	  - ctime from previous check.
+     <li> <b>lastmd5</b> (string)
+	  <br>
+	  - md5 from previous check.
+
+     <li> <b>now</b> (long integer)
+	  <br>
+	  - contains the current time, useful for comparison against ctime/mtime/atime.
+    </ul>
+
+    Action Variables:
+    <ul>
+     <li> <b>file</b> (string)
+	  <br>
+	  - the value of the file argument.
+     <li> Plus all the rule variables as usual.
+    </ul>
+
+    <i>Directive Examples:</i>
+    <pre>
+	# Alert when /etc/passwd changes
+	FILE passwd_change:
+	    file='/etc/passwd'
+	    rule='mtime != lastmtime'
+	    action=email('alert','%(file)s has been modified.')
+
+	# Alert when 'ps' changes
+	FILE ps_change:
+	    file='/bin/ps'
+	    rule='md5 != lastmd5'
+	    action=email('alert','%(file)s has changed.')
+
+	# Alert if file not owned by root
+	FILE file_root:
+	    file='/usr/local/bin/testfile'
+	    rule='uid != 0'
+	    action=email('alert','%(file)s uid is %(uid)s.')
+
+	## Simple test that cron is working
+	## crontab should have an entry like:
+	##   0,15,30,45 * * * * /bin/touch /var/run/eddie/cron.test
+	FILE cron_test:
+	    file='/var/run/eddie/cron.test'
+	    rule='exists and mtime &gt; (now-15*60)'  # file modified within last 15 minutes
+	    action=email("alert", "Cron test failed.", "%(file)s mtime=%(mtime)s now=%(now)s")
+    </pre>
+    </p>
+
+
+
+   <p>
+    <b><a name="FS">FS</a></b><br>
+
+    The FS directive is used to perform checks on local filesystems.
+    Alerting when the filesystem is full would be the most common use for
+    this directive.
+
+    <br><br>
+    FS-specific Arguments:
+    <ul>
+    <li> <b>fs=&lt;filesystem mount point&gt;</b> <i>(required)</i>:
+	 <br>
+	  - specifies the filesystem to perform the check on.
+          The value, a string, is the mount point of the filesystem
+          (e.g., "/", "/var/log").
+	  <br><br>
+	  <i>Example:</i>
+	  <pre>
+	  fs='/var/log'</pre>
+  </ul><br>
+
+    Rule Variables:
+    <ul>
+     <li> <b>size</b> (int)
+	  <br>
+	  - the size of the filesystem in kBytes.
+     <li> <b>used</b> (int)
+	  <br>
+	  - the amount of the filesystem used, in kBytes.
+     <li> <b>avail</b> (int)
+	  <br>
+	  - the amount of the filesystem available, in kBytes.
+     <li> <b>pctused</b> (float)
+	  <br>
+	  - the percentage of filesystem used.
+     <li> <b>fsname</b> (string)
+	  <br>
+	  - the filesystem (device) name.
+     <li> <b>mountpt</b> (string)
+	  <br>
+	  - the filesystem mount point.
+     <li> <i>Examples:</i>
+	  <pre>
+          rule='pctused &gt; 95.0'  # true if filesystem over 95% full
+	  rule='avail &lt; 350000'  # true if less than about 350MB available
+  </ul>
+
+    Action Variables:
+    <ul>
+     <li> <b>df</b> (string)
+	  <br>
+	  - contains the stats of the current filesystem in a "df"-like format.
+     <li> Plus all the rule variables as usual.
+     <li> <i>Examples:</i>
+	  <pre>
+          action=email("alert", "%(mountpt)s at %(pctused)s%% - %(avail)d of %(size)d remain")
+    </ul>
+
+    Directive Examples:</i>
+    <pre>
+        # alert if / over 95% full
+        FS root:
+            fs='/'
+            rule='pctused > 95'
+            action=email("alert", "%(mountpt)s is over 95%% full on %(h)s")
+
+        # alert if /var has less than 100MB available
+        FS var:
+            fs='/var'
+            rule='avail &lt; 100*1024'
+            action=email("alert", "%(mountpt)s has only %(avail)dkB free on %(h)s")
+    </pre>
+   </p>
+
+
+
+   <p>
+    <b><a name="HTTP">HTTP</a></b><br>
+
+    This is a directive for performing remote HTTP and HTTPS tests against
+    web servers.
+    <br><br>
+    The elapsed connection time is recorded, and all related
+    connection variables are made available, such as response code, headers and
+    returned message body, as well as error information if the connection
+    failed.
+    <br><br>
+    SSL-support must be compiled into Python for HTTPS connections.
+    <br><br>
+    The POST method is not yet supported.
+
+    <br><br>
+    HTTP-specific Arguments:
+    <ul>
+     <li> <b>url=&lt;URL&gt;</b> <i>(required)</i>:
+	  <br>
+	  - the URL to fetch.
+    </ul><br>
+
+    Rule Variables:
+    <ul>
+     <li> <b>failed</b> (boolean)
+	  <br>
+	  - will be 1 (true) if the connection failed; and 0 (false) if not.
+     <li> <b>time</b> (float)
+	  <br>
+	  - the elapsed time of the connection (whether or not if failed).
+     <p>
+     <i>If failed:</i>
+     <li> <b>exception</b> (string)
+	  <br>
+	  - the exception type.
+     <li> <b>errno</b> (integer)
+	  <br>
+	  - error code of failure.
+     <li> <b>errstr</b> (string)
+	  <br>
+	  - error message.
+     <p>
+     <i>If not failed:</i>
+     <li> <b>status</b> (integer)
+	  <br>
+	  - HTTP response status (e.g., 200, 404, etc)
+     <li> <b>reason</b> (string)
+	  <br>
+	  - HTTP response status message (e.g., "OK", "Not Found", etc)
+     <li> <b>ok</b> (boolean)
+	  <br>
+	  - true if status is 2xx or 3xx.
+     <li> <b>length</b> (integer)
+	  <br>
+	  - length of message body.
+     <li> <b>version</b> (integer)
+	  <br>
+	  - HTTP version used (10 = HTTP/1.0; 11 = HTTP/1.1)
+     <li> <b>header</b> (string)
+	  <br>
+	  - the response header.
+     <li> <b>body</b> (string)
+	  <br>
+	  - contains HTTP message body.
+    </ul>
+
+    Action Variables:
+    <ul>
+     <li> <b>url</b> (string)
+	  <br>
+	  - the value of the url argument.
+     <li> <b>hostname</b> (string)
+	  <br>
+	  - the hostname part of the URL.
+     <li> <b>file</b> (string)
+	  <br>
+	  - the file part of the URL.
+     <li> Plus all the rule variables as usual.
+    </ul>
+
+    <i>Directive Examples:</i>
+    <pre>
+	# Check our web site is up.
+	HTTP website:
+	    url='http://www.my.domain.name/index.html'
+	    rule='failed'
+	    action=email('alert', '%(url)s failed', 'exception: %(exception)s\nerrno: %(errno)s\nerrstr: %(errstr)s')
+
+	# Check a certain page hasn't disappeared.
+	HTTP mypage:
+	    url='http://www.my.domain.name/~fred/fred.html'
+	    rule='failed or not ok'
+	    action=email('fred', '%(url)s failed')
+
+	# Store web site response time in RRD db.
+	HTTP web_time:
+            url='http://our.website.com/'
+	    rule='not failed'
+	    scanperiod='5m'
+	    action=elvinrrd('http-%(h)s_%(hostname)s', 'time=%(time)f')
+	    actelse=email('alert', 'Connection failed to %(url)s')
+    </pre>
+    </p>
+
+
+
+   <p>
+    <b><a name="IF">IF</a></b><br>
+
+    The IF directive provides a mechanism for testing network interfaces.
+    Interfaces listed in "netstat -i" are available for testing.
+    The test can be simply whether the interfaces exists on a host or not;
+    or it can be a more complex rule based on various statistics about that
+    interface.
+
+    <br><br>
+    IF-specific Arguments:
+    <ul>
+     <li> <b>name=&lt;interface name&gt;</b> <i>(required)</i>:
+	  <br>
+	  - the name of the interface (e.g., "eth0" or "hme0").
+    </ul><br>
+
+    Rule Variables:
+    <ul>
+     <li> <b>exists</b> (boolean)
+	  <br>
+	  - this variable will be 1 (true) if the interface exists,
+	  0 (false) if not.
+     <li> Other variables available in this name-space will be every
+	  piece of data about the interface that EDDIE can find, like "rx_bytes",
+          "rx_packets", etc.  The types of data available will be
+          OS-dependent.  You should examine the netstat.py module in the
+          system-specific lib directory to see what is available.
+     <li> <b>exists</b> (boolean)
+	  <br>
+     <li> <i>Example:</i>
+	  <pre>
+	  rule='not exists'   # true if interface doesn't exist</pre>
+    </ul>
+
+    Action Variables:
+    <ul>
+     <li> <b>name</b> (string)
+	  <br>
+	  - the interface name as specified by the name argument.
+    </ul>
+
+    Directive Examples:</i>
+    <pre>
+	# alert if eth0 interface has disappeared
+	IF ethexists:
+		name='eth0'
+		rule='not exists'
+		action=email('alert', 'interface %(name)s has disappeared on %(h)s')
+
+	# alert if input packet errors are greater than 10% (Solaris)
+	IF ierrs:
+		name='hme0'
+		rule="100.0*ierrs/ipkts &gt; 10.0"
+		action=email('alert', 'input packet error &gt; 10%% on %(name)s')
+    </pre>
+   </p>
+
+
+   <p>
+    <b><a name="LOGSCAN">LOGSCAN</a></b><br>
+
+    The LOGSCAN directive provides a facility to watch files for important
+    messages.  Every line in the file can be matched, or for a busy system,
+    selective lines can be picked out using a regular expression pattern.
+    Commonly the resulting lines are emailed to an admin, but any standard
+    EDDIE action could also be performed with the results.
+    <br><br>
+    This directive works by initially finding the end of the file on its
+    first 'scan' and storing this location.  On the second and subsequent
+    scans, the directive will scan all the new lines of the file that have
+    been added since the previous scan, and finish by storing the new location
+    of the end-of-file.
+    If, however, the file has truncated
+    in size (i.e., perhaps a log rotation has occured) the directive will
+    scan all lines from the start of the truncated file.
+    <br><br>
+    Note: it is possible that some lines may be missed in between scanning
+    the file and the file being truncated (or log rotation) if the scanperiod
+    is not short enough.  It is recommended that the scanperiod be short if the
+    file is updated frequently (i.e., for a busy logfile).
+
+    <br><br>
+    LOGSCAN-specific arguments:
+    <ul>
+     <li> <b>file=&lt;filename&gt;</b> <i>(required)</i>:
+	  <br>
+	  - the filename of the file to be scanned.
+     <li> <b>regex=&lt;search string&gt;</b> <i>(required)</i>:
+	  <br>
+	  - a string to use to filter scanned lines.  The string can be
+	  some text to match anywhere on the line, or a more complex regular
+	  expression.  If all lines are required, regex='.*' should be used.
+     <li> <b>negate=&lt;true or false&gt;</b> <i>(optional)</i>:
+	  <br>
+	  - if set to 'true', the regex filter is used to exclude matching
+	  lines from the scan.
+     <li> <b>rule=&lt;rule string&gt;</b> <i>(optional)</i>:
+	  <br>
+	  - the rule argument is optional for this directive, and defaults
+	  to "linecount &gt; 0".  i.e., the rule is true if 1 or more scanned
+	  lines match the regex.  This can, of course, be overridden by
+	  supplying a custom rule argument.
+    </ul><br>
+
+    Rule Variables:
+    <ul>
+     <li> <b>linecount</b> (integer)
+	  <br>
+	  - this variable contains the number of lines which matched the
+	  regex for this scan.
+     <li> <b>lines</b> (string)
+	  <br>
+	  - the actual lines of the file that matched the regex are stored in
+	  this variable.
+     <li> <i>Examples:</i>
+	  <pre>
+	  rule='linecount &gt; 0'    # true if 1 or more lines matched (default rule)
+	  rule='lines != ""'      # true if some lines matched (same result as above)</pre>
+    </ul>
+
+    Action Variables:
+    <ul>
+     <li> <b>file</b> (string)
+	  <br>
+	  - the value of the file argument.
+     <li> <b>regex</b> (string)
+	  <br>
+	  - the value of the regex argument.
+     <li> <b>negate</b> (boolean)
+	  <br>
+	  - the value of the negate argument.
+     <li> Plus all the rule variables as usual.
+     <li> <i>Examples:</i>
+	  <pre>
+	  action=email("alert", "%(linecount)d lines matched scan, they are:\n%(lines)s")</pre>
+    </ul>
+
+    <i>Directive Examples:</i>
+    <pre>
+	# Email all entries from /var/log/messages to alert every 12 hours.
+        LOGSCAN messages:
+	    file='/var/log/messages'
+            regex='.*'
+            scanperiod='12h'
+            action=email("alert", "%(h)s:%(file)s", "-- Logscan matched %(linecount)d lines: --\n%(lines)s")
+
+	# Email lines from /var/log/httpd/error_log, and ignore "notice" messages
+        LOGSCAN httpd_error:
+	    file='/var/log/httpd/error_log'
+            regex='.*[notice].*'
+	    negate=true
+            action=email("alert", "%(h)s:%(file)s", "-- Logscan matched %(linecount)d lines: --\n%(lines)s")
+    </pre>
+   </p>
+
+
+
+   <p>
+    <b><a name="METASTAT">METASTAT</a></b><br>
+
+    This directive, part of the Solaris directives module, allows simple
+    checks to be performed on Solaris Disksuite devices.
+    Currently it only checks whether any metadevices require maintenance,
+    but will be expanded in the future.
+
+    <br><br>
+    METASTAT-specific Arguments:
+    <ul>
+	<li> only the standard rule argument is currently required.
+    </ul><br>
+
+    Rule Variables:
+    <ul>
+     <li> <b>need_maintenance</b> (boolean)
+	  <br>
+	  - this variable is 1 (true) if a metadevice requires maintenance;
+	  0 (false) if not.
+     <li> <i>Example:</i>
+	  <pre>
+	  rule='need_maintenance'   # true if a metadevice needs maintenance</pre>
+    </ul>
+
+    Action Variables:
+    <ul>
+     <li> Just the rule variables as usual.
+    </ul>
+
+    <i>Directive Examples:</i>
+    <pre>
+    # Check if any metadevice requires maintenance
+    METASTAT maintenance:
+        rule='need_maintenance'
+	action=email('alert', 'A metadevice on %(h)s requires maintenance')
+    </pre>
+   </p>
+
+
+
+   <p>
+    <b><a name="NET">NET</a></b><br>
+
+    The NET directive provides an interface to the kernel network statistics
+    usually provided by a call to 'netstat -s'.  Simple or complex rules can
+    be written using these statistics.
+    <br><br>
+    Linux Note: network stats counters are now collected from '/proc/net/snmp'.
+    Try a 'cat /proc/net/snmp' to see what counters are available.
+
+    <br><br>
+    NET-specific arguments:
+    <ul>
+     <li> (rule): the rule is the only required argument for this directive.
+    </ul>
+
+    Rule Variables:
+    <ul>
+     <li> The variables available in this name-space will be many of the 
+          network statistic provided by the kernel.  i.e., see the results
+	  of a 'netstat -s' call (or 'cat /proc/net/snmp' on Linux).
+	  The actual variables available will be
+	  OS-dependent.  You should examine the stats_ctrs data collector
+	  class in the netstat.py module in the
+          system-specific lib directory to see what is available.
+     <li> <i>Examples:</i>
+	  <pre>
+	      rule='TcpInErrs &gt; 0'   # true if TcpInErrs counter greater than 0 (Linux)</pre>
+    </ul>
+
+    Action Variables:
+    <ul>
+     <li> All the rule variables as usual.
+     <li> <i>Examples:</i>
+	  <pre>
+	  action=email("alert", "There have been %(TcpInErrs)d TCP Input Errors on %(h)s")
+	  </pre>
+    </ul>
+
+    Directive Examples:</i>
+    <pre>
+	# alert if any UDP input errors (Solaris)
+	IF udpinerr:
+		rule="udpInErrors > 0"
+		action=email('alert', '%(h)s has had %(udpInErrors)s UDP input errors')
+    </pre>
+   </p>
+
+
+   <p>
+    <b><a name="PID">PID</a></b><br>
+
+    The PID directive is used to perform simple checks using pid files
+    which some program generate.  The most basic check is whether the pid file
+    exists or not, which can often indicate whether the program is running or
+    not; the second most basic check makes sure the pid found in the pid file
+    also belongs to a process in the process table.
+
+    <br><br>
+    PID-specific Arguments:
+    <ul>
+     <li> <b>pidfile=&lt;pidfile&gt;</b> <i>(required)</i>:
+	  <br>
+	  - specifies the pid file to perform checks on.  The directive expects
+	  the pid to be the first number found in the file.  It ignores anything
+	  beyond this.
+          This is simply a filename as a string.
+          (e.g., "/var/run/sshd.pid").
+          <i>Example:</i>
+	  <pre>
+	  pidfile="/var/run/syslog.pid"</pre>
+    </ul><br>
+
+    Rule Variables:
+    <ul>
+     <li> <b>exists</b> (boolean)
+	  <br>
+	  - this variable is 1 (true) if a process exists in the pidfile exists;
+	  and 0 (false) if it does not.
+     <li> <b>running</b> (boolean)
+	  <br>
+	  - this variable is 1 (true) if the pid found in the pidfile (if it exists) is
+	  also a valid process in the process table; and 0 (false) if not.
+     <li> <i>Examples:</i>
+	  <pre>
+	  rule='not exists'   	        # true if pidfile not found
+	  rule='exists and not running' # true if pidfile exists but pid not valid running process</pre>
+    </ul>
+
+    Action Variables:
+    <ul>
+     <li> <b>pidfile</b> (string)
+	  <br>
+	  - the value of the pidfile argument.
+     <li> Plus all the rule variables as usual.
+     <li> <i>Examples:</i>
+	  <pre>
+	  action=email("alert", "the pid-file %(pidfile)s does not exist")
+          </pre>
+    </ul>
+
+    <i>Directive Examples:</i>
+    <pre>
+        # alert if the sshd pid file doesn't exist
+        PID sshdpid1:
+            pidfile='/var/run/sshd.pid'
+	    rule='not exists'
+            action=email("alert", "sshd pid file not found on %(h)s")
+
+        # alert if the sshd pid doesn't match the process table
+        PID sshdpid2:
+            pidfile='/var/run/sshd.pid'
+	    rule='exists and not running'
+            action=email("alert", "sshd pid not a valid process on %(h)s")
+    </pre>
+   </p>
+
+
+   <p>
+    <b><a name="PING">PING</a></b><br>
+
+    This directive provides a facility for checking the availability of
+    hosts on a network.  It allows ICMP ping checks to be performed and
+    rules and actions can be written based on whether the remote host is
+    alive, packet loss and round trip times.
+
+    <br><br>
+    PING-specific arguments:
+    <ul>
+     <li> <b>host=&lt;hostname&gt;</b> <i>(required)</i>:
+	  <br>
+	  - the address of the host to ping.
+     <li> <b>numpings=&lt;number&gt;</b> <i>(optional)</i>:
+	  <br>
+	  - the number of pings to send (default is 5 pings).
+    </ul>
+
+    Rule Variables:
+    <ul>
+     <li> <b>alive</b> (boolean)
+	  <br>
+	  - this variable will be 1 (true) if the host responded to pings;
+	  and 0 (false) otherwise.  Note: if at least one ping response
+	  is received, the host is considered to be 'alive'.
+     <li> <b>mintriptime</b> (float)
+	  <br>
+	  - the minimum round-trip-time (seconds).
+     <li> <b>avgtriptime</b> (float)
+	  <br>
+	  - the average round-trip-time (seconds).
+     <li> <b>maxtriptime</b> (float)
+	  <br>
+	  - the maximum round-trip-time (seconds).
+     <li> <b>numpktstx</b> (integer)
+	  <br>
+	  - the number of pings transmitted.
+     <li> <b>numpktsrx</b> (integer)
+	  <br>
+	  - the number of pings received.
+     <li> <b>pktloss</b> (float)
+	  <br>
+	  - the percentage packet-loss.
+     <li> <i>Examples:</i>
+	  <pre>
+	  rule='not alive'         # true if the host did not respond
+	  rule='pktloss &gt; 50.0'    # true if greater than 50% packet loss
+	  rule='avgtriptime &gt; 1.5' # true if avg RTT greater than 1.5 seconds</pre>
+    </ul>
+
+    Action Variables:
+    <ul>
+     <li> <b>host</b> (string)
+	  <br>
+	  - the value of the host argument.
+     <li> <b>numpings</b> (integer)
+	  <br>
+	  - the value of the numpings argument.
+     <li> Plus all the rule variables as usual.
+     <li> <i>Examples:</i>
+	  <pre>
+	  action=email("alert", "avg RTT from %(h)s to %(host)s is %(avgtriptime)f")
+      </pre>
+    </ul>
+
+    <i>Directive Examples:</i>
+    <pre>
+	# Alert if host not responding
+	PING foo:
+	    host="foo.domain.name"
+            rule="not alive"
+	    action=email('alert', 'host foo is not responding to pings')
+
+	# Alert via ticker if there is any packet-loss.
+	PING badpings:
+	    host='10.0.0.5'
+	    numpings=20
+	    rule='pktloss &gt;= 0.0'
+	    scanperiod='1m'
+	    action=ticker("%(host)s packetloss=%(pktloss)0.1f%% avgrtt=%(avgtriptime)f sec")
+    </pre>
+   </p>
+
+
+   <p>
+    <b><a name="POP3TIMING">POP3TIMING</a></b><br>
+
+    The POP3TIMING directive is used to measure the performance of a POP3
+    server.  EDDIE connects to the given POP3 server/port and logs in as
+    the given user, then performs some standard commands before closing
+    the connection.  The time taken for each step of the connection are timed
+    and stored in variables to be used by the action(s).
+    <br><br>
+    Besides timing information, this directive can also be used to perform
+    basic checks on a POP3 server.  A variable is set if the connection
+    fails, so simple rules can be written to test this.
+
+    <br><br>
+    POP3TIMING-specific Arguments:
+    <ul>
+     <li> <b>server=&lt;hostname:port&gt;</b> <i>(required)</i>:
+	  <br>
+	  - the address of the POP3 server and an optional port number,
+	  separated by a colon.  If no port number is supplied, the default
+	  (110) is used.
+     <li> <b>user=&lt;username&gt;</b> <i>(required)</i>:
+	  <br>
+	  - the username to use when logging in to the POP3 server.
+     <li> <b>password=&lt;password&gt;</b> <i>(required)</i>:
+	  <br>
+	  - the password to use when authenticating the above user.
+	  Note: the password will be in plain text, so the config file should
+	  have appropriate permissions set if necessary.
+     <li> <i>Examples:</i>
+	  <pre>
+	  server='10.0.0.12'
+	  server='pop3.my.domain:10110'
+	  user='fred'
+	  password='foo'</pre>
+    </ul><br>
+
+    Rule Variables:
+    <ul>
+     <li> <b>connected</b> (boolean)
+	  <br>
+	  - this variable will be 1 (true) if a successful POP3 connection
+	  was made; 0 (false) otherwise.
+     <li> <b>connecttime</b> (float)
+	  <br>
+	  - the elapsed time (seconds) for the initial connection to be established.
+     <li> <b>authtime</b> (float)
+	  <br>
+	  - the elapsed time (seconds) for the authentication part
+	  (USER and PASS commands) to be performed.
+     <li> <b>listtime</b> (float)
+	  <br>
+	  - the elapsed time (seconds) for a LIST command to be performed.
+     <li> <b>retrtime</b> (float)
+	  <br>
+	  - the elapsed time (seconds) for a RETR command to be performed.
+     <li> <i>Examples:</i>
+	  <pre>
+	  rule='not connected'     # true if connection failed
+	  rule='connecttime &gt; 2.0' # true if time to connect over 2 seconds
+          rule='connecttime+authtime+listtime+retrtime &gt; 5.0' # true if whole session took over 5 seconds</pre>
+    </ul>
+
+    Action Variables:
+    <ul>
+     <li> <b>server</b> (string)
+	  <br>
+	  - the server part of the server argument (not the port).
+     <li> <b>port</b> (integer)
+	  <br>
+	  - the TCP port number of the POP3 server.
+     <li> <b>username</b> (string)
+	  <br>
+	  - the value of the user argument.
+     <li> <b>password</b> (string)
+	  <br>
+	  - the value of the password argument.
+     <li> Plus all the rule variables as usual.
+     <li> <i>Examples:</i>
+	  <pre>
+	  action=email("alert", "connection to %(server)s took %(connecttime)f seconds")
+          </pre>
+    </ul>
+
+    <i>Directive Examples:</i>
+    <pre>
+        POP3TIMING pop3test:
+	    server='pop3.domain.com'
+            user='fred'
+            password='foo'
+	    rule='connected'
+            action=email('mary', 'host=%(server)s, username=%(username)s, connecttime=%(connecttime)f, authtime=%(authtime)f, listtime=%(listtime)f, retrtime=%(retrtime)f')
+	    actelse=email('alert', 'POP3 connection to %(server)s failed')
+    </pre>
+   </p>
+
+
+   <p>
+    <b><a name="PORT">PORT</a></b><br>
+
+    The PORT directive tests remote TCP based services.  The simplest test
+    is to determine whether the service is accepting remote connections on
+    a given TCP port.
+    <br><br>
+    The test can be made more complex
+    by defining send and expect strings.  The send string
+    will be sent to the remote host after connecting, and any reply will
+    be matched against the expect string (a regular expression).
+    The check fails if the result does not match.
+
+    <br><br>
+    PORT-specific arguments:
+    <ul>
+     <li> <b>host=&lt;remote host name or IP&gt;</b> <i>(required)</i>:
+	  <br>
+	  - specifies the remote host name or IP address to connect to.
+     <li> <b>port=&lt;remote TCP port number&gt;</b> <i>(required)</i>:
+	  <br>
+	  - the remote TCP port number to connect to (an integer).
+     <li> <b>send=&lt;string to send&gt;</b> <i>(optional)</i>:
+	  <br>
+	  - a string to be sent to the remote port after connection is opened.
+     <li> <b>expect=&lt;string to expect&gt;</b> <i>(optional)</i>:
+	  <br>
+	  - a string to expect in response from the remote TCP connection.
+	  The string can be a regular expression.
+    </ul><br>
+
+    Rule Variables:
+    <ul>
+     <li> <b>alive</b> (boolean)
+	  <br>
+	  - will be set to 1 (true) if a TCP connection can be made; or
+	  0 (false) if not.
+     <li> <b>recv</b> (string)
+	  <br>
+	  - the response received from the remote TCP connection (after the
+	  'send' string is sent if any).
+     <li> <b>connect_time</b> (float)
+	  <br>
+	  - the total elapsed time (in seconds) for the connection to be made,
+	  any data sent/received, and closed again.
+     <li> <b>matched</b> (boolean)
+	  <br>
+	  - if an 'expect' argument was given, this variable will be set to
+	  1 (true) if it matched the data received from the connection, and
+	  0 (false) otherwise.
+     <li> <b>error</b> (int)
+	  <br>
+	  - if the connection failed, this variable will contain the error code.
+     <li> <b>errorstr</b> (string)
+	  <br>
+	  - if the connection failed, the explanation of the error as a string
+	  is stored in errorstr.
+     <li> <i>Examples:</i>
+	  <pre>
+          rule='not alive'   # true if the connection could not be opened
+	  rule='not matched' # true if the received string did not match the expect string
+          rule='connect_time &gt; 0.5' # true if connect time greater than 0.5 seconds</pre>
+    </ul>
+
+    Directive Examples:</i>
+    <pre>
+	# check that 10.0.0.5 is accepting connections on port 80
+	PORT webcheck:
+		host='10.0.0.5'
+		port=80
+		rule='not alive'
+		action=email('alert', 'port 80 not responding on 10.0.0.5')
+
+	# check that a host is accepting connections on port 25
+	PORT smtpcheck:
+		host='ahost.domain.name'
+		port=25
+		expect='220.*'
+		rule='not alive or not matched'
+		action=email('alert', 'port 25 problem on 10.0.0.5')
+    </pre>
+   </p>
+
+
+   <p>
+    <b><a name="PROC">PROC</a></b><br>
+
+    The PROC directive is used to perform process checks.  In the simplest
+    case it is used to check if a process is not running when it should be
+    (or running when it should not be).  More complex rules can also be
+    written, using most of the process statistics such as memory-usage,
+    owner, percentage cpu used, running time, etc.
+
+    <br><br>
+    PROC-specific Arguments:
+    <ul>
+     <li> <b>name=&lt;process name&gt;</b> <i>(required)</i>:
+	  <br>
+	  - specifies the name of the process to perform the check
+          on.  The value is a string and is defined as the name of the program
+          running, not including any path information or arguments.  For example,
+          if a process is shown as "/usr/sbin/syslogd -r", the value of name
+          should be "syslogd" only.
+	  <br><br>
+          An exception is programs executed by some type of interpreter, like
+          'sh', 'perl', 'python', etc.  Any program name defined in the global
+          config <a href="#INTERPRETERS">INTERPRETERS</a>
+          is assumed to be an interpreter and the name in this case will
+          be the first argument (excluding any path information).  For example,
+          a program shown in ps as "/usr/bin/perl /var/tmp/test -x" will match
+          a name value of "test" provided that "perl" exists in the
+          INTERPRETERS setting.
+	  <br><br>
+          <i>Example:</i>
+	  <pre>
+	  name='syslogd'</pre>
+    </ul><br>
+
+    Rule Variables:
+    <ul>
+     <li> <b>exists</b> (boolean)
+	  <br>
+	  - this variable is 1 (true) if a process exists in the process list
+	  with the same name as the <i>name</i> argument; or 0 (false) if not.
+     <li> Other variables available in this name-space will be every
+          piece of data about the process that EDDIE can find, like "uid",
+          "ppid", "pcpu", "vsz", etc.  The types of data available will be
+          OS-dependent.  You should examine the proc.py module in the
+          system-specific lib directory to see what is available.
+	  <br><br>
+          The rule could be something like "vsz > 40000" which would be true
+          if the memory footprint (vsz) of the program was over 40000 bytes.
+     <li> <i>Examples:</i>
+	  <pre>
+	  rule='not exists'   # true if process not running
+          rule='pcpu &gt; 50.0'  # true if process using over 50% CPU</pre>
+    </ul>
+
+    Action Variables:
+    <ul>
+     <li> <b>name</b> (string)
+	  <br>
+	  - the value of the name argument.
+     <li> Plus all the rule variables as usual.
+     <li> <i>Examples:</i>
+	  <pre>
+	  action=email("alert", "the %(name)s process is not running")
+    </ul>
+
+    Directive Examples:</i>
+    <pre>
+        # alert if cron is not running
+        PROC cron:
+            name='cron'
+            rule='not exists'
+            action=email("alert", "cron is not running on %(h)s")
+
+        # syslog has a memory leak - alert if using over 50MB
+        PROC syslogmem:
+            name='syslogd'
+            rule='vsz &gt; 50*1024'
+            action=email("alert", "%(name)s is using %(vsz)d kBytes")
+    </pre>
+   </p>
+
+
+   <p>
+    <b><a name="RADIUS">RADIUS</a></b><br>
+
+    The RADIUS directive provides a facility for performing radius authentication
+    checks.
+
+    <br><br>
+    RADIUS-specific Arguments:
+    <ul>
+     <li> <b>server=&lt;hostname:port&gt;</b> <i>(required)</i>:
+	  <br>
+	  - the address of the radius server, and optionally the UDP port number.
+	  If port is left out, the default (1645) is used.
+     <li> <b>secret=&lt;secret&gt;</b> <i>(required)</i>:
+	  <br>
+	  - the server secret.
+     <li> <b>user=&lt;username&gt;</b> <i>(required)</i>:
+	  <br>
+	  - the username to use for authentication.
+     <li> <b>password=&lt;password&gt;</b> <i>(required)</i>:
+	  <br>
+	  - the password to use for authentication.
+    </ul><br>
+
+    Rule Variables:
+    <ul>
+     <li> <b>passed</b> (boolean)
+	  <br>
+	  - this variables is 1 (true) if the radius authentication was accepted;
+	  and 0 (false) if not.
+     <li> <b>timing</b> (float)
+	  <br>
+	  - the elapsed time between sending the radius authentication request
+	  and receiving the response (whether or not it failed).
+    </ul>
+
+    Action Variables:
+    <ul>
+     <li> <b>server</b> (string)
+	  <br>
+	  - the hostname of the radius server.
+     <li> <b>port</b> (integer)
+	  <br>
+	  - the port of the radius server.
+     <li> <b>secret</b> (string)
+	  <br>
+	  - the value of the secret argument.
+     <li> <b>username</b> (string)
+	  <br>
+	  - the value of the username argument.
+     <li> <b>password</b> (string)
+	  <br>
+	  - the value of the password argument.
+     <li> Plus all the rule variables as usual.
+    </ul>
+
+    <i>Directive Examples:</i>
+    <pre>
+	RADIUS radtest:
+	    server='radius.domain.name:1812'
+	    secret='s3cr3t'
+	    user='bob@domain.name'
+	    password='b0bm@t3'
+	    rule='not passed'
+	    action='email("alert", "radius FAILED to %(host)s:%(port)d")'
+    </pre>
+
+
+   <p>
+    <b><a name="SP">SP</a></b><br>
+
+    The SP directive is used to perform checks on listening service ports.
+    These can be either TCP or UDP ports.  The simplest use is to check if
+    nothing is currently listening on the given port, protocol and bind
+    address combination.
+
+    <br><br>
+    SP-specific Arguments:
+    <ul>
+     <li> <b>protocol=&lt;protocol name&gt;</b> <i>(required)</i>:
+	  <br>
+	  - specifies the protocol type; currently only 'tcp' and 'udp' are
+	  supported here.
+     <li> <b>port=&lt;port number or name&gt;</b> <i>(required)</i>:
+	  <br>
+	  - specifies the port number (or name as defined in /etc/services,
+	  which should be a string) to perform the check on.
+     <li> <b>bindaddr=&lt;IP address&gt;</b> <i>(required)</i>:
+	  <br>
+	  - specifies the IP address this port should be bound to.  Usually
+	  this is the wildcard address, '0.0.0.0'.  Note, under Solaris '*'
+	  represents the wildcard address.
+    </ul><br>
+
+    Rule Variables:
+    <ul>
+     <li> <b>exists</b> (boolean)
+	  <br>
+	  - this variable will be 1 (true) if the port/protocol/bindaddr
+	  combination exists in the netstat table and is in the "LISTENING"
+	  state; otherwise it will be 0 (false).
+	  <br><br>
+     <li> <i>Example:</i>
+	  <pre>
+	  rule='not exists'   # true if port not listening for connections</pre>
+    </ul>
+
+    Action Variables:
+    <ul>
+     <li> <b>port</b> (string)
+	  <br>
+	  - the port name or number as specified by the port argument.
+     <li> <b>protocol</b> (string)
+	  <br>
+	  - the protocol as specified by the protocol argument.
+     <li> <b>bindaddr</b> (string)
+	  <br>
+	  - the bind address as specified by the bindaddr argument.
+     <li> Plus all the rule variables as usual.
+     <li> <i>Examples:</i>
+	  <pre>
+	  action=email("alert", "the port %(protocol)s/%(port)s bound to %(bindaddr)s is not listening on %(h)s")
+    </ul>
+
+    <i>Directive Examples:</i>
+    <pre>
+        # alert if nothing listening on http port
+        SP http:
+            port='http'
+            protocol='tcp'
+	    bindaddr='0.0.0.0'
+	    rule='not exists'
+            action=email('alert', 'http port not bound to on %(h)s')
+
+        # alert if nothing listening on tcp port 22 on 10.0.0.5
+        SP sshport:
+            port=22
+            protocol='tcp'
+	    bindaddr='10.0.0.5'
+	    rule='not exists'
+	    action=email('alert', '%(protocol)s port %(bindaddr)s:%(port)s not listening')
+    </pre>
+   </p>
+
+
+
+   <p>
+    <b><a name="SNMP">SNMP</a></b><br>
+
+    This directive provides an SNMP client to retrieve data from remote
+    hosts and devices via the SNMP protocol.  Multiple values can be
+    retrieved in one call.  Standard EDDIE rules can then perform tests
+    on the retrieved data, or the data could be stored in RRD files using
+    the elvinrrd action (for instance).
+
+    <br><br>
+    SNMP-specific Arguments:
+    <ul>
+     <li> <b>host=&lt;hostname:port&gt;</b> <i>(required)</i>:
+	  <br>
+	  - the remote host to poll.  Specifying the port is optional, and defaults
+	  to 161.
+     <li> <b>oid=&lt;OIDs&gt;</b> <i>(required)</i>:
+	  <br>
+	  - one or more OIDs to fetch from host.  Multiple OIDs should be separated
+	  by commas (,).  Currently these must be the full OID in numeric format
+	  only.
+     <li> <b>community=&lt;community string&gt;</b> <i>(optional)</i>:
+	  <br>
+	  - the community string of the remote SNMP server.  Defaults to 'public' if
+	  not supplied.
+     <li> <b>maxretry=&lt;integer&gt;</b> <i>(optional)</i>:
+	  <br>
+	  - the maximum number of retries before failing an SNMP connection.  Defaults
+	  to 5.
+    </ul><br>
+
+    Rule Variables:
+    <ul>
+     <li> <b>failed</b> (boolean)
+	  <br>
+	  - contains 1 (true) if the SNMP connection failed; 0 (false) if ok.
+     <li> <b>response</b> (type dependent on type of OID)
+	  <br>
+	  - contains the result of the OID, if only 1 OID was specified.
+     <li> <b>response<i>n</i></b> (type dependent on type of OID)
+	  <br>
+	  - contains the results of the OIDs, if 2 or more were specified.  E.g.,
+	  response1, response2, response3, etc, matching the specified OIDs in
+	  order.
+    </ul>
+
+    Action Variables:
+    <ul>
+     <li> <b>host</b> (string)
+	  <br>
+	  - the hostname part of the host argument.
+     <li> <b>port</b> (integer)
+	  <br>
+	  - the port part of the host argument.
+     <li> <b>community</b> (string)
+	  <br>
+	  - the value of the community argument.
+     <li> <b>oid</b> (string)
+	  <br>
+	  - the value of the oid argument.
+     <li> <b>maxretry</b> (integer)
+	  <br>
+	  - the value of the maxretry argument.
+     <li> <b>rule</b> (string)
+	  <br>
+	  - the value of the rule argument.
+     <li> Plus all the rule variables as usual.
+    </ul>
+
+    <i>Directive Examples:</i>
+    <pre>
+    # Fetch a counter from a device
+    SNMP foo:
+        host='alt1.domain.name'
+	oid='1.3.6.1.4.1.1872.2.1.1.6.0'
+	community='private'
+	rule='response > 0'
+	maxretry=10
+	action=email('alert', 'Head for the lifeboats: %(snmpresponse)s')
+
+    SNMP router_traffic:
+	scanperiod='5m'
+	host='10.0.0.1'
+	oid='1.3.6.1.2.1.2.2.1.10.2, 1.3.6.1.2.1.2.2.1.16.2'
+	community='special'
+	rule='not failed'
+	maxretry=10
+	action=elvinrrd("net-router_BRI01", "ibytes=%(response1)s", "obytes=%(response2)s")
+    </pre>
+    </p>
+
+
+
+   <p>
+    <b><a name="STORE">STORE</a></b><br>
+
+    The STORE directive is still being developed and tested.
+    It will be documented at a later date.
+   </p>
+
+
+
+   <p>
+    <b><a name="SYS">SYS</a></b><br>
+
+    The SYS directive provides an interface to the kernel's system statistics.
+    Simple or complex rules can be written using these statistics.
+
+    <br><br>
+    SYS-specific arguments:
+    <ul>
+     <li> (rule): the rule is the only required argument for this directive.
+    </ul>
+
+    Rule Variables:
+    <ul>
+     <li> The variables available in this name-space will be many of the 
+     system statistics provided by the kernel.  Many of these are
+     OS-specific, but some common variables are 'loadavg1', 'loadavg5',
+     and 'loadavg15'.
+     <br><br>
+     See the Solaris-specific System Data section, or
+     the system data collector class in the system.py module
+     in the system-specific lib directory to see what is available.
+     <li> <i>Examples:</i>
+	  <pre>
+	      rule='loadavg1 &gt; 2.0'   # true if 1-min load-average &gt; 2.0</pre>
+    </ul>
+
+    Action Variables:
+    <ul>
+     <li> All the rule variables as usual.
+     <li> <i>Examples:</i>
+     <pre>
+	 action=email("alert", "The loadavg on %(h)s is %(loadavg1)0.2f")
+     </pre>
+    </ul>
+
+    Directive Examples:</i>
+    <pre>
+	# alert if 1 minute load average &gt; 2
+	SYS loadavg1:
+		rule="loadavg1 &gt; 2.0"
+		action=email('alert', '%(h)s has a loadavg1 of %(loadavg1)0.2f')
+    </pre>
+   </p>
+
+
+
+
+
+
+  <p>
+   <H4><a name="notif_msg_objects">Notification and Message objects</a></H4>
+  </p>
+   Notification objects define levels of actions to be performed.  Usually, the higher
+   the level, the more serious the actions will be.  Later versions of EDDIE will
+   use notification objects for advanced features like problem escalation.
+   <br>
+   Message objects define messages to be used in actions like email or paging.
+   They are grouped together to provide a common way to call them from notification
+   objects.
+  <p>
+   <ul>
+    <li> N - define a Notification object, containing levels of actions.
+         <pre>
+         N name:
+             Level 0:
+                 action1, [action2, ...]
+             Level 1:
+                 action1, [action2, ...]
+             Level n:
+                 action1, [action2, ...]
+         </pre>
+	 Levels should range from 0 to 9, with 9 being the most critical. E.g.:
+	 <pre>
+         N COMMONALERT:
+
+             # Info
+             Level 0:
+                 email(INFO_EMAIL,INFO)
+
+             # Warning
+             Level 1:
+                 email(ALERT_EMAIL,WARN)
+
+             # Alert
+             Level 2:
+                 email(ALERT_EMAIL,ALERT),ticker(ALERT_P)
+
+             # Serious Alert
+             Level 3:
+                 email(ALERT_EMAIL,ALERT),email(ONCALL_EMAIL,ALERT_P),ticker(ALERT_P)
+         </pre>
+	 Actions are defined like function calls, and multiple actions are
+	 separated by commas.  See Actions for more information.
+
+    <li> M - define a message group.
+	 This simply allows you to group together messages and message subgroups.
+    <li> MSG - define a message object.
+	 This allows you to define a message object.  A message object has a name
+	 and one or more strings of text.  The way the strings are used by actions
+	 depends on the action.   For example, the email() action wants two strings,
+	 the first being the subject and the second being the body of the email.
+	 <pre>
+	 M groupname:
+	     MSG msgname1: "string1"
+		 "string2"
+	     MSG msgname2: "string3"
+		 "string4"
+	 </pre>
+	 or
+	 <pre>
+	 M groupname:
+             M subgroupname1:
+	         MSG msgname1: "string1"
+		     "string2"
+	         MSG msgname2: "string3"
+		     "string4"
+             M subgroupname2:
+	         MSG msgname3: "string5"
+		     "string6"
+	 </pre>
+	 E.g.:
+         <pre>
+         # Define common messages.  These are used by the COMMONALERT notification object
+         M commonmsg:
+             # Define a subgroup of messages to be used by PROC directive actions
+             M proc:
+                 # Warning-level message for email
+                 MSG WARN: "Warning: %(name)s on %(h)s not running"
+                     "The %(name)s process on %(h)s is not running"
+
+                 # Warning-level message for paging or tickertape
+                 MSG WARN_P: "Warn: The %(name)s daemon on %(h)s is not running." ""
+
+	         # Alert-level message for email
+                 MSG ALERT: "Alert: %(name)s on %(h)s not running"
+                     """ALERT: The %(name)s daemon on %(h)s is not running.
+
+         %(problemage)s
+         %(problemfirstdetect)s
+         """
+
+                 # Alert-level message for paging or tickertape
+                 MSG ALERT_P: "ALERT: The %(name)s daemon on %(h)s is not running." ""
+        </pre>
+   </ul>
+  </p>
+
+
+  <hr>
+
+  <p>
+   <H3><a name="other_features">Other Features</a></H3>
+
+   <H4><a name="console">Console</a></H4>
+    EDDIE features a Console facility which provides live information about the
+    active directives via a TCP connection.  The TCP port used is set by
+    the CONSOLE_PORT setting in eddie.cf and defaults to port 33343.
+    Set this to 0 to disable this feature.
+
+    <p>
+    By default every directive is shown in the Console output in the format
+    "&lt;ID&gt; - &lt;state&gt;".  This can be modified with the
+    <a href="#console_arg"><b>console</b></a> directive argument, or the directive
+    not shown at all by setting this argument to None.
+
+    <p>
+    Substitution variables available to the console argument string are:
+    <ul>
+     <li> <b>state</b> - current state of directive (e.g., "ok", "fail")
+     <li> <b>lastchecktime</b> - date/time of last directive execution
+     <li> <b>problemfirstdetect</b> - date/time of current failure first detected (only if state is failed)
+     <li> <b>problemlastfail</b> - date/time of current failure last detected (only if state is failed)
+     <li> <b><i>others</i></b> - directive-specific variables normally available to actions
+    </ul>
+
+    <p>
+    Directive examples:
+    <pre>
+    # check root filesystem usage
+    FS rootfs:    fs='/'
+                  rule="pctused > 95"
+                  action=email("root", "%(mountpt)s at %(pctused)s%%")
+                  console='%(state)s %(pctused)s%%'
+
+    # email me load average every 5mins
+    SYS loadavg5: rule="1"
+                  action=email('chris', '%(h)s loadavg5: %(sysloadavg5).02f')
+                  scanperiod='5m'
+                  console="loadavg5=%(sysloadavg5).02f"
+
+    # store root filesystem data in RRD (don't show on Console)
+    FS root_rrd:  fs='/'
+                  rule="1"
+                  scanperiod='5m'
+                  action=elvinrrd("fs-%(h)s_root", "used=%(fsused)s", "size=%(fssize)s")
+                  console=None
+</pre>
+
+   <p>
+   Console example:
+   <pre>
+    $ telnet localhost 33343
+    Trying 127.0.0.1...
+    Connected to localhost.
+    Escape character is '^]'.
+    Eddie Console Gateway
+    FS.rootfs - ok 33%
+    SYS.loadavg5 - loadavg5=0.14
+    Connection closed by foreign host.
+</pre>
+  </p>
+
+  <hr>
+
+  <b>
+  TODO: System-specific information...... (NOT FINISHED)
+  </b>
+  <p>
+
+	  <i>Solaris</i>:
+          <pre>
+  System stats from '/usr/bin/uptime':
+      uptime          - time since last boot (string)
+      users           - number of logged on users (int)
+      loadavg1        - 1 minute load average (float)
+      loadavg5        - 5 minute load average (float)
+      loadavg15       - 15 minute load average (float)
+
+  System counters from '/usr/bin/vmstat -s' (see vmstat(1M)):
+      ctr_swap_ins                            - (long)
+      ctr_swap_outs                           - (long)
+      ctr_pages_swapped_in                    - (long)
+      ctr_pages_swapped_out                   - (long)
+      ctr_total_address_trans_faults_taken    - (long)
+      ctr_page_ins                            - (long)
+      ctr_page_outs                           - (long)
+      ctr_pages_paged_in                      - (long)
+      ctr_pages_paged_out                     - (long)
+      ctr_total_reclaims                      - (long)
+      ctr_reclaims_from_free_list             - (long)
+      ctr_micro_hat_faults                    - (long)
+      ctr_minor_as_faults                     - (long)
+      ctr_major_faults                        - (long)
+      ctr_copyonwrite_faults                  - (long)
+      ctr_zero_fill_page_faults               - (long)
+      ctr_pages_examined_by_the_clock_daemon  - (long)
+      ctr_revolutions_of_the_clock_hand       - (long)
+      ctr_pages_freed_by_the_clock_daemon     - (long)
+      ctr_forks                               - (long)
+      ctr_vforks                              - (long)
+      ctr_execs                               - (long)
+      ctr_cpu_context_switches                - (long)
+      ctr_device_interrupts                   - (long)
+      ctr_traps                               - (long)
+      ctr_system_calls                        - (long)
+      ctr_total_name_lookups                  - (long)
+      ctr_toolong                             - (long)
+      ctr_user_cpu                            - (long)
+      ctr_system_cpu                          - (long)
+      ctr_idle_cpu                            - (long)
+      ctr_wait_cpu                            - (long)
+
+  Process/memory stats from '/usr/bin/vmstat' (see vmstat(1M)):
+      procs_running   - number of processes running (int)
+      procs_blocked   - number of processes blocked (int)
+      procs_waiting   - number of processes waiting (int)
+      mem_swapfree    - amount of free swap (kB) (int)
+      mem_free        - amount of free RAM (kB) (int)
+          </pre>
+
+	  <i>Linux</i>:
+	  <pre>
+  loadavg1              - 1min load average (float)
+  loadavg5              - 5min load average (float)
+  loadavg15             - 15min load average (float)
+  ctr_uptime            - uptime in seconds (float)
+  ctr_uptimeidle        - idle uptime in seconds (float)
+  ctr_cpu_user          - total cpu in user space (int)
+  ctr_cpu_nice          - total cpu in user nice space (int)
+  ctr_cpu_system        - total cpu in system space (int)
+  ctr_cpu_idle          - total cpu in idle thread (int)
+  ctr_cpu%d_user        - per cpu in user space (e.g., cpu0, cpu1, etc) (int)
+  ctr_cpu%d_nice        - per cpu in user nice space (e.g., cpu0, cpu1, etc) (int)
+  ctr_cpu%d_system      - per cpu in system space (e.g., cpu0, cpu1, etc) (int)
+  ctr_cpu%d_idle        - per cpu in idle thread (e.g., cpu0, cpu1, etc) (int)
+  ctr_pages_in          - pages read in (int)
+  ctr_pages_out         - pages written out (int)
+  ctr_pages_swapin      - swap pages read in (int)
+  ctr_pages_swapout     - swap pages written out (int)
+  ctr_interrupts        - number of interrupts received (int)
+  ctr_contextswitches   - number of context switches (int)
+  ctr_processes         - number of processes started (I think?) (int)
+  boottime              - time of boot (epoch) (int)
+	  </pre>
+
+	  <i>HP-UX:</i>
+          <pre>
+  System stats from '/usr/bin/uptime':
+      uptime          - (string)
+      users           - (int)
+      loadavg1        - (float)
+      loadavg5        - (float)
+      loadavg15       - (float)
+
+  System counters from '/usr/bin/vmstat -s' (see vmstat(1)):
+      ctr_swap_ins                                    - (long)
+      ctr_swap_outs                                   - (long)
+      ctr_pages_swapped_in                            - (long)
+      ctr_pages_swapped_out                           - (long)
+      ctr_total_address_trans_faults_taken            - (long)
+      ctr_page_ins                                    - (long)
+      ctr_page_outs                                   - (long)
+      ctr_pages_paged_in                              - (long)
+      ctr_pages_paged_out                             - (long)
+      ctr_reclaims_from_free_list                     - (long)
+      ctr_total_page_reclaims                         - (long)
+      ctr_intransit_blocking_page_faults              - (long)
+      ctr_zero_fill_pages_created                     - (long)
+      ctr_zero_fill_page_faults                       - (long)
+      ctr_executable_fill_pages_created               - (long)
+      ctr_executable_fill_page_faults                 - (long)
+      ctr_swap_text_pages_found_in_free_list          - (long)
+      ctr_inode_text_pages_found_in_free_list         - (long)
+      ctr_revolutions_of_the_clock_hand               - (long)
+      ctr_pages_scanned_for_page_out                  - (long)
+      ctr_pages_freed_by_the_clock_daemon             - (long)
+      ctr_cpu_context_switches                        - (long)
+      ctr_device_interrupts                           - (long)
+      ctr_traps                                       - (long)
+      ctr_system_calls                                - (long)
+      ctr_Page_Select_Size_Successes_for_Page_size_4K - (long)
+      ctr_Page_Select_Size_Successes_for_Page_size_16K - (long)
+      ctr_Page_Select_Size_Successes_for_Page_size_64K - (long)
+      ctr_Page_Select_Size_Successes_for_Page_size_256K - (long)
+      ctr_Page_Select_Size_Failures_for_Page_size_16K - (long)
+      ctr_Page_Select_Size_Failures_for_Page_size_64K - (long)
+      ctr_Page_Select_Size_Failures_for_Page_size_256K - (long)
+      ctr_Page_Allocate_Successes_for_Page_size_4K    - (long)
+      ctr_Page_Allocate_Successes_for_Page_size_16K   - (long)
+      ctr_Page_Allocate_Successes_for_Page_size_64K   - (long)
+      ctr_Page_Allocate_Successes_for_Page_size_256K  - (long)
+      ctr_Page_Allocate_Successes_for_Page_size_64M   - (long)
+      ctr_Page_Demotions_for_Page_size_16K            - (long)
+          </pre>
+
+
+  <hr>
+
+  <H3>Appendix A</H3>
+
+  <b><a name="#timedef">Time Definition</a></b>
+  <p>
+   The format for specifying time is either:
+   <ul>
+    <li> Integer number = that number in seconds; or
+    <li> A string of the form "&lt;int&gt;[smhdwcy]" (an integer followed by one of the specified characters) where the characters define the time scale:
+     <ul>
+      <li> <b>s</b> = seconds
+      <li> <b>m</b> = minutes
+      <li> <b>h</b> = hours
+      <li> <b>d</b> = days
+      <li> <b>w</b> = weeks
+      <li> <b>c</b> = calendar months
+      <li> <b>y</b> = years
+     </ul>
+    </ul>
+  </p>
+
+  <p align=center>
+   [&nbsp;<a href="http://eddie-tool.net/">EDDIE-Tool&nbsp;Homepage</a>&nbsp;]
+  </p>
+
+  <hr>
+  <p align=right><font size=-2 color=blue>
+   &copy; <a href="mailto:chris@psychofx.com">Chris Miles</a> 2002
+  </font></p>
+
+  $Id$
+
+ </Body>
+
+</HTML>

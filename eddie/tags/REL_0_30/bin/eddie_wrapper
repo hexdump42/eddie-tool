@@ -1,0 +1,115 @@
+#!/bin/sh
+#
+## Eddie wrapper script to make sure it keeps running!
+## Pretty basic.  Use it or write your own!
+## 19990302 Chris Miles <chris@psychofx.com>
+##
+########################################################################
+## (C) Chris Miles 2001
+##
+## The author accepts no responsibility for the use of this software and
+## provides it on an ``as is'' basis without express or implied warranty.
+##
+## Redistribution and use in source and binary forms are permitted
+## provided that this notice is preserved and due credit is given
+## to the original author and the contributors.
+##
+## This program is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+########################################################################
+
+# Address to receive restart messages
+EDDIE_ADMIN=eddie-adm
+
+MAX_TRIES=10	# only restart MAX_TRIES time in a short period of time
+
+
+# Set path for mail/sleep/gtime/etc
+PATH=/bin:/usr/bin:/opt/local/bin
+export PATH
+
+
+# Exit if host is called 'testjump*'
+host=`uname -n`
+echo $host | grep testjump >/dev/null
+if [ $? = 0 ]; then
+	echo "eddie_wrapper: host is a testjump - quitting."
+	exit 0
+fi
+
+
+# stdout/err from Eddie stored in temp file
+RUNFILE=/var/run/eddie/tmp/eddie$$.out
+
+
+# Create (if necessary) /var/run/eddie/tmp
+if [ ! -d /var/run/eddie/tmp ]; then
+ 	mkdir -p /var/run/eddie/tmp >/dev/null 2>&1
+	if [ $? -gt 0 ]; then
+		echo '$0: "mkdir -p /var/run/eddie/tmp" failed.'
+		RUNFILE=/var/tmp/eddie$$.out
+        fi
+fi
+
+# Find mail program
+if [ -x /bin/mailx ]; then		# Solaris
+    MAIL=/bin/mailx
+elif [ -x /bin/mail ]; then		# Linux
+    MAIL=/bin/mail
+else
+    MAIL=mail				# dunno...
+fi
+
+# Find GNU date program - used for 'gdate "+%s"' below
+GDATE=`which gdate 2>/dev/null | grep -v "^no "`
+if [ "$GDATE" = "" ]; then
+    GDATE=`which date`		# hopefully standard 'date' is GNU date (ie, Linux)
+fi
+
+
+# clean up a bit
+rm -f /var/run/eddie/tmp/*.out
+
+tries=0
+
+while [ 1 ]; do
+	pid=`ps -ef | grep \.\*python\.\*eddie.py  | grep -v grep | awk '{ print $2 }'`
+        if [ "${pid}" != "" ]; then
+                echo "Error: Eddie is already running."
+                exit 2
+        fi
+
+	start_time=`$GDATE "+%s"`
+
+	cd /opt/eddie/bin
+	./eddie.py >>$RUNFILE
+
+	retcode=$?
+	echo "eddie_wrapper: eddie died at `date` return code: $retcode" >> $RUNFILE
+
+	curtime=`$GDATE "+%s"`
+	restart_time=`expr $curtime - $start_time`
+	if [ $restart_time -lt 120 ]; then
+		tries=`expr $tries + 1`
+	else
+		tries=0
+	fi
+
+	if [ $tries -gt $MAX_TRIES ]; then
+		echo "eddie_wrapper: Too many restarts ($tries) in a short time. eddie_wrapper quitting." >>$RUNFILE
+
+		$MAIL -s "Eddie output on `hostname` at `date`" $EDDIE_ADMIN < $RUNFILE
+		rm $RUNFILE
+		exit 3
+	fi
+
+	$MAIL -s "Eddie output on `hostname` at `date`" $EDDIE_ADMIN < $RUNFILE
+	rm -f $RUNFILE
+
+	sleep 30
+	echo "eddie_wrapper: restarting Eddie at `date` [tries=$tries]." >> $RUNFILE
+done
+
+# clean up some more
+rm -f $RUNFILE

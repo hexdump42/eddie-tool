@@ -1,0 +1,60 @@
+EDDIE TODO
+
+- create a generic data-collector class which provides thread-safe access to
+  cached data for the data-collector classes to inherit.
+
+- access to data-collectors should be through a dedicated class, which tracks
+  which data-collectors are available for the particular platform, rather
+  than the hard-coded method that exists now.
+
+- Elvin connection code needs to be re-written to run in its own thread to
+  prevent multiple threads creating Elvin connections, and to fix up Elvin
+  re-connection problems.
+
+- implement rule dependencies
+
+- make os-dependent data collectors thread-safe, as Linux/proc.py
+
+- Fix doArgs to use standard Python args.
+
+- Fix history object.
+
+- escalation
+
+- msg objects in action calls, eg:
+    PORT  'hostname': 50006   ""  "ALIVE" email('alert', commonmsg.port.WARN)
+
+- check inode usage
+
+- DIR checks, like "DIR /usr/bin" to notify of changes.
+
+- Can store state between sessions (for FILE checks, history, etc).
+  Store state to /var/run/eddie/.... which can be re-read if restarted.
+
+- "cron" mode for directives: always tries to run jobs starting from specific
+  intervals, rather than pausing for interval between runs.
+
+- group should handle multiple hostnames, eg: "group myeah,myponga:"
+
+- PROC rule NR/R, change to variable, ie: rule="!exists"
+
+- back off on warnings - something like 10m, 30m, 1hr, 2hr, 4hr, etc.
+
+- allow MSG strings to be included from separate files, so instead of a string
+  in the MSG def, it would have file:procwarn.
+
+- add excludehosts argument to directives, to provide a list of hostnames
+  to not execute this directive on.
+
+- extra args for PROC: matchre='.*': match on regular expression
+    user="username": match on user
+    notuser="username": match not owned by user, and allow multiple entries
+    allow userid matches in rule.
+
+BUGS:
+ - Unknown directives are not handled properly.
+
+ - cannot have a commented line in the middle of a directive definition...
+
+ - needs a catch in SIGHUP to catch the interupted system call - severity minor [RT]
+

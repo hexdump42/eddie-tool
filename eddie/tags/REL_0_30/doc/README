@@ -1,0 +1,20 @@
+This is the EDDIE Tool.  It is a monitoring, security and performance
+analysis tool for most common flavours of UNIX.
+
+It is still very much in development but is very stable in its current
+form and has been used in production for over 4 years (it is the primary
+monitoring tool at the author's places of employment).
+
+Documentation is online at http://eddie-tool.net/doc/
+
+You need to create a config directory where config.sample is located
+and create an eddie.cf config file and rules files.  See config.sample
+for examples.
+
+See QUICKSTART if you are impatient.
+
+See http://eddie-tool.net/ for more information.
+Email eddie@eddie-tool.net for information/help/tips/comments/etc.
+
+Chris & Rod.
+
