@@ -100,5 +100,15 @@ def quoteArgs( list ):
  
 
 ##
+## charpresent( s, chars ) - returns 1 if ANY of the characters present in the string
+##   chars is found in the string s.  If none are found, 0 is returned.
+##
+def charpresent( s, chars ):
+    for c in chars:
+	if string.find( s, c ) != -1:
+	    return 1
+    return 0
+
+##
 ## END - utils.py
 ##

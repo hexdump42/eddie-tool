@@ -19,6 +19,7 @@ import regex
 import sys
 import definition
 import log
+import utils
 
 #### CONSTANTS ####
 
@@ -182,12 +183,44 @@ def system(cmd):
     # Call system() to execute the command
     log.log( "<action>system(), calling os.system() with cmd '%s'" % (cmd), 8 )
     retval = os.system( cmd )
+
+    # Alert if return value != 0
+    if retval != 0:
+	log.log( "<action>system(), Alert, return value for cmd '%s' is %d" % (cmd,retval), 3 )
+
     log.log( "<action>system(), cmd '%s', return value %d" % (cmd,retval), 5 )
 
 # restart()
 def restart(cmd):
-    pass
-    log.log( "<action>restart(), cmd '%s'" % (cmd), 5 )
+    # cmd is cmd to be executed with: '/etc/init.d/cmd start'.
+    # cmd should not contain any path information, hence if '/'s are found it
+    # is not executed.
+
+    # Security: if cmd contains any illegal characters, "/#;!$%&*|~`", then we abort.
+    #if string.find( cmd, '/' ) != -1:
+    if utils.charpresent( cmd, '/#;!$%&*|~`' ) != 0:
+	log.log( "<action>restart(), Alert, restart() arg contains illegal character and is not being executed, cmd is '%s'" % (cmd), 3 )
+	return
+
+    # Substitute variables in string
+    cmd = parseVars( cmd, varDict )
+
+    if len(cmd) == 0:
+        log.log( "<action>restart(), Error, no command given", 2)
+    	return
+    
+    # Build command
+    cmd = '/etc/init.d/'+cmd+' start'
+
+    # Call system() to execute the command
+    log.log( "<action>restart(), calling os.system() with cmd '%s'" % (cmd), 8 )
+    retval = os.system( cmd )
+
+    # Alert if return value != 0
+    if retval != 0:
+	log.log( "<action>restart(), Alert, return value for cmd '%s' is %d" % (cmd,retval), 3 )
+
+    log.log( "<action>restart(), cmd '%s', return value %d" % (cmd,retval), 5 )
 
 
 ##
