@@ -83,8 +83,8 @@ class action:
 	#tmp.write( '.\n' )
 	tmp.close()
 
-	if not log.log( "<action>email(), email sent to '%s', subject '%s', body '%s'" % (u,subj,body), 9 ):
-	    log.log( "<action>email('%s', '%s', '%s')" % (u,subj,body[:20]) ,5 )
+	if not log.log( "<action.py>action.email(), email sent to '%s', subject '%s', body '%s'" % (u,subj,body), 9 ):
+	    log.log( "<action.py>action.email('%s', '%s', '%s')" % (u,subj,body[:20]) ,5 )
 	
 	#e = eddieElvin.eddieElvin()
 	#e.sendmsg( subj )
@@ -100,18 +100,18 @@ class action:
 	cmd = parseVars( cmd, self.varDict )
 
 	if len(cmd) == 0:
-	    log.log( "<action>system(), Error, no command given", 2)
+	    log.log( "<action.py>action.system(), Error, no command given", 2)
 	    return
 
 	# Call system() to execute the command
-	log.log( "<action>system(), calling os.system() with cmd '%s'" % (cmd), 8 )
+	log.log( "<action.py>action.system(), calling os.system() with cmd '%s'" % (cmd), 8 )
 	retval = os.system( cmd )
 
 	# Alert if return value != 0
 	if retval != 0:
-	    log.log( "<action>system(), Alert, return value for cmd '%s' is %d" % (cmd,retval), 3 )
+	    log.log( "<action.py>action.system(), Alert, return value for cmd '%s' is %d" % (cmd,retval), 3 )
 
-	log.log( "<action>system(), cmd '%s', return value %d" % (cmd,retval), 5 )
+	log.log( "<action.py>action.system(), cmd '%s', return value %d" % (cmd,retval), 5 )
 
 
     # restart()
@@ -130,25 +130,25 @@ class action:
 	# Security: if cmd contains any illegal characters, "/#;!$%&*|~`", then we abort.
 	#if string.find( cmd, '/' ) != -1:
 	if utils.charpresent( cmd, '/#;!$%&*|~`' ) != 0:
-	    log.log( "<action>restart(), Alert, restart() arg contains illegal character and is not being executed, cmd is '%s'" % (cmd), 3 )
+	    log.log( "<action.py>action.restart(), Alert, restart() arg contains illegal character and is not being executed, cmd is '%s'" % (cmd), 3 )
 	    return 1001
 
 	if len(cmd) == 0:
-	    log.log( "<action>restart(), Error, no command given", 2)
+	    log.log( "<action.py>action.restart(), Error, no command given", 2)
 	    return 1002
 	
 	# Build command
 	cmd = '/etc/init.d/'+cmd+' start'
 
 	# Call system() to execute the command
-	log.log( "<action>restart(), calling os.system() with cmd '%s'" % (cmd), 8 )
+	log.log( "<action.py>action.restart(), calling os.system() with cmd '%s'" % (cmd), 8 )
 	retval = os.system( cmd )
 
 	# Alert if return value != 0
 	if retval != 0:
-	    log.log( "<action>restart(), Alert, return value for cmd '%s' is %d" % (cmd,retval), 3 )
+	    log.log( "<action.py>action.restart(), Alert, return value for cmd '%s' is %d" % (cmd,retval), 3 )
 
-	log.log( "<action>restart(), cmd '%s', return value %d" % (cmd,retval), 5 )
+	log.log( "<action.py>action.restart(), cmd '%s', return value %d" % (cmd,retval), 5 )
 
 	return retval
 
@@ -171,7 +171,7 @@ class action:
 	nice_max = 19
 
 	if len(arg) < 0 or len(arg) > 2:
-	    log.log( "<action>nice(), Error, %d arguments found, expecting 1 or 2" % (len(arg)), 2 )
+	    log.log( "<action.py>action.nice(), Error, %d arguments found, expecting 1 or 2" % (len(arg)), 2 )
 	    return
 
 	# if one argument given, it is absolute priority level.
@@ -184,14 +184,14 @@ class action:
 
 	    # If val out of range, error.
 	    if val < nice_min or val > nice_max:
-		log.log( "<action>nice(), Error, val out of range, val is %d, range is %d-%d" % (val,nice_min,nice_max), 2 )
+		log.log( "<action.py>action.nice(), Error, val out of range, val is %d, range is %d-%d" % (val,nice_min,nice_max), 2 )
 		return
 	elif len(arg) == 2:
 	    # Relative priority given, incr must be '-' or '+'
 	    incr = arg[0]
 	    val = string.atoi(arg[1])
 	    if incr != '-' and incr != '+':
-		log.log( "<action>nice(), Error, incremental is '%s', expecting '-' or '+'" % (incr), 2 )
+		log.log( "<action.py>action.nice(), Error, incremental is '%s', expecting '-' or '+'" % (incr), 2 )
 		return
 
 
@@ -199,7 +199,7 @@ class action:
 	try:
 	    pid = varDict['pid']
 	except KeyError:
-	    log.log( "<action>nice(), Error, %pid is not defined", 2 )
+	    log.log( "<action.py>action.nice(), Error, %pid is not defined", 2 )
 
 	# Build command
 	if incr == '':
@@ -208,14 +208,14 @@ class action:
 	    cmd = '/usr/bin/renice -n %s%d %s' % (incr,val,pid)
 
 	# Call renice()
-	log.log( "<action>nice(), calling os.system() with cmd '%s'" % (cmd), 8 )
+	log.log( "<action.py>action.nice(), calling os.system() with cmd '%s'" % (cmd), 8 )
 	retval = os.system( cmd )
 
 	# Alert if return value != 0
 	if retval != 0:
-	    log.log( "<action>nice(), Alert, return value for cmd '%s' is %d" % (cmd,retval), 3 )
+	    log.log( "<action.py>action.nice(), Alert, return value for cmd '%s' is %d" % (cmd,retval), 3 )
 
-	log.log( "<action>nice(), cmd '%s', return value %d" % (cmd,retval), 5 )
+	log.log( "<action.py>action.nice(), cmd '%s', return value %d" % (cmd,retval), 5 )
 
 
     # eddielog()
@@ -224,7 +224,7 @@ class action:
 	# if two arguments, first is text to log, second is log level.
 
 	if len(arg) < 0 or len(arg) > 2:
-	    log.log( "<action>log(), Error, %d arguments found, expecting 1 or 2" % (len(arg)), 2 )
+	    log.log( "<action.py>action.eddielog(), Error, %d arguments found, expecting 1 or 2" % (len(arg)), 2 )
 	    return
 
 	logstr = arg[0]
@@ -235,7 +235,7 @@ class action:
 
 	    # If loglevel out of range, error.
 	    if loglevel < log.loglevel_min or loglevel > log.loglevel_max:
-		log.log( "<action>log(), Error, loglevel out of range, loglevel is %d, range is %d-%d" % (loglevel,log.loglevel_min,log.loglevel_max), 2 )
+		log.log( "<action.py>action.eddielog(), Error, loglevel out of range, loglevel is %d, range is %d-%d" % (loglevel,log.loglevel_min,log.loglevel_max), 2 )
 		return
 	else:
 	    loglevel = log.loglevel_min
@@ -248,15 +248,15 @@ class action:
 
 	# Alert if return value == 0
 	if retval == 0:
-	    log.log( "<action>log(), Alert, return value for log.log( '%s', %d ) is %d" % (logstr,loglevel,retval), 3 )
+	    log.log( "<action.py>action.eddielog(), Alert, return value for log.log( '%s', %d ) is %d" % (logstr,loglevel,retval), 3 )
 	else:
-	    log.log( "<action>eddielog(), text '%s', loglevel %d" % (logstr,loglevel), 5 )
+	    log.log( "<action.py>action.eddielog(), text '%s', loglevel %d" % (logstr,loglevel), 5 )
 
 
     # elvin()
     def elvin(self, msg):
 	if eddieElvin.UseElvin == 0:
-	    #log.log( "<action>elvin(), Elvin is not available - skipping.", 8 )
+	    #log.log( "<action.py>action.elvin(), Elvin is not available - skipping.", 8 )
 	    return 0
 
 	# send a message via Elvin message system
@@ -268,7 +268,7 @@ class action:
 
 	if len(msg) == 0:
 	    # msg must contain something
-	    log.log( "<action>elvin(), Error, msg is empty", 2 )
+	    log.log( "<action.py>action.elvin(), Error, msg is empty", 2 )
 	    return
 
 	try:
@@ -288,7 +288,7 @@ class action:
 	    #e = eddieElvin.eddieElvin( elvinServer, elvinPort )
 	    e = eddieElvin.eddieElvin()
 	except eddieElvin.ElvinError:
-	    log.log( "<action>elvin(), Error, eddieElvin(%s, %d) could not connect" % (elvinServer,elvinPort), 2 )
+	    log.log( "<action.py>action.elvin(), Error, eddieElvin(%s, %d) could not connect" % (elvinServer,elvinPort), 2 )
 	    return
 
 	retval = e.sendmsg( msg )
@@ -296,15 +296,15 @@ class action:
 
 	# Alert if return value != 0
 	if retval != 0:
-	    log.log( "<action>elvin(), Alert, return value for e.sendmsg('%s') is %d" % (msg,retval), 3 )
+	    log.log( "<action.py>action.elvin(), Alert, return value for e.sendmsg('%s') is %d" % (msg,retval), 3 )
 	else:
-	    log.log( "<action>elvin('%s')" % (msg), 5 )
+	    log.log( "<action.py>action.elvin('%s')" % (msg), 5 )
 
 
     # elvinPage()
     def elvinPage(self, pager, msg):
 	if eddieElvin.UseElvin == 0:
-	    #log.log( "<action>elvin(), Elvin is not available - skipping.", 8 )
+	    #log.log( "<action.py>action.elvin(), Elvin is not available - skipping.", 8 )
 	    return 0
 
 	# send a message via Elvin message system to Pager
@@ -313,7 +313,7 @@ class action:
 
 	if len(msg) == 0:
 	    # msg must contain something
-	    log.log( "<action>elvinPage(), Error, msg is empty", 2 )
+	    log.log( "<action.py>action.elvinPage(), Error, msg is empty", 2 )
 	    return
 
 	try:
@@ -329,16 +329,16 @@ class action:
 	try:
 	    e = eddieElvin.elvinPage( elvinServer, elvinPort )
 	except eddieElvin.ElvinError:
-	    log.log( "<action>elvinPage(), Error, eddieElvin(%s, %d) could not connect" % (elvinServer,elvinPort), 2 )
+	    log.log( "<action.py>action.elvinPage(), Error, eddieElvin(%s, %d) could not connect" % (elvinServer,elvinPort), 2 )
 	    return
 
 	retval = e.sendmsg(pager, msg)
 
 	# Alert if return value != 0
 	if retval != 0:
-	    log.log( "<action>elvinPage(), Alert, return value for e.sendmsg('%s') is %d" % (msg,retval), 3 )
+	    log.log( "<action.py>action.elvinPage(), Alert, return value for e.sendmsg('%s') is %d" % (msg,retval), 3 )
 	else:
-	    log.log( "<action>elvinPage('%s')" % (msg), 5 )
+	    log.log( "<action.py>action.elvinPage('%s')" % (msg), 5 )
 
 
     # Temporary: page via email for now...
@@ -355,7 +355,7 @@ class action:
 
 	if len(msg) == 0:
 	    # msg must contain something
-	    log.log( "<action>page(), Error, msg is empty", 2 )
+	    log.log( "<action.py>action.page(), Error, msg is empty", 2 )
 	    return
 
 	try:
@@ -376,27 +376,59 @@ class action:
 	try:
 	    p.send()
 	except snpp.SNPPpageFail:
-	    log.log( "<action>page(), Error, %s, returned %s" % (pageServer,snpp.SNPPpageFail), 2 )
+	    log.log( "<action.py>action.snpp_page(), Error, %s, returned %s" % (pageServer,snpp.SNPPpageFail), 2 )
 	    return
 
-	log.log( "<action>page('%s')" % (msg), 5 )
+	log.log( "<action.py>action.snpp_page('%s')" % (msg), 5 )
 
 
-    def elvindb(self, table):
-	"""Send information to remote database listener via Elvin."""
+    def elvindb(self, table, data=None):
+	"""Send information to remote database listener via Elvin.
+	Data to insert in db can be specified in the data argument as
+	'col1=data1, col2=data2, col3=data3' or if data is None it will
+	use self.storedict
+	"""
+
+	log.log( "<action.py>action.elvindb( table='%s' data='%s' )"%(table,data), 8 )
 
 	if eddieElvin.UseElvin == 0:
-	    #log.log( "<action>elvin(), Elvin is not available - skipping.", 8 )
+	    log.log( "<action.py>action.elvindb(), Elvin is not available - skipping.", 8 )
 	    return 0
 
 	try:
 	    e = eddieElvin.elvindb()
 	except eddieElvin.ElvinError:
-	    log.log( "<action>elvindb(), Error, eddieElvin.elvindb() could not connect", 2 )
+	    log.log( "<action.py>action.elvindb(), Error, eddieElvin.elvindb() could not connect", 2 )
 	    return
 
 	#print "created elvindb() connection to elvin"
-	retval = e.send(table, self.storedict)
+
+	if data == None:
+	    # if nothing passed in data storedict will be used
+	    retval = e.send(table, self.storedict)
+	else:
+	    data = parseVars( data, self.varDict )	# substitute variables
+	    datas = string.split(data, ',')		# separate key/val pairs
+	    storedict = {}
+	    for d in datas:
+		(key,val) = string.split(d, '=')	# separate key & value
+		key = string.strip(key)			# strip spaces
+
+		val = utils.stripquote(val)		# strip spaces then quotes
+		# try to convert val to float or int if possible
+		try:
+		    val = float(val)
+		except ValueError:
+		    try:
+			val = int(val)
+		    except ValueError:
+			pass
+
+		storedict[key] = val
+
+	    #print "storedict:",storedict
+
+	    retval = e.send(table, storedict)
 
 	# kill elvin connection (I hope?!)
 	#e._destroy()			# close connection
@@ -404,9 +436,9 @@ class action:
 
 	# Alert if return value != 0
 	if retval != 0:
-	    log.log( "<action>elvindb('%s', dict), Alert, return value for e.send() is %d" % (table,retval), 3 )
+	    log.log( "<action.py>action.elvindb('%s', dict), Alert, return value for e.send() is %d" % (table,retval), 3 )
 	else:
-	    log.log( "<action>elvindb('%s', dict): store ok" % (table), 6 )
+	    log.log( "<action.py>action.elvindb('%s', dict): store ok" % (table), 7 )
 
 
     #
