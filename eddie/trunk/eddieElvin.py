@@ -17,7 +17,11 @@
 import time, types, os, sys, thread, signal, getopt
 import log
 sys.path = ['/import/src/bin/elvin/dstc/lib/python', '/import/src/bin/elvin/dstc/sparc-sun-solaris2.5/lib'] + sys.path
-import Elvin, ElvinMisc
+try:
+    import Elvin, ElvinMisc
+except ImportError:
+    print "Elvin not available..."
+    log.log( "<eddieElvin>ImportError: Elvin, ElvinMisc - Elvin not available", 2 );
 
 ################################################################
 ElvinError = 'ElvinError'
@@ -37,7 +41,7 @@ class eddieElvin:
 	except:
 	    #sys.stderr.write("Connection to elvin failed\nIs there an elvin server running at %s:%d\n" %(self.host, self.port))
 	    #self._exit()
-	    raise elvinError, "Connection failed to %s:%d" % (self.host,self.port)
+	    raise ElvinError, "Connection failed to %s:%d" % (self.host,self.port)
 	else:
 	    self.connected = 1
 

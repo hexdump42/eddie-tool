@@ -347,7 +347,7 @@ def elvin(msg):
     try:
 	e = eddieElvin.eddieElvin( elvinServer, elvinPort )
     except eddieElvin.ElvinError:
-	log.log( "<action>elvin(), Error, eddieElvin(%d, %d) could not connect" % (elvinServer,elvinPort), 2 )
+	log.log( "<action>elvin(), Error, eddieElvin(%s, %d) could not connect" % (elvinServer,elvinPort), 2 )
 	return
 
     retval = e.sendmsg( msg )
