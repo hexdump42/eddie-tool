@@ -1,0 +1,13 @@
+# Elvin RRD Name to match	RRD filename				What Elvin variable to store
+#########################	#######################			############################
+elvinrrd=warrane-rad1.hay	rrdfile=/export/rrd/radiustiming/warrane-rad1.hay.rrd	store=timing
+elvinrrd=yarrina-rad1.hay	rrdfile=/export/rrd/radiustiming/yarrina-rad1.hay.rrd	store=timing
+elvinrrd=rexx-rad1.hay		rrdfile=/export/rrd/radiustiming/rexx-rad1.hay.rrd	store=timing
+elvinrrd=hakisak-rad1.hay	rrdfile=/export/rrd/radiustiming/hakisak-rad1.hay.rrd	store=timing
+
+elvinrrd=warrane-rad1.mel	rrdfile=/export/rrd/radiustiming/warrane-rad1.mel.rrd	store=timing
+elvinrrd=yarrina-rad1.mel	rrdfile=/export/rrd/radiustiming/yarrina-rad1.mel.rrd	store=timing
+elvinrrd=rexx-rad1.mel		rrdfile=/export/rrd/radiustiming/rexx-rad1.mel.rrd	store=timing
+elvinrrd=hakisak-rad1.mel	rrdfile=/export/rrd/radiustiming/hakisak-rad1.mel.rrd	store=timing
+
+elvinrrd=hakisak-radentoo	rrdfile=/export/rrd/radiustiming/hakisak-radentoo.rrd	store=timing
