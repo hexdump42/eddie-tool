@@ -245,7 +245,6 @@ def main():
 
 	    # Count fds in use - for debugging
 	    numfds = countFDs()
-	    print "%d FDs in use." % (numfds)
 	    log.log( "main(): FDs in use = %d." % (numfds), 7 )
 
 	    # check if any config/rules files have been modified
