@@ -7,7 +7,7 @@
 ## 
 ## Start Date   : 19971204 
 ## 
-## Description  : Eddie main program
+## Description  : EDDIE main program
 ##
 ## $Id$
 ##
@@ -27,16 +27,16 @@
 ########################################################################
 
 #global __version__
-__version__='0.30'
+__version__='0.30.1'
 
 
 # Python modules
 import sys, os, time, signal, re, threading
 
 
-print "Eddie v%s" % (__version__)
+print "EDDIE v%s" % (__version__)
 
-# Work out the base Eddie directory which should contain bin/, lib/, etc...
+# Work out the base EDDIE directory which should contain bin/, lib/, etc...
 cwd = os.getcwd()
 ewd = os.path.split(sys.argv[0])[0]
 fullp = os.path.join(cwd, ewd)
@@ -60,7 +60,7 @@ oslibdirs = [ os.path.join(basedir,'lib',osname,osver,osarch),
 commonlibdir = os.path.join(basedir, 'lib/common')
 sys.path = oslibdirs + [commonlibdir,] + sys.path
 
-# Eddie common modules
+# EDDIE common modules
 import parseConfig, directive, config, log, timeQueue, sockets, eddieElvin4, datacollect
 
 # Main config file - this file INCLUDEs all other config files
@@ -92,7 +92,7 @@ def start_threads(sargs, cargs):
     global cthread		# the Console Server thread
     if config.consport > 0:	# don't start if CONSPORT=0
 	cthread = threading.Thread(group=None, target=sockets.console_server_thread, name='Console', args=cargs, kwargs={})
-	cthread.setDaemon(1)	# mark thread as Daemon-thread so Eddie will not block when trying to terminate
+	cthread.setDaemon(1)	# mark thread as Daemon-thread so EDDIE will not block when trying to terminate
 	cthread.start()
 
     return()
@@ -115,10 +115,10 @@ def stop_threads():
  
 def eddieexit():
     """
-    Exit Eddie cleanly.
+    Exit EDDIE cleanly.
     """
 
-    log.log( '<eddie>eddieexit(): Eddie exiting cleanly.', 5 )
+    log.log( '<eddie>eddieexit(): EDDIE exiting cleanly.', 5 )
     # email admin any remaining messages
     log.sendadminlog(1)
     sys.exit()
@@ -160,7 +160,7 @@ def SigHandler( sig, frame ):
         stop_threads()
 
 	try:
-	    print "\nEddie quitting ... bye bye"
+	    print "\nEDDIE quitting ... bye bye"
 	except IOError:
 	    pass	# if tty has gone it will cause this exception
 	eddieexit()
@@ -173,7 +173,7 @@ def SigHandler( sig, frame ):
         stop_threads()
 
 	try:
-	    print "\nEddie quitting ... bye bye"
+	    print "\nEDDIE quitting ... bye bye"
 	except IOError:
 	    pass	# if tty has gone it will cause this exception
 	eddieexit()
@@ -207,7 +207,7 @@ def countFDs():
 
 def scheduler(q, Config, die_event):
     """
-    The Eddie scheduler thread.  This thread tracks the queue of waiting
+    The EDDIE scheduler thread.  This thread tracks the queue of waiting
     checks and executes them in their own thread as required.  It attempts
     to limit the number of actual checking threads running to keep things
     sane.
@@ -261,7 +261,7 @@ def scheduler(q, Config, die_event):
 	    # start check in a new thread
 	    thr = threading.Thread(group=None, target=c.safeCheck, name="%s"%(c), args=(Config,), kwargs={})
 	    log.log( "<eddie>scheduler(): Starting new thread for %s, %s" % (c,thr), 8 )
-	    thr.setDaemon(1)	# mark thread as Daemon-thread so Eddie will not block when trying to terminate
+	    thr.setDaemon(1)	# mark thread as Daemon-thread so EDDIE will not block when trying to terminate
 	    			# with still-running threads.
 	    thr.start()		# new thread starts running
 	else:
@@ -302,17 +302,17 @@ def doArgs(args, argflags):
 
     for a in args:
 	if a == '-v' or a == '--version':
-	    print "Eddie (c) Chris Miles and Rod Telford 1998-2001"
+	    print "EDDIE (c) Chris Miles and Rod Telford 1998-2002"
 	    print "  chris@psychofx.com / rtelford@psychofx.com"
 	    print "  Version: %s" % __version__
 	    eddieexit()
 	elif a == '-h' or a == '--help' or a == '-?':
-	    print "Eddie: help not yet available..."
+	    print "EDDIE: help not yet available..."
 	    eddieexit()
 	elif a == '-sc' or a == '--showconfig':
 	    argflags['showconfig'] = 1
 	else:
-	    print "Eddie: bad argument '%s'" % a
+	    print "EDDIE: bad argument '%s'" % a
 	    eddieexit()
 
 
@@ -350,12 +350,12 @@ def main():
 
     # don't log till now because log file location is defined in configuration
     log.log( "<eddie>main(): Configuration complete from '%s'" % (config_file), 6 )
-    log.log( "<eddie>main(): Eddie %s, systype: %s" % (__version__, systype), 5 )
+    log.log( "<eddie>main(): EDDIE %s, systype: %s" % (__version__, systype), 5 )
     log.log( "<eddie>main(): oslibdirs: %s" % (oslibdirs), 8 )
 
     if 'showconfig' in argflags.keys() and argflags['showconfig'] == 1:
 	# Just display the configuration and exit
-	print "---Displaying Eddie Configuration---"
+	print "---Displaying EDDIE Configuration---"
 	print Config
 	eddieexit()
 
@@ -428,7 +428,7 @@ def main():
 	    # CTRL-c hit - quit now
 	    log.log( '<eddie>main(): KeyboardInterrupt encountered - quitting', 1 )
 	    try:
-		print "\nEddie quitting ... bye bye"
+		print "\nEDDIE quitting ... bye bye"
 	    except IOError:
 		pass	# if tty has gone it will cause this exception
 	    eddieexit()
@@ -452,7 +452,7 @@ if __name__ == "__main__":
 	    tb = traceback.format_list( traceback.extract_tb( e[2] ) )
 	    import string
 	    tbstr = string.join(tb, '')
-	    log.log( "<eddie.py>: Eddie died with exception: %s, %s\n%s" % (e[0], e[1], tbstr), 1 )
+	    log.log( "<eddie.py>: EDDIE died with exception: %s, %s\n%s" % (e[0], e[1], tbstr), 1 )
 	    log.sendadminlog()
 	    print tbstr
 	    print e[0], e[1]
