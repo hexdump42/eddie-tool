@@ -41,22 +41,22 @@ class IPF(directive.Directive):
 
 	# test required arguments
 	try:
-	    self.rule
+	    self.args.rule
 	except AttributeError:
 	    raise ParseFailure, "Rule not specified"
 
 	# Set any FS-specific variables
 	#  rule = rule
-	self.Action.varDict['rule'] = self.rule
+	self.Action.varDict['rule'] = self.args.rule
 
 	# define the unique ID
-	self.ID = '%s.IPF.%s' % (log.hostname,self.rule)
+	self.ID = '%s.IPF.%s' % (log.hostname,self.args.rule)
 
-	log.log( "<ipf>IPF.tokenparser(): ID '%s' rule '%s' action '%s'" % (self.ID, self.rule, self.actionList), 8 )
+	log.log( "<ipf>IPF.tokenparser(): ID '%s' rule '%s' action '%s'" % (self.ID, self.args.rule, self.args.actionList), 8 )
 
 
     def docheck(self, Config):
-	log.log( "<ipf>IPF.docheck(): rule '%s'" % (self.rule), 7 )
+	log.log( "<ipf>IPF.docheck(): rule '%s'" % (self.args.rule), 7 )
 
 	# locations to find ipfstat command
 	ipfstatcmds = [ "/sbin/ipfstat", "/opt/local/sbin/ipfstat" ]
@@ -96,9 +96,7 @@ class IPF(directive.Directive):
 	rulesenv['ipfstatin'] = str(ipfstatin)
 	rulesenv['ipfstatout'] = str(ipfstatout)
 
-	###self.parseRule()
-
-	result = eval( self.rule, rulesenv )
+	result = eval( self.args.rule, rulesenv )
 
 	if result == 0:
 	    self.state.stateok()	# update state info for check passed
@@ -111,49 +109,10 @@ class IPF(directive.Directive):
 	    self.Action.varDict['ipfstatin'] = str(ipfstatin)
 	    self.Action.varDict['ipfstatout'] = str(ipfstatout)
 
-    	    log.log( "<ipf>IPF.docheck(): rule '%s' was false, calling doAction()" % (self.rule), 6 )
+    	    log.log( "<ipf>IPF.docheck(): rule '%s' was false, calling doAction()" % (self.args.rule), 6 )
     	    self.doAction(Config)
 
         self.putInQueue( Config.q )     # put self back in the Queue
-
-
-    # Parse the rule line and replace/remove certain characters
-    def parseRule(self):
-	parsed = ""
-
-	skipnext = 0			# flag to skip next character/s
-
-	for i in range(len(self.rule)):
-	    if skipnext > 0:
-		skipnext = skipnext - 1
-		continue
-
-	    c = self.rule[i]
-
-	    if c == '%':	# throw away '%'s - don't need em
-		continue
-	    elif c == '|':	# replace '|'s with 'or'
-		parsed = parsed + ' or '
-		continue
-	    elif c == '&':	# replace '&'s with 'and'
-		parsed = parsed + ' and '
-		continue
-	    elif i == len(self.rule)-1:	# break out of 'switch' if c is last character
-		pass
-	    elif ( string.lower(c) + string.lower(self.rule[i+1]) ) == 'mb':
-		parsed = parsed + '000'
-		skipnext = 1
-		continue
-	    elif ( string.lower(c) + string.lower(self.rule[i+1]) ) == 'gb':
-		parsed = parsed + '000000'
-		skipnext = 1
-		continue
-	    
-	    parsed = parsed + c
-
-	self.rule = parsed
-
-
 
 
 

@@ -136,7 +136,7 @@ class action:
 	tmp = utils.safe_popen('/usr/lib/sendmail -t', 'w')
 	tmp.write( 'To: '+users+'\n' )
 	tmp.write( 'From: "Eddie" <eddie@connect.com.au>\n' )
-	tmp.write( 'Reply-To: systems@connect.com.au\n' )
+	tmp.write( 'Reply-To: systems\n' )
 	tmp.write( 'Subject: ['+log.hostname+'] '+subj+'\n' )
 	tmp.write( 'X-Generated-By: %s:%s\n' % (os.uname()[1], sys.argv[0]) )
 	tmp.write( '\n' )

@@ -188,24 +188,24 @@ class POP3TIMING(directive.Directive):
 
 	# test required arguments
 	try:
-	    self.server		# hostname:port
+	    self.args.server		# hostname:port
         except AttributeError:
             raise ParseFailure, "POP3 Server not specified"
 	try:
-	    self.user		# username
+	    self.args.user		# username
         except AttributeError:
             raise ParseFailure, "Username not specified"
 
 	try:
-	    self.password	# password
+	    self.args.password	# password
         except AttributeError:
             raise ParseFailure, "Password not specified"
 
-	if ':' in self.server:
+	if ':' in self.args.server:
 	    (self.host, self.port) = string.split( self.server, ':' )
 	    self.port = int(self.port)
 	else:
-	    self.host = self.server
+	    self.host = self.args.server
 	    self.port = 110
 
 
@@ -213,13 +213,13 @@ class POP3TIMING(directive.Directive):
 	#  rule = rule
 	self.Action.varDict['pop3timinghost'] = self.host
 	self.Action.varDict['pop3timingport'] = self.port
-	self.Action.varDict['pop3timingusername'] = self.user
-	self.Action.varDict['pop3timingpassword'] = self.password
+	self.Action.varDict['pop3timingusername'] = self.args.user
+	self.Action.varDict['pop3timingpassword'] = self.args.password
 
 	# define the unique ID
-	self.ID = '%s.POP3TIMING.%s.%d.%s' % (log.hostname,self.host,self.port,self.user)
+	self.ID = '%s.POP3TIMING.%s.%d.%s' % (log.hostname,self.host,self.port,self.args.user)
 
-	log.log( "<pop3>POP3TIMING.tokenparser(): ID '%s' host '%s' port %d user '%s'" % (self.ID, self.host, self.port, self.user), 8 )
+	log.log( "<pop3>POP3TIMING.tokenparser(): ID '%s' host '%s' port %d user '%s'" % (self.ID, self.host, self.port, self.args.user), 8 )
 
 
     def docheck(self, Config):
@@ -228,7 +228,7 @@ class POP3TIMING(directive.Directive):
 	The directive actions are always called.  Usually these will
 	record the timing details in some way."""
 
-	log.log( "<pop3>POP3TIMING.docheck(): host '%s' port %d user '%s'" % (self.host, self.port, self.user), 7 )
+	log.log( "<pop3>POP3TIMING.docheck(): host '%s' port %d user '%s'" % (self.host, self.port, self.args.user), 7 )
 
 	connecttime = None
 	authtime = None
@@ -240,7 +240,7 @@ class POP3TIMING(directive.Directive):
 	if p.connect():			# login to pop3 server
 	    connecttime = p.timing	# get timing for connection to return banner
 
-	    if p.auth( self.user, self.password ):	# authenticate user
+	    if p.auth( self.args.user, self.args.password ):	# authenticate user
 		authtime = p.timing	# get timing for authentication
 
 		l = p.list()		# list email headers

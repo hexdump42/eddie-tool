@@ -199,13 +199,13 @@ def scheduler(q, Config, die_event):
 
 	(c,t) = q.get(block=1)	# retrieve next object from queue
 
-	if c.numchecks > 0:
+	if c.args.numchecks > 0:
 	    # start check in a new thread
 	    log.log( "<eddie>scheduler(), Starting new thread for %s, %s" % (c,t), 8 )
 	    threading.Thread(group=None, target=c.docheck, name=None, args=(Config,), kwargs={}).start()
 	else:
 	    # when numchecks == 0 we don't do any checks at all...
-	    log.log( "<eddie>scheduler(), Not scheduling checks for %s when numchecks=%d" % (c,c.numchecks), 7 )
+	    log.log( "<eddie>scheduler(), Not scheduling checks for %s when numchecks=%d" % (c,c.args.numchecks), 7 )
 
     log.log( "<eddie>scheduler(), die_event received, scheduler exiting", 5 )
 
@@ -219,7 +219,9 @@ def buildCheckQueue(q, Config):
 	if list != None:
 	    for i in list:
 		log.log( "<eddie>buildCheckQueue(), adding to Queue: %s" % (i), 8 )
-		q.put( (i,0) )
+		# if directive template is 'self', do not schedule it
+		if i.args.template != 'self':
+		    q.put( (i,0) )
 	else:
 	    log.log( "<eddie>buildCheckQueue(), Config.ruleList['%s'] is empty" % (d), 4 )
 

@@ -98,7 +98,7 @@ def sendadminlog( override=0 ):
     tmp = utils.safe_popen('/usr/lib/sendmail -t', 'w')
     tmp.write( 'To:'+adminemail+'\n' )
     tmp.write( 'From:eddie@connect.com.au\n' )
-    tmp.write( 'Reply-To:systems@connect.com.au\n' )
+    tmp.write( 'Reply-To:systems\n' )
     tmp.write( 'Subject: [%s] Eddie Admin Messages\n' % hostname )
     tmp.write( '\n' )
     tmp.write( "Greetings Eddie Admin '%s', the following log messages are\n" % adminemail )

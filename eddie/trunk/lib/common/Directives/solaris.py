@@ -40,30 +40,30 @@ class CRON(directive.Directive):
 
 	# test required arguments
 	try:
-	    self.file		# test file touched by cronjob
+	    self.args.file		# test file touched by cronjob
 	except AttributeError:
 	    raise ParseFailure, "Test File not specified"
 	try:
-	    self.rule		# the rule
+	    self.args.rule		# the rule
 	except AttributeError:
 	    raise ParseFailure, "Rule not specified"
 
 	# Set any FS-specific variables
 	#  rule = rule
-	self.Action.varDict['rule'] = self.rule
+	self.Action.varDict['rule'] = self.args.rule
 
 	# define the unique ID
-	self.ID = '%s.CRON.%s' % (log.hostname,self.rule)
+	self.ID = '%s.CRON.%s' % (log.hostname,self.args.rule)
 
-	log.log( "<solaris>CRON.tokenparser(): ID '%s' rule '%s' action '%s'" % (self.ID, self.rule, self.actionList), 8 )
+	log.log( "<solaris>CRON.tokenparser(): ID '%s' rule '%s' action '%s'" % (self.ID, self.args.rule, self.args.actionList), 8 )
 
 
     def docheck(self, Config):
-	log.log( "<solaris>CRON.docheck(): rule '%s'" % (self.rule), 7 )
+	log.log( "<solaris>CRON.docheck(): rule '%s'" % (self.args.rule), 7 )
 
 	from stat import *				# for ST_MTIME
 	try:
-	    mtime = os.stat( self.file )[ST_MTIME]
+	    mtime = os.stat( self.args.file )[ST_MTIME]
 	except OSError, detail:
     	    log.log( "<solaris>CRON.docheck(): stat had error %d, '%s'" % (detail[0], detail[1]), 6 )
 	    return
@@ -78,7 +78,7 @@ class CRON(directive.Directive):
 	    self.state.statefail()	# update state info for check failed
 
 	    # assign variables
-	    self.Action.varDict['cronfile'] = self.file
+	    self.Action.varDict['cronfile'] = self.args.file
 	    self.Action.varDict['cronfilemtime'] = str(mtime)
 
     	    log.log( "<solaris>CRON.docheck(): check failed, calling doAction()", 6 )
@@ -120,7 +120,7 @@ class METASTAT(directive.Directive):
 	# define the unique ID
 	self.ID = '%s.METASTAT' % (log.hostname)
 
-	log.log( "<solaris>METASTAT.tokenparser(): ID '%s' action '%s'" % (self.ID, self.actionList), 8 )
+	log.log( "<solaris>METASTAT.tokenparser(): ID '%s' action '%s'" % (self.ID, self.args.actionList), 8 )
 
 
     def docheck(self, Config):

@@ -173,7 +173,11 @@ class State:
 		return
 
 	    elif self.direc != None:
-		self.direc.tokenparser(self.toklist, self.toktypes, self.indent)
+		try:
+		    self.direc.Config = self.Config
+		    self.direc.tokenparser(self.toklist, self.toktypes, self.indent)
+		except 'Template':
+		    log.log( "<parseConfig>tokeneater(), directive is a Template, args: %s" % (dir(self.direc.args)), 8 )
 		self.reset()		# reset state
 		return
 

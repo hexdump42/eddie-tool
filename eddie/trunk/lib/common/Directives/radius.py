@@ -41,55 +41,55 @@ class RADIUS(directive.Directive):
 
 	# test required arguments
 	try:
-	    self.server		# hostname:port
+	    self.args.server		# hostname:port
 	except AttributeError:
 	    raise ParseFailure, "Server not specified"
 	try:
-	    self.secret		# secret
+	    self.args.secret		# secret
 	except AttributeError:
 	    raise ParseFailure, "Secret not specified"
 	try:
-	    self.user		# username
+	    self.args.user		# username
 	except AttributeError:
 	    raise ParseFailure, "Username not specified"
 	try:
-	    self.password	# password
+	    self.args.password	# password
 	except AttributeError:
 	    raise ParseFailure, "Password not specified"
 
-	if ':' in self.server:
-	    (self.host, self.port) = string.split( self.server, ':' )
+	if ':' in self.args.server:
+	    (self.host, self.port) = string.split( self.args.server, ':' )
 	    self.port = int(self.port)
 	else:
-	    self.host = self.server
+	    self.host = self.args.server
 	    self.port = 1645
 
 
 	# Set any directive-specific variables
 	self.Action.varDict['radiushost'] = self.host
 	self.Action.varDict['radiusport'] = self.port
-	self.Action.varDict['radiussecret'] = self.secret
-	self.Action.varDict['radiususername'] = self.user
-	self.Action.varDict['radiuspassword'] = self.password
+	self.Action.varDict['radiussecret'] = self.args.secret
+	self.Action.varDict['radiususername'] = self.args.user
+	self.Action.varDict['radiuspassword'] = self.args.password
 
 	# define the unique ID
-	self.ID = '%s.RADIUS.%s.%d.%s' % (log.hostname,self.host,self.port,self.user)
+	self.ID = '%s.RADIUS.%s.%d.%s' % (log.hostname,self.host,self.port,self.args.user)
 
-	log.log( "<radius>RADIUS.tokenparser(): ID '%s' host '%s' port %d secret '%s' user '%s'" % (self.ID, self.host, self.port, self.secret, self.user), 8 )
+	log.log( "<radius>RADIUS.tokenparser(): ID '%s' host '%s' port %d secret '%s' user '%s'" % (self.ID, self.host, self.port, self.args.secret, self.args.user), 8 )
 
 
     def docheck(self, Config):
 	"""Perform a Radius authentication and return results."""
 
-	log.log( "<radius>RADIUS.docheck(): host '%s' port %d user '%s'" % (self.host, self.port, self.user), 7 )
+	log.log( "<radius>RADIUS.docheck(): host '%s' port %d user '%s'" % (self.host, self.port, self.args.user), 7 )
 
 	timing = None
 
 	# create pop3 connection object
-	r = radcm.Radius( self.host, self.secret, self.port  )
+	r = radcm.Radius( self.host, self.args.secret, self.port  )
 	tstart = time.time()
 	try:
-	    z = r.authenticate(self.user,self.password)
+	    z = r.authenticate(self.args.user,self.args.password)
 	except radcm.NoResponse:
 	    z = None
 	tend = time.time()

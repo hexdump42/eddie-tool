@@ -29,8 +29,13 @@ class dfList:
 	self.mounthash = {}
 	self.list = []
 	self.dfheader = ""
-	 
-	#rawList = os.popen('df -text2', 'r')
+
+	self.refresh()
+
+
+    def refresh(self):
+	"""Force df refresh."""
+
 	rawList = utils.safe_popen('df -text2', 'r')
 	self.dfheader = rawList.readline()
  
