@@ -148,6 +148,7 @@ class system(datacollect.DataCollect):
 	    line = rawList.readline()
 	    if len(line) == 0:
 		log.log( "<system>system._getSystemstate() error parsing 'top' output looking for 'load averages:'.", 5 )
+		utils.safe_pclose( rawList )
 		return
 
 	    #if line[:8] == 'last pid':
@@ -165,6 +166,7 @@ class system(datacollect.DataCollect):
 	inx = re.search( reline1, line )
 	if inx == None:
 	    log.log( "<system>system._getSystemstate() error parsing line1 'top' output.", 5 )
+	    utils.safe_pclose( rawList )
 	    return
 	## Handled by _getuptime() now
 	#self.lastpid = int(inx.group(1))
@@ -178,6 +180,7 @@ class system(datacollect.DataCollect):
 	inx = re.search( reline2, line )
 	if inx == None:
 	    log.log( "<system>system._getSystemstate() error parsing line2 'top' output.", 5 )
+	    utils.safe_pclose( rawList )
 	    return
 	self.processes = int(inx.group(1))
 	try:
@@ -206,6 +209,7 @@ class system(datacollect.DataCollect):
 	inx = re.search( reline3, line )
 	if inx == None:
 	    log.log( "<system>system._getSystemstate() error parsing line3 'top' output.", 5 )
+	    utils.safe_pclose( rawList )
 	    return
 	self.cpu_idle = float(inx.group(1))
 	self.cpu_user = float(inx.group(2))
