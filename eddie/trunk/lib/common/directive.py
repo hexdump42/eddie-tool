@@ -66,10 +66,10 @@ class Rules:
 	return "%s" % self.hash
 
 
-##
-## The base directive class.  Derive all directives from this base class.
-##
+
 class Directive:
+    """The base directive class.  Derive all directives from this base class."""
+
     def __init__(self, toklist):
 	# Check toklist for valid tokens
 	if len(toklist) < 2:		# need at least 2 tokens

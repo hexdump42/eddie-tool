@@ -29,10 +29,10 @@ ParseNotcomplete = 'ParseNotcomplete'
 scanperiod = 10*60
 scanperiodraw = '10m'
 
-##
-## The main Eddie configuration class.
-##
+
 class Config:
+    """The main Eddie configuration class."""
+
     def __init__(self, name, parent=None):
 	if len(name) < 1:
 	    raise SyntaxError
@@ -61,8 +61,9 @@ class Config:
 	    self.NDict.update(parent.NDict)
 	    # TODO: copy ruleList and MDict too ?
 
-    # Display Config in readable format (ie: for debugging)
     def __str__(self):
+	"""Display Config in readable format (ie: for debugging)."""
+
 	str = "<Config name='%s' type='%s'" % (self.name, self.type)
 	str = str + "\n\n ruleList: %s" % self.ruleList
 	str = str + "\n\n groups:"
@@ -79,8 +80,9 @@ class Config:
         str = str + "\n>"
 	return str
 
-    # Add new rules group
     def newgroup(self, toklist, toktypes, parent=None):
+	"""Add new rules group."""
+
 	# Require 3 tokens, ('group', <str>, ':')
 	if len(toklist) < 3:
 	    raise ParseNotcomplete
@@ -109,8 +111,9 @@ class Config:
 	return newgroup
 
 
-    # Object 'obj' is given to Config, and placed in the appropriate list.
     def give(self, obj):
+	"""Object 'obj' is given to Config, and placed in the appropriate list."""
+
 	if obj.type == 'N':
 	    self.NDict[obj.name] = obj
 	elif obj.type == 'M':
@@ -128,8 +131,9 @@ class Config:
 	    return
 
 
-    # Check if any of the config or rules files have been modified
     def checkfiles(self):
+	"""Check if any of the config or rules files have been modified."""
+
 	for f in self.configfiles.keys():
 	    try:
 		if os.stat(f)[8] != self.configfiles[f]:		# check mtime
@@ -141,6 +145,18 @@ class Config:
 
 	return 0
 
+
+    def getDirective(self, id):
+	"""Return directive object with given id."""
+
+	for d in self.ruleList.keys():
+	    list = self.ruleList[d]
+	    if list != None:
+		for i in list:
+		    if i.ID == id:
+			return i
+
+	return None
 
 
 ##
