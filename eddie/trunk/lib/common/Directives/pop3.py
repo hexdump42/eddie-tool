@@ -44,7 +44,12 @@ class pop3:
 	self.pop3sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 	tstart = time.time()
-	self.pop3sock.connect(self.host, self.port)
+	try:
+	    self.pop3sock.connect(self.host, self.port)
+	except socket.error, detail:
+	    log.log( "<solaris.py>pop3.connect(): exception, %d, '%s'" % (detail[0], detail[1]), 3 )
+	    return 0
+
 	data = self.pop3sock.recv(1024)
 	tend = time.time()
 

@@ -161,7 +161,10 @@ class State:
 		else:
 		    if direc != None:
 			self.prevdirec = self.direcStack.top()
-			self.prevdirec.give(direc)
+			try:
+			    self.prevdirec.give(direc)
+			except AttributeError:
+			    raise config.ParseFailure, "Error, no give() attribute for object %s - possible indentation error." % (self.prevdirec)
 			direc.parent = self.prevdirec	# show directive its parent
 
 		    self.reset()		# reset state
