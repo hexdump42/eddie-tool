@@ -349,7 +349,7 @@ class SP(Directive):
 	except socket.error:
 	    self.port = self.port_n
 
-	self.varDict['port'] = self.port_n
+	self.varDict['spp'] = self.port_n
 	self.varDict['addr'] = self.addr
 	self.varDict['prot'] = self.proto
 
