@@ -377,7 +377,7 @@ class SP(Directive):
 class COM(Directive):
     def __init__(self, *arg):
 	apply( Directive.__init__, (self,) + arg )
-	self.regexp = 'COM[\t \n]+\([a-zA-Z0-9_$><=&\|.:%*^/!-]+\|"[a-zA-Z0-9_$><=&\|.:%*^/!{}()\' \t-]+"\|\'[a-zA-Z0-9_$><=&\|.:%*^/!{}()" \t-]+\'\)[\t \n]+\([a-zA-Z0-9_$><=&\|.:%*^!{}()-]+\|["\'][a-zA-Z0-9_$><=&\|.:%*^!{}()"\' \t-]+["\']\)[\t \n]+\(.*\)'
+	self.regexp = 'COM[\t \n]+\([a-zA-Z0-9_$><=&\|.,:;%*^/!-]+\|"[a-zA-Z0-9_$><=&\|.,:;%*^/!{}()\' \t-]+"\|\'[a-zA-Z0-9_$><=&\|.,:;%*^/!{}()" \t-]+\'\)[\t \n]+\([a-zA-Z0-9_$><=&\|.,:;%*^!{}()-]+\|["\'][a-zA-Z0-9_$><=&\|.,:;%*^!{}()"\' \t-]+["\']\)[\t \n]+\(.*\)'
 	fields = self.parseRaw()
 	self.command = utils.stripquote(fields[0])	# the command
 	self.rule = utils.stripquote(fields[1])	# the rule
