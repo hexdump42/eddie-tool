@@ -22,7 +22,7 @@ GLOBAL_CONFIG = '/export/rrd/eddiebrowser.cfg'
 #### End of settings ####
 
 
-__version__ = '0.4.1'
+__version__ = '0.4.2'
 __copyright__ = 'Chris Miles 2002-2004'
 
 
@@ -730,6 +730,15 @@ def showHost( hostname, start, cfg ):
     print "</center>"
 
     showTypes( hostname, start, cfg.filter )
+
+    print """<Table width="100%%"><tr>
+	<td align="left" width="30%%">
+	    <font size="-1">
+	    [<a href="./eddiebrowser.cgi?%s">Control Panel</a>]
+	    </font></td>
+	<td align="center" width="40%%"><b>%s%s</b></td>
+	<td align="right" valign="middle" width="30%%">%s&nbsp;%s&nbsp;%s</td>
+	</tr></Table>""" % (cursettings,hostname,alias,prev,hostselect,next)
 
     print "</BODY>"
 
