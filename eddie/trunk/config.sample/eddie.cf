@@ -98,7 +98,6 @@ INTERPRETERS='sh,bash,perl,perl5.001,perl5.003,perl5.004,python,python1.4,python
 
 CLASS news=perki,merki
 CLASS dns=yarrina,warrane
-CLASS dnscache=yalumba,yulp
 CLASS cache=myeah,myponga,myangup,myalla,myoon
 
 

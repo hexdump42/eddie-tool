@@ -1,6 +1,6 @@
 # Eddie config file
 #  Rules specific to News servers.
-#
+#  This is a sample configuration only.
 
 group news:
 
@@ -19,163 +19,45 @@ Eddie."""
     # Notification Definitions
 
     N INNDALERT:
-	notifyperiod=10m
-	escalperiod=20m
 
 	# Notify
 	Level 0:
-	    email($ALERT,ALERT)
-		email($ALERT,ALERT),elvin(ALERT)
+	    email($ALERT,ALERT),ticker(ALERT_P)
 
 	# Notify/page
 	Level 1:
-	    email($ALERT,ALERT),email($SYSSUP,ALERT),elvin(ALERT)
+	    email($ALERT,ALERT),email($SYSSUP,ALERT_P),ticker(ALERT_P)
 
 
 
     ###########################################################################
     # RULES
 
-    ## PROC
-    #  Process	Rules	Action
-    #  -------	-----	------
-
-    PROC innd:		NR	COMMONALERT(commonmsg.proc,2)
-    PROC named:		NR	NAMEDRESTART(commonmsg.proc,2)
-    PROC ntpd:		NR	COMMONALERT(commonmsg.proc,2)
-    PROC actived:	NR	email($ALERT,'Alert: %procp on %h not running - restarting...'),system("su news -c /opt/local/news/bin/actived")
+    PROC innd:		procname='innd'
+			rule=NR
+			action='COMMONALERT(commonmsg.proc,2)'
+    PROC actived:	procname='actived'
+			rule=NR
+			action='email($ALERT,"Alert: %procp on %h not running - restarting..."),system("su news -c /opt/local/news/bin/actived")'
 
 
-    ## FS
-    #  Filesystem   	Thresholds      Action
-    #  ----------   	----------      ----------
-    FS /home:		$OVER99		COMMONALERT(commonmsg.fs,0)
-    FS /opt:		$OVER95		COMMONALERT(commonmsg.fs,2)
-    FS /var/log:	$VARLOG1	COMMONALERT(commonmsg.fs,2)
-    FS /var/log:	$VARLOG2	COMMONALERT(commonmsg.fs,1)
-    FS /var/spool:	$VARLOG1	COMMONALERT(commonmsg.fs,2)
-    FS /var/spool:	$VARLOG2	COMMONALERT(commonmsg.fs,1)
-    FS /news:		$OVER95		COMMONALERT(commonmsg.fs,2)
+    FS varspool:	fs='/var/spool'
+			rule='capac>=95'
+			action='COMMONALERT(commonmsg.fs,2)'
+    FS news:		fs='/news'
+			rule='capac>=90'
+			action='COMMONALERT(commonmsg.fs,2)'
 
 
-    ## PID
-    #    pidfile                	Rules   Action
-    #    -------                	-----   ------
-    PID  /var/run/named.pid:		EX	COMMONALERT(commonmsg.pid,0)
-    PID  /var/run/named.pid:		PR	COMMONALERT(commonmsg.pidpr,1)
-    PID  /etc/mail/sendmail.pid:	EX	COMMONALERT(commonmsg.pid,0)
-    PID  /etc/mail/sendmail.pid:	PR	COMMONALERT(commonmsg.pidpr,1)
+    SP nntp:		port='nntp'
+			protocol='tcp'
+			bindaddr='*'
+			action='COMMONALERT(commonmsg.sp,1)'
 
-
-    ## SP
-    #   Port		Bind Addr	Action
-    #   ----		---------	------
-    SP tcp/nntp:	*		COMMONALERT(commonmsg.sp,1)
-    SP tcp/uucp:	*		COMMONALERT(commonmsg.sp,1)
-
-
-    ## COM
-    #    command			Rules		Action
-    #    -------			-----		------
-    COM '/opt/local/news/bin/ctlinnd mode | grep "^Server " | grep -v "^Server running" | grep -v "Flushing log and syslog files"':
-					"out != ''"
-					INNDALERT(inndmsg.throttled,1)
-
-
-    ## PORT
-    #     Host	Port	SendStr	Expect		Action
-    #     ----	----	-------	------		-----
-
-
-
-
-
-group newsold:
-
-    ###########################################################################
-    # MESSAGES
-
-    M inndmsg:
-	M throttled:
-	    MSG ALERT: "Alert: innd on %h is throttled"
-		"""ALERT: innd on %h needs urgent attention.
-
-Eddie."""
-
-
-    ###########################################################################
-    # Notification Definitions
-
-    N INNDALERT:
-	notifyperiod=10m
-	escalperiod=20m
-
-	# Notify
-	Level 0:
-	    email($ALERT,ALERT)
-		email($ALERT,ALERT),elvin(ALERT)
-
-	# Notify/page
-	Level 1:
-	    email($ALERT,ALERT),email($SYSSUP,ALERT),elvin(ALERT)
-
-
-
-    ###########################################################################
-    # RULES
-
-    ## PROC
-    #  Process	Rules	Action
-    #  -------	-----	------
-
-    PROC innd:		NR	COMMONALERT(commonmsg.proc,2)
-    PROC radiusd:	NR	COMMONRESTART(commonmsg.proc,0)
-    PROC named:		NR	NAMEDRESTART(commonmsg.proc,2)
-    PROC xntpd:		NR	COMMONALERT(commonmsg.proc,2)
-    PROC actived:	NR	email($ALERT,'Alert: %procp on %h not running - restarting...'),system("su news -c /opt/local/news/bin/actived")
-
-
-    ## FS
-    #  Filesystem   	Thresholds      Action
-    #  ----------   	----------      ----------
-    FS /home:		$OVER99		COMMONALERT(commonmsg.fs,0)
-    FS /opt:		$OVER95		COMMONALERT(commonmsg.fs,2)
-    FS /var/log:	$VARLOG1	COMMONALERT(commonmsg.fs,2)
-    FS /var/log:	$VARLOG2	COMMONALERT(commonmsg.fs,1)
-    FS /var/spool:	$VARLOG1	COMMONALERT(commonmsg.fs,2)
-    FS /var/spool:	$VARLOG2	COMMONALERT(commonmsg.fs,1)
-    FS /opt/local/news:	$OVER95		COMMONALERT(commonmsg.fs,2)
-    FS /var/spool/news:	$OVER100	COMMONALERT(commonmsg.fs,2)
-
-
-    ## PID
-    #    pidfile                	Rules   Action
-    #    -------                	-----   ------
-    PID  /var/run/named.pid:		EX	COMMONALERT(commonmsg.pid,0)
-    PID  /var/run/named.pid:		PR	COMMONALERT(commonmsg.pidpr,1)
-    PID  /etc/mail/sendmail.pid:	EX	COMMONALERT(commonmsg.pid,0)
-    PID  /etc/mail/sendmail.pid:	PR	COMMONALERT(commonmsg.pidpr,1)
-
-
-    ## SP
-    #   Port		Bind Addr	Action
-    #   ----		---------	------
-    SP tcp/nntp:	*		COMMONALERT(commonmsg.sp,1)
-    SP tcp/uucp:	*		COMMONALERT(commonmsg.sp,1)
-
-
-    ## COM
-    #    command			Rules		Action
-    #    -------			-----		------
-    COM '/opt/local/news/bin/ctlinnd mode | grep "^Server " | grep -v "^Server running" | grep -v "Flushing log and syslog files"':
-					"out != ''"
-					INNDALERT(inndmsg.throttled,1)
-
-
-    ## PORT
-    #     Host	Port	SendStr	Expect		Action
-    #     ----	----	-------	------		-----
-
+    # Check with ctlinnd if innd is sane or not
+    COM ctlinnd:	cmd='/opt/local/news/bin/ctlinnd mode | grep "^Server " | grep -v "^Server running" | grep -v "Flushing log and syslog files"'
+			rule="out != ''"
+			action='INNDALERT(inndmsg.throttled,1)'
 
 
 

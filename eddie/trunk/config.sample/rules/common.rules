@@ -1,10 +1,11 @@
 # Eddie config file
 #  Common rules for all machines
-#
+#  This is a sample configuration only.
 
 
 ###########################################################################
 # MESSAGES
+# Define MSGs to use in actions.  These are grouped by the M objects.
 
 M commonmsg:
     M proc:
@@ -139,10 +140,9 @@ Eddie."""
 
 ###########################################################################
 # Notification Definitions
+# These define notification levels, and what actions to perform at each level.
 
 N COMMONALERT:
-    notifyperiod=10m
-    escalperiod=20m
 
     # Notification
     Level 0:
@@ -150,111 +150,113 @@ N COMMONALERT:
 
     # Warning
     Level 1:
-	email($ALERT,WARN),elvin(WARN_P)
+	email($ALERT,WARN),ticker(WARN_P)
 
     # Alert
     Level 2:
-	email($SYSSUP,ALERT_P),elvin(ALERT_P)
-	    email($ALERT,ALERT)
+	email($SYSSUP,ALERT_P),ticker(ALERT_P)
 
     # Serious Alert
     Level 3:
-	email($ALERT,ALERT),email($SYSSUP,ALERT_P),elvin(ALERT_P)
+	email($ALERT,ALERT),email($SYSSUP,ALERT_P),ticker(ALERT_P)
 
 
 
 N COMMONRESTART:
-    notifyperiod=10m
-    escalperiod=20m
 
     # Restart and notify
     Level 0:
 	restart("%procp"),email($ALERT,RE_WARN)
-	    email($ALERT,RE_ERR),elvin(RE_ERR_P)
 
     # Restart/page
     Level 1:
-	restart("%procp"),email($ALERT,RE_WARN),elvin(RE_WARN_P)
-	    email($ALERT,RE_ERR),elvin(RE_ERR_P),email($SYSSUP,RE_ERR_P)
+	restart("%procp"),email($SYSSUP,RE_WARN),ticker(RE_WARN_P)
 
 
 N SYSLOGRESTART:
-    notifyperiod=10m
-    escalperiod=20m
 
     # Restart and notify
     Level 0:
 	restart("syslog"),email($ALERT,RE_WARN)
-	    email($ALERT,RE_ERR),elvin(RE_ERR_P)
 
     # Restart/page
     Level 1:
-	restart("syslog"),email($ALERT,RE_WARN),elvin(RE_WARN_P)
-	    email($ALERT,RE_ERR),elvin(RE_ERR_P),email($SYSSUP,RE_ERR_P)
+	restart("syslog"),email($SYSSUP,RE_WARN),ticker(RE_WARN_P)
 
 
 N NAMEDRESTART:
-    notifyperiod=10m
-    escalperiod=20m
 
     # Restart and notify
     Level 0:
 	restart("bind"),email($ALERT,RE_WARN)
-	    email($ALERT,RE_ERR),elvin(RE_ERR_P)
 
     # Restart/page
     Level 1:
-	restart("bind"),email($ALERT,RE_WARN),elvin(RE_WARN_P)
-	    email($ALERT,RE_ERR),email($SYSSUP,RE_ERR_P),elvin(RE_ERR_P)
+	restart("bind"),email($SYSSUP,RE_WARN),ticker(RE_WARN_P)
 
 
 ###########################################################################
 # RULES
 
-# NR = process not running
-# R  = process is running
+# PROC rules to perform checks on processes
+#   NR = process not running
+#   R  = process is running
 
-#  Process	Rules	Action
-#  -------	-----	------
-PROC cron:	NR	COMMONRESTART(commonmsg.proc)
-PROC syslogd:	NR	SYSLOGRESTART(commonmsg.proc)
-PROC inetd:	NR	COMMONALERT(commonmsg.proc,1)
-PROC sshd:	NR	COMMONALERT(commonmsg.proc,1)
+# define a PROC template to make the other PROC definitions much simpler
+#  PROCs using this template will inherit all the settings, but the settings
+#  can still be overridden per directive.
+PROC 'proctpl': template=self           # indicates this is a template definition
+		scanperiod='10m'        # default scanperiod
+		numchecks=3             # number of checks to make before alerting
+		checkwait=10            # interval between re-checks
+		rule=NR                 # default rule to use
 
-# Defs for filesystem checks
-DEF OVER90= "capac>=90%"
-DEF OVER95= "capac>=95%"
-DEF OVER99= "capac>=99%"
-DEF OVER100="capac>=100%"
-DEF VAR=    "(capac>=95 & avail<=100MB) | (capac>=90 & capacdelta>=2)"
-DEF VARLOG1="(capac>=95 & avail<=100MB) | (capac>=90 & capacdelta>=2)"
-DEF VARLOG2="capac>=75 & capacdelta>=5"
-DEF EXPORT= "(capac>=97 & avail<=100MB) | (capac>=90 & capacdelta>=2)"
-DEF ARCHIVE="(capac>=98 & avail<=100MB)"
+PROC cron:	procname='cron'
+		template='proctpl'
+		action='COMMONRESTART(commonmsg.proc)'
+PROC syslogd:	procname='syslogd'
+		template='proctpl'
+		action='SYSLOGRESTART(commonmsg.proc)'
+PROC inetd:	procname='inetd'
+		template='proctpl'
+		action='COMMONALERT(commonmsg.proc,1)'
+PROC sshd:	procname='sshd'
+		template='proctpl'
+		action='COMMONALERT(commonmsg.proc,1)'
+
+# FS directives perform checks on filesystems.
+FS root:	fs='/'
+		rule='capac>=90'
+		action='COMMONALERT(commonmsg.fs,1)'
+FS var:		fs='/var'
+		rule='capac>=90'
+		action='COMMONALERT(commonmsg.fs,2)'
 
 
-#  Filesystem   	Thresholds      Action
-#  ----------   	----------      ----------
-FS /:			$OVER90         COMMONALERT(commonmsg.fs,1)
-FS /var:            	$VAR            COMMONALERT(commonmsg.fs,2)
+# PID directives use pidfiles to perform checks.
+#  EX rule means run actions if pidfile does not exist
+#  PR rule means run actions if pid defined in pidfile is not currently in process table
+PID sshd1:	pid='/var/run/sshd.pid'
+		rule=EX
+		action='COMMONALERT(commonmsg.pid,0)'
+PID sshd2:	pid='/var/run/sshd.pid'
+		rule=PR
+		action='COMMONALERT(commonmsg.pidpr,1)'
 
+# SP directives perform service port checks by examining the current list of
+#  active listening ports (eg: 'netstat -anv') and performing actions if the
+#  defined port/protocol/bind-address is not in the list.
+SP ssh:		port='ssh'	# port to check, as defined in /etc/services
+		protocol='tcp'	# protocol, eg: tcp or udp
+		bindaddr='*'	# '*' on Solaris, or '0.0.0.0' on Linux
+		action='COMMONALERT(commonmsg.sp,1)'
 
-#    pidfile                    Rules   Action
-#    -------                    -----   ------
-PID  /var/run/sshd.pid:         EX      COMMONALERT(commonmsg.pid,0)
-PID  /var/run/sshd.pid:         PR      COMMONALERT(commonmsg.pidpr,1)
+# COM directives can execute any commands and process rules based on the
+#  output (stdout, stderr or return value) of the commands.
 
-#   Port        Bind Addr       Action
-#   ----        ---------       ------
-SP tcp/ssh:	*		COMMONALERT(commonmsg.sp,1)
+# This is one way to check the loadavg of a server.
+COM loadavg:	cmd="uptime | cut -d, -f4 | awk '{print $3}'"
+		rule="float(out) > 6.0"
+		action='elvin("Load on %h is %comout")'
 
-#    command			Rules		Action
-#    -------			-----		------
-#COM "uptime | cut -d, -f4 | awk '{print $3}'":
-#				"float(out) > 6.0"
-#						elvin("Load on %h is %comout")
-
-## PORT
-#     Host	Port	SendStr	Expect		Action
-#     ----	----	-------	------		-----
 

@@ -1,68 +1,94 @@
 # Eddie config file
 #  Rules specific to cache boxes.
-#
+#  This is just a sample configuration.
 
 group myeah:
-    PROC named:		NR	COMMONALERT(commonmsg.proc,2)
+    # This group will be used by the server with hostname 'myeah'.
 
-    PID  /var/run/named.pid:	EX	COMMONALERT(commonmsg.pid,0)
-    PID  /var/run/named.pid:	PR	COMMONALERT(commonmsg.pidpr,1)
+    PROC named:		procname='named'
+			rule=NR
+			numchecks=2		# do 2 checks before alerting
+			checkwait='30s'		# wait 30 secs between 2nd check
+			action='COMMONALERT(commonmsg.proc,2)'
+
+    PID named1:		pid='/var/run/named.pid'
+			rule=EX
+			scanperiod='30m'	# only check every 30min
+			action='COMMONALERT(commonmsg.pid,0)'
+    PID named2:		pid='/var/run/named.pid'
+			rule=PR
+			scanperiod='30m'	# only check every 30min
+			action='COMMONALERT(commonmsg.pidpr,1)'
 
 group myponga:
-    PROC named:		NR	COMMONALERT(commonmsg.proc,2)
+    # This group will be used by the server with hostname 'myponga'.
 
-    PID  /var/run/named.pid:	EX	COMMONALERT(commonmsg.pid,0)
-    PID  /var/run/named.pid:	PR	COMMONALERT(commonmsg.pidpr,1)
+    PROC named:		procname='named'
+			rule=NR
+			numchecks=2		# do 2 checks before alerting
+			checkwait='30s'		# wait 30 secs between 2nd check
+			action='COMMONALERT(commonmsg.proc,2)'
+
+    PID named1:		pid='/var/run/named.pid'
+			rule=EX
+			scanperiod='30m'	# only check every 30min
+			action='COMMONALERT(commonmsg.pid,0)'
+    PID named2:		pid='/var/run/named.pid'
+			rule=PR
+			scanperiod='30m'	# only check every 30min
+			action='COMMONALERT(commonmsg.pidpr,1)'
 
 
 group cache:
+    # This group will be used by any hosts defined in the CLASS 'cache'
+    # (see eddie.cf).  Any host called 'cache' would also use this.
 
-    ###########################################################################
-    # MESSAGES
-
-
-    ###########################################################################
-    # Notification Definitions
-
-
-    ###########################################################################
-    # RULES
-
-    ## PROC
-    #  Process		Rules	Action
-    #  -------		-----	------
-    PROC bgp:		NR	COMMONALERT(commonmsg.proc,2)
+    PROC bgp:		procname='bgp'
+			rule=NR
+			numchecks=2		# do 2 checks before alerting
+			checkwait='1m'		# wait 1 min between 2nd check
+			action='COMMONALERT(commonmsg.proc,2)'
 
     # Proxy-related processes
-    PROC httpd:		NR	COMMONALERT(commonmsg.proc,2)
-    PROC squid:		NR	COMMONALERT(commonmsg.proc,2)
-    PROC RunCache:	NR	COMMONALERT(commonmsg.proc,2)
+    PROC httpd:		procname='httpd'
+			rule=NR
+			scanperiod='30m'	# only check every 30 mins
+			numchecks=2		# do 2 checks before alerting
+			checkwait='1m'		# wait 1 min between 2nd check
+			action='COMMONALERT(commonmsg.proc,2)'
+    PROC squid:		procname='squid'
+			rule=NR
+			numchecks=3		# do 3 checks before alerting
+			checkwait='20s'		# wait 20 secs between 2nd & 3rd checks
+			action='COMMONALERT(commonmsg.proc,2)'
 
 
-    ## FS
-    #  Filesystem   	Thresholds      Action
-    #  ----------   	----------      ----------
-    FS /home:		$OVER99		COMMONALERT(commonmsg.fs,0)
-    FS /opt:		$OVER95		COMMONALERT(commonmsg.fs,2)
-    FS /var/log:	$VARLOG1	COMMONALERT(commonmsg.fs,2)
-    FS /var/log:	$VARLOG2	COMMONALERT(commonmsg.fs,1)
-    FS /var/log/cache:	$VARLOG1	COMMONALERT(commonmsg.fs,2)
+    FS home:		fs='/home'
+			rule='capac>=99'	# alert if >= 99% full
+			scanperiod='1h'		# only check once an hour
+			action='COMMONALERT(commonmsg.fs,0)'
+    FS opt:		fs='/opt'
+			rule='capac>=97'
+			scanperiod='1h'		# only check once an hour
+			action='COMMONALERT(commonmsg.fs,2)'
+    FS varlog:		fs='/var/log'
+			rule='capac>=95'
+			action='COMMONALERT(commonmsg.fs,2)'
+    FS varlogcache:	fs='/var/log/cache'
+			rule='capac>=95'
+			action='COMMONALERT(commonmsg.fs,2)'
 
-    ## PID
-    #    pidfile                Rules   Action
-    #    -------                -----   ------
-
-    ## SP
-    #   Port        Bind Addr       Action
-    #   ----        ---------       ------
-    SP tcp/http:        *               COMMONALERT(commonmsg.sp,1)
-    SP tcp/http-proxy:  *               COMMONALERT(commonmsg.sp,1)
-
-    ## COM
-    #    command			Rules		Action
-    #    -------			-----		------
-
-    ## PORT
-    #     Host	Port	SendStr	Expect		Action
-    #     ----	----	-------	------		-----
+    SP http:		port='http'	# check http port is listening
+			protocol='tcp'	# tcp protocol
+			bindaddr='*'	# '*' on solaris, '0.0.0.0' on linux...
+			scanperiod='30m'	# check every 30 mins
+			numchecks=2		# perform 2 checks
+			checkwait='30s'		# wait 30s before 2nd check
+			action='COMMONALERT(commonmsg.sp,1)'
+    SP proxy:		port='http-proxy'
+			protocol='*'
+			scanperiod='30m'
+			numchecks=2
+			checkwait='30s'
+			action='COMMONALERT(commonmsg.sp,1)'
 

@@ -1,59 +1,43 @@
 # Eddie config file
 #  Rules specific to certain hosts.
-#
+#  This is a sample configuration only.
 
 group koro:
 
-    ###########################################################################
-    # MESSAGES
+    PROC radiusd:	procname='radiusd'
+			rule=NR
+			action='COMMONALERT(commonmsg.proc,1)'
+    PROC named:		procname='named'
+			rule=NR
+			action='COMMONALERT(commonmsg.proc,2)'
 
+    FS varlog:		fs='/var/log'
+			rule='capac>=95'
+			action='COMMONALERT(commonmsg.fs,2)'
 
-    ###########################################################################
-    # Notification Definitions
+    PID namedex:	pid='/var/run/named.pid'
+			rule=EX
+			action='COMMONALERT(commonmsg.pid,0)'
+    PID namedpr:	pid='/var/run/named.pid'
+			rule=PR
+			action='COMMONALERT(commonmsg.pidpr,1)'
 
-
-    ###########################################################################
-    # RULES
-
-    #  Process	Rules	Action
-    #  -------	-----	------
-    PROC creditd:	NR	COMMONRESTART(commonmsg.proc)
-    PROC radiusd:	NR	COMMONALERT(commonmsg.proc,1)
-    PROC named:		NR	COMMONALERT(commonmsg.proc,2)
-
-    DEF EXPORT= "(capac>=97 & avail<=100MB) | (capac>=90 & capacdelta>=2)"
-    DEF ARCHIVE="(capac>=98 & avail<=100MB)"
-    DEF SCRATCH="(capac>=92)"
-
-    #  Filesystem   	Thresholds      Action
-    #  ----------   	----------      ----------
-    FS /var/log:	$VARLOG1	COMMONALERT(commonmsg.fs,2)
-    FS /var/log:	$VARLOG2	COMMONALERT(commonmsg.fs,1)
-    FS /archive:	$ARCHIVE	COMMONALERT(commonmsg.fs,2)
-    FS /export/00:	$EXPORT		COMMONALERT(commonmsg.fs,2)
-    FS /export/01:	$EXPORT		COMMONALERT(commonmsg.fs,2)
-    #FS /scratch:	$SCRATCH	COMMONALERT(commonmsg.fs,0)
-
-    #    pidfile                Rules   Action
-    #    -------                -----   ------
-    PID  /var/run/named.pid:	EX	COMMONALERT(commonmsg.pid,0)
-    PID  /var/run/named.pid:	PR	COMMONALERT(commonmsg.pidpr,1)
-
-    #   Port        Bind Addr       Action
-    #   ----        ---------       ------
-    SP tcp/ftp:		*	COMMONALERT(commonmsg.sp,0)
-    SP tcp/telnet:	*	COMMONALERT(commonmsg.sp,0)
-    SP tcp/pop:		*	COMMONALERT(commonmsg.sp,0)
-    SP tcp/pop2:	*	COMMONALERT(commonmsg.sp,0)
-    SP tcp/pop3:	*	COMMONALERT(commonmsg.sp,1)
-
-    #    command			Rules		Action
-    #    -------			-----		------
+    SP ftp:		port='ftp'
+			protocol='tcp'
+			bindaddr='*'
+			action='COMMONALERT(commonmsg.sp,0)'
+    SP telnet:		port='telnet'
+			protocol='tcp'
+			bindaddr='*'
+			action='COMMONALERT(commonmsg.sp,0)'
+    SP pop3:		port='pop3'
+			protocol='tcp'
+			bindaddr='*'
+			action='COMMONALERT(commonmsg.sp,1)'
 
     ## Check ntp stratum is sane
-    COM  "/opt/local/sbin/xntpdc -c sysinfo | grep stratum | awk '{ print $2 }'":
-					"int(out) > 3"	email($ALERT,"Stratum > 3")
-    COM  "/opt/local/sbin/xntpdc -c sysinfo | grep stratum | awk '{ print $2 }'":
-					"int(out) > 15"	email($ALERT,"Stratum > 15"),elvin("Stratum > 15")
+    COM stratum3:	cmd="/opt/local/sbin/xntpdc -c sysinfo | grep stratum | awk '{ print $2 }'"
+			rule="int(out) > 3"
+			action='email($ALERT,"Stratum > 3")'
 
 
