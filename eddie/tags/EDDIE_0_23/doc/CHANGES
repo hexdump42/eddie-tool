@@ -1,0 +1,93 @@
+Eddie CHANGES
+
+Eddie-0.23 (19-Jun-2000)
+ - cleaned up Solaris x86 support (still fairly untested).
+ - changed Linux system.py to get statistics from /proc rather than
+   parsing 'top' output.
+ - added close() method to kstat object and removed kstat_close() call
+   from kstat object initialization function which was possibly causing
+   seg faults in solkstatmodule.so.
+ - elvindb() action now takes optional string argument containing the
+   column/value pairs to store in the database (via Elvin).
+ - added POP3TIMING directive for checking and timing pop3 connections
+   in new pop3 directive module.
+ - added CRON directive for cron checks in solaris.py directive module.
+ - added IPF directive for ipfilter tests.
+ - added support for custom Directive imports from new Directive directory.
+ - added count of filedescriptors for debugging.
+ - fixed bug with PROC check which would only perform check on first
+   process found with the name specified.  It now performs checks on every
+   process with the specified name.
+ - added a kstat_close() to fix a file-descriptor leak in solkstatmodule.so.
+ - added a default class, DataStore, for storage subclasses to use, which
+   automatically caches data.
+ - added support for iostat data to STORE directive.
+ - find OS-specific modules in multiple directories from most specific
+   to least specific (eg: OS/version/architecture, OS/version, then OS).
+ - changed auto system type determination to internal code rather than
+   calling separate 3rd-party 'systype' script.
+ - added iostat objects for collecting iostat data under Solaris.  Uses
+   a shared library, solkstatmodule.so, created by the Eddie developers
+   and included.
+
+
+Eddie-0.22 (15-May-2000)
+ - added defaults for out and err in COM directive to stop an exception
+   when the executed command did not write stdout or stderr files.
+ - fixed SIGALRM so it works properly under Linux.  (Works slightly
+   differently to Solaris).
+ - COM did not use the return value of a os.system() call properly.  This
+   has been fixed as per the wait (2) call.
+ - email() action takes an optional 3rd argument which is the body of
+   the message.  Otherwise the 2nd argument is used as both subject and body.
+ - msg is copied to subject for simple email() call with only subject given.
+ - changed import for new Elvin.py module.
+ - now using Python 1.5.2
+ - fixed process name hash keys.
+ - added Solaris x86 support.
+ - added Linux support (tested with RedHat 6).
+
+
+Eddie-0.21 (4-Oct-1999)
+ - catch timeouts while trying to stat config files and skip the config file
+   modified checks.
+ - added '-n' to 'netstat -i' coz resolving interfaces on some hosts were
+   taking forever.
+ - fixed Elvin messaging with new ElvinConnection object.
+ - added Elvin db data-storage consumer daemon.
+ - separated Solaris 2.5 and 2.7-specific lib areas.
+ - added caching functionality to data gathering code.
+ - added functions to return hashes of network information.
+ - changed eddie-elvin interface to maintain single shared connection to Elvin
+   server.
+ - added double-checking for SP directive.
+ - added STORE directive to enable configuration of data to be sent via
+   elvindb().
+ - added elvindb() functionality to send database objects over Elvin to
+   database consumer.
+ - added support for Solaris 2.7.
+ - created sample config files in config.sample.
+ - fixed quote problem with address specified in SP check.
+ - PORT directive handles multiple lines sent to destination.
+ - added estored development to contrib area.
+ - added creation of system objects for collecting system stats.
+ - added SYS directive to allow detailed checks to be performed on system
+   data such as load-average, memory/swap usage, cpu idle %, etc.
+ - parses email address strings for variable definitions.
+ - fixed int overflow errors in netstat data collection.
+ - elvin() will use subject as message if message is blank for Tickertape.
+ - fixed small bug with actions parsing '%' at end of line.
+ - added directive 'NET' to allow detailed checks on current network
+   statistics.
+ - netstat object now obtains all current network statistics from host
+   (ie: 'netstat -s') under Solaris.
+ - added 'IF' directive to enable detailed network interface checks.
+ - added new rule for process checking to allow complex checks to be performed
+   on running processes.
+ - automatically re-load config files if any have changed.
+ - during process (and pid) checks, if process isn't found, sleep a bit then
+   double check.
+ - now only pulls in process info when called, and caches that info for a
+   set time before fetching it again.
+ - now pulls in every bit of process info that ps can provide.
+ - added a wrapper for eddie to capture major exceptions and auto restart.

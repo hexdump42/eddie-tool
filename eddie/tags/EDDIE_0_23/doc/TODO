@@ -1,0 +1,25 @@
+Things TODO for Eddie!
+
+- Double checking for Port directive
+- TEST with 'import elvin' (Elvin4)
+
+- rule dependencies
+
+- escalation
+
+- logfile checking
+
+- ping checks
+
+- msg objects in action calls, eg:
+    PORT  'hostname': 50006   ""  "ALIVE" email('alert', commonmsg.port.WARN)
+
+- store disk usage in eddiedb
+
+
+BUGS:
+ - Solaris 8:
+     top: /dev/ksyms is not a 32-bit kernel namelist
+     kvm_open: Error 0
+
+

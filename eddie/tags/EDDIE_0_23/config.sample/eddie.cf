@@ -1,0 +1,42 @@
+# Eddie Global Config File
+#
+# $Id$
+#
+
+			# LOG* should be before other configs so that logging
+			# is setup properly (and LOGLEVEL should go first).
+			# ADMINLEVEL should preferably go straight after
+			# LOGLEVEL.
+
+LOGLEVEL=8		# log levels: see doc/config
+ADMINLEVEL=5		# Admin inform level
+LOGFILE="/var/log/eddie.log"	# logging details go into this folder
+ADMIN="eddie-adm@domain.name"	# The Eddie Admin
+ADMIN_NOTIFY=1d		# Send Admin summaries only once a day
+
+			# approximate minimum scan period - Eddie will sleep for SCANPERIOD
+#SCANPERIOD=20		# scan every 20 seconds
+#SCANPERIOD=60s		# scan every 60 seconds
+SCANPERIOD=10m		# scan every 10 minutes
+#SCANPERIOD=1h		# scan every 1 hour
+#SCANPERIOD=2d		# scan every 2 days
+#SCANPERIOD=3w		# scan every 3 weeks
+#SCANPERIOD=4c		# scan every 4 months (calender month)
+#SCANPERIOD=5y		# scan every 5 years
+
+INTERPRETERS='sh,bash,perl,perl5.001,perl5.003,perl5.004,python,python1.4,python1.5'
+
+CLASS news=perki,merki
+CLASS dns=yarrina,warrane
+CLASS dnscache=yalumba,yulp
+CLASS cache=myeah,myponga,myangup,myalla,myoon
+
+DEF ALERT="alert@domain.name"
+DEF SYSSUP="syssup@domain.name"
+
+INCLUDE 'rules/common.rules'
+INCLUDE 'rules/host.rules'
+INCLUDE 'rules/dns.rules'
+INCLUDE 'rules/news.rules'
+INCLUDE 'rules/cache.rules'
+

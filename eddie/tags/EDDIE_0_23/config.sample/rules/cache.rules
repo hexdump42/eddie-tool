@@ -1,0 +1,68 @@
+# Eddie config file
+#  Rules specific to cache boxes.
+#
+
+group myeah:
+    PROC named:		NR	COMMONALERT(commonmsg.proc,2)
+
+    PID  /var/run/named.pid:	EX	COMMONALERT(commonmsg.pid,0)
+    PID  /var/run/named.pid:	PR	COMMONALERT(commonmsg.pidpr,1)
+
+group myponga:
+    PROC named:		NR	COMMONALERT(commonmsg.proc,2)
+
+    PID  /var/run/named.pid:	EX	COMMONALERT(commonmsg.pid,0)
+    PID  /var/run/named.pid:	PR	COMMONALERT(commonmsg.pidpr,1)
+
+
+group cache:
+
+    ###########################################################################
+    # MESSAGES
+
+
+    ###########################################################################
+    # Notification Definitions
+
+
+    ###########################################################################
+    # RULES
+
+    ## PROC
+    #  Process		Rules	Action
+    #  -------		-----	------
+    PROC bgp:		NR	COMMONALERT(commonmsg.proc,2)
+
+    # Proxy-related processes
+    PROC httpd:		NR	COMMONALERT(commonmsg.proc,2)
+    PROC squid:		NR	COMMONALERT(commonmsg.proc,2)
+    PROC RunCache:	NR	COMMONALERT(commonmsg.proc,2)
+
+
+    ## FS
+    #  Filesystem   	Thresholds      Action
+    #  ----------   	----------      ----------
+    FS /home:		$OVER99		COMMONALERT(commonmsg.fs,0)
+    FS /opt:		$OVER95		COMMONALERT(commonmsg.fs,2)
+    FS /var/log:	$VARLOG1	COMMONALERT(commonmsg.fs,2)
+    FS /var/log:	$VARLOG2	COMMONALERT(commonmsg.fs,1)
+    FS /var/log/cache:	$VARLOG1	COMMONALERT(commonmsg.fs,2)
+
+    ## PID
+    #    pidfile                Rules   Action
+    #    -------                -----   ------
+
+    ## SP
+    #   Port        Bind Addr       Action
+    #   ----        ---------       ------
+    SP tcp/http:        *               COMMONALERT(commonmsg.sp,1)
+    SP tcp/http-proxy:  *               COMMONALERT(commonmsg.sp,1)
+
+    ## COM
+    #    command			Rules		Action
+    #    -------			-----		------
+
+    ## PORT
+    #     Host	Port	SendStr	Expect		Action
+    #     ----	----	-------	------		-----
+

@@ -1,0 +1,80 @@
+# Eddie config file
+#  Rules specific to Primary/Secondary DNS servers.
+#
+
+group dns:
+
+    ###########################################################################
+    # MESSAGES
+
+
+    ###########################################################################
+    # Notification Definitions
+
+
+    ###########################################################################
+    # RULES
+
+    ## PROC
+    #  Process		Rules	Action
+    #  -------		-----	------
+
+    PROC named:		NR	COMMONALERT(commonmsg.proc,2)
+    PROC ntpd:		NR	COMMONALERT(commonmsg.proc,1)
+    PROC radiusd:	NR	COMMONRESTART(commonmsg.proc,0)
+    PROC sendmail:	NR	COMMONALERT(commonmsg.proc,1)
+
+    ## FS
+    #  Filesystem   	Thresholds      Action
+    #  ----------   	----------      ----------
+    FS /home:		$OVER99		COMMONALERT(commonmsg.fs,0)
+    FS /opt:		$OVER99		COMMONALERT(commonmsg.fs,1)
+    FS /var/log:	$VARLOG1	COMMONALERT(commonmsg.fs,2)
+    FS /var/log:	$VARLOG2	COMMONALERT(commonmsg.fs,1)
+    FS /var/spool:	$VARLOG1	COMMONALERT(commonmsg.fs,2)
+    FS /var/spool:	$VARLOG2	COMMONALERT(commonmsg.fs,1)
+    FS /var/tftpboot:	$VARLOG1	COMMONALERT(commonmsg.fs,2)
+
+    ## PID
+    #    pidfile                	Rules   Action
+    #    -------                	-----   ------
+    PID  /var/run/named.pid:		EX	COMMONALERT(commonmsg.pid,0)
+    PID  /var/run/named.pid:		PR	COMMONALERT(commonmsg.pidpr,1)
+    PID  /etc/mail/sendmail.pid:	EX	COMMONALERT(commonmsg.pid,0)
+    PID  /etc/mail/sendmail.pid:	PR	COMMONALERT(commonmsg.pidpr,1)
+
+
+
+
+# DNS cache - ie: yalumba, yulp
+
+group dnscache:
+
+    ###########################################################################
+    # MESSAGES
+
+
+    ###########################################################################
+    # Notification Definitions
+
+
+    ###########################################################################
+    # RULES
+
+    #  Process		Rules	Action
+    #  -------		-----	------
+    PROC named:		NR	COMMONALERT(commonmsg.proc,2)
+
+    #  Filesystem   	Thresholds      Action
+    #  ----------   	----------      ----------
+    FS /opt:		$OVER99		COMMONALERT(commonmsg.fs,1)
+    FS /home:		$OVER99		COMMONALERT(commonmsg.fs,0)
+    FS /var/log:	$OVER95		COMMONALERT(commonmsg.fs,2)
+
+    #    pidfile                Rules   Action
+    #    -------                -----   ------
+    PID  /var/run/named.pid:	EX	COMMONALERT(commonmsg.pid,0)
+    PID  /var/run/named.pid:	PR	COMMONALERT(commonmsg.pidpr,1)
+
+
+
