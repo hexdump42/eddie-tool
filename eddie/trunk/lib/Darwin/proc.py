@@ -132,10 +132,15 @@ class procList(datacollect.DataCollect):
 	rawList.readline()		# skip header
  
 	for line in rawList.readlines():
-	    p = proc(line)
-	    self.data.proclist.append(p)
-	    self.data.datahash[p.pid] = p
-	    self.data.nameHash[p.procname] = p
+	    try:
+		p = proc(line)
+	    except:
+		e = sys.exc_info()
+		log.log( "<proc>procList.collectData(): exception parsing proc: %s, %s; line: %s" % (e[0],e[1],line), 5 )
+	    else:
+		self.data.proclist.append(p)
+		self.data.datahash[p.pid] = p
+		self.data.nameHash[p.procname] = p
 
 	utils.safe_pclose( rawList )
 
