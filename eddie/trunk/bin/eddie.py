@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/opt/python152/bin/python
 ## 
 ## File         : eddie.py 
 ## 
@@ -53,7 +53,7 @@ sys.path = [commonlibdir, oslibdir] + sys.path
 import parseConfig, directive, definition, config, action, log, history
 
 # Python OS-specific Eddie modules
-import proc, df, netstat, system
+import proc, df, netstat, system, iostat
 
 # Main config file - this file INCLUDEs all other config files
 configdir = os.path.join(basedir, 'config')
@@ -165,9 +165,13 @@ def eddieguts(Config, eddieHistory):
     log.log( "<eddie>eddieguts(), creating netstat object", 8 )
     directive.nlist = netstat.netstat()
 
-    # instantiate a system list
+    # instantiate a system object
     log.log( "<eddie>eddieguts(), creating system object", 8 )
-    directive.syslist = system.system()
+    directive.system = system.system()
+
+    # instantiate an iostat object
+    log.log( "<eddie>eddieguts(), creating iostat object", 8 )
+    directive.iostat = iostat.iostat()
 
     # Now do all the checking
     log.log( "<eddie>eddieguts(), beginning checks", 7 )
