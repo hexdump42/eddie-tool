@@ -370,9 +370,8 @@ class Directive:
 		    ret = eval( 'self.Action.'+a )
 		except:
 		    e = sys.exc_info()
-		    log.log( "<directive>doAction(), Error evaluating self.Action.%s: %s, %s, %s" % (a, e[0], e[1], e[2]), 1 )
-		    import traceback
-		    traceback.print_exc()
+		    tb = traceback.format_list( traceback.extract_tb( e[2] ) )
+		    log.log( "<directive>doAction(), Error evaluating self.Action.%s: %s, %s, %s" % (a, e[0], e[1], tb), 2 )
 		    return
 		self.Action.actionReports[a] = ret
 		if ret == None:
@@ -416,9 +415,8 @@ class Directive:
 				ret = eval( 'self.Action.'+aa )
 			    except:
 				e = sys.exc_info()
-				log.log( "<directive>doAction(), Error evaluating self.Action.%s: %s, %s, %s" % (aa, e[0], e[1], e[2]), 1 )
-				import traceback
-				traceback.print_exc()
+				tb = traceback.format_list( traceback.extract_tb( e[2] ) )
+				log.log( "<directive>doAction(), Error evaluating self.Action.%s: %s, %s, %s" % (aa, e[0], e[1], tb), 2 )
 				return
 			    self.Action.actionReports[aa] = ret
 			    if ret == None:
@@ -488,9 +486,8 @@ class Directive:
 		        ret = eval( 'self.Action.'+aa )
 		    except:
 		        e = sys.exc_info()
-		        log.log( "<directive>doAction(), Error evaluating self.Action.%s: %s, %s, %s" % (aa, e[0], e[1], e[2]), 1 )
-		        import traceback
-			traceback.print_exc()
+			tb = traceback.format_list( traceback.extract_tb( e[2] ) )
+		        log.log( "<directive>doAction(), Error evaluating self.Action.%s: %s, %s, %s" % (aa, e[0], e[1], tb), 2 )
 			return
 
 		    self.Action.actionReports[aa] = ret
