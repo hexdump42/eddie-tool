@@ -4,6 +4,7 @@
 ** Date        : 980713
 **
 ** Author      : Rod Telford <rtelford@connect.com.au>
+**               Chris Miles <chris@psychofx.com>
 **
 ** Description : This module provides a binding between 
 **               the Solaris kstat library and Python
@@ -15,14 +16,37 @@
 #include "Python.h"
 #include <kstat.h>
 
+#include "structmember.h"
+
+#define OFF(x) offsetof(XXXXobject, x)
+
 static PyObject *ErrorObject;
 
+/*
 static PyObject *PyLong_FromLongLong(long long v);
+*/
+
 static PyObject *build_io_data(kstat_t *kp);
 
 /* ----------------------------------------------------- */
 
 /* Declarations for objects of type kstatistics */
+
+/* kstatnamed: a representation of kstat_named_t which holds named kstat
+ * data as returned from kstat_data_lookup()
+ */
+
+typedef struct {
+    PyObject_HEAD
+
+    kstat_named_t *kn;
+} kstatnamed;
+
+
+/*
+ * kstatobject: really a kstat_ctl_t pointer.  Represents each
+ * node of kstat linked list.
+ */
 
 typedef struct {
     PyObject_HEAD
@@ -32,11 +56,360 @@ typedef struct {
 
 } kstatobject;
 
+/*
+ * kstatdataobject: really a kstat_t pointer.  Represents kstat data
+ * returned from kstat_lookup() etc.
+ */
+
+typedef struct {
+    PyObject_HEAD
+    
+    kstat_ctl_t *kc;
+    kstat_t *ksp;
+
+} kstatdataobject;
+
+
 staticforward PyTypeObject Kstattype;
+staticforward PyTypeObject Kstatdatatype;
+staticforward PyTypeObject Kstatnamedtype;
 
 
 
 /* ---------------------------------------------------------------- */
+
+static kstatnamed *
+newkstatnamed(kn)
+    kstat_named_t *kn;
+{
+    kstatnamed *self;
+    
+    self = PyObject_NEW(kstatnamed, &Kstatnamedtype);
+    if (self == NULL)
+	return NULL;
+
+    self->kn = kn;
+
+    return self;
+}
+
+static void
+kstatnamed_dealloc(self)
+    kstatnamed *self;
+{
+    /* XXXX Add your own cleanup code here */
+
+    PyMem_DEL(self);
+}
+
+static PyObject *
+kstatnamed_str(self)
+    kstatnamed *self;
+{
+    PyObject *s;
+    char str[256];
+
+    snprintf( str, 256, "%s", self->kn->name );
+    s = PyString_FromString(str);
+
+    /*
+    if( self->kn != NULL )
+	if( self->kn->name != NULL )
+	    s = Py_BuildValue("(s)", self->kn->name);
+	else
+	    s = Py_None;
+    else
+	s = Py_None;
+    */
+
+    return s;
+}
+
+static char kstatnamed_getdata__doc__[] =
+""
+;
+
+static PyObject *
+kstatnamed_getdata(self, args)
+    kstatnamed *self;
+    PyObject *args;
+{
+    PyObject *ret;
+
+    if (!PyArg_ParseTuple(args, ""))
+	return NULL;
+
+    if( self->kn == NULL )
+	return NULL;
+
+    switch( self->kn->data_type ) {
+	case KSTAT_DATA_CHAR:
+	    ret = PyString_FromString(self->kn->value.c);	/* actually a string... XXXX */
+	    break;
+	case KSTAT_DATA_INT32:
+	    ret = PyLong_FromLong(self->kn->value.i32);
+	    break;
+	case KSTAT_DATA_UINT32:
+	    ret = PyLong_FromLong(self->kn->value.ui32);
+	    break;
+	case KSTAT_DATA_INT64:
+	    ret = PyLong_FromLongLong(self->kn->value.i64);
+	    break;
+	case KSTAT_DATA_UINT64:
+	    ret = PyLong_FromLongLong(self->kn->value.ui64);
+	    break;
+	default:
+	    ret = Py_None;
+    }
+
+    return (PyObject*)ret;
+}
+
+
+static struct PyMethodDef kstatnamed_methods[] = {
+    {"getdata",		(PyCFunction)kstatnamed_getdata,	METH_VARARGS,	kstatnamed_getdata__doc__},
+    {NULL,		NULL}		/* sentinel */
+};
+
+static struct memberlist kstatnamed_memberlist[] = {
+    /* XXXX Add lines like { "foo", T_INT, OFF(foo), RO }  */
+
+    {NULL}	/* Sentinel */
+};
+
+
+static PyObject *
+kstatnamed_getattr(self, name)
+    kstatnamed *self;
+    char *name;
+{
+    PyObject *rv;
+
+    rv = PyMember_Get((char *)/*XXXX*/0, kstatnamed_memberlist, name);
+    if (rv)
+	    return rv;
+    PyErr_Clear();
+    return Py_FindMethod(kstatnamed_methods, (PyObject *)self, name);
+}
+
+static int
+kstatnamed_setattr(self, name, v)
+    kstatnamed *self;
+    char *name;
+    PyObject *v;
+{
+    /* XXXX Add your own setattr code here */
+    if ( v == NULL ) {
+	PyErr_SetString(PyExc_AttributeError, "Cannot delete attribute");
+	return -1;
+    }
+    return PyMember_Set((char *)/*XXXX*/0, kstatnamed_memberlist, name, v);
+}
+
+
+static char Kstatnamedtype__doc__[] = 
+""
+;
+
+static PyTypeObject Kstatnamedtype = {
+    PyObject_HEAD_INIT(&PyType_Type)
+    0,					/*ob_size*/
+    "kstatisticsnameddata",		/*tp_name*/
+    sizeof(kstatnamed),			/*tp_basicsize*/
+    0,					/*tp_itemsize*/
+    /* methods */
+    (destructor)kstatnamed_dealloc,	/*tp_dealloc*/
+    (printfunc)0,			/*tp_print*/
+    (getattrfunc)kstatnamed_getattr,	/*tp_getattr*/
+    (setattrfunc)kstatnamed_setattr,	/*tp_setattr*/
+    (cmpfunc)0,				/*tp_compare*/
+    (reprfunc)kstatnamed_str,		/*tp_repr*/
+    0,					/*tp_as_number*/
+    0,					/*tp_as_sequence*/
+    0,					/*tp_as_mapping*/
+    (hashfunc)0,			/*tp_hash*/
+    (ternaryfunc)0,			/*tp_call*/
+    (reprfunc)kstatnamed_str,		/*tp_str*/
+
+    /* Space for future expansion */
+    0L,0L,0L,0L,
+    Kstatnamedtype__doc__ 		/* Documentation string */
+};
+
+
+
+/* ---------- */
+
+
+
+
+/* ---------------------------------------------------------------- */
+
+static kstatdataobject *
+newkstatdataobject(kc, ksp)
+    kstat_ctl_t *kc;
+    kstat_t *ksp;
+{
+    kstatdataobject *self;
+    
+    self = PyObject_NEW(kstatdataobject, &Kstatdatatype);
+    if (self == NULL)
+	return NULL;
+
+    self->kc = kc;
+    self->ksp = ksp;
+
+    return self;
+}
+
+static void
+kstatdata_dealloc(self)
+    kstatdataobject *self;
+{
+    /* XXXX Add your own cleanup code here */
+
+    PyMem_DEL(self);
+}
+
+static PyObject *
+kstatdata_str(self)
+    kstatdataobject *self;
+{
+    PyObject *s;
+    char str[256];
+
+    snprintf( str, 256, "%s/%s/%s", self->ksp->ks_module, self->ksp->ks_name, self->ksp->ks_class );
+    s = PyString_FromString(str);
+
+    /*
+    s = Py_BuildValue("(sss)", self->ksp->ks_module, self->ksp->ks_name, self->ksp->ks_class);
+    */
+
+    return s;
+}
+
+
+static char kstat_Read__doc__[] =
+""
+;
+
+static PyObject *
+kstat_Read(self, args)
+    kstatdataobject *self;
+    PyObject *args;
+{
+    int r;
+
+    if (!PyArg_ParseTuple(args, ""))
+	return NULL;
+
+    r = kstat_read(self->kc, self->ksp, NULL);
+    if( r == -1 )
+	 return NULL;
+
+    return Py_None;
+}
+
+static char kstat_Data_lookup__doc__[] =
+""
+;
+
+static PyObject *
+kstat_Data_lookup(self, args)
+    kstatdataobject *self;
+    PyObject *args;
+{
+    kstat_named_t *kn;
+    char *dname;
+    PyObject *ret;
+
+    if (!PyArg_ParseTuple(args, "s", &dname))
+	return NULL;
+
+    kn = kstat_data_lookup(self->ksp, dname);
+
+    ret = (PyObject *)newkstatnamed(kn);
+
+    return ret;
+}
+
+
+static struct PyMethodDef kstatdata_methods[] = {
+    {"read",		(PyCFunction)kstat_Read,	METH_VARARGS,	kstat_Read__doc__},
+    {"data_lookup",	(PyCFunction)kstat_Data_lookup,	METH_VARARGS,	kstat_Data_lookup__doc__},
+    {NULL,		NULL}		/* sentinel */
+};
+
+static struct memberlist kstatdata_memberlist[] = {
+    /* XXXX Add lines like { "foo", T_INT, OFF(foo), RO }  */
+
+    {NULL}	/* Sentinel */
+};
+
+
+static PyObject *
+kstatdata_getattr(self, name)
+    kstatobject *self;
+    char *name;
+{
+    PyObject *rv;
+
+    rv = PyMember_Get((char *)/*XXXX*/0, kstatdata_memberlist, name);
+    if (rv)
+	    return rv;
+    PyErr_Clear();
+    return Py_FindMethod(kstatdata_methods, (PyObject *)self, name);
+}
+
+static int
+kstatdata_setattr(self, name, v)
+    kstatobject *self;
+    char *name;
+    PyObject *v;
+{
+    /* XXXX Add your own setattr code here */
+    if ( v == NULL ) {
+	PyErr_SetString(PyExc_AttributeError, "Cannot delete attribute");
+	return -1;
+    }
+    return PyMember_Set((char *)/*XXXX*/0, kstatdata_memberlist, name, v);
+}
+
+
+static char Kstatdatatype__doc__[] = 
+""
+;
+
+static PyTypeObject Kstatdatatype = {
+    PyObject_HEAD_INIT(&PyType_Type)
+    0,					/*ob_size*/
+    "kstatisticsdata",			/*tp_name*/
+    sizeof(kstatdataobject),		/*tp_basicsize*/
+    0,					/*tp_itemsize*/
+    /* methods */
+    (destructor)kstatdata_dealloc,	/*tp_dealloc*/
+    (printfunc)0,			/*tp_print*/
+    (getattrfunc)kstatdata_getattr,	/*tp_getattr*/
+    (setattrfunc)kstatdata_setattr,	/*tp_setattr*/
+    (cmpfunc)0,				/*tp_compare*/
+    (reprfunc)kstatdata_str,		/*tp_repr*/
+    0,					/*tp_as_number*/
+    0,					/*tp_as_sequence*/
+    0,					/*tp_as_mapping*/
+    (hashfunc)0,			/*tp_hash*/
+    (ternaryfunc)0,			/*tp_call*/
+    (reprfunc)kstatdata_str,		/*tp_str*/
+
+    /* Space for future expansion */
+    0L,0L,0L,0L,
+    Kstatdatatype__doc__ 		/* Documentation string */
+};
+
+
+
+/* ---------- */
+
+
 
 static kstatobject *
 newkstatobject(kc, curr)
@@ -82,28 +455,28 @@ kstat_getnext(self, args)
     }
 }
 
-static char kstat_lookup__doc__[] =
+static char kstat_Lookup__doc__[] =
 ""
 ;
 
 static PyObject *
-kstat_find(self, args)
+kstat_Lookup(self, args)
     kstatobject *self;
     PyObject *args;
 {
     PyObject *ret;
     kstat_t *kp;
 
-    char *ks_modual;
+    char *ks_module;
     int ks_instance;
     char *ks_name;
 
-    if (!PyArg_ParseTuple(args, "sis", &ks_modual, &ks_instance, &ks_name))
+    if (!PyArg_ParseTuple(args, "sis", &ks_module, &ks_instance, &ks_name))
 	return NULL;
 
-    kp = kstat_lookup(self->kc, ks_modual, ks_instance, ks_name);
+    kp = kstat_lookup(self->kc, ks_module, ks_instance, ks_name);
 
-    ret = (PyObject *)newkstatobject(self->kc, kp);
+    ret = (PyObject *)newkstatdataobject(self->kc, kp);
     return ret;
 }
 
@@ -138,14 +511,14 @@ kstat_getdata(self, args)
 
 static struct PyMethodDef kstat_methods[] = {
     {"getnext",	(PyCFunction)kstat_getnext,	METH_VARARGS,	kstat_getnext__doc__},
-    {"lookup",	(PyCFunction)kstat_find,	METH_VARARGS,	kstat_lookup__doc__},
+    {"lookup",	(PyCFunction)kstat_Lookup,	METH_VARARGS,	kstat_Lookup__doc__},
     {"close",	(PyCFunction)kstat_Close,	METH_VARARGS,	kstat_Close__doc__},
  /*   {"getdata",	(PyCFunction)kstat_getdata,	METH_VARARGS,	kstat_getdata__doc__}, */
     {NULL,		NULL}		/* sentinel */
 };
 
-/* ---------- */
 
+/* ---------- */
 
 
 static void
@@ -162,19 +535,30 @@ kstat_str(self)
     kstatobject *self;
 {
     PyObject *s;
+    char str[256];
 
-    /* XXXX Add code here to put self into s */
-    s = Py_BuildValue("(sss)", self->kp->ks_module, self->kp->ks_name, self->kp->ks_class);
+    snprintf( str, 256, "%s/%s/%s", self->kp->ks_module, self->kp->ks_name, self->kp->ks_class );
+    s = PyString_FromString(str);
+
+    /*
+    s = Py_BuildValue("(s)", "testing");
+    */
+
+    /*
+    if( self->kp != NULL )
+	if( self->kp->ks_module != NULL && self->kp->ks_name != NULL && self->kp->ks_class != NULL )
+	    s = Py_BuildValue("(sss)", self->kp->ks_module, self->kp->ks_name, self->kp->ks_class);
+	else
+	    s = Py_None;
+    else
+	s = Py_None;
+    */
 
     return s;
 }
 
 
 /* Code to access structure members by accessing attributes */
-
-#include "structmember.h"
-
-#define OFF(x) offsetof(XXXXobject, x)
 
 static struct memberlist kstat_memberlist[] = {
     /* XXXX Add lines like { "foo", T_INT, OFF(foo), RO }  */
@@ -224,6 +608,12 @@ kstat_getattr(self, name)
 	    case KSTAT_TYPE_IO:
 		if ( kstat_read(self->kc, self->kp, 0) != -1 )
 		    return build_io_data(self->kp);
+
+/*
+	    case KSTAT_TYPE_RAW:
+		if( strcmp( self->kp->ks_name, "sysinfo" ) == 0 )
+		    return build_sysinfo_data(self->kp);
+*/
 	}
     }
 
@@ -288,6 +678,11 @@ static PyTypeObject Kstattype = {
     Kstattype__doc__ 			/* Documentation string */
 };
 
+
+
+/* ---------------------------------------------------------------- */
+
+
 /* End of code for kstatistics objects */
 /* -------------------------------------------------------- */
 
@@ -312,7 +707,7 @@ skstat_open(self, args)
     /*
     Py_Assert( kc != 0, ErrorObject, "Can't open kstat tree" );
     */
-    
+
     ret = (PyObject *)newkstatobject(kc, kc->kc_chain);
 
     /*kstat_close(kc);*/
@@ -389,44 +784,4 @@ build_io_data(kp)
 }
 
 
-static PyObject *
-PyLong_FromLongLong(long long v)
-{
-	/* XXXX Somewhat complicated way to convert a long long to a PyLong */
-	PyObject *l = NULL, *lhi, *llo;
-	int is_negative = 0;
-	static PyObject *i32;	/* 32 as a python long */
-
-	if (v < 0) {
-		is_negative = 1;
-		v = -v;
-	}
-	lhi = PyLong_FromUnsignedLong((unsigned long) ((unsigned long long) v >> 32));
-	llo = PyLong_FromUnsignedLong((unsigned long) (v & 0xFFFFFFFFLL));
-	if (i32 == NULL)
-		i32 = PyLong_FromLong(32L); /* don't decref */
-	if (PyErr_Occurred())
-		goto error;
-	if ((l = PyNumber_Lshift(lhi, i32)) == NULL)
-		goto error;
-	Py_DECREF(lhi);
-	lhi = l;
-	if ((l = PyNumber_Or(lhi, llo)) == NULL)
-		goto error;
-	Py_DECREF(lhi);
-	Py_DECREF(llo);
-	if (is_negative) {
-		if ((lhi = PyNumber_Negative(l)) == NULL)
-			goto error;
-		Py_DECREF(l);
-		l = lhi;
-	}
-	return l;
-
-  error:
-	Py_XDECREF(lhi);
-	Py_XDECREF(llo);
-	Py_XDECREF(l);
-	return NULL;
-}
 

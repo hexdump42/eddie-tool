@@ -16,10 +16,13 @@ Things TODO for Eddie!
 
 - store disk usage in eddiedb
 
+- check inode usage
 
 BUGS:
  - Solaris 8:
      top: /dev/ksyms is not a 32-bit kernel namelist
      kvm_open: Error 0
+
+ - Unknown directives are not handled properly.
 
 
