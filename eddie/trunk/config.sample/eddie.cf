@@ -88,9 +88,24 @@ SCANPERIOD=10m          # by default scan every 10 minutes
 #  Define the location of the sendmail binary, which EDDIE uses to send
 #  all email.  This is usually either '/usr/lib/sendmail' (Solaris) or
 #  '/usr/sbin/sendmail' (Redhat Linux).  Defaults to '/usr/lib/sendmail'.
+#  If this option is set after the SMTP_SERVERS option, this will be used
+#  as the method to send email.
 #  Use: SENDMAIL='/path/to/sendmail'
 
 #SENDMAIL='/usr/lib/sendmail'
+
+
+# SMTP_SERVERS
+#  Define one or more servers to make SMTP connections to for sending
+#  email.  Servers are specified by hostname or IP address, separated
+#  by commas.  The first server will be used, unless the connection
+#  fails, then each server will be attempted in turn.
+#  Defaults to 'localhost'.
+#  If this option is set after the SENDMAIL option, this will be used
+#  as the method to send email.
+#  Use: SMTP_SERVERS='smtp0.domain.com,smtp1.domain.com'
+
+#SMTP_SERVERS='localhost'
 
 
 # ELVINURL, ELVINSCOPE
