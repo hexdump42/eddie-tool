@@ -25,6 +25,8 @@ y Multi-threaded checks
 
 - ping checks
 
+- radius checks
+
 - msg objects in action calls, eg:
     PORT  'hostname': 50006   ""  "ALIVE" email('alert', commonmsg.port.WARN)
 
@@ -33,6 +35,12 @@ y Multi-threaded checks
 - check inode usage
 
 - Problem age/ack details variable for messages, eg: %(probage)s, etc.
+
+- FILE checks (like tripwire) - stat file, and md5 file.
+- Similarly, DIR checks, like "DIR /usr/bin" to notify of changes.
+
+- Can store state between sessions (for FILE checks, history, etc).
+  Store state to /var/run/eddie/.... which can be re-read if restarted.
 
 BUGS:
  - Solaris 8:
