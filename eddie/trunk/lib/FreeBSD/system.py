@@ -55,9 +55,6 @@ class system(datacollect.DataCollect):
             System stats from '/usr/bin/uptime':
                 uptime          - (string)
                 users           - (int)
-                loadavg1        - (float)
-                loadavg5        - (float)
-                loadavg15       - (float)
 
             System counters from '/usr/bin/vmstat -s' (see vmstat(1)):
                 ctr_cpu_context_switches                  - (long)
@@ -86,6 +83,17 @@ class system(datacollect.DataCollect):
                 ctr_pages_freed_by_exiting_processes      - (long)
                 ctr_pages_freed_by_exiting_processes      - (long)
                 ctr_total_name_lookups                    - (long)
+
+            System counters from '/sbin/sysctl -a' (see sysctl(8)):
+		ctr_cpu_user                              - (long)
+		ctr_cpu_nice                              - (long)
+		ctr_cpu_system                            - (long)
+		ctr_cpu_interrupt                         - (long)
+		ctr_cpu_idle                              - (long)
+		open_files                                - (long)
+                loadavg1                                  - (float)
+                loadavg5                                  - (float)
+                loadavg15                                 - (float)
     """
 
     def __init__(self):
@@ -118,6 +126,10 @@ class system(datacollect.DataCollect):
         swapinfo_dict = self._getswapinfo()
         if swapinfo_dict:
             self.data.datahash.update(swapinfo_dict)
+
+        sysctl_dict = self._getsysctl()
+        if sysctl_dict:
+            self.data.datahash.update(sysctl_dict)
 
 	log.log( "<system>system.collectData(): new system list created", 7 )
 
@@ -216,9 +228,11 @@ class system(datacollect.DataCollect):
 
         # convert types
         uptime_dict['users'] = int(uptime_dict['users'])
-        uptime_dict['loadavg1'] = float(uptime_dict['loadavg1'])
-        uptime_dict['loadavg5'] = float(uptime_dict['loadavg5'])
-        uptime_dict['loadavg15'] = float(uptime_dict['loadavg15'])
+
+	# chris 2004-12-31: replaced by sysctl vm.loadavg
+        #uptime_dict['loadavg1'] = float(uptime_dict['loadavg1'])
+        #uptime_dict['loadavg5'] = float(uptime_dict['loadavg5'])
+        #uptime_dict['loadavg15'] = float(uptime_dict['loadavg15'])
 
         return uptime_dict
 
@@ -255,13 +269,118 @@ class system(datacollect.DataCollect):
 	    return None
 
 	swapinfo_dict['swap_device'] = fields[0]	# either the swap device or "Total"
-	swapinfo_dict['swap_size'] = fields[1]
-	swapinfo_dict['swap_used'] = fields[2]
-	swapinfo_dict['swap_available'] = fields[3]
+	swapinfo_dict['swap_size'] = int( fields[1] ) * 1024		# Bytes
+	swapinfo_dict['swap_used'] = int( fields[2] ) * 1024		# Bytes
+	swapinfo_dict['swap_available'] = int( fields[3] ) * 1024	# Bytes
 	# ignore fields[4] (capacity %)
 	# ignore fields[5] (Type, but only for a device line)
 
 	return swapinfo_dict
+
+
+    def _getvmstat2(self):
+	"""Get instantaneous system statistics from the output of the 'vmstat' command.
+	"""
+
+	vmstat_cmd = "/usr/bin/vmstat -n 0 1 2"
+
+	(retval, output) = utils.safe_getstatusoutput( vmstat_cmd )
+
+	if retval != 0:
+	    log.log( "<system>system._getvmstat2(): error calling '%s'"%(vmstat_cmd), 5 )
+	    return None
+
+	output = string.strip( output )
+        output_lastline = string.split( output, '\n' )[-1]
+
+	v_split = string.split( output_lastline )
+	if len(v_split) != 19:
+	    log.log( "<system>system._getvmstat2(): vmstat output invalid, '%s'"%(output_lastline), 5 )
+	    return None
+
+	vmstat_dict = {}
+	try:
+	    vmstat_dict['procs_running'] = int(v_split[0])
+	    vmstat_dict['procs_blocked'] = int(v_split[1])
+	    vmstat_dict['procs_waiting'] = int(v_split[2])
+	    vmstat_dict['active_virtual_pages'] = int(v_split[3])
+	    vmstat_dict['mem_free_list'] = int(v_split[4])
+	    vmstat_dict['page_faults'] = int(v_split[5])
+	    vmstat_dict['page_reclaims'] = int(v_split[6])
+	    vmstat_dict['pages_paged_in'] = int(v_split[7])
+	    vmstat_dict['pages_paged_out'] = int(v_split[8])
+	    vmstat_dict['pages_freed'] = int(v_split[9])
+	    vmstat_dict['scan_rate'] = int(v_split[10])
+	    vmstat_dict['device_interrupts'] = int(v_split[11])
+	    vmstat_dict['system_calls'] = int(v_split[12])
+	    vmstat_dict['cpu_context_switches'] = int(v_split[13])
+	    vmstat_dict['cpu_user'] = float(v_split[14])
+	    vmstat_dict['cpu_system'] = float(v_split[15])
+	    vmstat_dict['cpu_idle'] = float(v_split[16])
+	except ValueError:
+	    log.log( "<system>system._getvmstat2(): could not parse vmstat output '%s'"%(output), 5 )
+	    return None
+
+	return vmstat_dict
+
+
+    def _getsysctl(self):
+	"""Get system statistics from the output of the 'sysctl -a' command.
+	"""
+
+	sysctl_cmd = "/sbin/sysctl -a"
+
+	(retval, output) = utils.safe_getstatusoutput( sysctl_cmd )
+
+	if retval != 0:
+	    log.log( "<system>system._getsysctl(): error calling '%s'"%(sysctl_cmd), 5 )
+	    return None
+
+	fulldict = {}
+
+        for line in string.split( output, '\n' ):
+	    splitline = string.split( line, ':', 2 )
+	    if len( splitline ) == 2:
+		fulldict[splitline[0]] = splitline[1]
+
+	sysctl_dict = {}
+
+	# CPU counters
+	try:
+	    cp_time = fulldict['kern.cp_time'].split()
+	    sysctl_dict['ctr_cpu_user'] = long( cp_time[0] )
+	    sysctl_dict['ctr_cpu_nice'] = long( cp_time[1] )
+	    sysctl_dict['ctr_cpu_system'] = long( cp_time[2] )
+	    sysctl_dict['ctr_cpu_interrupt'] = long( cp_time[3] )
+	    sysctl_dict['ctr_cpu_idle'] = long( cp_time[4] )
+	except KeyError, msg:
+	    # This version of FreeBSD does not support kern.cp_time (old versions do not)
+	    pass
+	except ValueError, msg:
+	    log.log( "<system>system._getsysctl(): error parsing kern.cp_time, %s"%(msg), 5 )
+
+	# Total number of open files
+	try:
+	    sysctl_dict['open_files'] = long( fulldict['kern.openfiles'] )
+	except KeyError, msg:
+	    # This version of FreeBSD does not support kern.openfiles
+	    pass
+	except ValueError, msg:
+	    log.log( "<system>system._getsysctl(): error parsing kern.openfiles, %s"%(msg), 5 )
+
+	# Load averages
+	try:
+	    lavgs = fulldict['vm.loadavg'].split()
+	    sysctl_dict['loadavg1'] = float( lavgs[1] )
+	    sysctl_dict['loadavg5'] = float( lavgs[2] )
+	    sysctl_dict['loadavg15'] = float( lavgs[3] )
+	except KeyError, msg:
+	    # This version of FreeBSD does not support vm.loadavg
+	    pass
+	except ValueError, msg:
+	    log.log( "<system>system._getsysctl(): error parsing vm.loadavg, %s"%(msg), 5 )
+
+	return sysctl_dict
 
 
 ##
