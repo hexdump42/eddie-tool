@@ -418,7 +418,9 @@ def loadExtraDirectives( directivedir ):
 
     sys.path = oldsyspath		# restore module path
 
-    print "directives:",directives
+    #print "directives:",directives
+
+    keywords.update(directives)		# add new directives to keywords table
 
 
 ##
@@ -426,7 +428,6 @@ def loadExtraDirectives( directivedir ):
 ##
 
 ## Just the directives
-global directives
 directives = {  
 		"N"		: definition.N,
 		"FS"		: directive.FS,

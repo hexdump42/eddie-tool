@@ -13,11 +13,9 @@
 
 
 # Imports: Python
-import sys
-print "ipf sys.path:",sys.path
-import commands
+import sys, os, commands
 # Imports: Eddie
-import log, directive
+import log, directive, utils
 
 
 # Define exceptions
@@ -40,7 +38,7 @@ class IPF(directive.Directive):
 	self.Action.varDict['rule'] = self.rule
 
 	# define the unique ID
-	self.ID = '%s.FS.%s.%s' % (log.hostname,self.rule)
+	self.ID = '%s.IPF.%s' % (log.hostname,self.rule)
 
 	log.log( "<ipf.py>IPF, ID '%s' rule '%s' action '%s'" % (self.ID, self.rule, self.actionList), 8 )
 
@@ -63,10 +61,20 @@ class IPF(directive.Directive):
 		# ipfstat call failed
 		log.log( "<ipf.py>IPF, docheck(): ipfstat call failed, returned %d, '%s'" % (r, ipfstat), 3)
 
-	print "ipfstat:",ipfstat
+	    (r, ipfstatin) = commands.getstatusoutput("/opt/local/sbin/ipfstat -ih")
+	    if r != 0:
+		# ipfstat -ih call failed
+		log.log( "<ipf.py>IPF, docheck(): ipfstat -ih call failed, returned %d, '%s'" % (r, ipfstatin), 3)
+
+	    (r, ipfstatout) = commands.getstatusoutput("/opt/local/sbin/ipfstat -oh")
+	    if r != 0:
+		# ipfstat -oh call failed
+		log.log( "<ipf.py>IPF, docheck(): ipfstat -oh call failed, returned %d, '%s'" % (r, ipfstatout), 3)
 
 	rulesenv = {}			# environment for rules execution
 	rulesenv['ipfstat'] = str(ipfstat)
+	rulesenv['ipfstatin'] = str(ipfstatin)
+	rulesenv['ipfstatout'] = str(ipfstatout)
 
 	###self.parseRule()
 
@@ -80,6 +88,8 @@ class IPF(directive.Directive):
 
 	    # assign variables
 	    self.Action.varDict['ipfstat'] = str(ipfstat)
+	    self.Action.varDict['ipfstatin'] = str(ipfstatin)
+	    self.Action.varDict['ipfstatout'] = str(ipfstatout)
 
     	    log.log( "<ipf.py>IPF, docheck(): rule '%s' was false, calling doAction()" % (self.rule), 6 )
     	    self.doAction(Config)
