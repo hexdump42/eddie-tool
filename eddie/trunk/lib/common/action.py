@@ -112,7 +112,8 @@ class action:
 	    body = body + "\nProblem first detected: %04d/%02d/%02d %d:%02d:%02d" % (t[0], t[1], t[2], t[3], t[4], t[5])
 
 
-	tmp = os.popen('/usr/lib/sendmail -t', 'w')
+	#tmp = os.popen('/usr/lib/sendmail -t', 'w')
+	tmp = utils.safe_popen('/usr/lib/sendmail -t', 'w')
 	tmp.write( 'To: '+users+'\n' )
 	tmp.write( 'From: "Eddie" <eddie@connect.com.au>\n' )
 	tmp.write( 'Reply-To: systems@connect.com.au\n' )
@@ -121,7 +122,8 @@ class action:
 	tmp.write( '\n' )
 	tmp.write( body+'\n' )
 	#tmp.write( '.\n' )
-	tmp.close()
+	#tmp.close()
+	utils.safe_pclose( tmp )
 
 	if not log.log( "<action.py>action.email(), email sent to '%s', subject '%s', body '%s'" % (u,subj,body), 9 ):
 	    log.log( "<action.py>action.email('%s', '%s', '%s')" % (u,subj,body[:20]) ,5 )

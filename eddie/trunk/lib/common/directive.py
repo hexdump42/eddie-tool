@@ -342,17 +342,22 @@ class FS(Directive):
 	    self.Action.varDict['fsdf'] = "%s%s" % (dlist.dfheader,df)
 
 	    # get '%fsls' details for this filesystem
-    	    fsls = os.popen("ls -l %s" % (df.mountpt), 'r')
+    	    #fsls = os.popen("ls -l %s" % (df.mountpt), 'r')
+    	    fsls = utils.safe_popen("ls -l %s" % (df.mountpt), 'r')
  
 	    fsls_output = ""
     	    for line in fsls.readlines():
 		fsls_output = fsls_output + line
 	    
-	    fsls.close()
+	    #fsls.close()
+	    utils.safe_pclose( fsls )
+
 	    self.Action.varDict['fsls'] = fsls_output
 	
     	    log.log( "<directive>FS(), rule '%s' was false, calling doAction()" % (self.rule), 6 )
     	    self.doAction(Config)
+
+	Config.q.put( (self,time.time()+self.scanperiod) )	# put self back in the Queue
 
 
     # Parse the rule line and replace/remove certain characters
@@ -474,6 +479,8 @@ class PID(Directive):
 			log.log( "<directive>PID(), PR, pid %s is in process list" % (pid), 7 )
 			self.state.stateok()		# update state info for check passed
 
+	    Config.q.put( (self,time.time()+self.scanperiod) )	# put self back in the Queue
+
 	else:
 	    # invalid rule
 	    log.log( "<directive>PID, Error, '%s' is not a valid PID rule, config line follows,\n%s\n" % (self.rule,self.raw), 2 )
@@ -525,6 +532,8 @@ class PROC(Directive):
 	log.log( "<directive>PROC(), docheck(), daemon '%s', rule '%s'" % (self.daemon,self.rule), 7 )
 	self.rule(Config)
 
+	Config.q.put( (self,time.time()+self.scanperiod) )	# put self back in the Queue
+
 
     def NR(self,Config):
 	"""Call action if process is found to be NOT running."""
@@ -560,7 +569,7 @@ class PROC(Directive):
     def check(self,Config):
 	"""Executes a check string supplied by user."""
 
-	for p in plist.list:
+	for p in plist.getList():
 	    if p.procname == self.daemon:
 		try:
 		    procenv = p.procinfo()		# get dictionary of process details
@@ -638,6 +647,8 @@ class SP(Directive):
 		log.log( "<directive>SP(), port %s/%s no listener found bound to %s" % (self.proto , self.port_n, self.addr), 6 )
 		self.state.statefail()	# update state info for check failed
 		self.doAction(Config)
+
+	Config.q.put( (self,time.time()+self.scanperiod) )	# put self back in the Queue
 
 
 class COM(Directive):
@@ -746,6 +757,8 @@ class COM(Directive):
 	else:
 	    self.state.stateok()	# update state info for check passed
 
+	Config.q.put( (self,time.time()+self.scanperiod) )	# put self back in the Queue
+
 
 class PORT(Directive):
     def __init__(self, toklist):
@@ -811,6 +824,8 @@ class PORT(Directive):
             self.doAction(Config)
 	else:
 	    self.state.stateok()	# update state info for check passed
+
+	Config.q.put( (self,time.time()+self.scanperiod) )	# put self back in the Queue
 
 
     def isalive(self,host,port,send="",expect=""):
@@ -909,6 +924,8 @@ class IF(Directive):
 	log.log( "<directive>IF(), docheck(), name '%s', check '%s', checkstring '%s'" % (self.name,self.check,self.checkstring), 7 )
 
 	self.rule(Config)
+
+	Config.q.put( (self,time.time()+self.scanperiod) )	# put self back in the Queue
 
 
     def NE(self, Config):
@@ -1009,6 +1026,8 @@ class NET(Directive):
 	else:
 	    self.state.stateok()	# update state info for check passed
 
+	Config.q.put( (self,time.time()+self.scanperiod) )	# put self back in the Queue
+
 
 
 class SYS(Directive):
@@ -1062,6 +1081,8 @@ class SYS(Directive):
 	    self.doAction(Config)
 	else:
 	    self.state.stateok()	# update state info for check passed
+
+	Config.q.put( (self,time.time()+self.scanperiod) )	# put self back in the Queue
 
 
 
@@ -1135,6 +1156,8 @@ class STORE(Directive):
 
 	self.Action.storedict = datahash
 	self.doAction(Config)
+
+	Config.q.put( (self,time.time()+self.scanperiod) )	# put self back in the Queue
 
 
 

@@ -168,6 +168,7 @@ class State:
 			direc.parent = self.prevdirec	# show directive its parent
 
 		    self.reset()		# reset state
+		    direc.scanperiod = config.scanperiod	# set default scanperiod
 		    self.direc = direc	# current directive
 		return
 

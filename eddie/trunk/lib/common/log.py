@@ -12,8 +12,11 @@
 ## $Id$
 ##
 
-import time
-import os
+# Python imports
+import time, os
+
+# Eddie imports
+import utils
 
 ##
 ## Logfile & Log level (defaults)
@@ -91,7 +94,8 @@ def sendadminlog( override=0 ):
     if len(adminlog) == 0:
 	return
 
-    tmp = os.popen('/usr/lib/sendmail -t', 'w')
+    #tmp = os.popen('/usr/lib/sendmail -t', 'w')
+    tmp = utils.safe_popen('/usr/lib/sendmail -t', 'w')
     tmp.write( 'To:'+adminemail+'\n' )
     tmp.write( 'From:eddie@connect.com.au\n' )
     tmp.write( 'Reply-To:systems@connect.com.au\n' )
@@ -106,7 +110,8 @@ def sendadminlog( override=0 ):
 	tmp.write( "%s" % (i) )
 
     tmp.write( '------------------------------------------------------------------------------\n' )
-    tmp.close()
+    #tmp.close()
+    utils.safe_pclose( tmp )
 
     # clear adminlog
     adminlog = []

@@ -183,7 +183,7 @@ class SCANPERIOD(ConfigOption):
 	if list[-1] != '\012':
 	    raise ParseNotcomplete
 
-	# if we don't have 4 or 5 elements ['ADMIN_NOTIFY', '=', <int>, [<char>,] '012'] then
+	# if we don't have 4 or 5 elements ['SCANPERIOD', '=', <int>, [<char>,] '012'] then
 	# raise an error
 	if len(list) < 4 or len(list) > 5:
 	    raise ParseFailure, "SCANPERIOD definition has %d tokens when expecting 4 or 5" % len(list)

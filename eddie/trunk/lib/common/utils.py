@@ -1,4 +1,3 @@
-#!/opt/local/bin/python 
 ## 
 ## File		: utils.py 
 ## 
@@ -13,8 +12,7 @@
 ##
 ##
 
-import regex
-import string
+import regex, string, threading, os
 
 
 ##
@@ -190,9 +188,31 @@ def val2secs( value ):
     value = value[:-1]
     mult = atom( timech )
     if mult == 0:
-	#log.log( "<Config>val2secs(%d,'%s'), Error : timech is '%s'" % (self,value,timech), 2 )
 	return 0
     return string.atoi(value)*mult
+
+
+
+safe_popen_semaphore = threading.Semaphore()
+
+def safe_popen( cmd, mode ):
+    """A thread-safe wrapper for os.popen() which did not appear to like
+    being called simultaneously from multiple threads.  Obviously only
+    allows one thread at a time to call os.popen()."""
+
+    safe_popen_semaphore.acquire()
+    #print "<utils>safe_popen(), semaphore acquired for '%s', '%s'" % (cmd,mode)
+    r = os.popen(cmd, mode)
+    #print "<utils>safe_popen(), pipe open, fh='%s'" % (r)
+    return r
+
+def safe_pclose( fh ):
+    """Close the file handler and release the semaphore."""
+
+    fh.close()
+    #print "<utils>safe_popen(), releasing semaphore for '%s'" % (fh)
+    safe_popen_semaphore.release()
+
 
 ##
 ## END - utils.py
