@@ -253,6 +253,7 @@ class State:
 	    parseFailure( msg, (srow, scol), (erow, ecol), line, self.filename )
 	    #print "PARSEFAILURE: ",msg,(srow, scol), (erow, ecol), line
 	    ## TODO: probably should return to top level properly...?
+            log.sendadminlog()
 	    sys.exit(-1)
 
 
