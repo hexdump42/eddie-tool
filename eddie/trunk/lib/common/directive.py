@@ -417,7 +417,11 @@ class COM(Directive):
 	    err = string.strip(err)
 	    if err[-1:] == '\n':
 		err = err[:-1]
-	
+
+        log.log( "<directive>COM.docheck(), retval=%d" % retval, 9 )
+	log.log( "<directive>COM.docheck(), stdout='%s'" % out, 9 )
+	log.log( "<directive>COM.docheck(), stderr='%s'" % err, 9 )
+
 	# save values in variable dictionary
 	self.varDict['out'] = out
 	self.varDict['err'] = err
@@ -428,6 +432,7 @@ class COM(Directive):
         comenv['err'] = err
         comenv['ret'] = retval
 	result = eval( self.rule, comenv )
+        log.log( "<directive>COM.docheck(), eval:'%s', result='%s'" % (self.rule,result), 9 )
 	if result != 0:
 	    self.doAction()
 
