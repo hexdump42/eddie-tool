@@ -249,8 +249,12 @@ class HTTP(directive.Directive):
 	log.log( "<http>HTTP.getData(): Sending request: %s"%(self.file), 7 )
 	# cmiles 2004-07-13: set a socket timeout if one is specified
 	if self.request_timeout != None:
-	    conn.sock.settimeout( self.request_timeout )
-	    log.log( "<http>HTTP.getData(): socket timeout set to %f"%(self.request_timeout), 8 )
+	    try:
+		conn.sock.settimeout( self.request_timeout )
+	    except AttributeError, msg:
+		log.log( "<http>HTTP.getData(): request_timeout not set as socket.settimeout() not supported, %s"%(msg), 5 )
+	    else:
+		log.log( "<http>HTTP.getData(): socket timeout set to %f"%(self.request_timeout), 8 )
 	time_request_start = time.time()
 	try:
 	    conn.request( "GET", self.file, None, extra_headers )
@@ -258,7 +262,8 @@ class HTTP(directive.Directive):
 	    time_request_end = time.time()
 	    e = sys.exc_info()
 	    data['exception'] = e[0]
-	    if data['exception'] == socket.timeout:
+	    # cmiles 2004-07-13: check for socket.timeout exception (but only if Python >= 2.3)
+	    if (sys.version_info[0] > 2 or (sys.version_info[0] == 2 and sys.version_info[1] >= 3)) and data['exception'] == socket.timeout:
 		data['errno'] = 0
 		data['errstr'] = str(e[1])
 		data['timedout'] = 1
