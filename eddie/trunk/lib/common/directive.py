@@ -242,8 +242,9 @@ class Directive:
 	#    self.Action.varDict['act'] = self.Action.varDict['act'] + '\t' + a + '\n'
 	#    if a[:5] != 'email':
 	#	self.Action.varDict['actnm'] = self.Action.varDict['actnm'] + '\t' + a + '\n'
-	
+
 	self.Action.state = self.state
+	self.Action.aliasDict = Config.aliasDict
 
 	# Perform each action
 	ret = None

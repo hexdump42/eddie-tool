@@ -44,8 +44,28 @@ class action:
     def __init__(self):
 	pass
 
-    # email()
     def email(self, user, msg, msgbody=None):
+	"""The standard email action.
+	user should be a standard string containing a standard email address
+	or list of email addresses separated by either a ',' or '|' or an
+	ALIAS containing the same.
+
+	msg should be either a standard string which will be used as the
+	email subject (and also the email body if msgbody==None) or the
+	name of a MSG object.
+
+	msgbody should be a string containing the body of the email, assuming
+	that msg is also the subject.
+	"""
+
+	# Replace any ALIASes if needed.
+	if user in self.aliasDict.keys():
+	    user = self.aliasDict[user]
+	if msg in self.aliasDict.keys():
+	    msg = self.aliasDict[msg]
+	if msgbody in self.aliasDict.keys():
+	    msgbody = self.aliasDict[msgbody]
+
 	# Multiple email recipients are seperated by '|'.
 	multUsers = string.split( user, '|' )
 
@@ -138,6 +158,10 @@ class action:
 	# cmd contains the cmd to execute
 	# TODO: can we check this cmd for security problems ??
 
+	# Replace any ALIASes if needed.
+	if cmd in self.aliasDict.keys():
+	    cmd = self.aliasDict[cmd]
+
 	# Substitute variables in string
 	cmd = parseVars( cmd, self.varDict )
 
@@ -165,6 +189,10 @@ class action:
 	# cmd is cmd to be executed with: '/etc/init.d/cmd start'.
 	# cmd should not contain any path information, hence if '/'s are found it
 	# is not executed.
+
+	# Replace any ALIASes if needed.
+	if cmd in self.aliasDict.keys():
+	    cmd = self.aliasDict[cmd]
 
 	# Substitute variables in string
 	cmd = parseVars( cmd, self.varDict )
@@ -301,6 +329,10 @@ class action:
 	    #log.log( "<action.py>action.elvin(), Elvin is not available - skipping.", 8 )
 	    return 0
 
+	# Replace any ALIASes if needed.
+	if msg in self.aliasDict.keys():
+	    msg = self.aliasDict[msg]
+
 	# send a message via Elvin message system
 	elvinServer = 'elvin'
 	elvinPort = 5678
@@ -349,6 +381,12 @@ class action:
 	    #log.log( "<action.py>action.elvin(), Elvin is not available - skipping.", 8 )
 	    return 0
 
+	# Replace any ALIASes if needed.
+	if pager in self.aliasDict.keys():
+	    pager = self.aliasDict[pager]
+	if msg in self.aliasDict.keys():
+	    msg = self.aliasDict[msg]
+
 	# send a message via Elvin message system to Pager
 	elvinServer = 'chintoo'
 	elvinPort = 5678
@@ -395,6 +433,12 @@ class action:
 	# send a page via SNPP
 	pageServer = 'chintoo'
 
+	# Replace any ALIASes if needed.
+	if pager in self.aliasDict.keys():
+	    pager = self.aliasDict[pager]
+	if msg in self.aliasDict.keys():
+	    msg = self.aliasDict[msg]
+
 	if len(msg) == 0:
 	    # msg must contain something
 	    log.log( "<action.py>action.page(), Error, msg is empty", 2 )
@@ -430,6 +474,12 @@ class action:
 	'col1=data1, col2=data2, col3=data3' or if data is None it will
 	use self.storedict
 	"""
+
+	# Replace any ALIASes if needed.
+	if table in self.aliasDict.keys():
+	    table = self.aliasDict[table]
+	if data in self.aliasDict.keys():
+	    data = self.aliasDict[data]
 
 	log.log( "<action.py>action.elvindb( table='%s' data='%s' )"%(table,data), 8 )
 

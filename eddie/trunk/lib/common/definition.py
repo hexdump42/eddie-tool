@@ -26,38 +26,46 @@ ParseNotcomplete = 'ParseNotcomplete'
 
 
 
-##
-## The Message dictionary class.
-##
 class MsgDict:
+    """The Message dictionary class."""
+
     def __init__(self):
 	self.hash = {}		# Dictionary of M objects keyed by name
 
-    # Overload '+', eg: rules + directive_rule
+
     def __add__(self, new):
+	"""Overload '+', eg: rules + directive_rule"""
+
 	self.hash[new.name] = new	# Add M object to dictionary
 	return(self)
 
-    # Overload '[]' for setting
+
     def __setitem__(self, name, new):
+	"""Overload '[]' for setting."""
+
 	self.hash[name] = new		# Add M object to dictionary
 	return(self)
 
-    # Overload '[]', eg: returns corresponding object for name
+
     def __getitem__(self, name):
+	"""Overload '[]', eg: returns corresponding object for name."""
 	try:
 	    return self.hash[name]
 	except KeyError:
 	    return None
 
+
     def __str__(self):
 	return "%s" % self.hash
+
 
     def keys(self):
 	return self.hash.keys()
 
+
     def delete(self, name):
 	del self.hash[name]
+
 
     # update this dictionary with adict as per dict.update() method
     def update(self, adict):
@@ -67,10 +75,11 @@ class MsgDict:
 	    self.hash[a] = adict[a]
 
 
-##
-## The base definition class.  Derive all definition-types from this base class.
-##
 class Definition:
+    """The base definition class.  Derive all definition-types from
+       this base class.
+    """
+
     def __init__(self, list):
 	self.basetype = 'Definition'	# the object can know its own basetype
 	self.type = list[0]		# the definition type of this instance
@@ -79,10 +88,9 @@ class Definition:
 
 ## -- DEFINITIONS --
 
-##
-## MESSAGE DEFINITION
-##
 class MSG(Definition):
+    """Message Definition."""
+
     def __init__(self, toklist):
 	apply( Definition.__init__, (self, toklist) )
 	self.name = toklist[1]
@@ -122,10 +130,9 @@ class MSG(Definition):
 
 
 
-##
-## MESSAGE-LIST DEFINITION
-##
 class M(Definition):
+    """Message-list Definition."""
+
     def __init__(self, toklist):
 	apply( Definition.__init__, (self, toklist) )
 	self.name = toklist[1]
@@ -162,10 +169,17 @@ class M(Definition):
 
 
 
-##
-## DEF DEFINITION - defines general definitions, access with $defn_name
-##
 class DEF(Definition):
+    """DEF Definition - defines global string aliases to be replaced
+       during config file parsing only.  eg:
+	DEF FSRULE="capac>=90%"
+	...
+	FS: fs='/' rule=$FSRULE action=" ... "
+
+	This goes against the general Python-like format of the config
+	file and may disappear in the future.
+    """
+
     def __init__(self, list):
 	apply( Definition.__init__, (self,list) )
 
@@ -177,7 +191,7 @@ class DEF(Definition):
 	# if we don't have 5 elements ['DEF', <str>, '=', <str>, '012'] then
 	# raise an error
 	if len(list) != 5:
-	    print "..DEF list:",list
+	    #print "..DEF list:",list
 	    raise ParseFailure, "DEF definition has %d tokens when expecting 5" % len(list)
 
 	# OK, grab values
@@ -186,9 +200,36 @@ class DEF(Definition):
 	log.log( "<Definition>DEF(), DEF created, name '%s', text '%s'" % (self.name,self.text), 8 )
 
 
-##
-## N DEFINITION - defines Notification configs
+class ALIAS(Definition):
+    """ALIAS Definition - defines string aliases which can appear as
+	arguments to action calls, etc. eg:
+	ALIAS ALERT='root'
+	...
+	FS: fs='/' rule="capac>=90%" action="email(ALERT, 'fs nearly full')"
+    """
+
+    def __init__(self, list):
+	apply( Definition.__init__, (self,list) )
+
+	# if the last token isn't a carriage-return then we don't have the
+	# whole line yet...
+	if list[-1] != '\012':
+	    raise ParseNotcomplete
+
+	# if we don't have 5 elements ['ALIAS', <str>, '=', <str>, '012'] then
+	# raise an error
+	if len(list) != 5:
+	    raise ParseFailure, "ALIAS definition has %d tokens when expecting 5" % len(list)
+
+	# OK, grab values
+	self.name = list[1]			# the name of this ALIAS
+	self.text = utils.stripquote(list[3])	# the text that is assigned to it
+	log.log( "<Definition>ALIAS(), ALIAS created, name '%s', text '%s'" % (self.name,self.text), 8 )
+
+
 class N(Definition):
+    """N Definition - defines Notification configs."""
+
     defs={'notifyperiod':'TIME',	# available definitions
     	  'escalperiod':'TIME'
 	 }
@@ -356,31 +397,11 @@ class N(Definition):
 
 
 
-
-##
-## parseList( list, dict ) - cycles thru list, if any entries are keys in dict, replaces
-##   entry with value from dict.
-# NOT NEEDED ANYMORE ??
-#def parseList( list, dict ):
-#    newlist = []
-#    for l in list:
-#	try:
-#	    # is l a key in dict ?  if yes, it is added
-#	    tmp = dict[l]
-#	    tmplist = utils.trickySplit( tmp, ',' )
-#	    tmplist = parseList( tmplist, dict )
-#	    for i in tmplist:
-#		newlist.append(i)
-#	except KeyError:
-#	    # if no, just add l
-#	    newlist.append(l)
-#    return newlist
-#
-
-##
-## parseM( text, dict ) - if text is in dict (assumed to be of type MsgDict)
-##   then (subj,body) list is returned, else empty list is returned.
 def parseM( text, dict ):
+    """parseM( text, dict ) - if text is in dict (assumed to be of type MsgDict)
+       then (subj,body) list is returned, else empty list is returned.
+    """
+
     try:
 	# is text a key in dict ?
 	body = dict[text]

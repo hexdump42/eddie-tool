@@ -57,6 +57,7 @@ class Config:
 	    self.MDict.update(parent.MDict)	# inherit parent M-tree
 
 	self.defDict = {}			# dictionary of DEFinitions
+	self.aliasDict = {}			# dictionary of ALIASes
 	self.NDict = {}				# dictionary of Notification definitions
 	self.classDict = {}			# dictionary of Class definitions
 
@@ -67,6 +68,7 @@ class Config:
 	if parent != None:
 	    self.parent = parent
 	    self.defDict.update(parent.defDict)
+	    self.aliasDict.update(parent.aliasDict)
 	    self.NDict.update(parent.NDict)
 	    # TODO: copy ruleList and MDict too ?
 
@@ -82,6 +84,7 @@ class Config:
 	for i in self.MDict.keys():
 	    str = str + " %s" % self.MDict[i]
 	str = str + "\n\n defDict: %s" % self.defDict
+	str = str + "\n\n aliasDict: %s" % self.aliasDict
         str = str + "\n\n NDict:"
 	for i in self.NDict.keys():
 	    str = str + " %s" % self.NDict[i]
@@ -129,6 +132,8 @@ class Config:
 	    self.MDict[obj.name] = obj
 	elif obj.type == 'DEF':
 	    self.defDict[obj.name] = obj.text
+	elif obj.type == 'ALIAS':
+	    self.aliasDict[obj.name] = obj.text
 	elif obj.type == 'CLASS':
 	    self.classDict[obj.name] = obj.hosts
 	elif obj.type in directives.keys():
@@ -479,6 +484,7 @@ definitions = {
 		"M"		: definition.M,
 		"MSG"		: definition.MSG,
 		"DEF"		: definition.DEF,
+		"ALIAS"		: definition.ALIAS,
               }
 
 ## Just the settings
