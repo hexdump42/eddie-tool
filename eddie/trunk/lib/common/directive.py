@@ -123,14 +123,16 @@ class State:
 
 	    log.log( "<directive>State.stateok(): State changed to OK.  ID '%s'."%(self.ID), 7 )
 
-	    self.thisdirective.performAction(Config,self.thisdirective.args.act2okList)
+	    if 'act2okList' in dir(self.thisdirective.args):
+		self.thisdirective.performAction(Config,self.thisdirective.args.act2okList)
 
 	    #TODO: Post an EVENT about problem being resolved
 
 	else:
 	    # If state wasn't previously failed then it is still ok.
 	    # This is when the 'actelse' actions should be performed.
-	    self.thisdirective.performAction(Config,self.thisdirective.args.actelseList)
+	    if 'actelseList' in dir(self.thisdirective.args):
+		self.thisdirective.performAction(Config,self.thisdirective.args.actelseList)
 
 	self.status = "ok"
 
@@ -242,9 +244,9 @@ class Directive:
 	self.defaultVarDict = {}	# dictionary of variables used by action strings
 
 	self.args = Args()		# Container for arguments
-	self.args.actionList = []	# each directive will have a list of actions
-	self.args.act2okList = []	# a list of actions for failed state changing to ok
-	self.args.actelseList = []	# a list of actions for state remaining ok
+	#self.args.actionList = []	# each directive will have a list of actions
+	#self.args.act2okList = []	# a list of actions for failed state changing to ok
+	#self.args.actelseList = []	# a list of actions for state remaining ok
 
 	# Set up informational variables - these are common to all Directives
 	#  %(hostname)s = hostname
@@ -254,19 +256,6 @@ class Directive:
 
 	# Create initial variable dictionary
 	self.Action.varDict = {}
-
-	## Older variables - probably not needed now
-	#  %sys = command from a system() action
-	#     TODO
-	#self.Action.varDict['sys'] = '[sys not yet defined]'
-
-	#  %act = show list of actions taken preceded by "The following actions
-	#         were taken:" if any were taken
-	#self.Action.varDict['act'] = '[act not yet defined]'
-
-	#  %actnm = show list of actions taken (excluding email()'s) preceded by
-	#         "The following actions were taken:" if any were taken
-	#self.Action.varDict['actnm'] = '[actnm not yet defined]'
 
 	# Set default output displayed on console connections
 	self.console_output = '%(state)s'
@@ -331,11 +320,15 @@ class Directive:
 
 
     def tokenparser(self, toklist, toktypes, indent):
-	"""Parse named arguments for directives.  All valid named
-	arguments are saved in the objects as self.argname, eg: self.rule
+	"""
+	Parse named arguments for directives.  All valid named
+	arguments are saved in the objects as self.args.argname,
+	eg: self.args.rule
+
 	It is up to each directive to check the validity of the arguments.
 	Each directive should first call this function with:
 	    apply( Directive.tokenparser, (self, toklist, toktypes, indent) )
+
 	Note: toktypes and indent are not used by this function and can
 	be None.
 	"""
@@ -353,9 +346,7 @@ class Directive:
 			for t in dir(tpldirective.args):
 			    if t != 'template':
 				exec( 'self.args.%s = tpldirective.args.%s' % (t,t) )
-				#print 'self.args.%s = tpldirective.args.%s' % (t,t)
-				#print 'self.args.%s'%t,
-				#exec( "print self.args.%s" % (t) )
+				#exec( "print 'self.args.%s =', self.args.%s" % (t,t) )
 
 	    # Use action parser for any of the action lists
 	    elif t == 'act2ok':
@@ -420,6 +411,11 @@ class Directive:
 #	    for i in self.data_collectors.keys():
 #		self.data_collectors[i].history.setHistory(self.history_size)
 
+	# Assign Notification object actions if any
+	for n in self.parent.NDict.keys():
+	    execstr = "self.Action.%s = self.parent.NDict[n].doAction" % (n)
+	    exec( execstr )
+
 	# Set any default action variables
 	if 'rule' in dir(self.args):
 	    self.defaultVarDict['rule'] = str(self.args.rule)
@@ -430,7 +426,9 @@ class Directive:
 
 
     def evalAction(self, actioncall):
-	"""Evaluate the given action call."""
+	"""
+	Evaluate the given action call.
+	"""
 
 	log.log( "<directive>Directive.evalAction(): calling action '%s'" % (actioncall), 9 )
 
@@ -552,9 +550,10 @@ class Directive:
 	# record action information
 	self.lastactiontime = time.localtime(time.time())
 
-	#actionList = self.args.actionList
-
-	self.performAction(Config, self.args.actionList)
+	# Make sure there are some actions to perform
+	# (they are not always necessary)
+	if 'actionList' in dir(self.args):
+	    self.performAction(Config, self.args.actionList)
 
 
     def parseAction(self, toklist):
@@ -569,28 +568,24 @@ class Directive:
 
 
     def parseArgs( self, toklist ):
-	"""Return dictionary of directive arguments."""
+	"""
+	Return dictionary of directive arguments.
+
+	toklist is a list of directive argument lines.
+	Each line is a list of basic tokens.
+	Argument lines must be of the form: <name>=<value>
+	  where <name> is a 'word' and <value> is something like a string,
+	  int, float, function call, etc.
+	"""
 
 	argdict = {}
 
-	listsize = len(toklist)
-	i = 0
-	while i < listsize:
-	    try:
-		if toklist[i] == '\012':
-		    # skip carriage returns - we can ignore them
-		    i = i + 1
+	for argline in toklist:
+	    if len(argline) < 3 or argline[1] != '=':
+		log.log( "<directive>Directive.parseArgs(): invalid directive argument '%s'" % (string.join(argline)), 1)
+		raise ParseFailure, "invalid directive argument '%s'" %(string.join(argline))
 
-		elif toklist[i+1] == '=':
-		    argdict[toklist[i]] = utils.stripquote(toklist[i+2])
-		    i = i + 3
-
-		else:
-		    log.log( "<directive>Directive.parseArgs(): unknown directive token '%s'" % (toklist[i]), 1)
-		    raise ParseFailure, "unknown directive token '%s'" %(toklist[i])
-	    except KeyError:
-		log.log( "<directive>Directive.parseArgs(): error parsing directive arguments at i=%d" % (i), 1)
-		raise ParseFailure, "Error parsing directive arguments"
+	    argdict[argline[0]] = utils.stripquote(string.join(argline[2:],""))
 
 	return argdict
 

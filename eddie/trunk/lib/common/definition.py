@@ -30,7 +30,7 @@
 import string
 
 # Eddie specific modules
-import utils, log
+import utils, log, action
 
 
 # Define exceptions
@@ -111,31 +111,22 @@ class MSG(Definition):
 	self.message = None
 	#self.indent = 0		# used during parsing only
 	self.hastokenparser = 1
-	log.log( "<Definition>MSG(), MSG created, name '%s'" % (self.name), 9 )
+	log.log( "<definition>MSG: MSG created, name '%s'" % (self.name), 9 )
 
 
     def tokenparser(self, toklist, toktypes, indent):
 
-	for t in toklist:
-	    if self.subject == None:
-		self.subject = utils.stripquote(t)
-	    elif self.message == None:
-		self.message = utils.stripquote(t)
-	    else:
-		# tokens left and subject/message already defined
-		raise ParseFailure, "Parse error during MSG definition"
+	for argline in toklist:
+	    for t in argline:
+		if self.subject == None:
+		    self.subject = utils.stripquote(t)
+		elif self.message == None:
+		    self.message = utils.stripquote(t)
+		else:
+		    # tokens left and subject/message already defined
+		    raise ParseFailure, "Parse error during MSG definition"
 
-	log.log( "<Definition>tokenparser(), MSG parsed, subject:'%s' message:'%s'" % (self.subject,self.message), 8 )
-
-	#if self.indent == 0:
-	#    self.subject = utils.stripquote(toklist[0])
-	#    if len(toklist) > 1:
-	#	self.message = utils.stripquote(toklist[1])
-	#    self.indent = indent
-	#elif indent > self.indent:
-	#    self.message = utils.stripquote(toklist[0])
-	#else:
-	#    raise ParseFailure, "Indentation error parsing MSG definition"
+	log.log( "<definition>MSG.tokenparser(): MSG parsed, subject:'%s' message:'%s'" % (self.subject,self.message), 8 )
 
 
     def __str__(self):
@@ -152,7 +143,7 @@ class M(Definition):
 	apply( Definition.__init__, (self, toklist, toktypes) )
 	self.name = toklist[1]
 	self.MDict = {}			# Create dict of M's or MSG's
-	log.log( "<Definition>M(), M created, name '%s'" % (self.name), 8 )
+	log.log( "<definition>M: M created, name '%s'" % (self.name), 8 )
 
 
     def __str__(self):
@@ -207,11 +198,13 @@ class ALIAS(Definition):
 		self.value = float(self.value)		# float
 	elif toktypes[3] == 'STRING':
 	    self.value = utils.stripquote(self.value)	# the text that is assigned to it
-	log.log( "<Definition>ALIAS(), ALIAS created: %s=%s" % (self.name,self.value), 8 )
+	log.log( "<definition>ALIAS: ALIAS created: %s=%s" % (self.name,self.value), 8 )
 
 
 class N(Definition):
-    """N Definition - defines Notification configs."""
+    """
+    N Definition - defines Notification configs.
+    """
 
     defs={'notifyperiod':'TIME',	# available definitions
     	  'escalperiod':'TIME'
@@ -232,7 +225,7 @@ class N(Definition):
 	self.name = list[1]		# the name of this Action
 	self.lastNotify = 0		# time of last notify
 	self.escalLevel = 0		# current level of escalation
-	self.levels={}		# dict of notification levels
+	self.levels={}			# dict of notification levels
 
 	# used during config parsing
 	self.configLevel = -1
@@ -240,7 +233,13 @@ class N(Definition):
 
 	self.hastokenparser = 1
 
-	log.log( "<Definition>N(), N created, name '%s'" % (self.name), 9 )
+	# Get pointers to all the action functions
+	self.actionFuncs = {}
+	for a in dir(action.action):
+	    if a[0] != '_':
+		exec( "self.actionFuncs[a] = action.action.%s" % (a) )
+
+	log.log( "<definition>N: N created, name '%s'" % (self.name), 9 )
 
 
     def __str__(self):
@@ -253,53 +252,38 @@ class N(Definition):
 
     def tokenparser(self, toklist, toktypes, indent):
 
-	# no good if toklist empty
-	if len(toklist) < 1:
-	    #raise ParseNotcomplete
-	    raise ParseFailure
+	for argline in toklist:
 
-	while len(toklist) > 0:
-	    #print "--->toklist:",toklist
-
-	    # start again if toklist starts with CR
-	    if toklist[0] == '\012':
-		del toklist[0]
-		del toktypes[0]
-
-	    elif toklist[0] in ('Level', 'level', 'LEVEL'):
-		# Level must be a number.
-		if toktypes[1] != 'NUMBER':
-		    raise ParseFailure, 'N: Level definition expects a number, received a %s' % toktypes[1]
-		if toklist[2] != ':':
+	    if argline[0] in ('Level', 'level', 'LEVEL'):
+#		# Level must be a number.
+#		if types[1] != 'NUMBER':
+#		    raise ParseFailure, 'N: Level definition expects a number, received a %s' % argline[1]
+		if argline[2] != ':':
 		    raise ParseFailure
 
-		level = toklist[1]
-		self.addLevel(toklist[1])	# Create level
-		self.configLevel = toklist[1]
-		del toklist[:3]
-		del toktypes[:3]
+		level = argline[1]
+		self.addLevel(argline[1])	# Create level
+		self.configLevel = argline[1]
 
-	    elif toklist[0] in self.defs.keys():
+	    elif argline[0] in self.defs.keys():
 		# One of the defined assignments
 
-		if toklist[1] != '=':
-		    raise ParseFailure, 'Expecting "=" after "%s", got "%s' % (toklist[0], toklist[1])
+		if argline[1] != '=':
+		    raise ParseFailure, 'Expecting "=" after "%s", got "%s' % (argline[0], argline[1])
 
 		# assume number followed by letter at the moment...
-		value = string.join(toklist[2:3], "")
-		if self.defs[toklist[0]] == 'TIME':
+		#value = string.join(argline[2:3], "")
+		value = utils.stripquote(argline[2])
+		if self.defs[argline[0]] == 'TIME':
 		    # Convert time to seconds if required
 		    value = utils.val2secs(value)
 
-		assignment = 'self.%s=%d' % (toklist[0],value)
+		assignment = 'self.%s=%d' % (argline[0],value)
 		exec assignment
-
-		del toklist[:4]
-		del toktypes[:4]
 
 	    else:
 		# Must be a notification command (or list of commands)
-		notiflist = self.getNotifList( toklist )
+		notiflist = self.getNotifList( argline )
 		if len(notiflist) == 0:
 		    raise ParseFailure, "Notification list is empty"
 		else:
@@ -307,11 +291,12 @@ class N(Definition):
 			# Error if no levels defined yet
 			raise ParseFailure, "No notification levels have been defined yet"
 		    self.addNotif(self.configLevel,indent,notiflist)
-		    del toklist[:self.delcnt]
-		    del toktypes[:self.delcnt]
+
+	# Need reference to M objects
+	self.MDict = self.parent.MDict
 
 	# Finished parsing tokens
-	log.log( "<Definition>N.tokenparser(), '%s'" % (self), 8 )
+	log.log( "<definition>N.tokenparser(): '%s'" % (self), 8 )
 	
 
 
@@ -332,7 +317,6 @@ class N(Definition):
 	brackets = 0		# track brackets depth
 	self.delcnt = 0		# temporary counter so main loop can delete objects from list
 
-	#print "getNotif(): list:",list
 	for t in list:
 	    if t == 'Level':	# stop if new Level defn - poor code!
 		break
@@ -384,6 +368,33 @@ class N(Definition):
 		for l in list:
 		    a.append(l)
 	    self.configIndent = indent
+
+
+    def doAction(self, msg, level=0):
+	"""
+	Execute the actions from the given level.
+	"""
+
+	try:
+	    # TODO: level should be int (but isn't ...)
+	    actions = self.levels[str(level)]
+	except KeyError:
+	    log.log( "<definition>N.doAction(): error, invalid level %d" % (level), 4 )
+	    return None
+
+	for acall in actions:
+	    evalenv = {}
+	    evalenv.update(self.actionFuncs)	# add action functions
+	    try:
+		ret = eval( acall, {"__builtins__": {}}, evalenv )          # Call the Action
+	    except:
+		# Handle any action evaluation exceptions neatly
+		import sys, traceback
+		e = sys.exc_info()
+		tb = traceback.format_list( traceback.extract_tb( e[2] ) )
+		log.log( "<directive>N.doAction(): Error evaluating %s: %s, %s, %s" % (acall, e[0], e[1], tb), 5 )
+		return None
+
 
 
 

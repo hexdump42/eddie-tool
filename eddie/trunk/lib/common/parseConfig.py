@@ -107,8 +107,6 @@ class State:
 			self.direc.tokenparser(self.direcargs, self.directypes, self.indent)
 		    except 'Template':
 			log.log( "<parseConfig>tokeneater(), directive is a Template, args: %s" % (dir(self.direc.args)), 8 )
-		    self.prevdirec = self.direcStack.top()
-		    self.direc.parent = self.prevdirec	# show directive its parent
 
 		    if self.indent < self.direcindent:	# back to previous directive level
 			self.prevdirec = self.direcStack.pop()
@@ -147,8 +145,10 @@ class State:
 	    #print "toklist:",self.toklist
 
 	    if self.direcmode > 0 and token=='\012':
-		self.direcargs = self.direcargs + self.toklist
-		self.directypes = self.directypes + self.toktypes
+		#self.direcargs = self.direcargs + self.toklist
+		self.direcargs.append( self.toklist )
+		#self.directypes = self.directypes + self.toktypes
+		self.directypes.append( self.toktypes )
 		self.toklist = []		# clear token list
 		self.toktypes = []		# clear token types list
 		self.notfirstdirecline = 1	# passed first directive line
@@ -163,8 +163,6 @@ class State:
 		    self.direc.tokenparser(self.direcargs, self.directypes, self.indent)
 		except 'Template':
 		    log.log( "<parseConfig>tokeneater(), directive is a Template, args: %s" % (dir(self.direc.args)), 8 )
-		self.prevdirec = self.direcStack.top()
-		self.direc.parent = self.prevdirec	# show directive its parent
 
 		savetoklist = self.toklist	# save token list - not parsed yet
 		savetoktypes = self.toktypes	# save token types
@@ -179,9 +177,9 @@ class State:
 		return
 
 	    # If the only token is a CR, throw it away and continue
-	    if len(self.toklist) == 1 and self.toklist[0] == '\012':
-		self.reset()
-		return
+#	    if len(self.toklist) == 1 and self.toklist[0] == '\012':
+#		self.reset()
+#		return
 
 	    # See if we can do anything with the current list of tokens.
 
@@ -217,11 +215,16 @@ class State:
 		return
 
 	    elif config.keywords.has_key(self.toklist[0]):
+		# Create a new object (not a Directive)
 		direc = config.keywords[self.toklist[0]](self.toklist,self.toktypes)
 		self.direc = direc
 
 		if direc == None:
-		    raise ParseFailure, "Directive creation failed."
+		    raise ParseFailure, "Object creation failed."
+
+		# tell object who its parent is
+		self.prevdirec = self.direcStack.top()
+		self.direc.parent = self.prevdirec
 
 		self.reset()		# reset state
 
@@ -241,11 +244,16 @@ class State:
 		return
 
 	    elif config.directives.has_key(self.toklist[0]):
+		# Create new directive
 		direc = config.directives[self.toklist[0]](self.toklist)
 		self.direc = direc
 
 		if direc == None:
 		    raise ParseFailure, "Directive creation failed."
+
+		# tell directive who its parent is
+		self.prevdirec = self.direcStack.top()
+		self.direc.parent = self.prevdirec
 
 		self.reset()		# reset state
 
@@ -275,14 +283,15 @@ class State:
 	    sys.exit(-1)
 
 
-###
-### parseFailure( message, (start-row, start-col), (end-row, end-col), linestr, filename )
-###  Display error message caused by a parsing failure while parsing the
-###  config file.
-###
-### Returns: nothing
-###
 def parseFailure( msg, (srow, scol), (erow, ecol), line, filename ):
+    """
+    parseFailure( message, (start-row, start-col), (end-row, end-col), linestr, filename )
+     Display error message caused by a parsing failure while parsing the
+     config file.
+
+    Returns: nothing
+    """
+
     print "Parse Failure:",msg
     print "  File: '%s'" % (filename),
     if srow == erow:
@@ -306,14 +315,14 @@ def parseFailure( msg, (srow, scol), (erow, ecol), line, filename ):
 
 
 
-###
-### readConf( filename, Config-object )
-###  Parse config file 'filename' and create configuration information
-###  stored in a Config object.
-###
-### Returns: nothing
-###
 def readConf(file, Config):
+    """
+    readConf( filename, Config-object )
+     Parse config file 'filename' and create configuration information
+     stored in a Config object.
+
+    Returns: nothing
+    """
 
     # Instantiate a State object to track the current state of tokenization.
     state = State(Config)
@@ -337,13 +346,13 @@ def readConf(file, Config):
 	Config.configfiles[f] = os.stat(f)[8]
 
 
-###
-### readFile( filename, State-object)
-###  Open the config file 'filename' and pass file descriptor to the tokenizer.
-###
-### Returns: nothing
-###
 def readFile(file, state):
+    """
+    readFile( filename, State-object)
+     Open the config file 'filename' and pass file descriptor to the tokenizer.
+
+    Returns: nothing
+    """
 
     # Get the directory name of the current config file
     state.dir = file[:string.rfind(file, '/')]+'/'
