@@ -271,6 +271,10 @@ class SP(directive.Directive):
 	except AttributeError:
 	    raise directive.ParseFailure, "Rule not specified"
 
+	# CM 2004-05-16: allow '*' as alias for wildcard address '0.0.0.0'
+	if self.args.bindaddr == '*':
+	    self.args.bindaddr = '0.0.0.0'
+
 	self.port_n = self.args.port		# remember port name
 
 	# lets try resolving this service port to a number
