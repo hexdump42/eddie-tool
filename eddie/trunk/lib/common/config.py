@@ -11,7 +11,7 @@
 ## $Id$
 ##
 ########################################################################
-## (C) Chris Miles 2001
+## (C) Chris Miles 2001-2004
 ##
 ## The author accepts no responsibility for the use of this software and
 ## provides it on an ``as is'' basis without express or implied warranty.
@@ -26,11 +26,23 @@
 ########################################################################
 
 # Python specific modules
-import sys, string, os
+import sys
+import string
+import os
 
 # Eddie specific modules
-import directive, definition, log, proc, utils, eddieElvin4
+import directive
+import definition
+import log
+import utils
+import eddieElvin4
 
+# chris 2004-12-03: proc is optional; in fact it should not even be imported
+#	and used in this way, so will have to fix this later.
+try:
+    import proc
+except ImportError:
+    pass
 
 ## Define exceptions
 ParseFailure = 'ParseFailure'
@@ -329,8 +341,14 @@ class INTERPRETERS(ConfigOption):
 	    raise ParseFailure, "INTERPRETERS definition has %d tokens when expecting 3" % len(list)
 
 	value = utils.stripquote(list[2])
-	proc.interpreters = string.split(value, ',')
-	log.log( "<config>INTERPRETERS(): interpreters defined as '%s'." % (proc.interpreters), 8 )
+	# chris 2004-12-03: this is a terrible way to set interpreters
+	#	TODO re-write this to interface with proc properly
+	try:
+	    proc.interpreters = string.split(value, ',')
+	except NameError:
+	    log.log( "<config>INTERPRETERS(): interpreters ignored - no proc module.", 5 )
+	else:
+	    log.log( "<config>INTERPRETERS(): interpreters defined as '%s'." % (proc.interpreters), 8 )
 
 
 ## CLASS - define a class
