@@ -1,25 +1,29 @@
-#!/opt/python/bin/python
+#! /usr/bin/env python
 
 ## EDDIE RRD Browser - Chris Miles <chris@psychofx.com> 2002-06-16
-##
 ##  A smart CGI interface for browsing and graphing RRD stats.  Can be used
-##  with any RRDs but commonly used in conjuction with EDDIE-Tool and
+##  with any RRDs but commonly used in conjuction with EDDIE Tool and
 ##  elvinrrd generated system/network RRD stats.
+##
+##  See http://psychofx.com/eddiebrowser/ for more details/docs.
 ##
 ## $Id$
 ## $Source$
 
-## Settings ##
 
-# RRD_DIR: a directory containing all the RRD files.
+#### Settings ####
+
+# RRD_DIR: a directory containing all the subdirectories of RRD files.
 RRD_DIR = '/export/rrd'
+
 # GLOBAL_CONFIG: location of global config file
 GLOBAL_CONFIG = '/export/rrd/eddiebrowser.cfg'
 
-## End of settings ##
+#### End of settings ####
 
 
-__version__ = '0.4.0'
+__version__ = '0.4.1'
+__copyright__ = 'Chris Miles 2002-2004'
 
 
 import cgi
@@ -28,8 +32,20 @@ import sys
 import traceback
 import string
 import re
-import cgitb; cgitb.enable()
+import cgitb
 
+cgitb.enable()
+
+try:
+    # chris 2004-09-30: Now using py-rrdtool instead of out-of-date RRDtool module
+    #import RRDtool		# http://projects.gasperino.org/
+    import rrdtool		# py-rrdtool from http://sourceforge.net/projects/py-rrdtool/
+				#              or http://www.nongnu.org/py-rrdtool/
+except ImportError,msg:
+    #error_html( "<b>Cannot import RRDtool python module, error follows:<br>%s</b>"%(msg) )
+    #error_html( "<b>Cannot import rrdtool module - get this from http://sourceforge.net/projects/py-rrdtool/ - error follows:<br>%s</b>"%(msg) )
+    raise "Cannot import rrdtool module - get this from http://sourceforge.net/projects/py-rrdtool/",msg
+    sys.exit( -1 )
 
 
 class GlobalConfig:
@@ -53,7 +69,9 @@ class GlobalConfig:
 	try:
 	    fp = open( cfgfile, 'r' )
 	except IOError, err:
-	    raise IOError, "Cannot open global config file: %s (%s)"%(cfgfile,err)
+	    # Global config file is optional - not worth raising exception about it missing
+	    #raise IOError, "Cannot open global config file: %s (%s)"%(cfgfile,err)
+	    return
 
 	cfg_re = "([a-zA-Z0-9_]+?) (.+)"
 	inx = re.compile(cfg_re)
@@ -70,6 +88,7 @@ class GlobalConfig:
 	    line = fp.readline()
 
 	fp.close()
+
 
     def parseForm(self, form):
 	"""parseForm: parse options from cgi form fields.
@@ -264,7 +283,7 @@ def controlPanel(cfg):
     print "</HEAD><BODY>"
 
     print "<center><b>EDDIE RRD Browser (v%s)</b>" % (__version__)
-    print "<br>&copy; Chris Miles 2002-2003</center>"
+    print "<br>&copy; %s</center>" % (__copyright__)
 
     cfg.readDirConfigs()
     hosts = cfg.getAllHosts()
@@ -342,7 +361,7 @@ def error_html( msg ):
     print "</BODY></HTML>"
 
 
-def error_rrd( RRDtool, msg ):
+def error_rrd( rrdtool, msg ):
     """Display an error as image/png, using RRD to display the message."""
 
     # Return the raw PNG image
@@ -358,20 +377,16 @@ def error_rrd( RRDtool, msg ):
 	    'COMMENT:%s' % (msg)
 	    )
 
-    rrd = RRDtool.RRDtool()
+    #rrd = RRDtool.RRDtool()
+    rrd = RRDtool
     print "Content-Type: image/png"     # PNG data is following
     print                               # blank line, end of headers
-    rrd.graph( tuple(rrdopt) )
+    #rrd.graph( tuple(rrdopt) )
+    rrd.graph( *rrdopt )
 
 
 def graph( form ):
     """Graph an RRD data source using pyrrdtool module."""
-
-    try:
-	import RRDtool		# http://projects.gasperino.org/
-    except ImportError,msg:
-	error_html( "<b>Cannot import RRDtool python module, error follows:<br>%s</b>"%(msg) )
-	return 1
 
     try:
 	rrd = form['rrd'].value
@@ -398,7 +413,8 @@ def graph( form ):
     # read .eddiebrowser.cfg
     cfg = parseConfig( os.path.join( RRD_DIR, dir ) )
     if not cfg:
-	error_rrd( RRDtool, 'Error reading config in dir: %s'%(dir) )
+	#error_rrd( RRDtool, 'Error reading config in dir: %s'%(dir) )
+	error_rrd( rrdtool, 'Error reading config in dir: %s'%(dir) )
 	return
 
     files = cfg['FILES']
@@ -415,7 +431,8 @@ def graph( form ):
     sourcefile = os.path.join( RRD_DIR, dir, rrd )
 
     if 'GRAPH_TITLE' in cfg.keys():
-	graphoptions.append( '--title=%s' % (cfg['GRAPH_TITLE']) )
+	graph_title = cfg['GRAPH_TITLE'] % vars
+	graphoptions.append( '--title=%s' % (graph_title) )
     if 'GRAPH_VERTICAL_LABEL' in cfg.keys():
 	graphoptions.append( '--vertical-label=%s' % (cfg['GRAPH_VERTICAL_LABEL']) )
     if 'GRAPH_VERTICAL_LABEL' in cfg.keys():
@@ -470,7 +487,8 @@ def graph( form ):
 	    graphdef['file'] = sourcefile
 
 	if not os.path.isfile( graphdef['file'] ):
-	    error_rrd( RRDtool, 'ERROR: cannot read RRD file: %s' % (graphdef['file']) )
+	    #error_rrd( RRDtool, 'ERROR: cannot read RRD file: %s' % (graphdef['file']) )
+	    error_rrd( rrdtool, 'ERROR: cannot read RRD file: %s' % (graphdef['file']) )
 	    return 1
 
 	if 'GRAPH_LABEL_%s'%d in cfg.keys():
@@ -526,8 +544,10 @@ def graph( form ):
 	print "Content-Type: image/png"     # PNG data is following
 	print                               # blank line, end of headers
 
-	rrd = RRDtool.RRDtool()
-	r = rrd.graph( tuple(graphoptions) )
+	#rrd = RRDtool.RRDtool()
+	rrd = rrdtool
+	#r = rrd.graph( tuple(graphoptions) )
+	r = rrd.graph( *graphoptions )
 	sys.stderr.write( 'r=%s'%(r) )
 
     except:	# catch all
@@ -535,7 +555,8 @@ def graph( form ):
 	tb = traceback.format_list( traceback.extract_tb( e[2] ) )
 	msg1 = "%s" % e[0]
 	msg2 = "%s" % e[1]
-	error_rrd( RRDtool, (msg1,msg2) )
+	#error_rrd( RRDtool, (msg1,msg2) )
+	error_rrd( rrdtool, (msg1,msg2) )
 	return 1
 
 #    rrd = RRDtool.RRDtool()
@@ -746,7 +767,7 @@ class Filter:
 		    self.on = True
 
 
-
+#### Main ####
 
 def main():
 
@@ -787,25 +808,8 @@ def main():
     return 0
 
 
+
 if __name__ == "__main__":
 
     main()
-
-    # chris 2003-06-22: use cgitb for displaying exceptions now
-#    try:
-#	main()
-#    except:
-#	print "Content-Type: text/html"     # html error msg
-#	print                               # blank line, end of headers
-#	e = sys.exc_info()
-#	tb = traceback.format_list( traceback.extract_tb( e[2] ) )
-#	print "<p><font color=blue>Exception in %s :</font>" % (sys.argv[0])
-#	#print "<br><pre><font color=red>%s, %s, %s</font></pre></p>" % (e[0], e[1], tb)
-#	print "<br><font color=red><pre>"
-#	print e[0]
-#	print e[1]
-#	for t in tb:
-#	    print t,
-#	print "</pre></font></p>"
-
 
