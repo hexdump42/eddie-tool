@@ -259,36 +259,37 @@ class udp:
 
 class iftable:
     """Contains current network interface table."""
-     
+
     def __init__(self):
 
 	self.list = []			# list of interface objects
 	self.hash = {}			# hash of same objects keyed on interface name (eg: 'hme0')
 	self.numinterfaces = 0
 
-	# get the interface stats
-	#rawList = os.popen('netstat -i', 'r')
-	rawList = utils.safe_popen('netstat -i', 'r')
+	# get the interface statistics
+	fp = open('/proc/net/dev', 'r')
 
 	# skip header lines
-	rawList.readline()
-	rawList.readline()
+	fp.readline()
+	fp.readline()
 
-	for line in rawList.readlines():
-	    f = string.split(line)
-
-	    if len(f) != 12:
-		continue		# should be 12 fields per line
+	for line in fp.readlines():
+	    (name,data) = string.split( line, ':' )	# split interface name from data
+	    f = string.split(data)
 
 	    t = interface(f)		# new interface instance
+	    if t == None:
+		log.log( "<netstat>iftable, error parsing interface data for line '%s'"%(line), 5 )
+		continue		# could not parse interface data
+
+	    t.name = string.strip(name)
 
 	    self.list.append(t)
 	    self.hash[t.name] = t
 
 	    self.numinterfaces = self.numinterfaces + 1		# count number of interfaces
 
-	#rawList.close()
-	utils.safe_pclose( rawList )
+	fp.close()
 
 
     def __getitem__(self, key):
@@ -308,60 +309,51 @@ class interface:
 
     def __init__(self, fields):
 
-	if len(fields) != 12:
-	    raise "Netstat Parse Error", "interface class requires 12 fields, not %d" % (len(fields))
+	if len(fields) != 16:
+	    return None
 
-	# interface name address
-	self.name = fields[0]
+	self.rx_bytes		= fields[0]
+	self.rx_packets		= fields[1]
+	self.rx_errs		= fields[2]
+	self.rx_drop		= fields[3]
+	self.rx_fifo		= fields[4]
+	self.rx_frame		= fields[5]
+	self.rx_compressed	= fields[6]
+	self.rx_multicast	= fields[7]
 
-	# mtu
-	self.mtu = int(fields[1])
-
-	# Met
-	self.met = fields[2]
-
-	# RX-OK
-	self.rx_ok = fields[3]
-
-	# RX-ERR
-	self.rx_err = long(fields[4])
-
-	# RX-DRP
-	self.rx_drop = long(fields[5])
-
-	# RX-OVR
-	self.rx_over = long(fields[6])
-
-	# TX-OK
-	self.tx_ok = long(fields[7])
-
-	# TX-ERR
-	self.tx_err = long(fields[8])
-
-	# TX-DRP
-	self.tx_drp = long(fields[9])
-
-	# TX-OVR
-	self.tx_ovr = long(fields[10])
-
-	# Flg
-	self.flg = fields[11]
+	self.tx_bytes		= fields[8]
+	self.tx_packets		= fields[9]
+	self.tx_errs		= fields[10]
+	self.tx_drop		= fields[11]
+	self.tx_fifo		= fields[12]
+	self.tx_colls		= fields[13]
+	self.tx_carrier		= fields[14]
+	self.tx_compressed	= fields[15]
 
 
     def ifinfo(self):
 	"""Return interface details as a dictionary."""
 
 	info = {}
-	info['name'] = self.name
-	info['mtu'] = self.mtu
-	info['net'] = self.net
-	info['address'] = self.address
-	info['ipkts'] = self.ipkts
-	info['ierrs'] = self.ierrs
-	info['opkts'] = self.opkts
-	info['oerrs'] = self.oerrs
-	info['collis'] = self.collis
-	info['queue'] = self.queue
+
+	info['name']		= self.name
+	info['rx_bytes']	= self.rx_bytes
+	info['rx_packets']	= self.rx_packets
+	info['rx_errs']		= self.rx_errs
+	info['rx_drop']		= self.rx_drop
+	info['rx_fifo']		= self.rx_fifo
+	info['rx_frame']	= self.rx_frame
+	info['rx_compressed']	= self.rx_compressed
+	info['rx_multicast']	= self.rx_multicast
+
+	info['tx_bytes']	= self.tx_bytes
+	info['tx_packets']	= self.tx_packets
+	info['tx_errs']		= self.tx_errs
+	info['tx_drop']		= self.tx_drop
+	info['tx_fifo']		= self.tx_fifo
+	info['tx_colls']	= self.tx_colls
+	info['tx_carrier']	= self.tx_carrier
+	info['tx_compressed']	= self.tx_compressed
 
 	return info
 
