@@ -2,7 +2,8 @@
 ## 
 ## File         : parseConfig.py 
 ## 
-## Author       : Rod Telford 
+## Author       : Rod Telford  <rtelford@connect.com.au>
+##                Chris Miles  <cmiles@connect.com.au>
 ## 
 ## Date         : 971204 
 ## 
@@ -17,17 +18,14 @@ import regex
 import directive
 import config
 
-
-def main():
+def readFile(file, ruleList):
 
     # List the known directives we accept from the config
     directives = config.directives
-    file = config.rules
-
+    
     conf = open(file, 'r')
     count = 0
 
-    ourList = directive.Rules()
 
     while 1:
 	line = conf.readline()
@@ -60,14 +58,7 @@ def main():
 		else:
 		    action = directives[d](line)
 		
-		ourList + action
+		ruleList + action
 	    else:
 	       print "Ignoring Unknown Directive %s on line %s of %s" % (d, count, file)
-
-
-    print ourList
-    print ourList['M']
-
-if __name__ == "__main__":
-    main()
 
