@@ -15,7 +15,7 @@
 EDDIE_VER='0.20'
 
 # Standard Python modules
-import sys, os, time, signal
+import sys, os, time, signal, re
 
 # Work out the base Eddie directory which should contain bin/, lib/, etc...
 cwd = os.getcwd()
@@ -24,11 +24,22 @@ fullp = os.path.join(cwd, ewd)
 basedir = os.path.join(fullp, '..')
 
 # Determine OS type dynamically...
-syscmd = os.popen( basedir + '/bin/systype', 'r' )
-systype = syscmd.readline()[:-1]
-syscmd.close()
+try:
+    # use old systype if available (backwards compatability)
+    os.stat( basedir + '/bin/systype' )
+    syscmd = os.popen( basedir + '/bin/systype', 'r' )
+    systype = syscmd.readline()[:-1]
+    syscmd.close()
+except os.error:
+    # New system type determination (preferred)
+    syscmd = os.popen( '/bin/uname -psr' )
+    systype = syscmd.readline()[:-1]
+    syscmd.close()
+    systype = re.sub( ' ', '', systype )	# strip spaces
+
 if systype == '':
-    os.stderr.write( 'Eddie: could not determine system type.\n' )
+    sys.stderr.write( 'Eddie: could not determine system type.\n' )
+print "systype:",systype
 
 commonlibdir = os.path.join(basedir, 'lib/common')
 oslibdir = os.path.join(basedir, 'lib/' + systype)
