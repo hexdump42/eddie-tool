@@ -81,9 +81,18 @@ class State:
 	"""Update state info for check succeeding."""
 
 	if self.status != "ok":
+	    # This is a state change back to OK.
+	    # Mark the lastfailtime as now, as state has been failed up until
+	    # this point in time.
+	    timenow = time.localtime(time.time())
+	    self.lastfailtime = timenow
+
 	    log.log( "<directive>State.stateok(), State changed to OK.  ID '%s'."%(self.ID), 6 )
-	    #TODO: Post an EVENT about problem being resolved
+
+	    # Perform act2ok action calls if any were defined for this directive
             thisdirective.doOkAct(Config)
+
+	    #TODO: Post an EVENT about problem being resolved
 
 	self.status = "ok"
 
