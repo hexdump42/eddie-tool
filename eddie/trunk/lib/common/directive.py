@@ -479,11 +479,12 @@ class Directive:
 	else:
 	    for dep in checkdepends_names:
 		d = string.strip(dep)
-		directive = self.findDirective( d, self.Config )
-		if directive:
-		    self.checkdependson.append( directive )
-		else:
-		    raise ParseFailure, "Directive %s, referred to in checkdependson, not found"%(d)
+		if d:
+		    directive = self.findDirective( d, self.Config )
+		    if directive:
+			self.checkdependson.append( directive )
+		    else:
+			raise ParseFailure, "Directive '%s', referred to in checkdependson, not found"%(d)
 
 	# chris 2002-12-24: excludehosts parameter to exclude specific hosts;
 	#	Requires a comma-separated list of hostnames.
