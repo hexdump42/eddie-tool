@@ -212,11 +212,14 @@ class GlobalConfig:
 	self.datanames.append( dataname )
 
 	# Get data group
-	groupname = cfg['GROUP']
-	if groupname in self.datagroups.keys():
-	    self.datagroups[groupname].append( dataname )
-	else:
-	    self.datagroups[groupname] = [dataname,]
+	try:
+	    groupname = cfg['GROUP']
+	    if groupname in self.datagroups.keys():
+		self.datagroups[groupname].append( dataname )
+	    else:
+		self.datagroups[groupname] = [dataname,]
+	except KeyError:
+	    pass	# GROUP is optional
 
 	# Get hostnames from filenames
 	files = cfg['FILES']
