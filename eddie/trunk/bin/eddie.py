@@ -13,14 +13,13 @@
 ##
 
 
-import os
-import time
-import signal
-import sys
+# Standard Python modules
+import sys, os, time, signal
 
-import proc
-import df
-import netstat
+# TODO : determine OS type dynamically...
+sys.path = ['../lib/common', '../lib/sparc-sun-solaris2.5'] + sys.path
+
+# Python common modules
 import parseConfig
 import directive
 import definition
@@ -29,8 +28,13 @@ import action
 import log
 import history
 
+# Python OS-specific modules
+import proc
+import df
+import netstat
+
 # Main config file - this file INCLUDEs all other config files
-config_file = 'config/eddie.cf'
+config_file = '../config/eddie.cf'
 
 
 # Exit Eddie cleanly
