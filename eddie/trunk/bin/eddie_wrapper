@@ -3,6 +3,14 @@
 ## Eddie wrapper script to make sure it keeps running!
 ## 990302 Chris Miles <cmiles@connect.com.au>
 
+# Exit if host is called 'testjump*'
+host=`cat /etc/nodename`
+echo $host | grep testjump
+if [ $? = 0 ]; then
+        exit 0
+fi
+
+
 RUNFILE=/var/run/eddie$$.out
 
 while [ 1 ]; do
