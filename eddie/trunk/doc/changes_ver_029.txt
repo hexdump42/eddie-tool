@@ -1,0 +1,97 @@
+Major Eddie Config Changes for version 0.29+
+--------------------------------------------
+Chris Miles <chris@psychofx.com>
+
+
+Some major changes to the EDDIE-Tool configuration were made for version
+0.29.  If you are running an earlier version and wish to upgrade to 0.29
+or newer you will need to make changes to your configuration as documented
+below.
+
+
+- The major changes are:
+  - all directives now require a 'rule' argument.  Although some directives
+    have a default rule set, so for those you don't have to specify a rule.
+  - action variables have lost the directive prefix, so now all the action
+    variables match the rule variables for consistency.
+  - some of the arguments have changed names so they are more intuitive.
+  - some of the variables have changed names for the same reason.
+  - action arguments do not need quotes around the action calls anymore
+    (although should still work with them).
+
+
+- some of the specific changes to directives are listed below (but not
+  all, see config.sample or the User's Manual for examples and more
+  information)
+
+
+PROC:
+ Arguments:
+     procname= -> name=
+ Rules:
+     NR -> 'not exists'
+     R => 'exists'
+ Action variables:
+     procp -> name
+
+PID:
+ Rules:
+     EX -> 'not exists'
+     PR -> 'exists and not running'
+ Action variables:
+     pidf -> pidfile
+
+FS:
+ Rule variables:
+     capac -> pctused
+ Action variables:
+     fsf -> mountpt
+     fscapac -> pctused
+     fsavail -> avail
+     fsused -> used
+     fssize -> size
+     fsrule -> rule
+     fsdf -> df
+
+SP:
+ Rules:
+     -> 'not exists'
+ Action variables:
+     spprot -> protocol
+     spport -> port
+     spaddr -> bindaddr
+
+PORT:
+ Action variables:
+     portport -> port
+     porthost -> host
+     portsend -> send
+     portexpect -> expect
+     portrecv -> recv
+
+PING:
+ Action variables:
+     pinghost -> host
+ 
+COM:
+ Action variables:
+     comout -> out
+     comerr -> err
+
+LOGSCAN:
+ Action variables:
+     logscanfile -> file
+     logscanlinecount -> linecount
+     logscanlines -> lines
+
+SYS:
+ Action variables:
+     * Remove 'sys' from front of any variables
+
+IF:
+ Action variables:
+     * Remove 'if' from front of any variables
+
+
+--
+$Id$
