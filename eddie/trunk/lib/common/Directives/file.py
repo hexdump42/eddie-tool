@@ -11,7 +11,7 @@
 ##
 ##
 ########################################################################
-## (C) Chris Miles 2001
+## (C) Chris Miles 2001-2004
 ##
 ## The author accepts no responsibility for the use of this software and
 ## provides it on an ``as is'' basis without express or implied warranty.
@@ -27,9 +27,13 @@
 
 
 # Imports: Python
-import string, os, time
+import string
+import os
+import time
+
 # Imports: Eddie
-import log, directive
+import log
+import directive
 
 
 ##
@@ -38,8 +42,7 @@ import log, directive
 
 
 class FILE(directive.Directive):
-    """
-    FILE directive.  Examine a file statistics and perform checks on those statistics.
+    """FILE directive.  Examine a file statistics and perform checks on those statistics.
     Stats from previous check are kept so comparisons can be made from one scanperiod
     to the next (eg: rule='md5 != lastmd5').
 
@@ -59,8 +62,7 @@ class FILE(directive.Directive):
 
 
     def tokenparser(self, toklist, toktypes, indent):
-	"""
-	Parse directive arguments.
+	"""Parse directive arguments.
 	"""
 
 	apply( directive.Directive.tokenparser, (self, toklist, toktypes, indent) )
@@ -88,8 +90,7 @@ class FILE(directive.Directive):
 
 
     def getData(self):
-	"""
-	Called by Directive docheck() method to fetch the data required for
+	"""Called by Directive docheck() method to fetch the data required for
 	evaluating the directive rule.
 	"""
 
@@ -249,8 +250,7 @@ class FILE(directive.Directive):
 
 
     def postAction(self, data):
-	"""
-	Work that needs to be done after the actions are called.
+	"""Work that needs to be done after the actions are called.
 	"""
 
 	# save variables for next time (if they were collected)
