@@ -11,10 +11,48 @@
 . /etc/rc.d/init.d/functions
 
 # Set EDDIE_ADMIN to receive Eddie restart/exception notifications from eddie_wrapper
-#EDDIE_ADMIN=me@mydomain.com
+#EDDIE_ADMIN=eddie-adm@mydomain.com
 #export EDDIE_ADMIN
 
 EDDIERUN=/opt/eddie/bin/eddie_wrapper
+
+# Replace /sbin/pidof - it just doesn't work for scripts in newer Redhats...
+#	Redhat: your inconsistency sucks
+mypidof() {
+    ps auxwww | grep -v grep | grep "$1" | awk '{if(NR>1) printf " "; printf $2}'
+}
+
+myfail() {
+    failure
+    echo
+    exit $?
+}
+
+mywait() {
+    apid=$1
+    trytimes=5
+    waittime=1
+    for j in `seq $trytimes`
+    do
+	sleep $waittime
+	chck=`ps --noheading -p $apid`
+	[ "$chck" = "" ] && return
+	waittime=`expr $waittime \* 2`
+    done
+    echo "Process took too long to die - kill pid $apid manually"
+    exit 1
+}
+
+# Replace status from functions - it doesn't work coz pidof is broken
+status() {
+    pids=`mypidof $1`
+    if [ "$pids" = "" ]
+    then
+	echo "$1 is not running"
+    else
+	echo "$1 is running ($pids)"
+    fi
+}
 
 start() {
     echo -n $"Starting Eddie: "
@@ -30,19 +68,24 @@ start() {
 }
 
 stop() {
-    if test "x`pidof -x eddie.py`" != x; then
+    eddiepid=`mypidof eddie.py`
+    if test "x$eddiepid" != x; then
 	echo -n $"Stopping Eddie: "
-	killproc eddie.py
+	kill -TERM $eddiepid
+	[ $? -eq 0 ] || myfail $?
+	mywait $eddiepid
+	success
 	echo
     else
-        echo "Eddie not running"
+        echo "eddie.py not running"
     fi
 
-    sleep 1
-
-    if test "x`pidof -x eddie_wrapper`" != x; then
+    ewrappid=`mypidof eddie_wrapper`
+    if test "x$ewrappid" != x; then
         echo -n $"Stopping eddie_wrapper: "
-	killproc eddie_wrapper
+	kill -TERM $ewrappid
+	[ $? -eq 0 ] || myfail $?
+	success
 	echo
     else
         echo "eddie_wrapper not running"
@@ -56,14 +99,18 @@ stop() {
 restart() {
     # kill eddie and rely on eddie_wrapper to restart it
     echo -n $"Restarting Eddie: "
-    if test "x`pidof -x eddie.py`" != x; then
-	killproc eddie.py
+    eddiepid=`mypidof eddie.py`
+    if test "x$eddiepid" != x; then
+	kill -TERM $eddiepid
+	[ $? -eq 0 ] || myfail $?
+	mywait $eddiepid
+	success
 	echo
     else
-        echo "Eddie not running"
+        echo "eddie.py not running"
     fi
 
-    if test "x`pidof -x eddie_wrapper`" = x; then
+    if test "x`mypidof eddie_wrapper`" = x; then
         echo "eddie_wrapper not running - performing full startup"
 	start
     fi
@@ -86,7 +133,7 @@ case "$1" in
             restart
             ;;
         condrestart)
-            if test "x`pidof -x eddie_wrapper`" != x; then
+            if test "x`mypidof eddie_wrapper`" != x; then
                 restart
             fi
             ;;
