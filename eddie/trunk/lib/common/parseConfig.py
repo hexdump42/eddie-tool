@@ -203,15 +203,11 @@ class State:
 
 	    elif self.toklist[0] in ('group', 'Group', 'GROUP'):
 		# Create new rule group
-		try:
-		    newgrp = self.Config.newgroup(self.toklist, self.toktypes, self.Config)
-		except config.ParseNotcomplete:
-		    pass
-		else:
-		    self.reset()		# reset state
-		    self.direc = newgrp
-		    self.groupStack.push(self.Config)
-		    self.Config = newgrp
+		newgrp = self.Config.newgroup(self.toklist, self.toktypes, self.Config)
+		self.reset()		# reset state
+		self.direc = newgrp
+		self.groupStack.push(self.Config)
+		self.Config = newgrp
 		return
 
 	    elif config.keywords.has_key(self.toklist[0]):

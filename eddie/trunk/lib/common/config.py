@@ -111,8 +111,8 @@ class Config:
 	"""Add new rules group."""
 
 	# Require 3 tokens, ('group', <str>, ':')
-	#if len(toklist) < 3:
-	#    raise ParseNotcomplete
+	if len(toklist) < 3:
+	    raise ParseFailure, "Syntax error at group statement"
 	
 	# 3rd token must be a ':'
 	if toklist[2] != ':':
