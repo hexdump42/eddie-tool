@@ -350,6 +350,8 @@ class Directive:
 		except:
 		    e = sys.exc_info()
 		    log.log( "<directive>doAction(), Error evaluating self.Action.%s: %s, %s, %s" % (a, e[0], e[1], e[2]), 1 )
+		    import traceback
+		    traceback.print_exc()
 		    return
 		self.Action.actionReports[a] = ret
 		if ret == None:
@@ -394,6 +396,8 @@ class Directive:
 			    except:
 				e = sys.exc_info()
 				log.log( "<directive>doAction(), Error evaluating self.Action.%s: %s, %s, %s" % (aa, e[0], e[1], e[2]), 1 )
+				import traceback
+				traceback.print_exc()
 				return
 			    self.Action.actionReports[aa] = ret
 			    if ret == None:
@@ -1059,7 +1063,7 @@ class PORT(Directive):
         try:
             try:
                 s = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-                s.connect(host,port)
+                s.connect( (host,port) )
                 if expect == "":
                     s.close()
                     return 1    # port connection ok

@@ -1,4 +1,3 @@
-#!/opt/local/bin/python 
 ## 
 ## File         : parseConfig.py 
 ## 
@@ -13,9 +12,9 @@
 ##
 
 # Python specific modules
-import sys, os, string, regex, tokenize
+import sys, os, string, tokenize
 # Eddie specific modules
-import directive, definition, config, log, utils
+import config, log, utils
 
 #
 # State of tokenization
@@ -345,26 +344,6 @@ def readFile(file, state):
 
     conf.close()
 
-
-# find any DEF's in line (ie: $SPAZ) and replace with definition
-#def parseDefs(line, defDict):
-#    defsrch = regex.compile( "\$\([A-Za-z0-9_]+\)" )
-#
-#    pos = defsrch.search( line, 0 )
-#    while pos != -1 and pos < len(line):
-#	var = defsrch.group(0)[1:]		# get var name and strip '$'
-#
-#	try:
-#	    replace = defDict[var]
-#	except KeyError:
-#	    replace = None
-#	
-#	if replace != None:
-#	    line = line[:pos] + replace + line[pos+len(var)+1:]
-#
-#	pos = defsrch.search( line, pos+1 )
-#
-#    return line
 
 
 ###

@@ -12,7 +12,7 @@
 ##
 ##
 
-import regex, string, threading, os
+import re, string, threading, os
 
 
 ##
@@ -102,24 +102,24 @@ def trickySplit( line, delim ):
 ##
 def quoteArgs( list ):
     newlist = []
-    sre = regex.compile( "\([\t ]*[A-Za-z0-9_]*[\t ]*(\)\(.*\)\([\t ]*)[\t ]*\)" )
+    sre = re.compile( "([\t ]*[A-Za-z0-9_]*[\t ]*\()(.*)([\t ]*\)[\t ]*)" )
     for s in list:
 	inx = sre.search( s )
-	if inx != -1:
-	    argline = sre.group(2)
+	if inx != None:
+	    argline = inx.group(2)
 	    arglist = string.split( argline, ',' )
-	    newcmd = sre.group(1)		# build new command
+	    newcmd = inx.group(1)		# build new command
 	    i = 0				# count arguments so we don't put ',' before 1st argument
 	    for a in arglist:
 		a = string.strip( a )
 		# if argument is not already enclosed in quotes ("" or '')
-		if regex.search( "^[\"'].*[\"']$", a ) == -1:
+		if re.search( "^[\"'].*[\"']$", a ) == None:
 		    a = '"' + a + '"'		# enclose it in quotes
 		if i > 0:
 		    newcmd = newcmd + ','	# put comma before argument 2-onwards
 		newcmd = newcmd + a
 		i = i + 1
-	    newcmd = newcmd + sre.group(3)
+	    newcmd = newcmd + inx.group(3)
 	    newlist.append( newcmd )		# add our "quote-arg'd" command to list
 	else:
 	    newlist.append( s )			# add un-changed command to list
@@ -182,7 +182,7 @@ def atom( ch ):
 	
 
 def val2secs( value ):
-    if regex.search( '[mshdwcyMSHDWCY]', value ) == -1:
+    if re.search( '[mshdwcyMSHDWCY]', value ) == None:
 	return string.atoi(value)
     timech = value[-1]
     value = value[:-1]

@@ -1,4 +1,3 @@
-#!/opt/local/bin/python 
 ## 
 ## File		: action.py 
 ## 
@@ -13,19 +12,13 @@
 ##
 ##
 
-import os
-import string
-import regex
-import sys
-import definition
-import log
-import utils
+import os, string, sys, log, utils
 
-# Elvin test...
-import eddieElvin
+# Elvin
+import eddieElvin4
 
 # Page test
-import snpp
+#import snpp
 
 
 #### CONSTANTS ####
@@ -148,9 +141,6 @@ class action:
 	if not log.log( "<action.py>action.email(), email sent to '%s', subject '%s', body '%s'" % (u,subj,body), 9 ):
 	    log.log( "<action.py>action.email('%s', '%s', '%s')" % (u,subj,body[:20]) ,5 )
 	
-	#e = eddieElvin.eddieElvin()
-	#e.sendmsg( subj )
-
 
 
     # system()
@@ -323,26 +313,19 @@ class action:
 	    log.log( "<action.py>action.eddielog(), text '%s', loglevel %d" % (logstr,loglevel), 5 )
 
 
-    # elvin()
-    def elvin(self, msg):
-	if eddieElvin.UseElvin == 0:
-	    #log.log( "<action.py>action.elvin(), Elvin is not available - skipping.", 8 )
+    # Send Elvin Ticker message
+    def ticker(self, msg):
+	if eddieElvin4.UseElvin == 0:
+	    log.log( "<action.py>action.ticker(), Elvin is not available - skipping.", 7 )
 	    return 0
 
 	# Replace any ALIASes if needed.
 	if msg in self.aliasDict.keys():
 	    msg = self.aliasDict[msg]
 
-	# send a message via Elvin message system
-	elvinServer = 'elvin'
-	elvinPort = 5678
-
-	#print "ELVIN: elvinServer:",elvinServer
-	#print "ELVIN: elvinPort:",elvinPort
-
 	if len(msg) == 0:
 	    # msg must contain something
-	    log.log( "<action.py>action.elvin(), Error, msg is empty", 2 )
+	    log.log( "<action.py>action.ticker(), Error, msg is empty", 2 )
 	    return
 
 	try:
@@ -358,21 +341,18 @@ class action:
 	msg = parseVars( msg, self.varDict )
 
 	try:
-	    #e = eddieElvin.elvinTicker( elvinServer, elvinPort )
-	    #e = eddieElvin.eddieElvin( elvinServer, elvinPort )
-	    e = eddieElvin.eddieElvin()
-	except eddieElvin.ElvinError:
-	    log.log( "<action.py>action.elvin(), Error, eddieElvin(%s, %d) could not connect" % (elvinServer,elvinPort), 2 )
+	    e = eddieElvin4.elvinTicker()
+	except eddieElvin4.ElvinError:
+	    log.log( "<action.py>action.ticker(), Error, elvinTicker() error", 2 )
 	    return
 
 	retval = e.sendmsg( msg )
-	#e._destroy()			# close connection
 
 	# Alert if return value != 0
 	if retval != 0:
-	    log.log( "<action.py>action.elvin(), Alert, return value for e.sendmsg('%s') is %d" % (msg,retval), 3 )
+	    log.log( "<action.py>action.ticker(), Alert, return value for e.sendmsg('%s') is %d" % (msg,retval), 3 )
 	else:
-	    log.log( "<action.py>action.elvin('%s')" % (msg), 5 )
+	    log.log( "<action.py>action.ticker('%s')" % (msg), 5 )
 
 
     # elvinPage()
@@ -429,43 +409,43 @@ class action:
     # Paging via SNPP to paging server
     # page()
     #def page(self, pager, msg):
-    def snpp_page(self, pager, msg):
-	# send a page via SNPP
-	pageServer = 'chintoo'
-
-	# Replace any ALIASes if needed.
-	if pager in self.aliasDict.keys():
-	    pager = self.aliasDict[pager]
-	if msg in self.aliasDict.keys():
-	    msg = self.aliasDict[msg]
-
-	if len(msg) == 0:
-	    # msg must contain something
-	    log.log( "<action.py>action.page(), Error, msg is empty", 2 )
-	    return
-
-	try:
-	    MSG = self.getMessage(msg)
-	    msg = MSG.message
-	except (KeyError, GetMessageError):
-	    # Use msg string as the message
-	    pass
-
-	# Substitute variables in string
-	msg = parseVars( msg, self.varDict )
-
-	p = snpp.level1(pageServer)
-	p.pager(pager)
-	p.message(msg)
-
-
-	try:
-	    p.send()
-	except snpp.SNPPpageFail:
-	    log.log( "<action.py>action.snpp_page(), Error, %s, returned %s" % (pageServer,snpp.SNPPpageFail), 2 )
-	    return
-
-	log.log( "<action.py>action.snpp_page('%s')" % (msg), 5 )
+#    def snpp_page(self, pager, msg):
+#	# send a page via SNPP
+#	pageServer = 'chintoo'
+#
+#	# Replace any ALIASes if needed.
+#	if pager in self.aliasDict.keys():
+#	    pager = self.aliasDict[pager]
+#	if msg in self.aliasDict.keys():
+#	    msg = self.aliasDict[msg]
+#
+#	if len(msg) == 0:
+#	    # msg must contain something
+#	    log.log( "<action.py>action.page(), Error, msg is empty", 2 )
+#	    return
+#
+#	try:
+#	    MSG = self.getMessage(msg)
+#	    msg = MSG.message
+#	except (KeyError, GetMessageError):
+#	    # Use msg string as the message
+#	    pass
+#
+#	# Substitute variables in string
+#	msg = parseVars( msg, self.varDict )
+#
+#	p = snpp.level1(pageServer)
+#	p.pager(pager)
+#	p.message(msg)
+#
+#
+#	try:
+#	    p.send()
+#	except snpp.SNPPpageFail:
+#	    log.log( "<action.py>action.snpp_page(), Error, %s, returned %s" % (pageServer,snpp.SNPPpageFail), 2 )
+#	    return
+#
+#	log.log( "<action.py>action.snpp_page('%s')" % (msg), 5 )
 
 
     def elvindb(self, table, data=None):

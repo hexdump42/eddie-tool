@@ -1,4 +1,3 @@
-#!/opt/local/bin/python 
 ## 
 ## File		: config.py 
 ## 
@@ -13,10 +12,10 @@
 ##
 
 # Python specific modules
-import sys, string, regex, os
+import sys, string, os
 
 # Eddie specific modules
-import directive, definition, log, proc, utils, eddieElvin
+import directive, definition, log, proc, utils, eddieElvin4
 
 
 ## Define exceptions
@@ -367,43 +366,33 @@ class CLASS(ConfigOption):
 	log.log( "<config>CLASS(), class created %s:%s." % (self.name,self.hosts), 8 )
 
 
-## ELVINHOST - hostname or address of Elvin server
-class ELVINHOST(ConfigOption):
+## ELVINURL - URL of Elvin server
+class ELVINURL(ConfigOption):
     def __init__( self, list ):
 	apply( ConfigOption.__init__, (self,list) )
 
-	# if the last token isn't a carriage-return then we don't have the
-	# whole line yet...   DEFUNCT
-	#if list[-1] != '\012':
-	#    raise ParseNotcomplete
-
-	# if we don't have 3 elements ['ELVINHOST', '=', <str>] then
+	# if we don't have 3 elements ['ELVINURL', '=', <str>] then
 	# raise an error
 	if len(list) != 3:
-	    raise ParseFailure, "ELVINHOST definition has %d tokens when expecting 3" % len(list)
+	    raise ParseFailure, "ELVINURL definition has %d tokens when expecting 3" % len(list)
 
 	# ok, value is 3rd list element
-	eddieElvin.ELVINHOST = utils.stripquote(list[2])		# set the config option
-	log.log( "<config>ELVINHOST(), elvin host set to '%s'." % (eddieElvin.ELVINHOST), 6 )
+	eddieElvin4.ELVINURL = utils.stripquote(list[2])		# set the config option
+	log.log( "<config>ELVINURL(), elvin url set to '%s'." % (eddieElvin4.ELVINURL), 6 )
 
 
-## ELVINPORT - tcp port of Elvin server
-class ELVINPORT(ConfigOption):
+## ELVINSCOPE - Scope of Elvin server
+class ELVINSCOPE(ConfigOption):
     def __init__( self, list ):
 	apply( ConfigOption.__init__, (self,list) )
 
-	# if the last token isn't a carriage-return then we don't have the
-	# whole line yet...
-	#if list[-1] != '\012':
-	#    raise ParseNotcomplete
-
-	# if we don't have 3 elements ['ELVINPORT', '=', <int>] then raise an error
+	# if we don't have 3 elements ['ELVINSCOPE', '=', <str>] then raise an error
 	if len(list) != 3:
-	    raise ParseFailure, "ELVINPORT definition has %d tokens when expecting 3" % len(list)
+	    raise ParseFailure, "ELVINSCOPE definition has %d tokens when expecting 3" % len(list)
 
 	# ok, value is 3rd list element
-	eddieElvin.ELVINPORT = int(list[2])		# set the config option
-	log.log( "<config>ELVINPORT(), elvin port set to '%d'." % (eddieElvin.ELVINPORT), 6 )
+	eddieElvin4.ELVINSCOPE = utils.stripquote(list[2])		# set the config option
+	log.log( "<config>ELVINSCOPE(), elvin scope set to '%s'." % (eddieElvin4.ELVINSCOPE), 6 )
 
 
 ## NUMTHREADS - limit thread creation
@@ -490,8 +479,8 @@ settings = {
 		"ADMIN_NOTIFY"	: ADMIN_NOTIFY,
 		"INTERPRETERS"	: INTERPRETERS,
 		"CLASS"		: CLASS,
-		"ELVINHOST"	: ELVINHOST,
-		"ELVINPORT"	: ELVINPORT,
+		"ELVINURL"	: ELVINURL,
+		"ELVINSCOPE"	: ELVINSCOPE,
 		"NUMTHREADS"	: NUMTHREADS,
            }
 
