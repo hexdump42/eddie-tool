@@ -1,6 +1,45 @@
 Eddie CHANGES
 (reverse chronological order)
 
+Eddie-0.27 (12-Nov-2001)
+ - Put semaphore lock around Elvin connect calls to prevent multiple threads
+   trying to connect at once.
+ - Fixed bug with ELVINURL and ELVINSCOPE config options not being set
+   properly.
+ - Socket errors in Console code are matched with errno error names, rather
+   than assuming the error numbers are the same across platforms.
+   [Bug reported by: Ivar Zarans <iff@alcaron.ee>]
+ - Handle socket errors from PINGs nicely.
+ - Added a reconnect() function to force the elvin connection closed before
+   reconnecting.
+ - Cleaned up eddieElvin4 code, including connecting and auto-reconnecting to
+   Elvin server when connection is lost.
+ - Added better exception handling for "Connection Timed Out" error in PORT
+   directive isalive() function.
+ - Fixed file descriptor leak in PORT directive isalive() function when
+   Connection Refused exception is handled the socket file descriptor was
+   not being closed.
+ - Added more system statistics to the Linux system data collector module.
+   Added most of the stats available from /proc/stat, including:
+     cpu_user      - total cpu in user space
+     cpu_nice      - total cpu in user nice space
+     cpu_system    - total cpu in system space
+     cpu_idle      - total cpu in idle thread
+     cpu%d_user    - per cpu in user space (e.g., cpu0, cpu1, etc)
+     cpu%d_nice    - per cpu in user nice space (e.g., cpu0, cpu1, etc)
+     cpu%d_system  - per cpu in system space (e.g., cpu0, cpu1, etc)
+     cpu%d_idle    - per cpu in idle thread (e.g., cpu0, cpu1, etc)
+     pages_in      - pages read in
+     pages_out     - pages written out
+     pages_swapin  - swap pages read in
+     pages_swapout - swap pages written out
+     interrupts    - number of interrupts received
+     contextswitches - number of context switches
+     boottime      - time of boot (epoch)
+     processes     - number of processes started (I think?)
+   These are now available to directives like SYS.
+ - Cleaned up eddie-adm email headers.
+
 Eddie-0.26 (1-Oct-2001)
  - Changed elvinrrd() action call arguments slightly.  It is now:
    elvinrrd( 'rrdkey', 'arg1=val1', 'arg2=val2', ... )
