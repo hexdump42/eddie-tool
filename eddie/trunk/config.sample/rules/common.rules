@@ -9,133 +9,133 @@
 
 M commonmsg:
     M proc:
-	MSG WARN: "Warning: %procp on %h not running"
-	    """The %procp process on %h is not running
+	MSG WARN: "Warning: %(procp)s on %(h)s not running"
+	    """The %(procp)s process on %(h)s is not running
 
 This is just a Warning.
 Eddie."""
 
-	MSG WARN_P: "Warn: The %procp daemon on %h is not running." ""
+	MSG WARN_P: "Warn: The %(procp)s daemon on %(h)s is not running." ""
 
-	MSG ALERT: "Alert: %procp on %h not running"
-	    """ALERT: The %procp daemon on %h is not running.
+	MSG ALERT: "Alert: %(procp)s on %(h)s not running"
+	    """ALERT: The %(procp)s daemon on %(h)s is not running.
 
-%actnm
-
-Eddie."""
-
-	MSG ALERT_P: "ALERT: The %procp daemon on %h is not running." ""
-
-	MSG RE_WARN: "Alert: %procp on %h not running and is being restarted"
-	    """ALERT: The %procp daemon on %h not running and is being restarted.
-
-%actnm
+%(actnm)s
 
 Eddie."""
 
-	MSG RE_WARN_P: "ALERT: The %procp daemon on %h not running and is being restarted." ""
+	MSG ALERT_P: "ALERT: The %(procp)s daemon on %(h)s is not running." ""
 
-	MSG RE_ERR: "Alert: %procp on %h not restarting"
-	    """ALERT: The %procp daemon on %h will not restart.
+	MSG RE_WARN: "Alert: %(procp)s on %(h)s not running and is being restarted"
+	    """ALERT: The %(procp)s daemon on %(h)s not running and is being restarted.
 
-%actnm
+%(actnm)s
 
 Eddie."""
 
-	MSG RE_ERR_P: "ALERT: The %procp daemon on %h will not restart." ""
+	MSG RE_WARN_P: "ALERT: The %(procp)s daemon on %(h)s not running and is being restarted." ""
+
+	MSG RE_ERR: "Alert: %(procp)s on %(h)s not restarting"
+	    """ALERT: The %(procp)s daemon on %(h)s will not restart.
+
+%(actnm)s
+
+Eddie."""
+
+	MSG RE_ERR_P: "ALERT: The %(procp)s daemon on %(h)s will not restart." ""
 
     M pid:
-	MSG WARN: "Warning: pid file %pidf not found on %h"
-	    """Pid file %pidf not found on %h.
+	MSG WARN: "Warning: pid file %(pidf)s not found on %(h)s"
+	    """Pid file %(pidf)s not found on %(h)s.
 
 Eddie."""
 
-	MSG WARN_P: "%h: pid file %pidf not found" ""
+	MSG WARN_P: "%(h)s: pid file %(pidf)s not found" ""
 
-	MSG ALERT: "ALERT: pid file %pidf not found on %h"
-	    """Pid file %pidf not found on %h.
+	MSG ALERT: "ALERT: pid file %(pidf)s not found on %(h)s"
+	    """Pid file %(pidf)s not found on %(h)s.
 
 Eddie."""
 
-	MSG ALERT_P: "%h: pid file %pidf not found" ""
+	MSG ALERT_P: "%(h)s: pid file %(pidf)s not found" ""
 
     M pidpr:
-	MSG WARN: "Warning: process %pid (from %pidf) on %h not running"
-	    """Warning: The process with pid %pid (from pidfile '%pidf') on %h is not running.
+	MSG WARN: "Warning: process %(pid)s (from %(pidf)s) on %(h)s not running"
+	    """Warning: The process with pid %(pid)s (from pidfile '%(pidf)s') on %(h)s is not running.
 
 Eddie."""
 
-	MSG WARN_P: "%h warn: pid %pid from %pidf not running" ""
+	MSG WARN_P: "%(h)s warn: pid %(pid)s from %(pidf)s not running" ""
 
-	MSG ALERT: "Warning: process %pid (from %pidf) on %h not running"
-	    """ALERT: The process with pid %pid (from pidfile '%pidf') on %h is not running.
+	MSG ALERT: "Warning: process %(pid)s (from %(pidf)s) on %(h)s not running"
+	    """ALERT: The process with pid %(pid)s (from pidfile '%(pidf)s') on %(h)s is not running.
 
-%act
+%(act)s
 Eddie."""
 
-	MSG ALERT_P: "%h alert: pid %pid from %pidf not running" ""
+	MSG ALERT_P: "%(h)s alert: pid %(pid)s from %(pidf)s not running" ""
 
     M fs:
-	MSG WARN: "Warning: %h:%fsf at %fscapac% - %fsavail of %fssize remain"
-	    """Filesystem %fsf on %h has failed this FS rule:
-    %fsrule
+	MSG WARN: "Warning: %(h)s:%(fsf)s at %(fscapac)s%% - %(fsavail)s of %(fssize)s remain"
+	    """Filesystem %(fsf)s on %(h)s has failed this FS rule:
+    %(fsrule)s
 
 ----------------------------------------------------------------------
-%fsdf
+%(fsdf)s
 ----------------------------------------------------------------------
 
 This is just a Warning.
 Eddie."""
 
-	MSG WARN_P: "Warn: %h:%fsf at %fscapac% - %fsavail of %fssize remain" ""
+	MSG WARN_P: "Warn: %(h)s:%(fsf)s at %(fscapac)s%% - %(fsavail)s of %(fssize)s remain" ""
 
-	MSG ALERT: "Alert: %h:%fsf at %fscapac% - %fsavail of %fssize remain"
-	    """Filesystem %fsf on %h has failed this FS rule:
-    %fsrule
+	MSG ALERT: "Alert: %(h)s:%(fsf)s at %(fscapac)s%% - %(fsavail)s of %(fssize)s remain"
+	    """Filesystem %(fsf)s on %(h)s has failed this FS rule:
+    %(fsrule)s
 
 ----------------------------------------------------------------------
-%fsdf
+%(fsdf)s
 ----------------------------------------------------------------------
 
 Please free up space immediately.
 Eddie."""
 
-	MSG ALERT_P: "Alert: %h:%fsf at %fscapac% - %fsavail of %fssize remain" ""
+	MSG ALERT_P: "Alert: %(h)s:%(fsf)s at %(fscapac)s%% - %(fsavail)s of %(fssize)s remain" ""
 
     M sp:
-	MSG WARN: "Warning: Port %spprot/%spport on %h not responding"
-	    """The service port %spprot/%spport on %h is not responding.
+	MSG WARN: "Warning: Port %(spprot)s/%(spport)s on %(h)s not responding"
+	    """The service port %(spprot)s/%(spport)s on %(h)s is not responding.
 
 Eddie."""
 
-	MSG WARN_P: "%h warn: Port %spprot/%spport not responding" ""
+	MSG WARN_P: "%(h)s warn: Port %(spprot)s/%(spport)s not responding" ""
 
-	MSG ALERT: "ALERT: Port %spprot/%spport on %h not responding"
-	    """The service port %spprot/%spport on %h is not responding.
+	MSG ALERT: "ALERT: Port %(spprot)s/%(spport)s on %(h)s not responding"
+	    """The service port %(spprot)s/%(spport)s on %(h)s is not responding.
 Please fix this immediately.
 
 Eddie."""
                     
-	MSG ALERT_P: "%h ALERT: Port %spprot/%spport not responding" ""
+	MSG ALERT_P: "%(h)s ALERT: Port %(spprot)s/%(spport)s not responding" ""
 
     M port:
-	MSG WARN: "Warning: Port %portport on %porthost not responding"
-	    """The service port %portport on %porthost is not responding.
+	MSG WARN: "Warning: Port %(portport)s on %(porthost)s not responding"
+	    """The service port %(portport)s on %(porthost)s is not responding.
 
 This is just a Warning.
 Eddie."""
-	MSG WARN_P: "Warn: Port %portport on %porthost not responding" ""
-	MSG ALERT: "Alert: Port %portport on %porthost not responding"
-	    """Alert: The service port %portport on %porthost is not responding.
+	MSG WARN_P: "Warn: Port %(portport)s on %(porthost)s not responding" ""
+	MSG ALERT: "Alert: Port %(portport)s on %(porthost)s not responding"
+	    """Alert: The service port %(portport)s on %(porthost)s is not responding.
 
-Send data: %portsend
-Expecting: %portexpect
-Actually received: %portrecv
+Send data: %(portsend)s
+Expecting: %(portexpect)s
+Actually received: %(portrecv)s
 
 Please examine if appropriate.
 Eddie."""
 
-	MSG ALERT_P: "Alert: Port %portport on %porthost not responding" ""
+	MSG ALERT_P: "Alert: Port %(portport)s on %(porthost)s not responding" ""
 
 
 ###########################################################################
@@ -166,11 +166,11 @@ N COMMONRESTART:
 
     # Restart and notify
     Level 0:
-	restart("%procp"),email($ALERT,RE_WARN)
+	restart("%(procp)s"),email($ALERT,RE_WARN)
 
     # Restart/page
     Level 1:
-	restart("%procp"),email($SYSSUP,RE_WARN),ticker(RE_WARN_P)
+	restart("%(procp)s"),email($SYSSUP,RE_WARN),ticker(RE_WARN_P)
 
 
 N SYSLOGRESTART:
@@ -257,7 +257,7 @@ SP ssh:		port='ssh'	# port to check, as defined in /etc/services
 # This is one way to check the loadavg of a server.
 COM loadavg:	cmd="uptime | cut -d, -f4 | awk '{print $3}'"
 		rule="float(out) > 6.0"
-		action='elvin("Load on %h is %comout")'
+		action='elvin("Load on %(h)s is %(comout)s")'
 
 
 # LOGSCAN directive scans logfiles, looking for lines which match the given

@@ -9,8 +9,8 @@ group news:
 
     M inndmsg:
 	M throttled:
-	    MSG ALERT: "Alert: innd on %h is throttled"
-		"""ALERT: innd on %h needs urgent attention.
+	    MSG ALERT: "Alert: innd on %(h)s is throttled"
+		"""ALERT: innd on %(h)s needs urgent attention.
 
 Eddie."""
 
@@ -38,7 +38,7 @@ Eddie."""
 			action='COMMONALERT(commonmsg.proc,2)'
     PROC actived:	procname='actived'
 			rule=NR
-			action='email($ALERT,"Alert: %procp on %h not running - restarting..."),system("su news -c /opt/local/news/bin/actived")'
+			action='email($ALERT,"Alert: %(procp)s on %(h)s not running - restarting..."),system("su news -c /opt/local/news/bin/actived")'
 
 
     FS varspool:	fs='/var/spool'
