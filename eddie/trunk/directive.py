@@ -17,6 +17,9 @@ import os
 import string
 import regex
 import sys
+import action
+import definition
+import utils
 
 # Define exceptions
 ParseFailure = 'ParseFailure'
@@ -65,6 +68,8 @@ class Directive:
 	self.regexp = ''			# the regexp to split the raw line into fields
 	self.action = ''			# each directive will have an action
 
+    # Parses raw line with directive-defined regexp and returns tuple of
+    # regex groups.
     def parseRaw(self):
 	sre = regex.compile( self.regexp )
 	inx = sre.search( self.raw )
@@ -78,6 +83,26 @@ class Directive:
 	    i = i + 1
 	return fieldlist
 
+    # Perform actions for a directive
+    def doAction(self):
+	# split comma-seperated list of actions
+	actionList = utils.trickySplit( self.action, ',' )
+
+	# Replace Action definitions with the corresponding actions
+	actionList = definition.parseList( actionList, ADict )
+
+	# Put quotes around arguments so we can use eval()
+	actionList = utils.quoteArgs( actionList )
+
+	# Perform each action
+	for a in actionList:
+	    try:
+		# Call the action
+		eval( 'action.'+a )
+	    except AttributeError:
+		# Not an action function ... error...
+		print "'%s' is not a defined action.  Config line follows:\n%s\n" % (a,self.raw)
+
 
 
 ##
@@ -88,15 +113,11 @@ class FS(Directive):
 	print "FS directive doing checking......"
 
 
-class A(Directive):
-    def docheck(self):
-	print "A directive doing checking......"
-
 
 class PID(Directive):
     def __init__(self, *arg):
 	apply( Directive.__init__, (self,) + arg )
-	self.regexp = 'PID[\t \n]+\([a-zA-Z0-9_/\.]+\)[\t \n]+\([a-zA-Z0-9_]+\)[\t \n]+\([a-zA-Z0-9_]+\)[\t \n]*'
+	self.regexp = 'PID[\t \n]+\([a-zA-Z0-9_/\.]+\)[\t \n]+\([a-zA-Z0-9_]+\)[\t \n]+\(.*\)'
 	fields = self.parseRaw()
 	self.pidfile = fields[0]		# the pid file to check for
 	self.rule = fields[1]			# the rule (EX or PR)
@@ -110,7 +131,7 @@ class PID(Directive):
 class D(Directive):
     def __init__(self, *arg):
 	apply( Directive.__init__, (self,) + arg )
-	self.regexp = 'D[\t \n]+\([a-zA-Z0-9_]+\)[\t \n]+\([a-zA-Z0-9_]+\)[\t \n]+\([a-zA-Z0-9_]+\)[\t \n]*'
+	self.regexp = 'D[\t \n]+\([a-zA-Z0-9_]+\)[\t \n]+\([a-zA-Z0-9_]+\)[\t \n]+\(.*\)'
 	fields = self.parseRaw()
 	self.daemon = fields[0]			# the daemon to check for
 	self.rule = fields[1]			# the rule (NR or R)
@@ -125,22 +146,20 @@ class D(Directive):
 	self.ruleDict[ self.rule ]()
 
     def NR(self):
-	if plist.procExists( self.daemon ) > 0:
-	    print " NR: ...",self.daemon,"is running."
-	else:
-	    print " NR: ...",self.daemon,"is NOT running."
+	if plist.procExists( self.daemon ) == 0:
+	    print " <D>",self.daemon,"is NOT running."
+	    self.doAction()
 
     def R(self):
 	if plist.procExists( self.daemon ) > 0:
-	    print " R: ...",self.daemon,"is running."
-	else:
-	    print " R: ...",self.daemon,"is NOT running."
+	    print " <D>",self.daemon,"is running."
+	    self.doAction()
 
 
 class SP(Directive):
     def __init__(self, *arg):
 	apply( Directive.__init__, (self,) + arg )
-	self.regexp = 'SP[\t \n]+\([a-zA-Z0-9_/]+\)[\t \n]+\([a-zA-Z0-9_]+\)[\t \n]*'
+	self.regexp = 'SP[\t \n]+\([a-zA-Z0-9_/]+\)[\t \n]+\(.*\)'
 	fields = self.parseRaw()
 	self.port = fields[0]			# the port to check
 	self.action = fields[1]			# the action

@@ -22,7 +22,7 @@ import config
 # Define exceptions
 #ParseFailure = 'ParseFailure'
 
-def readFile(file, ruleList, defDict, MDict):
+def readFile(file, ruleList, defDict, MDict, ADict):
 
     # Get the directory name of the base config file
     dir = file[:string.rfind(file, '/')]+'/'
@@ -57,7 +57,7 @@ def readFile(file, ruleList, defDict, MDict):
 	    
 	    if d == 'INCLUDE':
 	    	# recursively read the INCLUDEd file
-	    	readFile(dir+elements[1][1:-1], ruleList, defDict, MDict)
+	    	readFile(dir+elements[1][1:-1], ruleList, defDict, MDict, ADict)
 		continue
 
 	    if directives.has_key(d):
@@ -90,6 +90,8 @@ def readFile(file, ruleList, defDict, MDict):
 			defDict[action.name] = action.text
 		    elif action.type == 'M':
 			MDict + action
+		    elif action.type == 'A':
+			ADict[action.name] = action.text
 		    else:
 			print "Do wot with action : ",action," ??"
 		elif action.basetype == 'ConfigOption':

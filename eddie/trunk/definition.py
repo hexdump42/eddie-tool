@@ -15,6 +15,7 @@
 
 import string
 import regex
+import utils
 
 # Define exceptions
 ParseFailure = 'ParseFailure'
@@ -96,7 +97,7 @@ class M(Definition):
 	print "sending message to", email
 
 ##
-## DEF DEFINITION
+## DEF DEFINITION - defines general definitions, access with $defn_name
 ##
 class DEF(Definition):
     def __init__(self, *arg):
@@ -107,6 +108,34 @@ class DEF(Definition):
 	self.text = fields[1]		# the text that is assigned to it
 
 
+##
+## A DEFINITION - defines Actions
+class A(Definition):
+    def __init__(self, *arg):
+	apply( Definition.__init__, (self,) + arg )
+	self.regexp = 'A[\t ]+\([a-zA-Z0-9_]+\)[\t ]+\(.*\)'
+	fields = self.parseRaw()
+	self.name = fields[0]		# the name of this Action
+	self.text = fields[1]		# the text that is assigned to it
+
+
+##
+## parseList( list, dict ) - cycles thru list, if any entries are keys in dict, replaces
+##   entry with value from dict.
+def parseList( list, dict ):
+    newlist = []
+    for l in list:
+	try:
+	    # is l a key in dict ?  if yes, it is added
+	    tmp = dict[l]
+	    tmpList = utils.trickySplit( tmp, ',' )
+	    tmpList = parseList( tmpList, dict )
+	    for i in tmpList:
+		newlist.append(i)
+	except KeyError:
+	    # if no, just add l
+	    newlist.append(l)
+    return newlist
 
 ##
 ## END - definition.py

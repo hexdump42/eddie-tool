@@ -30,14 +30,18 @@ def ottoguts():
     global ourList		# global list of all directives
     global defDict		# global dictionary of DEFinitions
     global MDict		# global dictionary of Messages
+    global ADict		# global dictionary of Actions
 
     # initialise our global lists/dicts
     ourList = directive.Rules()
     defDict = {}
     MDict = definition.MsgDict()
+    ADict = {}
 
     # read in config and rules
-    parseConfig.readFile(config_file, ourList, defDict, MDict)
+    parseConfig.readFile(config_file, ourList, defDict, MDict, ADict)
+
+    directive.ADict = ADict		# make ADict viewable in directive module
 
     #print "M: ",ourList['M']
     #print "D: ",ourList['D']
@@ -61,6 +65,9 @@ def ottoguts():
     #print "-- The following Ms are defined: --"
     #for i in MDict.keys():
     #	print "%s: Subject \"%s\"\n---BODY---\n%s\n----------" % (i, MDict.subj(i), MDict[i])
+    #print "-- The following As are defined: --"
+    #for i in ADict.keys():
+    #	print "%s=%s" % (i, ADict[i])
 
     # Now do all the checking
     # note ... directive order is not defined (we don't currently care do we?)
@@ -81,7 +88,7 @@ def main():
 	    print 'Press CTRL-C to quit'
 	    time.sleep( config.scanperiod )
 	except KeyboardInterrupt:
-	    print "Otto quitting ... bye bye"
+	    print "\nOtto quitting ... bye bye"
 	    break
 
 

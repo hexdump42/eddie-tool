@@ -90,11 +90,11 @@ class SCANPERIOD(ConfigOption):
 directives = {  "SCANPERIOD"	: SCANPERIOD,			\
 		"M"		: definition.M,			\
 		"DEF"		: definition.DEF,		\
+		"A"		: definition.A,			\
 		"FS"		: directive.FS,			\
                 "SP"		: directive.SP,			\
 	  	"PID"		: directive.PID,		\
-		"D"		: directive.D,			\
-		"A"		: directive.A			}
+		"D"		: directive.D,			}
 
 
 
