@@ -447,6 +447,20 @@
 	still exists in the configuration, but no checks will be executed for it.
 	[Eddie 0.33+]
 
+	<li> <b><a name="checktime">checktime=&lt;expression&gt;</a></b> - 
+	if specified, the directive will only be executed if the expression
+	evaluates to true.  The expression can make use of the current time and
+	day with the variables: day ('mon', 'tue', etc); time (HHMM); hour (0-23);
+	minute (0-59); second (0-59).
+	And the for shorthands, the fixed lists: weekdays ('mon' - 'fri'),
+	weekend ('sat', 'sun').
+	<br> Some Examples:
+	<pre>
+	    checktime='day=="mon" or day=="tue"'
+	    checktime='day in weekdays and hour&gt;18'
+	</pre>
+	[Eddie 0.33+]
+
     </ul>
    </p>
 
