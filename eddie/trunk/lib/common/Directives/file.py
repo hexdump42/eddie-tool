@@ -27,7 +27,7 @@
 
 
 # Imports: Python
-import string, os
+import string, os, time
 # Imports: Eddie
 import log, directive
 
@@ -107,6 +107,7 @@ class FILE(directive.Directive):
 	data['mtime'] = None
 	data['ctime'] = None
 	data['md5'] = None
+	data['now'] = None
 
 	data['lastmode'] = None
 	data['lastino'] = None
@@ -119,6 +120,8 @@ class FILE(directive.Directive):
 	data['lastmtime'] = None
 	data['lastctime'] = None
 	data['lastmd5'] = None
+
+	data['now'] = time.time()	# get current time for comparing with file times
 
 	if os.path.exists( self.args.file ):
 	    data['exists'] = 1		# true
