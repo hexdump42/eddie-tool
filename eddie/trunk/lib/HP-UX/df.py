@@ -3,7 +3,7 @@
 ## 
 ## Author       : Chris Miles  <chris@psychofx.com>
 ## 
-## Date		: 20010709
+## Start Date	: 20010709
 ## 
 ## Description	: Library of classes that deal with a HP-UX bdf list
 ##
@@ -25,22 +25,84 @@
 ########################################################################
 
 # Python Modules
-import os, string
+import os, string, threading, time
 # Eddie Modules
 import log, history, utils
 
-##
-## Class dfList - instantiates with a list of disk usage stats
-##
+
 class dfList:
+    """dfList is a thread-friendly object providing access to disk usage statistics."""
+
+    # refresh_rate : amount of time data will be cached before refreshing (in seconds)
+    refresh_rate = 60
+
     def __init__(self):
-	self.dfheader = ""
+        self.refresh_time = 0   # data must be refreshed at first request
+        self.semaphore = threading.Semaphore()  # lock before accessing data
+        self.dfheader = ""
 
-	self.refresh()
 
+    ##################################################################
+    # Public, thread-safe, methods
 
     def refresh(self):
-	"""Force df refresh."""
+        """Force a refresh of the data."""
+
+        self.semaphore.acquire()
+        self._refresh()
+        self.semaphore.release()
+
+
+    def keys(self):
+        """Return the current list of filesystems."""
+
+        self.semaphore.acquire()
+        self._checkCache()      # refresh data if necessary
+        k = self.hash.keys()
+        self.semaphore.release()
+
+        return(k)
+
+
+    def __str__(self):
+        """Create string to display disk usage stats."""
+
+        self.semaphore.acquire()
+        self._checkCache()      # refresh data if necessary
+        rv = self.dfheader
+        for item in self.list:
+            rv = rv + str(item) + '\n'
+        self.semaphore.release()
+
+        return(rv)
+
+
+    def __getitem__(self, name):
+        """
+        Overload '[]', eg: returns corresponding df object for given filesystem
+        device - if there isn't one, will try to find a df object based on the
+        mount point.  If both fail, returns None.
+        """
+
+        self.semaphore.acquire()
+        self._checkCache()              # refresh data if necessary
+        try:
+            r = self.hash[name]         # try to find filesystem device
+        except KeyError:
+            try:
+                r = self.mounthash[name]        # try to find mount point
+            except KeyError:
+                r = None                # not found
+        self.semaphore.release()
+
+        return r
+
+
+    ##################################################################
+    # Private methods.  No thread safety if not using public methods.
+
+    def _refresh(self):
+	"""Refresh disk usage data."""
 
 	dfre = "^([/0-9a-zA-Z]+)\s*\(([/0-9a-zA-Z])\s*\)\s*:\s*([0-9]+)\s*total allocated Kb\s*([0-9]+)\s*free allocated Kb\s*([0-9]+)\s*used allocated Kb\s*([0-9]+)\s*% allocation used"
 
@@ -67,39 +129,25 @@ class dfList:
 
 	utils.safe_pclose( rawList )
 
-
-    def __str__(self):
-	rv = 'Filesystem               kbytes    used   avail  pct    Mount on\n'
- 	for item in self.list:
- 	    rv = rv + str(item) + '\n'
-
-	return(rv)
+        # new refresh time is current time + refresh rate (seconds)
+        self.refresh_time = time.time() + self.refresh_rate
 
 
-    def keys(self):
-	self.refresh()
-        return(self.hash.keys())
+    def _checkCache(self):
+        """Check if cached data is invalid, ie: refresh_time has
+        been exceeded."""
 
-    # Overload '[]', eg: returns corresponding df object for given filesystem
-    # device - if there isn't one, will try to find a df object based on the
-    # mount point.  If both fail, returns None.
-    def __getitem__(self, name):
-	self.refresh()
-        try:
-            return self.hash[name]		# try to find filesystem device
-        except KeyError:
-	    try:
-		return self.mounthash[name]	# try to find mount point
-	    except KeyError:
-		return None
-
-	return None		# just in case...
+        if time.time() > self.refresh_time:
+            log.log( "<df>_checkCache(), refreshing dfList", 7 )
+            self._refresh()
+        else:
+            log.log( "<df>_checkCache(), using cache'd dfList", 7 )
 
 
-##
-## Class df : holds stats on disk usage
-##
+
 class df:
+    """df object holds stats on disk usage."""
+
     def __init__(self, *arg):
 	self.raw = arg[0]
 
@@ -153,7 +201,7 @@ class df:
 	return self.avail
 
     def getPctused(self):
-	return self.pctused	# strip '%' off end
+	return self.pctused
 
     def getMountpt(self):
 	return self.mountpt
@@ -165,7 +213,7 @@ class df:
 	return self.availDelta
 
     def getPctusedDelta(self):
-	return self.pctusedDelta	# strip '%' off end
+	return self.pctusedDelta
 
 ##
 ## END - df.py
