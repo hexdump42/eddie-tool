@@ -69,7 +69,7 @@ class MYSQL(directive.Directive):
 	    # It just won't be able to do anything
 	    self.available=0
 	    exctype,value=sys.exc_info()[:2]
-	    log.log("<mysql>__init__(): MySQLdb not importable %s, %s" % (exctype, value),3)
+	    log.log("<mysql>__init__(): MySQLdb not importable %s, %s" % (exctype, value),5)	# Should be 3 but it whinges a lot
 	    #raise directive.ParseFailure, "Cannot import MySQLdb module - mysql directive not available"
 
     ############################################################################
@@ -147,7 +147,7 @@ class MYSQL(directive.Directive):
 	    starttime=time.time()
 		
 	    if self.args.query==None:
-		curs.execute("show status")
+		curs.execute("SHOW STATUS")
 		data['querytime']=(time.time()-starttime)*1000
 		ans=curs.fetchone()
 		while(ans!=None):
@@ -158,7 +158,10 @@ class MYSQL(directive.Directive):
 		data['querytime']=(time.time()-starttime)*1000
 		result=[]
 		ans=curs.fetchone()
+		count=0
 		while(ans!=None):
+		    data['result%d' % count]=ans[0]
+		    count=count+1
 		    result.append(ans)
 		    ans=curs.fetchone()
 		data['result']=result
