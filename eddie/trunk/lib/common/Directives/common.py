@@ -195,7 +195,7 @@ class PROC(directive.Directive):
 
 	# test required arguments
 	try:
-	    self.args.procname
+	    self.args.name
 	except AttributeError:
 	    raise directive.ParseFailure, "Process name not specified"
 	try:
@@ -205,14 +205,14 @@ class PROC(directive.Directive):
 
 	# Set any PROC-specific action variables
 	#  proc_check_name = the process name being checked
-	self.defaultVarDict['proc_check_name'] = self.args.procname
+	self.defaultVarDict['name'] = self.args.name
 
 	# define the unique ID
 	if self.ID == None:
-	    self.ID = '%s.PROC.%s' % (log.hostname,self.args.procname)
+	    self.ID = '%s.PROC.%s' % (log.hostname,self.args.name)
 	self.state.ID = self.ID
 
-	log.log( "<directive>PROC.tokenparser(): ID '%s' procname '%s' rule '%s' action '%s'" % (self.state.ID, self.args.procname, self.args.rule, self.args.actionList), 8 )
+	log.log( "<directive>PROC.tokenparser(): ID '%s' name '%s' rule '%s' action '%s'" % (self.state.ID, self.args.name, self.args.rule, self.args.actionList), 8 )
 
 
     def getData(self):
@@ -223,12 +223,12 @@ class PROC(directive.Directive):
 
 	data = {}
 
-	proc = self.data_collectors['proc.procList'][self.args.procname]
+	proc = self.data_collectors['proc.procList'][self.args.name]
 	if proc == None:
-	    log.log( "<directive>PROC.getData(): process not in process table, '%s'" % (self.args.procname), 7 )
+	    log.log( "<directive>PROC.getData(): process not in process table, '%s'" % (self.args.name), 7 )
 	    data['exists'] = 0		# false
 	else:
-	    log.log( "<directive>PROC.getData(): process is in process table, '%s'" % (self.args.procname), 7 )
+	    log.log( "<directive>PROC.getData(): process is in process table, '%s'" % (self.args.name), 7 )
 	    data['exists'] = 1		# true
 	    data.update(proc.procinfo())
 
