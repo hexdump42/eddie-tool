@@ -305,6 +305,22 @@ class Elvin:
 	return r
 
 
+    def netsaint(self,data):
+	"""
+	by Dougal Scott <dwagon@connect.com.au>
+	"""
+
+        edict = { 'NETSAINT' : 'NETSAINT' }
+        edict.update(data)              # add data dictionary to edict
+        r = self.notify( edict )        # Send Elvin message
+        if r != 0:
+            log.log( "<eddieElvin4>Elvin.netsaint(): notify failed", 4 )
+            return r            # failed
+        else:
+            log.log( "<eddieElvin4>Elvin.netsaint(): notify successful", 8 )
+            return r            # succeeded
+
+
 ##
 ## END - eddieElvin4.py
 ##

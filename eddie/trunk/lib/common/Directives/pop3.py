@@ -226,7 +226,7 @@ class POP3TIMING(directive.Directive):
 	try:
 	    self.args.rule
 	except AttributeError:
-	    raise ParseFailure, "Rule not specified"
+	    raise directive.ParseFailure, "Rule not specified"
 
 	try:
 	    self.args.password	# password

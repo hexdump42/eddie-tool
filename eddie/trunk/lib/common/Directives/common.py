@@ -539,9 +539,8 @@ class PORT(directive.Directive):
 		    sendlist = string.split(send, '\n')		# split each line
 		    # send each line - only capture last output received
 		    for line in sendlist:
-			log.log( "<directive>PORT.getData(): sending '%s'" % (line), 9 )
+			log.log( "<directive>PORT.tcp_test(): sending '%s'" % (line), 9 )
 			s.send(line+'\n')
-			log.log( "<directive>PORT.getData(): received '%s'" % (data), 7 )
 
 		recv_string = s.recv(1024)	# receive max 1024 bytes
 		s.close()
@@ -557,12 +556,12 @@ class PORT(directive.Directive):
 		except KeyError:
 		    error = str(e[1][0])
 		errorstr = e[1][1]
-		log.log( "<directive>PORT.getData(): socket.error: %s, %s" % (e[0], e[1]), 7 )
+		log.log( "<directive>PORT.tcp_test(): socket.error: %s, %s" % (e[0], e[1]), 7 )
 
         except:
 	    e = sys.exc_info()
 	    tb = traceback.format_list( traceback.extract_tb( e[2] ) )
-	    log.log( "<directive>PORT.getData(): ID '%s', Uncaught exception: %s, %s, %s" % (self.state.ID, e[0], e[1], tb), 3 )
+	    log.log( "<directive>PORT.tcp_test(): ID '%s', Uncaught exception: %s, %s, %s" % (self.state.ID, e[0], e[1], tb), 3 )
 
 	return (connected, recv_string, connect_time, error, errorstr)
 

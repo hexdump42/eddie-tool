@@ -459,6 +459,36 @@ class action:
 
 
 
+    ############################################################################
+    def netsaint(self, desc, output, retcode):
+	"""
+	Send information to remote netsaint server via Elvin.
+	Usage:
+	    action=netsaint("EddieFS", "Disk / at %(fscapac)s percent", 1)
+
+	By Dougal Scott <dwagon@connect.com.au>
+	"""
+
+	log.log("<action>action.netsaint(desc='%s', output='%s', retcode=%s)" % (desc,output,retcode), 8)
+
+	if eddieElvin4.UseElvin == 0:
+	    log.log("<action>action.netsaint(), Elvin is not available - skipping.", 8)
+	    return 0
+
+	datadict = {}
+	datadict['hostname']=log.hostname
+	datadict['desc']=desc
+	datadict['output']=parseVars(output, self.varDict)
+	datadict['return']=retcode
+
+	retval = elvin.netsaint(datadict)
+        # Alert if return value != 0
+        if retval != 0:
+	    log.log("<action>action.netsaint(%s), Alert, return value for e.send() is %d" % (datadict,retval), 3)
+	else:
+	    log.log("<action>action.netsaint(%s): store ok" % datadict, 7)
+
+
 ##
 ## General utilities for actions
 ##
