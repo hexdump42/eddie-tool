@@ -18,9 +18,8 @@ import regex
 import directive
 import definition
 import config
+import log
 
-# Define exceptions
-#ParseFailure = 'ParseFailure'
 
 def readFile(file, ruleList, defDict, MDict, ADict):
 
@@ -30,6 +29,7 @@ def readFile(file, ruleList, defDict, MDict, ADict):
     # List the known directives we accept from the config
     directives = config.directives
     
+    #TODO: Check if file can't be opened...
     conf = open(file, 'r')
     count = 0
 
@@ -57,6 +57,7 @@ def readFile(file, ruleList, defDict, MDict, ADict):
 	    
 	    if d == 'INCLUDE':
 	    	# recursively read the INCLUDEd file
+		log.log( "<parseConfig>readFile(), reading INCLUDEd file %s" % elements[1], 8 )
 	    	readFile(dir+elements[1][1:-1], ruleList, defDict, MDict, ADict)
 		continue
 
@@ -80,7 +81,7 @@ def readFile(file, ruleList, defDict, MDict, ADict):
 		    try:
 			action = directives[d](line)
 		    except (directive.ParseFailure, definition.ParseFailure):
-			print "Parse failure in %s on line %d - skipping (line follows)\n%s" % (file, count, line)
+			log.log( "<parseConfig>readFile(), Alert, Parse failure in '%s' on line %d - skipping (line follows)\n%s" % (file, count, line), 3 )
 			continue
 		
 		if action.basetype == 'Directive':
@@ -93,13 +94,16 @@ def readFile(file, ruleList, defDict, MDict, ADict):
 		    elif action.type == 'A':
 			ADict[action.name] = action.text
 		    else:
-			print "Do wot with action : ",action," ??"
+			log.log( "<parseConfig>readFile(), Alert, unknown Definition type '%s' in '%s' on line %d" % (action,file,count), 3 )
 		elif action.basetype == 'ConfigOption':
 		    # ummm... do nothing!
 		    pass
 		else:
-		    print "Unknown type '"+action.basetype+"' for action: "+action
+		    log.log( "<parseConfig>readFile(), Alert, unknown type '%s' for action '%s' in '%s' on line %d" % (action.basetype,action), 3 )
 
 	    else:
-	       print "Ignoring Unknown Directive %s on line %s of %s" % (d, count, file)
+	       log.log( "<parseConfig>readFile(), Alert, ignoring unknown directive '%s' in '%s' on line %d" % (d,file,count), 3 )
 
+###
+### END parseConfig.py
+###

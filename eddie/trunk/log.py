@@ -22,14 +22,18 @@ loglevel = 9
 
 
 # log() - if level <= loglevel, text is appended to logfile
-#         with date/time prepended
+#         with date/time prepended (nothing is ever logged when
+#         loglevel is 0).
 def log(text='', level=1):
-    if level <= loglevel:
+    if level > 0 and level <= loglevel:
 	datetime = time.asctime(time.localtime(time.time()))
-	logtext = datetime+':'+text+'\n'
+	logtext = "%s [%d]:%s\n" % (datetime,level,text)
 	logf = open( logfile, 'a' )
 	logf.write( logtext )
 	logf.close()
+	return 1		# logged
+    else:
+    	return 0		# not logged
 
 
 

@@ -26,6 +26,7 @@ ParseFailure = 'ParseFailure'
 ## Scan Period in seconds (default is 10 minutes)
 ##
 scanperiod = 10*60
+scanperiodraw = '10m'
 
 ##
 ## The base configoption class.  Derive all config options from this base class.
@@ -57,10 +58,13 @@ class SCANPERIOD(ConfigOption):
 	apply( ConfigOption.__init__, (self,) + arg )
 	self.regexp = 'SCANPERIOD[\t ]+\([a-zA-Z0-9]+\)[\t \n]*'
 	value = self.parseRaw()
+	global scanperiodraw
+	scanperiodraw = value			# keep the raw scanperiod
 	value = self.val2secs( value )		# convert value to seconds
-	global scanperiod 		# how do I access global scanperiod that already exists?
-	scanperiod = value			# set the config option
-	print "<SCANPERIOD> scanperiod set to %d seconds." % (scanperiod)
+	if value > 0:
+	    global scanperiod 		# how do I access global scanperiod that already exists?
+	    scanperiod = value			# set the config option
+	log.log( "<Config>SCANPERIOD(), scanperiod set to %s (%d seconds)." % (scanperiodraw, scanperiod), 6 )
 
     def val2secs( self, value ):
 	if regex.search( '[mshdwcyMSHDWCY]', value ) == -1:
@@ -82,8 +86,8 @@ class SCANPERIOD(ConfigOption):
 	elif timech == 'y' or timech == 'Y':
 	    mult = 60*60*24*365
 	else:
-	    print "Error in SCANPERIOD: timech is '%s'" % (timech)
-	    mult = 0
+	    log.log( "<Config>SCANPERIOD(), Error in val2secs(%d,'%s'): timech is '%s'" % (self,value,timech), 2 )
+	    return 0
 	return string.atoi(value)*mult
 
 ## LOGFILE - where to store log messages
@@ -93,7 +97,7 @@ class LOGFILE(ConfigOption):
 	self.regexp = 'LOGFILE[\t ]+["\']\([a-zA-Z0-9/._=-]+\)["\'][\t \n]*'
 	value = self.parseRaw()
 	log.logfile = value			# set the config option
-	print "<LOGFILE> logfile set to '%s'." % (log.logfile)
+	log.log( "<Config>LOGFILE(), logfile set to '%s'." % (log.logfile), 6 )
 
 
 ## LOGLEVEL - how much logging to do
@@ -103,7 +107,7 @@ class LOGLEVEL(ConfigOption):
 	self.regexp = 'LOGLEVEL[\t ]+\([0-9]+\)[\t \n]*'
 	value = self.parseRaw()
 	log.loglevel = string.atoi(value)		# set the config option
-	print "<LOGLEVEL> loglevel set to %d." % (log.loglevel)
+	#log.log( "<Config>LOGLEVEL(), loglevel set to '%d'." % (log.loglevel), 6 )
 
 ##
 ## This is a list of known directives we accept in otto config/rules files

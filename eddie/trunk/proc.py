@@ -14,6 +14,7 @@
 
 import os
 import string
+import log
 
 ##
 ## Class procList - instantiates with a list or procs running
@@ -34,6 +35,7 @@ class procList:
 	    self.hash[fields[0]] = p
 	    self.nameHash[p.command] = p
 
+	log.log( "<proc>procList(), created new instance", 8 )
 	
     def __str__(self):
 	rv = 'PID     USER            COMMAND                 TIME            CPU     STATUS\n'
@@ -78,7 +80,7 @@ class proc:
 	    # This process has no command associated with it.  This can happen
 	    # when a process is <defunct>.
 	    # For now, let's call it "<defunct>"...
-	    comm = '<defunct'
+	    comm = '<defunct>'
 
 	self.pid = self.raw[0]		# pid
 	self.user = self.raw[1]		# user
@@ -93,6 +95,7 @@ class proc:
 	u = string.ljust(self.user, 10)
 	t = string.ljust(self.time, 10)
 
+	log.log( '<proc>proc, %s\t%s\t%s\t%s\t%s\t%s' % (self.pid,u,c,t,self.percent,self.status), 9 )
 	return( '%s\t%s\t%s\t%s\t%s\t%s' % (self.pid, u, c, t, self.percent, self.status ) )
 
 ##

@@ -20,6 +20,7 @@ import sys
 import action
 import definition
 import utils
+import log
 
 # Define exceptions
 ParseFailure = 'ParseFailure'
@@ -131,10 +132,11 @@ class Directive:
 	for a in actionList:
 	    try:
 		# Call the action
+		log.log( "<directive>Directive, calling action '%s'" % (a), 8 )
 		eval( 'action.'+a )
 	    except AttributeError:
 		# Not an action function ... error...
-		print "'%s' is not a defined action.  Config line follows:\n%s\n" % (a,self.raw)
+		log.log( "<directive>Directive, Error, '%s' is not a defined action, config line follows,\n%s\n" % (a,self.raw), 2 )
 
 
 
@@ -185,17 +187,17 @@ class D(Directive):
 	self.varDict['dpid'] = '[dpid not yet defined]'
 
     def docheck(self):
-	#print "D directive doing checking...... daemon: %s rule: '%s' action: '%s'" % (self.daemon,self.rule,self.action)
+	log.log( "<directive>docheck(D), daemon '%s', rule '%s', action '%s'" % (self.daemon,self.rule,self.action), 8 )
 	self.ruleDict[ self.rule ]()
 
     def NR(self):
 	if plist.procExists( self.daemon ) == 0:
-	    print " <D>",self.daemon,"is NOT running."
+	    log.log( "<directive>NR(D) daemon not running, '%s'" % (self.daemon), 6 )
 	    self.doAction()
 
     def R(self):
 	if plist.procExists( self.daemon ) > 0:
-	    print " <D>",self.daemon,"is running."
+	    log.log( "<directive>R(D) daemon is running, '%s'" % (self.daemon), 6 )
 	    # Set %dpid variable.
 	    self.varDict['dpid'] = plist[self.daemon].pid
 	    self.doAction()
@@ -208,7 +210,7 @@ class SP(Directive):
 	fields = self.parseRaw()
 	self.port = fields[0]			# the port to check
 	self.action = fields[1]			# the action
-	#print "<SP> port: '%s' action: '%s'" % (self.port, self.action)
+	log.log( "<Directive>SP, port '%s', action '%s'" % (self.port, self.action), 8 )
 
     def docheck(self):
 	print "SP directive doing checking......"

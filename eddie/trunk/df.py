@@ -14,6 +14,7 @@
 
 import os
 import string
+import log
 
 ##
 ## Class dfList - instantiates with a list of disk stats
@@ -31,7 +32,9 @@ class dfList:
 	    p = df(fields)
 	    self.list.append(p)
 	    self.hash[fields[0]] = p
-	
+
+	rawList.close()
+
 
     def __str__(self):
 	rv = 'Filesystem               kbytes    used   avail  pct    Mount on\n'
@@ -66,6 +69,8 @@ class df:
 	a = string.rjust(self.avail, 7)
 	p = string.center(self.pctused, 5)
 	m = string.ljust(self.mountpt, 15)
+
+	log.log( '%s\t%s\t%s\t%s\t%s\t%s' % (f, s, u, a, p, m), 9 )
 	
 	return( '%s\t%s\t%s\t%s\t%s\t%s' % (f, s, u, a, p, m) )
 

@@ -21,6 +21,7 @@ import definition
 import config
 import time
 import action
+import log
 
 # Main config file - this file INCLUDEs all other config files
 config_file = 'config/otto.cf'
@@ -53,12 +54,12 @@ def ottoguts():
 
 
     # instantiate a process list
+    log.log( "<otto>ottoguts(), creating process list", 8 )
     directive.plist = proc.procList()
-    #print p
 
     # instantiate a disk usage list
+    log.log( "<otto>ottoguts(), creating df list", 8 )
     directive.dlist = df.dfList()
-    #print d
 
     ## debugging ##
     #print "-- The following DEFs are defined: --"
@@ -73,6 +74,8 @@ def ottoguts():
 
     # Now do all the checking
     # note ... directive order is not defined (we don't currently care do we?)
+    log.log( "<otto>ottoguts(), beginning checks", 8 )
+
     ## debugging - test with 'D' directive for now ##
     ## for d in ourList.keylist():
     for d in ('D'):
@@ -86,10 +89,11 @@ def main():
     while 1:
 	try:
 	    ottoguts()
-	    print 'Sleeping for %d secs' % (config.scanperiod)
+	    log.log( '<otto>main(), sleeping for %d secs' % (config.scanperiod), 6 )
 	    print 'Press CTRL-C to quit'
 	    time.sleep( config.scanperiod )
 	except KeyboardInterrupt:
+	    log.log( '<otto>main, KeyboardInterrupt encountered - quitting', 2 )
 	    print "\nOtto quitting ... bye bye"
 	    break
 
@@ -98,3 +102,6 @@ def main():
 if __name__ == "__main__":
     main()
 
+###
+### END otto.py
+###

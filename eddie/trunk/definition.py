@@ -16,6 +16,7 @@
 import string
 import regex
 import utils
+import log
 
 # Define exceptions
 ParseFailure = 'ParseFailure'
@@ -92,9 +93,8 @@ class M(Definition):
 	self.name = fields[0]
 	self.subject = fields[1]
 	self.message = fields[2]
+	log.log( "<Definition>M(), M created, name '%s', subject '%s', message '%s'" % (self.name,self.subject,self.message), 8 )
 
-    def send(self, email):
-	print "sending message to", email
 
 ##
 ## DEF DEFINITION - defines general definitions, access with $defn_name
@@ -106,6 +106,7 @@ class DEF(Definition):
 	fields = self.parseRaw()
 	self.name = fields[0]		# the name of this DEFinition
 	self.text = fields[1]		# the text that is assigned to it
+	log.log( "<Definition>DEF(), DEF created, name '%s', text '%s'" % (self.name,self.text), 8 )
 
 
 ##
@@ -117,6 +118,7 @@ class A(Definition):
 	fields = self.parseRaw()
 	self.name = fields[0]		# the name of this Action
 	self.text = fields[1]		# the text that is assigned to it
+	log.log( "<Definition>A(), A created, name '%s', text '%s'" % (self.name,self.text), 8 )
 
 
 ##

@@ -81,7 +81,8 @@ def mail(user,*arg):
 	tmp.write( '.\n' )
 	tmp.close()
 
-	log.log( "mail sent to '"+u+"' subject '"+subj+"' body '"+body+"'" )
+	if not log.log( "<action>mail(), mail sent to '%s', subject '%s', body '%s'" % (u,subj,body), 9 ):
+	    log.log( "<action>mail(%s, '%s')" % (u,subj) ,5 )
 
 
 # Parse text string replacing occurences of %var with corresponding value from
@@ -151,12 +152,12 @@ def chrange(first,last):
 # system()
 def system(cmd):
     pass
-    print "    ACTION: system("+cmd+")"
+    log.log( "<action>system(), cmd '%s'" % (cmd), 5 )
 
 # restart()
 def restart(cmd):
     pass
-    print "    ACTION: restart("+cmd+")"
+    log.log( "<action>restart(), cmd '%s'" % (cmd), 5 )
 
 
 ##
