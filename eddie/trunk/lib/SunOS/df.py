@@ -131,10 +131,10 @@ class dfList:
         been exceeded."""
 
         if time.time() > self.refresh_time:
-            log.log( "<df>_checkCache(), refreshing dfList", 7 )
+            log.log( "<df>dfList._checkCache(), refreshing dfList", 7 )
             self._refresh()
         else:
-            log.log( "<df>_checkCache(), using cache'd dfList", 7 )
+            log.log( "<df>dfList._checkCache(), using cache'd dfList", 7 )
 
 
 
@@ -177,8 +177,6 @@ class df:
 	p = string.center(self.pctused, 5)
 	m = string.ljust(self.mountpt, 15)
 
-	log.log( '%s\t%s\t%s\t%s\t%s\t%s' % (f, s, u, a, p, m), 9 )
-	
 	return( '%s\t%s\t%s\t%s\t%s\t%s' % (f, s, u, a, p, m) )
 
     def getFs(self):

@@ -121,4 +121,3 @@ class Unreachable(Packet):
 	    self.type = ICMP_UNREACH
 	    self.id = self.seq = 0
 
-	

@@ -3,7 +3,7 @@
 ## 
 ## Author       : Chris Miles  <chris@psychofx.com>
 ## 
-## Date		: 20010529
+## Start Date	: 20010529
 ## 
 ## Description	: Directives for scanning logfiles
 ##
@@ -103,7 +103,8 @@ class LOGSCAN(directive.Directive):
 	try:
 	    s = os.stat( self.args.file )
 	except OSError, err:
-	    log.log( "<logscanning>LOGSCAN.docheck(): ID '%s' OSError stat-ing file '%s': %s" % (self.ID, self.args.file, err), 3 )
+	    log.log( "<logscanning>LOGSCAN.docheck(): ID '%s' OSError stat-ing file '%s': %s" % (self.ID, self.args.file, err), 5 )
+
 	else:
 	    if self.filestat == None:
 		# Haven't read file before so jump to EOF and save state
@@ -124,15 +125,12 @@ class LOGSCAN(directive.Directive):
 		    fp = open( self.args.file, 'r' )
 		except IOError:
 		    e = sys.exc_info()
-		    log.log( "<logscanning>LOGSCAN.docheck(): ID '%s' IOError opening file '%s': %s, %s" % (self.ID, self.args.file, e[0], e[1]), 3 )
+		    log.log( "<logscanning>LOGSCAN.docheck(): ID '%s' IOError opening file '%s': %s, %s" % (self.ID, self.args.file, e[0], e[1]), 5 )
 
 		else:
 		    if self.filepos > 0:
 			fp.seek(self.filepos)	# jump to last position in file
 			line = fp.readline()
-#			if len(line) == 0:		# already at EOF
-#			    fp.seek(0)		# jump to start-of-file
-#			    line = fp.readline()
 
 		    else:
 			line = fp.readline()
@@ -153,7 +151,7 @@ class LOGSCAN(directive.Directive):
 		    self.Action.varDict['logscanlines'] = string.join(matchedlines, "")
 		    self.Action.varDict['logscanlinecount'] = matchedcount
 
-		    log.log( "<logscanning>LOGSCAN.docheck(): matchedlinecount=%d" % (matchedcount), 8 )
+		    log.log( "<logscanning>LOGSCAN.docheck(): matchedlinecount=%d" % (matchedcount), 7 )
 
 		    if matchedcount > 0:
 			self.state.statefail()	# set state to fail before calling doAction()

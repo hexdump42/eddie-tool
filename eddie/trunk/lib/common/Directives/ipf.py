@@ -3,7 +3,7 @@
 ## 
 ## Author       : Chris Miles  <chris@psychofx.com>
 ## 
-## Date		: 20000613
+## Start Date	: 20000613
 ## 
 ## Description	: Directives for ipfilter checks
 ##
@@ -79,31 +79,31 @@ class IPF(directive.Directive):
             try:
 	        os.stat( i )
 		ipfstatcmd = i
-		log.log( "<ipf>IPF.docheck(): ipfstat found at %s" % (i), 8)
+		log.log( "<ipf>IPF.docheck(): ipfstat found at %s" % (i), 7 )
 		break
 	    except os.error, detail:
-		log.log( "<ipf>IPF.docheck(): ipfstat not found at %s, stat returned error %d, '%s'" % (i, detail[0], detail[1]), 8)
+		log.log( "<ipf>IPF.docheck(): ipfstat not found at %s, stat returned error %d, '%s'" % (i, detail[0], detail[1]), 9 )
 
 	if ipfstatcmd == None:
 	    # no ipfstat
-	    ipfstat = None
-	    ipfstatin = None
-	    ipfstatout = None
+	    log.log( "<ipf>IPF.docheck(): ipfstat command not found, directive cannot continue" % (i, detail[0], detail[1]), 4 )
+	    return
+
 	else:
 	    (r, ipfstat) = utils.safe_getstatusoutput(ipfstatcmd)
 	    if r != 0:
 		# ipfstat call failed
-		log.log( "<ipf>IPF.docheck(): %s call failed, returned %d, '%s'" % (ipfstatcmd, r, ipfstat), 3)
+		log.log( "<ipf>IPF.docheck(): %s call failed, returned %d, '%s'" % (ipfstatcmd, r, ipfstat), 5)
 
 	    (r, ipfstatin) = utils.safe_getstatusoutput(ipfstatcmd+" -ih")
 	    if r != 0:
 		# ipfstat -ih call failed
-		log.log( "<ipf>IPF.docheck(): %s -ih call failed, returned %d, '%s'" % (ipfstatcmd, r, ipfstatin), 3)
+		log.log( "<ipf>IPF.docheck(): %s -ih call failed, returned %d, '%s'" % (ipfstatcmd, r, ipfstatin), 5)
 
 	    (r, ipfstatout) = utils.safe_getstatusoutput(ipfstatcmd+" -oh")
 	    if r != 0:
 		# ipfstat -oh call failed
-		log.log( "<ipf>IPF.docheck(): %s -oh call failed, returned %d, '%s'" % (ipfstatcmd, r, ipfstatout), 3)
+		log.log( "<ipf>IPF.docheck(): %s -oh call failed, returned %d, '%s'" % (ipfstatcmd, r, ipfstatout), 5)
 
 	rulesenv = {}			# environment for rules execution
 	rulesenv['ipfstat'] = str(ipfstat)
@@ -123,7 +123,7 @@ class IPF(directive.Directive):
 	    self.Action.varDict['ipfstatin'] = str(ipfstatin)
 	    self.Action.varDict['ipfstatout'] = str(ipfstatout)
 
-    	    log.log( "<ipf>IPF.docheck(): rule '%s' was false, calling doAction()" % (self.args.rule), 6 )
+    	    log.log( "<ipf>IPF.docheck(): rule '%s' was false, calling doAction()" % (self.args.rule), 7 )
     	    self.doAction(Config)
 
         self.putInQueue( Config.q )     # put self back in the Queue

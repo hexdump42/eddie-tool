@@ -30,8 +30,9 @@ global EDDIE_VER
 EDDIE_VER='0.28'
 
 
-# Standard Python modules
+# Python modules
 import sys, os, time, signal, re, threading
+
 
 print "Eddie v%s" % (EDDIE_VER)
 
@@ -137,7 +138,7 @@ def eddieexit():
     """Exit Eddie cleanly.
     """
 
-    log.log( '<eddie>eddieexit(), Eddie exiting cleanly.', 3 )
+    log.log( '<eddie>eddieexit(), Eddie exiting cleanly.', 5 )
     # email admin any remaining messages
     log.sendadminlog(1)
     sys.exit()
@@ -148,7 +149,7 @@ def SigHandler( sig, frame ):
 
     if sig == signal.SIGHUP:
 	# SIGHUP (Hangup) - reload config
-	log.log( '<eddie>SigHandler(), SIGHUP encountered - reloading config', 3 )
+	log.log( '<eddie>SigHandler(), SIGHUP encountered - reloading config', 5 )
 
         stop_threads()
 
@@ -198,7 +199,7 @@ def SigHandler( sig, frame ):
 
     else:
 	# un-handled signal - log & ignore it
-	log.log( '<eddie>SigHandler(), unknown signal received, %d - ignoring' % sig, 3 )
+	log.log( '<eddie>SigHandler(), unknown signal received, %d - ignoring' % sig, 5 )
 
 
 def countFDs():
@@ -278,7 +279,7 @@ def scheduler(q, Config, die_event):
 	    # when numchecks == 0 we don't do any checks at all...
 	    log.log( "<eddie>scheduler(), Not scheduling checks for %s when numchecks=%d" % (c,c.args.numchecks), 7 )
 
-    log.log( "<eddie>scheduler(), die_event received, scheduler exiting", 5 )
+    log.log( "<eddie>scheduler(), die_event received, scheduler exiting", 4 )
 
 
 
@@ -294,43 +295,14 @@ def buildCheckQueue(q, Config):
 		    log.log( "<eddie>buildCheckQueue(), adding to Queue: %s" % (i), 8 )
 		    q.put( (i,0) )
 	else:
-	    log.log( "<eddie>buildCheckQueue(), Config.ruleList['%s'] is empty" % (d), 4 )
+	    log.log( "<eddie>buildCheckQueue(), Config.ruleList['%s'] is empty" % (d), 5 )
 
     for c in Config.groups:
 	if c.name == log.hostname or (c.name in Config.classDict.keys() and log.hostname in Config.classDict[c.name]):
-	    log.log( "<eddie>buildCheckQueue(), Adding checks from group %s to queue" % (c.name), 5 )
+	    log.log( "<eddie>buildCheckQueue(), Adding checks from group %s to queue" % (c.name), 7 )
 	    buildCheckQueue(q, c)
 	else:
 	    log.log( "<eddie>buildCheckQueue(), Not queueing group %s" % (c.name), 8 )
-
-
-#def check(Config):
-#    """Perform all the checks."""
-#
-#    # perform checks in current config group
-#    for d in Config.ruleList.keys():
-#	list = Config.ruleList[d]
-#	if list != None:
-#	    for i in list:
-#		log.log( "<eddie>check(), checking %s" % (i), 8 )
-#		i.docheck(Config)
-#	else:
-#	    log.log( "<eddie>check(), Config.ruleList['%s'] is empty" % (d), 4 )
-#
-#    # perform checks for appropriate groups/hostnames
-#    for c in Config.groups:
-#	if c.name == log.hostname or (c.name in Config.classDict.keys() and log.hostname in Config.classDict[c.name]):
-#	    if Config.display == 0:
-#		log.log( "<eddie>check(), Calling check() with group %s" % (c.name), 5 )
-#	    else:
-#		log.log( "<eddie>check(), Calling check() with group %s" % (c.name), 8 )
-#	    check(c)
-#	else:
-#	    log.log( "<eddie>check(), Not checking group %s" % (c.name), 8 )
-#
-#    # only display Config information once
-#    if Config.display == 0:
-#	Config.display = 1
 
 
 
@@ -380,9 +352,9 @@ def main():
     parseConfig.readConf(config_file, Config)
 
     # don't log till now because log file location is defined in configuration
-    log.log( "<eddie>main(), Configuration complete from '%s'" % (config_file), 7 )
-    log.log( "<eddie>main(), Eddie %s, systype: %s" % (EDDIE_VER, systype), 3 )
-    log.log( "<eddie>main(), oslibdirs: %s" % (oslibdirs), 7 )
+    log.log( "<eddie>main(), Configuration complete from '%s'" % (config_file), 5 )
+    log.log( "<eddie>main(), Eddie %s, systype: %s" % (EDDIE_VER, systype), 5 )
+    log.log( "<eddie>main(), oslibdirs: %s" % (oslibdirs), 5 )
 
     if 'showconfig' in argflags.keys() and argflags['showconfig'] == 1:
 	# Just display the configuration and exit
@@ -391,24 +363,24 @@ def main():
 	eddieexit()
 
     # instantiate a process list
-    log.log( "<eddie>main(), creating process object", 7 )
+    log.log( "<eddie>main(), creating process object", 8 )
     directive.plist = proc.procList()
 
     # instantiate a disk usage list
-    log.log( "<eddie>eddieguts(), creating df object", 7 )
+    log.log( "<eddie>eddieguts(), creating df object", 8 )
     directive.dlist = df.dfList()
 
     # instantiate a netstat list
-    log.log( "<eddie>eddieguts(), creating netstat object", 7 )
+    log.log( "<eddie>eddieguts(), creating netstat object", 8 )
     directive.nlist = netstat.netstat()
 
     # instantiate a system object
-    log.log( "<eddie>eddieguts(), creating system object", 7 )
+    log.log( "<eddie>eddieguts(), creating system object", 8 )
     directive.system = system.system()
 
     if module_iostat:
         # instantiate an iostat object
-        log.log( "<eddie>eddieguts(), creating iostat object", 7 )
+        log.log( "<eddie>eddieguts(), creating iostat object", 8 )
         directive.iostat = iostat.iostat()
 
 
@@ -435,9 +407,9 @@ def main():
 
 	    # Count fds in use - for debugging
 	    numfds = countFDs()
-	    log.log( "<eddie>main(), FDs in use = %d." % (numfds), 7 )
-	    log.log( "<eddie>main(), Threads in use = %d." % (threading.activeCount()), 7 )
-	    log.log( "<eddie>main(), Threads: %s" % (threading.enumerate()), 8 )
+	    log.log( "<eddie>main(), FDs in use = %d." % (numfds), 8 )
+	    log.log( "<eddie>main(), Threads in use = %d." % (threading.activeCount()), 8 )
+	    log.log( "<eddie>main(), Threads: %s" % (threading.enumerate()), 9 )
 
 	    # check if any config/rules files have been modified
 	    # if so, re-read config

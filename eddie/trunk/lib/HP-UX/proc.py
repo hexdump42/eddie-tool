@@ -3,7 +3,7 @@
 ## 
 ## Author       : Chris Miles  <chris@psychofx.com>
 ## 
-## Date		: 20010709
+## Start Date	: 20010709
 ## 
 ## Description	: Library of classes that deal with a machine's process table
 ##
@@ -24,7 +24,9 @@
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 ########################################################################
 
+# Python imports
 import os, string, time, threading
+# Eddie imports
 import log, utils
 
 # List of interpreters - default empty
@@ -160,10 +162,10 @@ class procList:
 	been exceeded."""
 
 	if time.time() > self.refresh_time:
-	    log.log( "<proc>_checkCache(), refreshing procList", 7 )
+	    log.log( "<proc>procList._checkCache(), refreshing procList", 7 )
 	    self._refresh()
 	else:
-	    log.log( "<proc>_checkCache(), using cache'd procList", 7 )
+	    log.log( "<proc>procList._checkCache(), using cache'd procList", 7 )
 
 
     def _getProcList(self):
@@ -183,7 +185,7 @@ class procList:
 
 	utils.safe_pclose( rawList )
 
-	log.log( "<proc>_procList(), new proc list created", 7 )
+	log.log( "<proc>procList._procList(), new proc list created", 7 )
 
 
 

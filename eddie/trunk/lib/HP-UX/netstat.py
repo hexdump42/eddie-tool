@@ -3,7 +3,7 @@
 ## 
 ## Author       : Chris Miles  <chris@psychofx.com>
 ## 
-## Date		: 20010709
+## Start Date	: 20010709
 ## 
 ## Description	: Library of classes that deal with a HP-UX netstat list
 ##
@@ -24,8 +24,11 @@
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 ########################################################################
 
+# Python imports
 import os, string, re, time
+# Eddie imports
 import log, utils
+
 
 ##
 ## Class netstat - holds all information about current network information
@@ -57,10 +60,10 @@ class netstat:
         been exceeded."""
 
         if time.time() > self.refresh_time:
-            log.log( "<netstat>checkCache(), refreshing network data", 7 )
+            log.log( "<netstat>netstat.checkCache(), refreshing network data", 7 )
             self.refresh()
         else:
-            log.log( "<netstat>checkCache(), using cache'd network data", 7 )
+            log.log( "<netstat>netstat.checkCache(), using cache'd network data", 7 )
 
 
     def __str__(self):

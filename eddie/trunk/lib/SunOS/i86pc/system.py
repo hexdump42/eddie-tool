@@ -4,7 +4,7 @@
 ## Author       : Chris Miles  <chris@psychofx.com>
 ##                Rod Telford  <rtelford@psychofx.com>
 ## 
-## Date		: 19990520
+## Start Date	: 19990520
 ## 
 ## Description	: Collect current snapshot of system state
 ##
@@ -25,7 +25,10 @@
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 ########################################################################
 
+
+# Python modules
 import os, string, time, re
+# Eddie modules
 import log, utils
 
 
@@ -55,10 +58,10 @@ class system:
 	"""Check if cached data is invalid, ie: refresh_time has been exceeded."""
 
 	if time.time() > self.refresh_time:
-	    log.log( "<system>checkCache(), refreshing system data", 7 )
+	    log.log( "<system>system.checkCache(), refreshing system data", 7 )
 	    self.refresh()
 	else:
-	    log.log( "<system>checkCache(), using cache'd system data", 7 )
+	    log.log( "<system>system.checkCache(), using cache'd system data", 7 )
 
 
     def getSystemstate(self):
@@ -75,7 +78,7 @@ class system:
 	while 1:
 	    line = rawList.readline()
 	    if len(line) == 0:
-		log.log( "<system>system.getSystemstate() error parsing 'top' output looking for 'last pid'.", 2 )
+		log.log( "<system>system.getSystemstate() error parsing 'top' output looking for 'last pid'.", 5 )
 		return
 
 	    if line[:8] == 'last pid':
@@ -90,7 +93,7 @@ class system:
 	# line 1
 	inx = re.search( reline1, line )
 	if inx == None:
-	    log.log( "<system>system.getSystemstate() error parsing line1 'top' output.", 2 )
+	    log.log( "<system>system.getSystemstate() error parsing line1 'top' output.", 5 )
 	    return
 	self.lastpid = int(inx.group(1))
 	self.loadavg1 = float(inx.group(2))
@@ -102,7 +105,7 @@ class system:
 	line = rawList.readline()
 	inx = re.search( reline2, line )
 	if inx == None:
-	    log.log( "<system>system.getSystemstate() error parsing line2 'top' output.", 2 )
+	    log.log( "<system>system.getSystemstate() error parsing line2 'top' output.", 5 )
 	    return
 	self.processes = int(inx.group(1))
 	try:
@@ -130,7 +133,7 @@ class system:
 	line = rawList.readline()
 	inx = re.search( reline3, line )
 	if inx == None:
-	    log.log( "<system>system.getSystemstate() error parsing line3 'top' output.", 2 )
+	    log.log( "<system>system.getSystemstate() error parsing line3 'top' output.", 5 )
 	    return
 	self.cpu_idle = float(inx.group(1))
 	self.cpu_user = float(inx.group(2))
@@ -142,7 +145,7 @@ class system:
 	line = rawList.readline()
 	inx = re.search( reline4, line )
 	if inx == None:
-	    log.log( "<system>system.getSystemstate() error parsing line4 'top' output.", 2 )
+	    log.log( "<system>system.getSystemstate() error parsing line4 'top' output.", 5 )
 	    return
 	mem_real = inx.group('mem_real')
 	mem_free = inx.group('mem_free')
@@ -243,7 +246,7 @@ class system:
 	self.hash['mem_swapfree'] = self.mem_swapfree
 
 
-	log.log( "<proc>system(), new system list created", 7 )
+	log.log( "<proc>system.getSystemstate(), new system list created", 7 )
 
 
     def getHash(self):

@@ -148,10 +148,10 @@ class system:
 
 	self.cache_semaphore.acquire()	# serialize refreshing of system cache
 	if time.time() > self.refresh_time:
-	    log.log( "<system>checkCache(), refreshing system data", 7 )
+	    log.log( "<system>system.checkCache(), refreshing system data", 7 )
 	    self.refresh()
 	else:
-	    log.log( "<system>checkCache(), using cache'd system data", 7 )
+	    log.log( "<system>system.checkCache(), using cache'd system data", 7 )
 	self.cache_semaphore.release()
 
 
@@ -170,7 +170,7 @@ class system:
 	while 1:
 	    line = rawList.readline()
 	    if len(line) == 0:
-		log.log( "<system>system._getSystemstate() error parsing 'top' output looking for 'load averages:'.", 2 )
+		log.log( "<system>system._getSystemstate() error parsing 'top' output looking for 'load averages:'.", 5 )
 		return
 
 	    #if line[:8] == 'last pid':
@@ -187,7 +187,7 @@ class system:
 	# line 1
 	inx = re.search( reline1, line )
 	if inx == None:
-	    log.log( "<system>system._getSystemstate() error parsing line1 'top' output.", 2 )
+	    log.log( "<system>system._getSystemstate() error parsing line1 'top' output.", 5 )
 	    return
 	## Handled by _getuptime() now
 	#self.lastpid = int(inx.group(1))
@@ -200,7 +200,7 @@ class system:
 	line = rawList.readline()
 	inx = re.search( reline2, line )
 	if inx == None:
-	    log.log( "<system>system._getSystemstate() error parsing line2 'top' output.", 2 )
+	    log.log( "<system>system._getSystemstate() error parsing line2 'top' output.", 5 )
 	    return
 	self.processes = int(inx.group(1))
 	try:
@@ -228,7 +228,7 @@ class system:
 	line = rawList.readline()
 	inx = re.search( reline3, line )
 	if inx == None:
-	    log.log( "<system>system._getSystemstate() error parsing line3 'top' output.", 2 )
+	    log.log( "<system>system._getSystemstate() error parsing line3 'top' output.", 5 )
 	    return
 	self.cpu_idle = float(inx.group(1))
 	self.cpu_user = float(inx.group(2))
@@ -236,92 +236,7 @@ class system:
 	self.cpu_iowait = float(inx.group(4))
 	self.cpu_swap = float(inx.group(5))
 
-	#### DISABLED: not used anymore
-	# line 4
-	#line = rawList.readline()
-	#inx = re.search( reline4, line )
-	#if inx == None:
-	#    log.log( "<system>system._getSystemstate() error parsing line4 'top' output.", 2 )
-	#    return
-	#mem_real = inx.group('mem_real')
-	#mem_free = inx.group('mem_free')
-	#mem_swapuse = inx.group('mem_swapuse')
-	#mem_swapfree = inx.group('mem_swapfree')
-
-        #try:
-	#    if mem_real[-1] == 'K':
-	#        self.mem_real = int(mem_real[:-1]) * 1024
-	#    elif mem_real[-1] == 'M':
-	#        self.mem_real = int(mem_real[:-1]) * 1024 * 1024
-	#    else:
-	#        self.mem_real = int(mem_real)
-        #except:
-        #    self.mem_real = 0
-
-        #try:
-	#    if mem_free[-1] == 'K':
-	#        self.mem_free = int(mem_free[:-1]) * 1024
-	#    elif mem_free[-1] == 'M':
-	#        self.mem_free = int(mem_free[:-1]) * 1024 * 1024
-	#    else:
-	#        self.mem_free = int(mem_free)
-        #except:
-        #    self.mem_free = 0
-
-        #try:
-	#    if mem_swapuse[-1] == 'K':
-	#        self.mem_swapuse = int(mem_swapuse[:-1]) * 1024
-	#    elif mem_swapuse[-1] == 'M':
-	#        self.mem_swapuse = int(mem_swapuse[:-1]) * 1024 * 1024
-	#    else:
-	#        self.mem_swapuse = int(mem_swapuse)
-        #except:
-        #    self.mem_swapuse = 0
-
-        #try:
-	#    if mem_swapfree[-1] == 'K':
-	#        self.mem_swapfree = int(mem_swapfree[:-1]) * 1024
-	#    elif mem_swapfree[-1] == 'M':
-	#        self.mem_swapfree = int(mem_swapfree[:-1]) * 1024 * 1024
-	#    else:
-	#        self.mem_swapfree = int(mem_swapfree)
-        #except:
-        #    self.mem_swapfree = 0
-
-
 	utils.safe_pclose( rawList )
-
-	#print "system debug:"
-	#print " - lastpid:",self.lastpid
-	#print " - loadavg1:",self.loadavg1
-	#print " - loadavg5:",self.loadavg5
-	#print " - loadavg15:",self.loadavg15
-	#print " - time:",self.time
-
-	#print " - processes:",self.processes
-	#print " - sleeping:",self.sleeping
-	#print " - zombie:",self.zombie
-	#print " - running:",self.running
-	#print " - stopped:",self.stopped
-	#print " - oncpu:",self.oncpu
-
-	#print " - cpu_idle:",self.cpu_idle
-	#print " - cpu_user:",self.cpu_user
-	#print " - cpu_kernel:",self.cpu_kernel
-	#print " - cpu_iowait:",self.cpu_iowait
-	#print " - cpu_swap:",self.cpu_swap
-
-	#print " - mem_real:",self.mem_real
-	#print " - mem_free:",self.mem_free
-	#print " - mem_swapuse:",self.mem_swapuse
-	#print " - mem_swapfree:",self.mem_swapfree
-
-	# Fill hash
-	#self.hash['lastpid'] = self.lastpid
-	#self.hash['loadavg1'] = self.loadavg1
-	#self.hash['loadavg5'] = self.loadavg5
-	#self.hash['loadavg15'] = self.loadavg15
-	#self.hash['time'] = self.time
 
 	self.hash['processes'] = self.processes
 	self.hash['sleeping'] = self.sleeping
@@ -336,11 +251,6 @@ class system:
 	self.hash['cpu_iowait'] = self.cpu_iowait
 	self.hash['cpu_swap'] = self.cpu_swap
 
-	#self.hash['mem_real'] = self.mem_real
-	#self.hash['mem_free'] = self.mem_free
-	#self.hash['mem_swapuse'] = self.mem_swapuse
-	#self.hash['mem_swapfree'] = self.mem_swapfree
-
 	vmstat_dict = self._getvmstat()
 	if vmstat_dict:
 	    self.hash.update(vmstat_dict)
@@ -353,7 +263,7 @@ class system:
 	if uptime_dict:
 	    self.hash.update(uptime_dict)
 
-	log.log( "<system>system(), new system list created", 7 )
+	log.log( "<system>system._getSystemstate(), new system list created", 7 )
 
 
     def _getvmstat(self):
@@ -365,7 +275,7 @@ class system:
 	(retval, output) = utils.safe_getstatusoutput( vmstat_cmd )
 
 	if retval != 0:
-	    log.log( "<system>system._getvmstat(), error calling '%s'"%(vmstat_cmd), 4 )
+	    log.log( "<system>system._getvmstat(), error calling '%s'"%(vmstat_cmd), 5 )
 	    return None
 
 	vmstat_dict = {}
@@ -448,7 +358,7 @@ class system:
 	(retval, output) = utils.safe_getstatusoutput( uptime_cmd )
 
 	if retval != 0:
-	    log.log( "<system>system._getuptime(), error calling '%s'"%(uptime_cmd), 4 )
+	    log.log( "<system>system._getuptime(), error calling '%s'"%(uptime_cmd), 5 )
 	    return None
 
 	uptime_re = ".+up (?P<uptime>.+),\s*(?P<users>[0-9]+) users?,\s+ load average:\s+(?P<loadavg1>[0-9.]+),\s*(?P<loadavg5>[0-9.]+),\s*(?P<loadavg15>[0-9.]+)"
@@ -457,7 +367,7 @@ class system:
 	if sre:
 	    uptime_dict = sre.groupdict()
 	else:
-	    log.log( "<system>system._getuptime(), could not parse uptime output '%s'"%(output), 4 )
+	    log.log( "<system>system._getuptime(), could not parse uptime output '%s'"%(output), 5 )
 	    return None
 
 	# convert types
@@ -479,12 +389,12 @@ class system:
 	(retval, output) = utils.safe_getstatusoutput( vmstat_cmd )
 
 	if retval != 0:
-	    log.log( "<system>system._getvmstat2(), error calling '%s'"%(vmstat_cmd), 4 )
+	    log.log( "<system>system._getvmstat2(), error calling '%s'"%(vmstat_cmd), 5 )
 	    return None
 
 	v_split = string.split( output )
 	if len(v_split) < 5:
-	    log.log( "<system>system._getvmstat2(), vmstat output invalid, '%s'"%(output), 4 )
+	    log.log( "<system>system._getvmstat2(), vmstat output invalid, '%s'"%(output), 5 )
 	    return None
 
 	vmstat_dict = {}
@@ -495,7 +405,7 @@ class system:
 	    vmstat_dict['mem_swapfree'] = int(v_split[3])
 	    vmstat_dict['mem_free'] = int(v_split[4])
 	except ValueError:
-	    log.log( "<system>system._getvmstat2(), could not parse vmstat output '%s'"%(output), 4 )
+	    log.log( "<system>system._getvmstat2(), could not parse vmstat output '%s'"%(output), 5 )
 	    return None
 
 	return vmstat_dict

@@ -4,7 +4,7 @@
 ## Author       : Rod Telford  <rtelford@psychofx.com>
 ##                Chris Miles  <chris@psychofx.com>
 ## 
-## Date		: 980122
+## Start Date	: 19980122
 ## 
 ## Description	: Library of classes that deal with a solaris netstat list
 ##
@@ -25,8 +25,11 @@
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 ########################################################################
 
+# Python modules
 import os, string, re, time
+# Eddie modules
 import log, utils
+
 
 ##
 ## Class netstat - holds all information about current network information
@@ -58,10 +61,10 @@ class netstat:
         been exceeded."""
 
         if time.time() > self.refresh_time:
-            log.log( "<netstat>checkCache(), refreshing network data", 7 )
+            log.log( "<netstat>netstat.checkCache(), refreshing network data", 7 )
             self.refresh()
         else:
-            log.log( "<netstat>checkCache(), using cache'd network data", 7 )
+            log.log( "<netstat>netstat.checkCache(), using cache'd network data", 7 )
 
 
     def __str__(self):
@@ -376,7 +379,7 @@ class statstable:
 	while 1:
 	    inx = sre.search( line )
 	    if inx == None:
-		log.log("<netstat>statstable.init() getting udp stats: no re match for line '%s'" % (line), 9)
+		log.log("<netstat>statstable.init(): getting udp stats, no re match for line '%s'" % (line), 9)
 		line = rawList.readline()
 		if len(line) == 0:
 		    break

@@ -4,7 +4,7 @@
 ## Author       : Rod Telford  <rtelford@psychofx.com>
 ##                Chris Miles  <chris@psychofx.com>
 ## 
-## Date		: 971203 
+## Start Date	: 19971203 
 ## 
 ## Description	: Library of classes that deal with a machine's process table
 ##
@@ -25,8 +25,11 @@
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 ########################################################################
 
+# Python modules
 import os, string, time
+# Eddie modules
 import log, utils
+
 
 # List of interpreters - default empty
 interpreters = []
@@ -58,10 +61,10 @@ class procList:
 	been exceeded."""
 
 	if time.time() > self.refresh_time:
-	    log.log( "<proc>checkCache(), refreshing procList", 7 )
+	    log.log( "<proc>procList.checkCache(), refreshing procList", 7 )
 	    self.refresh()
 	else:
-	    log.log( "<proc>checkCache(), using cache'd procList", 7 )
+	    log.log( "<proc>procList.checkCache(), using cache'd procList", 7 )
 
 
     def getProcList(self):
@@ -81,7 +84,7 @@ class procList:
 
 	utils.safe_pclose( rawList )
 
-	log.log( "<proc>procList(), new proc list created", 7 )
+	log.log( "<proc>procList.getProcList(), new proc list created", 7 )
 
 
     def __str__(self):
@@ -164,16 +167,6 @@ class proc:
     def __init__(self, rawline):
 
 	fields = string.split(rawline)
-
-	#self.pid = fields[0]		# pid
-	#self.user = fields[1]		# user
-	#self.time = fields[2]		# cpu time
-	#self.percent = fields[3]	# percentage of cpu
-	#self.status = fields[4]		# status
-	#self.command = comm		# command	
-
-	#log.log("<proc>proc.__init__(), fields: %s" % (fields), 8)
-
 
 	self.s =       fields[ 0]       # state of the process
 	self.user =    fields[ 1]       # effective user ID of the process (text or decimal)

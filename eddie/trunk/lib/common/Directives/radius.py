@@ -3,7 +3,7 @@
 ## 
 ## Author       : Chris Miles  <chris@psychofx.com>
 ## 
-## Date		: 20001016
+## Start Date	: 20001016
 ## 
 ## Description	: Directives for Radius authentication & accounting checks
 ##
@@ -135,13 +135,13 @@ class RADIUS(directive.Directive):
 	# commands.
 	if timing == None:
 	    timing = 0
-	    log.log( "<radius>RADIUS.docheck(): timing could not be measured, setting to 0", 3 )
+	    log.log( "<radius>RADIUS.docheck(): timing could not be measured, setting to 0", 5 )
 
 	# assign variables
 	self.Action.varDict['radiustiming'] = timing
 	self.Action.varDict['radiuspassed'] = passed
 
-	log.log( "<radius>RADIUS.docheck(): timing=%s passed=%s" % (timing,passed), 8 )
+	log.log( "<radius>RADIUS.docheck(): timing=%s passed=%s" % (timing,passed), 7 )
 
 	if self.args.rule:
 	    # setup for rule

@@ -4,7 +4,7 @@
 ## Author       : Chris Miles  <chris@psychofx.com>
 ##                Rod Telford  <rtelford@psychofx.com>
 ## 
-## Date		: 20000520
+## Start Date	: 20000520
 ## 
 ## Description	: Collect current snapshot of I/O statistics
 ##
@@ -25,7 +25,10 @@
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 ########################################################################
 
+
+# Python modules
 import sys, os, string, time, re
+# Eddie modules
 import log, datastore
 import solkstat
 
@@ -62,12 +65,12 @@ class iostat(datastore.DataStore):
 		    self.snaptimes[name] = snaptime
 		except AttributeError:
 		    print "Error with kstat list: '%s'.  k.ks_name='%s'" % (sys.exc_value,k.ks_name)
-		    log.log( "<iostat>iostat(), Error with kstat list: '%s'. k.ks_name='%s'" % (sys.exc_value,k.ks_name), 3 )
+		    log.log( "<iostat>iostat.fetchData(), Error with kstat list: '%s'. k.ks_name='%s'" % (sys.exc_value,k.ks_name), 5 )
 
 	    k = k.getnext()
 
 
-	log.log( "<iostat>iostat(), new iostat data collected", 7 )
+	log.log( "<iostat>iostat.fetchData(), new iostat data collected", 7 )
 	khead.close()		# close kstat
 
 

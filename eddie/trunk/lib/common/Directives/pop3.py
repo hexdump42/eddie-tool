@@ -3,7 +3,7 @@
 ## 
 ## Author       : Chris Miles  <chris@psychofx.com>
 ## 
-## Date		: 20000616
+## Start Date	: 20000616
 ## 
 ## Description	: Directives for pop3 checks
 ##
@@ -61,7 +61,7 @@ class pop3:
 	try:
 	    self.pop3sock.connect( (self.host,self.port) )
 	except socket.error, detail:
-	    log.log( "<solaris>pop3.connect(): exception, %d, '%s'" % (detail[0], detail[1]), 3 )
+	    log.log( "<pop3>pop3.connect(): exception, %d, '%s'" % (detail[0], detail[1]), 5 )
 	    return 0
 
 	data = self.pop3sock.recv(1024)
@@ -280,18 +280,18 @@ class POP3TIMING(directive.Directive):
 	# commands.
 	if connecttime == None:
 	    connecttime = 0
-	    log.log( "<pop3>POP3TIMING.docheck(): connecttime could not be measured, setting to 0", 3 )
+	    log.log( "<pop3>POP3TIMING.docheck(): connecttime could not be measured, setting to 0", 5 )
 	if authtime == None:
 	    authtime = 0
-	    log.log( "<pop3>POP3TIMING.docheck(): authtime could not be measured, setting to 0", 3 )
+	    log.log( "<pop3>POP3TIMING.docheck(): authtime could not be measured, setting to 0", 5 )
 	if listtime == None:
 	    listtime = 0
-	    log.log( "<pop3>POP3TIMING.docheck(): listtime could not be measured, setting to 0", 3 )
+	    log.log( "<pop3>POP3TIMING.docheck(): listtime could not be measured, setting to 0", 5 )
 	if retrtime == None:
 	    retrtime = 0
-	    log.log( "<pop3>POP3TIMING.docheck(): retrtime could not be measured, setting to 0", 3 )
+	    log.log( "<pop3>POP3TIMING.docheck(): retrtime could not be measured, setting to 0", 5 )
 
-	log.log( "<pop3>POP3TIMING.docheck(): connecttime=%s authtime=%s listtime=%s retrtime=%s" % (connecttime, authtime, listtime, retrtime), 8 )
+	log.log( "<pop3>POP3TIMING.docheck(): connecttime=%s authtime=%s listtime=%s retrtime=%s" % (connecttime, authtime, listtime, retrtime), 7 )
 
 	self.state.statefail()	# set state to fail before calling doAction()
 	self.doAction(Config)

@@ -3,7 +3,7 @@
 ## 
 ## Author       : Chris Miles  <chris@psychofx.com>
 ## 
-## Date		: 19990929
+## Start Date	: 19990929
 ## 
 ## Description	: Collect current snapshot of system state for Linux
 ##
@@ -24,35 +24,38 @@
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 ########################################################################
 
-# This is an Eddie data collector.  It collects System data and statistics on
-# a generic Linux system.
-# The following statistics are currently collected and made available to the
-# appropriate directives (e.g., SYS):
-# 
-# loadavg1	- 1min load average
-# loadavg5	- 5min load average
-# loadavg15	- 15min load average
-# uptime	- uptime in seconds
-# uptimeidle	- idle uptime in seconds
-# cpu_user	- total cpu in user space
-# cpu_nice	- total cpu in user nice space
-# cpu_system	- total cpu in system space
-# cpu_idle	- total cpu in idle thread
-# cpu%d_user	- per cpu in user space (e.g., cpu0, cpu1, etc)
-# cpu%d_nice	- per cpu in user nice space (e.g., cpu0, cpu1, etc)
-# cpu%d_system	- per cpu in system space (e.g., cpu0, cpu1, etc)
-# cpu%d_idle	- per cpu in idle thread (e.g., cpu0, cpu1, etc)
-# pages_in	- pages read in
-# pages_out	- pages written out
-# pages_swapin	- swap pages read in
-# pages_swapout	- swap pages written out
-# interrupts	- number of interrupts received
-# contextswitches - number of context switches
-# boottime	- time of boot (epoch)
-# processes	- number of processes started (I think?)
+"""
+  This is an Eddie data collector.  It collects System data and statistics on
+  a generic Linux system.
+  The following statistics are currently collected and made available to the
+  appropriate directives (e.g., SYS):
+  
+  loadavg1	- 1min load average
+  loadavg5	- 5min load average
+  loadavg15	- 15min load average
+  uptime	- uptime in seconds
+  uptimeidle	- idle uptime in seconds
+  cpu_user	- total cpu in user space
+  cpu_nice	- total cpu in user nice space
+  cpu_system	- total cpu in system space
+  cpu_idle	- total cpu in idle thread
+  cpu%d_user	- per cpu in user space (e.g., cpu0, cpu1, etc)
+  cpu%d_nice	- per cpu in user nice space (e.g., cpu0, cpu1, etc)
+  cpu%d_system	- per cpu in system space (e.g., cpu0, cpu1, etc)
+  cpu%d_idle	- per cpu in idle thread (e.g., cpu0, cpu1, etc)
+  pages_in	- pages read in
+  pages_out	- pages written out
+  pages_swapin	- swap pages read in
+  pages_swapout	- swap pages written out
+  interrupts	- number of interrupts received
+  contextswitches - number of context switches
+  boottime	- time of boot (epoch)
+  processes	- number of processes started (I think?)
+"""
 
-
+# Python modules
 import os, string, time, re
+# Eddie modules
 import log
 
 
@@ -82,10 +85,10 @@ class system:
 	"""Check if cached data is invalid, ie: refresh_time has been exceeded."""
 
 	if time.time() > self.refresh_time:
-	    log.log( "<system>checkCache(), refreshing system data", 8 )
+	    log.log( "<system>system.checkCache(), refreshing system data", 7 )
 	    self.refresh()
 	else:
-	    log.log( "<system>checkCache(), using cache'd system data", 8 )
+	    log.log( "<system>system.checkCache(), using cache'd system data", 7 )
 
 
     def getSystemstate(self):
@@ -95,7 +98,7 @@ class system:
 	try:
 	    fp = open( '/proc/loadavg', 'r' )
 	except IOError:
-	    log.log( "<system>getSystemstate(), cannot read /proc/loadavg", 4 )
+	    log.log( "<system>system.getSystemstate(), cannot read /proc/loadavg", 5 )
 	else:
 	    line = fp.read()
 	    fp.close()
@@ -108,7 +111,7 @@ class system:
 	try:
 	    fp = open( '/proc/uptime', 'r' )
 	except IOError:
-	    log.log( "<system>getSystemstate(), cannot read /proc/uptime", 4 )
+	    log.log( "<system>system.getSystemstate(), cannot read /proc/uptime", 5 )
 	else:
 	    line = fp.read()
 	    fp.close()
@@ -120,7 +123,7 @@ class system:
 	try:
 	    fp = open( '/proc/stat', 'r' )
 	except IOError:
-	    log.log( "<system>getSystemstate(), cannot read /proc/stat", 4 )
+	    log.log( "<system>system.getSystemstate(), cannot read /proc/stat", 5 )
 	else:
 	    line = fp.readline()
 	    while line != "":
@@ -186,7 +189,7 @@ class system:
 
 	    fp.close()
 
-	log.log( "<proc>system(), new system list created", 8 )
+	log.log( "<proc>system.getSystemstate(), new system list created", 7 )
 
 
     def getHash(self):

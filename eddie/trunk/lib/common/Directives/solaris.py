@@ -3,9 +3,9 @@
 ## 
 ## Author       : Chris Miles  <cmiles@codefx.com.au>
 ## 
-## Date		: 20000615
+## Start Date	: 20000615
 ## 
-## Description	: Directives for standard Solaris checks
+## Description	: Directives for Solaris-specific checks
 ##
 ## $Id$
 ##
@@ -81,7 +81,7 @@ class CRON(directive.Directive):
 	try:
 	    mtime = os.stat( self.args.file )[ST_MTIME]
 	except OSError, detail:
-    	    log.log( "<solaris>CRON.docheck(): stat had error %d, '%s'" % (detail[0], detail[1]), 6 )
+    	    log.log( "<solaris>CRON.docheck(): stat had error %d, '%s'" % (detail[0], detail[1]), 4 )
 	    return
 
 	import time
@@ -97,7 +97,7 @@ class CRON(directive.Directive):
 	    self.Action.varDict['cronfile'] = self.args.file
 	    self.Action.varDict['cronfilemtime'] = str(mtime)
 
-    	    log.log( "<solaris>CRON.docheck(): check failed, calling doAction()", 6 )
+    	    log.log( "<solaris>CRON.docheck(): check failed, calling doAction()", 7 )
     	    self.doAction(Config)
 
 	else:
@@ -142,7 +142,7 @@ class METASTAT(directive.Directive):
 
 
     def docheck(self, Config):
-	log.log( "<solaris>METASTAT.docheck(): ", 7 )
+	log.log( "<solaris>METASTAT.docheck(): performing standard check", 7 )
 
         # where to find the metastat command
 	metastat_list = [ "/usr/opt/SUNWmd/sbin/metastat", "/usr/sbin/metastat" ]
@@ -177,7 +177,7 @@ class METASTAT(directive.Directive):
 		# assign variables
 		self.Action.varDict['metastatmaintcnt'] = int(result)
 
-		log.log( "<solaris>METASTAT.docheck(): check failed, calling doAction()", 6 )
+		log.log( "<solaris>METASTAT.docheck(): check failed, calling doAction()", 7 )
 		self.doAction(Config)
 
 	    else:
@@ -221,7 +221,7 @@ class PRTDIAG(directive.Directive):
 
 
     def docheck(self, Config):
-	log.log( "<solaris>PRTDIAG.docheck(): ", 7 )
+	log.log( "<solaris>PRTDIAG.docheck(): performing standard check", 7 )
 
         prtdiag = None
 
@@ -238,8 +238,10 @@ class PRTDIAG(directive.Directive):
 	    prtdiag_dict = self.parse_prtdiag_Enterprise()
 	else:
 	    log.log( "<solaris>PRTDIAG.docheck(): system type %s not supported yet, directive cancelled" % (output), 4 )
+	    return
 
 	if prtdiag_dict == None:	# there was an error, just exit
+	    log.log( "<solaris>PRTDIAG.docheck(): prtdiag returned no data, directive cancelled", 4 )
 	    return
 
 	rulesenv = {}
@@ -255,7 +257,7 @@ class PRTDIAG(directive.Directive):
 	    for i in prtdiag_dict.keys():
 		self.Action.varDict['PRTDIAG_%s'%(i)] = prtdiag_dict[i]
 
-	    log.log( "<solaris>PRTDIAG.docheck(): check failed, calling doAction()", 6 )
+	    log.log( "<solaris>PRTDIAG.docheck(): check failed, calling doAction()", 7 )
 	    self.doAction(Config)
 
 	else:

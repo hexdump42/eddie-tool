@@ -3,7 +3,7 @@
 ## 
 ## Author       : Chris Miles  <chris@psychofx.com>
 ## 
-## Date		: 19990929
+## Start Date	: 19990929
 ## 
 ## Description	: Library of classes that deal with a Linux netstat list
 ##
@@ -24,8 +24,11 @@
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 ########################################################################
 
+# Python modules
 import os, string, re, time
+# Eddie modules
 import log, utils
+
 
 # This fetches data by parsing system calls of common commands.  This was done because
 # it was quick and easy to implement and port to multiple platforms.  I know this is
@@ -63,10 +66,10 @@ class netstat:
         been exceeded."""
 
         if time.time() > self.refresh_time:
-            log.log( "<netstat>checkCache(), refreshing network data", 8 )
+            log.log( "<netstat>netstat.checkCache(), refreshing network data", 7 )
             self.refresh()
         else:
-            log.log( "<netstat>checkCache(), using cache'd network data", 8 )
+            log.log( "<netstat>netstat.checkCache(), using cache'd network data", 7 )
 
 
     def __str__(self):
@@ -279,7 +282,7 @@ class iftable:
 
 	    t = interface(f)		# new interface instance
 	    if t == None:
-		log.log( "<netstat>iftable, error parsing interface data for line '%s'"%(line), 5 )
+		log.log( "<netstat>iftable: error parsing interface data for line '%s'"%(line), 5 )
 		continue		# could not parse interface data
 
 	    t.name = string.strip(name)

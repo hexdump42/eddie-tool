@@ -3,7 +3,7 @@
 ## 
 ## Author       : Chris Miles  <chris@psychofx.com>
 ## 
-## Date		: 20010716
+## Start Date	: 20010716
 ## 
 ## Description	: Directives for monitoring files
 ##
@@ -90,7 +90,9 @@ class FILE(directive.Directive):
 	try:
 	    s = os.stat( self.args.file )
 	except OSError, err:
-	    log.log( "<file>FILE.docheck(): ID '%s' OSError stat-ing file '%s': %s" % (self.ID, self.args.file, err), 3 )
+	    log.log( "<file>FILE.docheck(): ID '%s' OSError stat-ing file '%s': %s" % (self.ID, self.args.file, err), 4 )
+	    # directive not re-scheduled
+
 	else:
 	    # Setup rule environment
 	    rulesenv = {}
@@ -113,12 +115,12 @@ class FILE(directive.Directive):
 		    import md5
 		except ImportError, err:
 		    # no md5 module - log error and don't re-schedule
-		    log.log( "<file>FILE.docheck(): ID '%s' ImportError, md5 module needed but not available" % (self.ID, self.args.file, err), 3 )
+		    log.log( "<file>FILE.docheck(): ID '%s' ImportError, md5 module needed but not available" % (self.ID, self.args.file, err), 4 )
 		else:
 		    fp = open(self.args.file)
 		    m = md5.md5(string.join(fp.readlines(), '')).hexdigest()
 		    fp.close()
-		    log.log( "<file>FILE.docheck(): ID '%s' md5='%s'" % (self.ID, m), 8 )
+		    log.log( "<file>FILE.docheck(): ID '%s' md5='%s'" % (self.ID, m), 9 )
 		    rulesenv['md5'] = m
 
 	    if self.lastmode == None:
@@ -174,7 +176,7 @@ class FILE(directive.Directive):
 	    self.Action.varDict['filelastctime'] = rulesenv['lastctime']
 	    self.Action.varDict['filelastmd5'] = rulesenv['lastmd5']
 
-	    log.log( "<logscanning>LOGSCAN.docheck(): ID '%s' rule result=%d" % (self.ID, result), 8 )
+	    log.log( "<logscanning>LOGSCAN.docheck(): ID '%s' rule result=%d" % (self.ID, result), 7 )
 
 	    if result == 0:
 		self.state.stateok(Config)	# reset state info

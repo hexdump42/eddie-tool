@@ -3,7 +3,7 @@
 ## 
 ## Author       : Chris Miles  <chris@psychofx.com>
 ## 
-## Date		: 20010710
+## Start Date	: 20010710
 ## 
 ## Description	: Directives for network pinging
 ##
@@ -100,7 +100,7 @@ class PING(directive.Directive):
 	try:
 	    p = pinger.Pinger( self.args.host, self.args.numpings )
 	except socket.error, err:
-	    log.log( "<ping>PING.docheck(): Socket Error, host '%s', %s" % (self.args.host,err), 4 )
+	    log.log( "<ping>PING.docheck(): Socket Error, host '%s', %s" % (self.args.host,err), 5 )
 	    self.putInQueue( Config.q )     # put self back in the Queue
 	    return 1
 
@@ -124,7 +124,7 @@ class PING(directive.Directive):
 	self.Action.varDict['pingnumpktsrx'] = s[4]
 	self.Action.varDict['pingpktloss'] = s[5] * 100		# convert to %
 
-	log.log( "<ping>PING.docheck(): host '%s' pingmintriptime=%d pingavgtriptime=%d pingmaxtriptime=%s pingnumpktstx=%d pingnumpktsrx=%d pingpktloss=%f" % (self.args.host,s[0],s[1],s[2],s[3],s[4],s[5]), 8 )
+	log.log( "<ping>PING.docheck(): host '%s' pingmintriptime=%d pingavgtriptime=%d pingmaxtriptime=%s pingnumpktstx=%d pingnumpktsrx=%d pingpktloss=%f" % (self.args.host,s[0],s[1],s[2],s[3],s[4],s[5]), 7 )
 
 	# Evaluate Rule
         rulesenv = {}                   # environment for rules execution

@@ -3,7 +3,7 @@
 ## 
 ## Author       : Chris Miles  <chris@psychofx.com>
 ## 
-## Date		: 19990929
+## Start Date	: 19990929
 ## 
 ## Description	: Library of classes that deal with the process table for Linux
 ##
@@ -24,13 +24,17 @@
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 ########################################################################
 
+# Python modules
 import os, string, time, threading
+# Eddie modules
 import log, utils
+
 
 # This fetches data by parsing system calls of common commands.  This was done because
 # it was quick and easy to implement and port to multiple platforms.  I know this is
 # a bit ugly, but will clean it up later with more efficient code that fetches data
 # directly from /proc or the kernel.  CM 19990929
+
 
 # List of interpreters - default empty
 interpreters = []
@@ -168,10 +172,10 @@ class procList:
 	been exceeded."""
 
 	if time.time() > self.refresh_time:
-	    log.log( "<proc>checkCache(), refreshing procList", 8 )
+	    log.log( "<proc>procList.checkCache(), refreshing procList", 7 )
 	    self._refresh()
 	else:
-	    log.log( "<proc>checkCache(), using cache'd procList", 8 )
+	    log.log( "<proc>procList.checkCache(), using cache'd procList", 7 )
 
 
     def _getProcList(self):
@@ -192,10 +196,7 @@ class procList:
 	utils.safe_pclose( rawList )
 	#rawList.close()
 
-	log.log( "<proc>procList(), new proc list created", 8 )
-
-#    def keys(self):
-#        return(self.hash.keys())
+	log.log( "<proc>procList._getProcList(), new proc list created", 7 )
 
 
 ##
@@ -205,16 +206,6 @@ class proc:
     def __init__(self, rawline):
 
 	fields = string.split(rawline)
-
-	#self.pid = fields[0]		# pid
-	#self.user = fields[1]		# user
-	#self.time = fields[2]		# cpu time
-	#self.percent = fields[3]	# percentage of cpu
-	#self.status = fields[4]		# status
-	#self.command = comm		# command	
-
-	#log.log("<proc>proc.__init__(), fields: %s" % (fields), 8)
-
 
 	self.s =       fields[ 0]       # state of the process
 	self.user =    fields[ 1]       # effective user ID of the process (text or decimal)

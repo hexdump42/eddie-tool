@@ -4,7 +4,7 @@
 ## Author       : Rod Telford  <rtelford@psychofx.com>
 ##                Chris Miles  <chris@psychofx.com>
 ## 
-## Date		: 971204 
+## Start Date	: 19971204 
 ## 
 ## Description	: Library of classes that deal with a solaris df list
 ##
@@ -25,8 +25,11 @@
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 ########################################################################
 
+# Python modules
 import os, string
+# Eddie modules
 import log, history, utils
+
 
 ##
 ## Class dfList - instantiates with a list of disk stats
@@ -117,8 +120,6 @@ class df:
 	p = string.center(self.pctused, 5)
 	m = string.ljust(self.mountpt, 15)
 
-	log.log( '%s\t%s\t%s\t%s\t%s\t%s' % (f, s, u, a, p, m), 9 )
-	
 	return( '%s\t%s\t%s\t%s\t%s\t%s' % (f, s, u, a, p, m) )
 
     def getFs(self):

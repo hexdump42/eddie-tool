@@ -62,10 +62,10 @@ class iostat:
         been exceeded."""
 
         if time.time() > self.refresh_time:
-            log.log( "<iostat>checkCache(), refreshing network data", 8 )
+            log.log( "<iostat>iostat.checkCache(), refreshing network data", 8 )
             self.refresh()
         else:
-            log.log( "<iostat>checkCache(), using cache'd network data", 8 )
+            log.log( "<iostat>iostat.checkCache(), using cache'd network data", 8 )
 
 
     def __str__(self):

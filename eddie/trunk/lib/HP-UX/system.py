@@ -139,10 +139,10 @@ class system:
 
 	self.cache_semaphore.acquire()	# serialize refreshing of system cache
 	if time.time() > self.refresh_time:
-	    log.log( "<system>checkCache(), refreshing system data", 7 )
+	    log.log( "<system>system.checkCache(), refreshing system data", 7 )
 	    self.refresh()
 	else:
-	    log.log( "<system>checkCache(), using cache'd system data", 7 )
+	    log.log( "<system>system.checkCache(), using cache'd system data", 7 )
 	self.cache_semaphore.release()
 
 
@@ -157,7 +157,7 @@ class system:
 	if uptime_dict:
 	    self.hash.update(uptime_dict)
 
-	log.log( "<system>system(), new system list created", 7 )
+	log.log( "<system>system._getSystemstate(), new system list created", 7 )
 
 
     def _getvmstat(self):
@@ -168,7 +168,7 @@ class system:
 	(retval, output) = utils.safe_getstatusoutput( vmstat_cmd )
 
 	if retval != 0:
-	    log.log( "<system>system._getvmstat(), error calling '%s'"%(vmstat_cmd), 4 )
+	    log.log( "<system>system._getvmstat(), error calling '%s'"%(vmstat_cmd), 5 )
 	    return None
 
 	vmstat_dict = {}
@@ -262,7 +262,7 @@ class system:
 	(retval, output) = utils.safe_getstatusoutput( uptime_cmd )
 
 	if retval != 0:
-	    log.log( "<system>system._getuptime(), error calling '%s'"%(uptime_cmd), 4 )
+	    log.log( "<system>system._getuptime(), error calling '%s'"%(uptime_cmd), 5 )
 	    return None
 
 	uptime_re = ".+up (?P<uptime>.+),\s*(?P<users>[0-9]+) users,\s+ load average:\s+(?P<loadavg1>[0-9.]+),\s*(?P<loadavg5>[0-9.]+),\s*(?P<loadavg15>[0-9.]+)"
@@ -271,7 +271,7 @@ class system:
 	if sre:
 	    uptime_dict = sre.groupdict()
 	else:
-	    log.log( "<system>system._getuptime(), could not parse uptime output '%s'"%(output), 4 )
+	    log.log( "<system>system._getuptime(), could not parse uptime output '%s'"%(output), 5 )
 	    return None
 
 	# convert types
