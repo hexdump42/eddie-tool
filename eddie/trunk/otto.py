@@ -35,7 +35,7 @@ config_file = 'config/otto.cf'
 # Exit Otto cleanly
 def ottoexit():
     # email admin any remaining messages
-    log.sendadminlog()
+    log.sendadminlog(1)
     sys.exit()
 
 
@@ -166,9 +166,6 @@ def main():
 
 	    # email admin the adminlog if required
 	    log.sendadminlog()
-
-	    # reset adminlog
-	    log.adminlog = []
 
 	    # sleep for set period - only quits with CTRL-c
 	    log.log( '<otto>main(), sleeping for %d secs' % (config.scanperiod), 6 )

@@ -126,5 +126,30 @@ def stripquote( s ):
 
 
 ##
+## atom( ch ) - ascii-to-multiplyer - converts ascii char to a time multiplyer.
+##   eg: s=seconds, m=minutes, h=hours, d=days, w=weeks, c=calendar=months, y=years
+##
+def atom( ch ):
+    if ch == 's' or ch == 'S':
+	mult = 1
+    elif ch == 'm' or ch == 'M':
+	mult = 60
+    elif ch == 'h' or ch == 'H':
+	mult = 60*60
+    elif ch == 'd' or ch == 'D':
+	mult = 60*60*24
+    elif ch == 'w' or ch == 'W':
+	mult = 60*60*24*7
+    elif ch == 'c' or ch == 'C':
+	mult = 60*60*24*30			# not exact...
+    elif ch == 'y' or ch == 'Y':
+	mult = 60*60*24*365
+    else:
+	return 0
+
+    return mult
+	
+
+##
 ## END - utils.py
 ##

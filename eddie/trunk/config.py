@@ -19,6 +19,7 @@ import directive
 import definition
 import log
 import proc
+import utils
 
 
 ## Define exceptions
@@ -50,6 +51,17 @@ class ConfigOption:
 	return sre.group(1)		# should only be 1 group
 
 
+def val2secs( value ):
+    if regex.search( '[mshdwcyMSHDWCY]', value ) == -1:
+	return string.atoi(value)
+    timech = value[-1]
+    value = value[:-1]
+    mult = utils.atom( timech )
+    if mult == 0:
+	log.log( "<Config>val2secs(%d,'%s'), Error : timech is '%s'" % (self,value,timech), 2 )
+	return 0
+    return string.atoi(value)*mult
+
 ##
 ## CONFIGURATION OPTIONS
 ##
@@ -62,35 +74,12 @@ class SCANPERIOD(ConfigOption):
 	value = self.parseRaw()
 	global scanperiodraw
 	scanperiodraw = value			# keep the raw scanperiod
-	value = self.val2secs( value )		# convert value to seconds
+	value = val2secs( value )		# convert value to seconds
 	if value > 0:
-	    global scanperiod 		# how do I access global scanperiod that already exists?
+	    global scanperiod
 	    scanperiod = value			# set the config option
 	log.log( "<Config>SCANPERIOD(), scanperiod set to %s (%d seconds)." % (scanperiodraw, scanperiod), 6 )
 
-    def val2secs( self, value ):
-	if regex.search( '[mshdwcyMSHDWCY]', value ) == -1:
-	    return string.atoi(value)
-	timech = value[-1]
-	value = value[:-1]
-	if timech == 's' or timech == 'S':
-	    mult = 1
-	elif timech == 'm' or timech == 'M':
-	    mult = 60
-	elif timech == 'h' or timech == 'H':
-	    mult = 60*60
-	elif timech == 'd' or timech == 'D':
-	    mult = 60*60*24
-	elif timech == 'w' or timech == 'W':
-	    mult = 60*60*24*7
-	elif timech == 'c' or timech == 'C':
-	    mult = 60*60*24*30			# not exact...
-	elif timech == 'y' or timech == 'Y':
-	    mult = 60*60*24*365
-	else:
-	    log.log( "<Config>SCANPERIOD(), Error in val2secs(%d,'%s'): timech is '%s'" % (self,value,timech), 2 )
-	    return 0
-	return string.atoi(value)*mult
 
 ## LOGFILE - where to store log messages
 class LOGFILE(ConfigOption):
@@ -133,6 +122,18 @@ class ADMINLEVEL(ConfigOption):
 	log.adminlevel = string.atoi(value)		# set the config option
 	log.log( "<Config>ADMINLEVEL(), adminlevel set to '%d'." % (log.adminlevel), 6 )
 
+## ADMIN_NOTIFY - how often to send admin-logs to admin
+class ADMIN_NOTIFY(ConfigOption):
+    def __init__( self, *arg ):
+	apply( ConfigOption.__init__, (self,) + arg )
+	self.regexp = 'ADMIN_NOTIFY[\t ]+\([0-9]+[smhdwcy]?\)[\t \n]*'
+	value = self.parseRaw()
+	rawval = value
+	value = val2secs( value )		# convert value to seconds
+	if value > 0:
+	    log.admin_notify = value		# set the config option
+	log.log( "<Config>ADMIN_NOTIFY(), admin_notify set to %s (%d seconds)." % (rawval, log.admin_notify), 6 )
+
 ## INTERPRETERS - define the list of interpreters
 class INTERPRETERS(ConfigOption):
     def __init__( self, *arg ):
@@ -151,6 +152,7 @@ directives = {  "SCANPERIOD"	: SCANPERIOD,			\
 		"LOGLEVEL"	: LOGLEVEL,			\
 		"ADMIN"		: ADMIN,			\
 		"ADMINLEVEL"	: ADMINLEVEL,			\
+		"ADMIN_NOTIFY"	: ADMIN_NOTIFY,			\
 		"INTERPRETERS"	: INTERPRETERS,			\
 		"M"		: definition.M,			\
 		"DEF"		: definition.DEF,		\

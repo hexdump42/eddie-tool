@@ -24,6 +24,8 @@ loglevel = 2
 adminemail = 'root'
 adminlevel = 0
 adminlog = []
+admin_notify = 86400	# default send admin summaries once per day
+admin_notify_time = 0	# track time till next notify
 
 loglevel_min = 0
 loglevel_max = 9
@@ -63,8 +65,26 @@ def log(text='', level=1):
 
 
 # sendadminlog() - send adminlog list to adminemail only if there is something in
-# this list.
-def sendadminlog():
+#   this list.
+#   If override==1 then admin_notify times are ignored.
+def sendadminlog( override=0 ):
+    global admin_notify_time
+    global adminlog
+
+    if override == 0:
+	# if no admin_notify_time set, set one and return
+	if admin_notify_time == 0:
+	    admin_notify_time = time.time() + admin_notify
+	    return
+    
+	# if time hasn't reached admin_notify_time then return
+	if time.time() < admin_notify_time:
+	    return
+
+    # time for notify - set new time and send the adminlog
+    admin_notify_time = time.time() + admin_notify
+
+    # if there isn't anything in adminlog don't bother
     if len(adminlog) == 0:
 	return
 
@@ -75,15 +95,18 @@ def sendadminlog():
     tmp.write( 'Subject: [%s] Otto Admin Messages\n' % hostname )
     tmp.write( '\n' )
     tmp.write( "Greetings Otto Admin '%s', the following log messages are\n" % adminemail )
-    tmp.write( 'being delivered to you for your perusal.  Enjoy.\n' )
-    tmp.write( "[Host:%s LogLevel=%d AdminLevel=%d]\n" % (hostname,loglevel, adminlevel) )
+    tmp.write( 'being delivered to you for your perusal.  Enjoy.\n\n' )
+    tmp.write( "[Host:%s LogLevel=%d AdminLevel=%d AdminNotify=%s secs]\n" % (hostname,loglevel, adminlevel, admin_notify) )
     tmp.write( '------------------------------------------------------------------------------\n' )
 
     for i in adminlog:
-	tmp.write( "%s\n" % (i) )
+	tmp.write( "%s" % (i) )
 
     tmp.write( '------------------------------------------------------------------------------\n' )
     tmp.close()
+
+    # clear adminlog
+    adminlog = []
 
 
 ##
