@@ -390,27 +390,27 @@ class NUMTHREADS(ConfigOption):
 	num_threads = int(list[2])		# set the config option
 	log.log( "<config>NUMTHREADS, num_threads set to '%d'." % (num_threads), 6 )
 
-class CONSPORT(ConfigOption):
+class CONSOLE_PORT(ConfigOption):
     """Set the tcp port to listen on for console connections"""
 
     def __init__( self, list ):
 	apply( ConfigOption.__init__, (self,list) )
 
-	# if we don't have 3 elements ['CONSPORT', '=', <int>] then raise an error
+	# if we don't have 3 elements ['CONSOLE_PORT', '=', <int>] then raise an error
 	if len(list) != 3:
-	    raise ParseFailure, "CONSPORT definition has %d tokens when expecting 3" % len(list)
+	    raise ParseFailure, "CONSOLE_PORT definition has %d tokens when expecting 3" % len(list)
 
 	# ok, value is 3rd list element
 	global consport
 	try:
 	    consport = int(list[2])		# set the config option
 	except TypeError:			# must be integer
-	    raise ParseFailure, "CONSPORT is not an integer, '%s'" % (list[2])
+	    raise ParseFailure, "CONSOLE_PORT is not an integer, '%s'" % (list[2])
 
 	if consport < 0:
-	    raise ParseFailure, "CONSPORT must be a positive integer, %d" % (consport)
+	    raise ParseFailure, "CONSOLE_PORT must be a positive integer, %d" % (consport)
 
-	log.log( "<config>CONSPORT, consport set to '%d'." % (consport), 6 )
+	log.log( "<config>CONSOLE_PORT, consport set to '%d'." % (consport), 6 )
 
 
 class EMAIL_FROM(ConfigOption):
@@ -512,7 +512,7 @@ settings = {
 		"ELVINURL"	: ELVINURL,
 		"ELVINSCOPE"	: ELVINSCOPE,
 		"NUMTHREADS"	: NUMTHREADS,
-		"CONSPORT"	: CONSPORT,
+		"CONSOLE_PORT"	: CONSOLE_PORT,
 		"EMAIL_FROM"	: EMAIL_FROM,
 		"EMAIL_REPLYTO"	: EMAIL_REPLYTO,
            }

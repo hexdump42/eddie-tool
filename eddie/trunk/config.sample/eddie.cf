@@ -65,13 +65,13 @@ NUMTHREADS=20
 SCANPERIOD=10m          # by default scan every 10 minutes
 
 
-# CONSPORT
+# CONSOLE_PORT
 #  Defines the tcp port which the Eddie Console Server thread listens on.
 #  This provides a read-only interface to the current state of all active
 #  directives within a running Eddie.  The default port is 33343.
 #  Set to 0 to disable this feature.
-#  Use: CONSPORT=<int>
-#CONSPORT=33343
+#  Use: CONSOLE_PORT=<int>
+#CONSOLE_PORT=33343
 
 
 # EMAIL_FROM, EMAIL_REPLYTO
