@@ -21,9 +21,8 @@ import sys, traceback, re, string
 import RRDtool	# requires PyRRDtool from http://cvsweb.extreme-ware.com/cvsweb.cgi/PyRRDtool/
 import elvin	# requires Elvin4 modules from http://elvin.dstc.edu.au/
 
-ELVIN_URL='elvin://elvin.connect.com.au'
+ELVIN_URL='elvin://elvin'
 ELVIN_SCOPE='elvin'
-RRD_DB = '/var/tmp/test.rrd'
 
 ################################################################
 
@@ -91,16 +90,32 @@ class storeconsumer(eddieElvin):
 
 	try:
 	    r = self.rrddict[msg[u'ELVINRRD']]
-	    val = msg[u'%s'%(r.store)]
-	    u = (r.rrdfile, "N:%s" % (str(val)))
+	    storelist = string.split( r.store, ',' )
+	    if len(storelist) == 1:
+		# only one variable to store, use default method
+		val = msg[u'%s'%(r.store)]
+		u = (r.rrdfile, "N:%s" % (str(val)))
+	    else:
+		# multiple variables to store - must name them
+		ds = "-t"
+		n = "N:"
+		for s in storelist:
+		    val = msg[u'%s'%(s)]
+		    ds = "%s%s:" % (ds,s)
+		    n = "%s%s:" % (n,str(val))
+
+		ds = ds[:-1]	# remove ':' from end
+		n = n[:-1]	# remove ':' from end
+		u = (r.rrdfile, ds, n)
+
 	    print ' rrd.update( %s )' % (u,)
 	    self.rrd.update( u )
 
-	except KeyError:
-	    print "KeyError with message %s" % (msg)
+	except KeyError, err:
+	    print "KeyError, %s, with message %s" % (err, msg)
 
-	except IOError:
-	    print "IOError, cannot update rrd file for message %s" % (msg)
+	except IOError, err:
+	    print "IOError, %s, cannot update rrd file for message %s" % (err, msg)
 
 
 
