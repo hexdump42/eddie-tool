@@ -32,6 +32,7 @@ class procList:
 	    p = proc(fields)
 	    self.list.append(p)
 	    self.hash[fields[0]] = p
+	    self.nameHash[p.command] = p
 
 	
     def __str__(self):
@@ -53,6 +54,15 @@ class procList:
 		count = count + 1
 
 	return count
+
+    # Overload '[]', eg: returns corresponding proc object for given process
+    # name
+    def __getitem__(self, name):
+	try:
+	    return self.nameHash[name]
+	except KeyError:
+	    return None
+
 
 ##
 ## Class proc : holds a process record

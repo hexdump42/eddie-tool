@@ -67,6 +67,28 @@ class Directive:
 	self.type = string.split(self.raw)[0]	# the directive type of this instance
 	self.regexp = ''			# the regexp to split the raw line into fields
 	self.action = ''			# each directive will have an action
+	self.varDict = {}			# dictionary of variables used for emails etc
+
+	# Set up informational variables - these are common to all Directives
+	#  %h = hostname
+	#    TODO: Is there a simpler Python-way of getting hostname ??
+	tmp = os.popen('uname -n', 'r')
+	hostname = tmp.readline()
+	self.varDict['h'] = hostname[:-1]	# strip \n off end
+	tmp.close()
+
+	#  %sys = command from a system() action
+	#     TODO
+	self.varDict['sys'] = '[sys not yet defined]'
+	#  %act = show list of actions taken preceded by "The following actions
+	#         were taken:" if any were taken
+	#     TODO
+	self.varDict['act'] = '[act not yet defined]'
+	#  %actnm = show list of actions taken (excluding mail()'s) preceded by
+	#         "The following actions were taken:" if any were taken
+	#     TODO
+	self.varDict['actnm'] = '[actnm not yet defined]'
+
 
     # Parses raw line with directive-defined regexp and returns tuple of
     # regex groups.
@@ -93,6 +115,9 @@ class Directive:
 
 	# Put quotes around arguments so we can use eval()
 	actionList = utils.quoteArgs( actionList )
+
+	# Setup current varDict in action module
+	action.varDict = self.varDict
 
 	# Perform each action
 	for a in actionList:
@@ -141,6 +166,12 @@ class D(Directive):
 	                  'R'  : self.R	}
 	#print "<D> daemon: '%s' rule: '%s' action: '%s'" % (self.daemon, self.rule, self.action)
 
+	# Set any D-specific variables
+	#  %dproc = the process name
+	self.varDict['dproc'] = self.daemon
+	#  %dpid = pid of process (ie: if found running for R rule)
+	self.varDict['dpid'] = '[dpid not yet defined]'
+
     def docheck(self):
 	#print "D directive doing checking...... daemon: %s rule: '%s' action: '%s'" % (self.daemon,self.rule,self.action)
 	self.ruleDict[ self.rule ]()
@@ -153,6 +184,8 @@ class D(Directive):
     def R(self):
 	if plist.procExists( self.daemon ) > 0:
 	    print " <D>",self.daemon,"is running."
+	    # Set %dpid variable.
+	    self.varDict['dpid'] = plist[self.daemon].pid
 	    self.doAction()
 
 

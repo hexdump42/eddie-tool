@@ -20,6 +20,7 @@ import directive
 import definition
 import config
 import time
+import action
 
 # Main config file - this file INCLUDEs all other config files
 config_file = 'config/otto.cf'
@@ -42,6 +43,7 @@ def ottoguts():
     parseConfig.readFile(config_file, ourList, defDict, MDict, ADict)
 
     directive.ADict = ADict		# make ADict viewable in directive module
+    action.MDict = MDict		# make MDict viewable in action module
 
     #print "M: ",ourList['M']
     #print "D: ",ourList['D']

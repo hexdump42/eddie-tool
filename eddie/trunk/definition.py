@@ -128,14 +128,31 @@ def parseList( list, dict ):
 	try:
 	    # is l a key in dict ?  if yes, it is added
 	    tmp = dict[l]
-	    tmpList = utils.trickySplit( tmp, ',' )
-	    tmpList = parseList( tmpList, dict )
-	    for i in tmpList:
+	    tmplist = utils.trickySplit( tmp, ',' )
+	    tmplist = parseList( tmplist, dict )
+	    for i in tmplist:
 		newlist.append(i)
 	except KeyError:
 	    # if no, just add l
 	    newlist.append(l)
     return newlist
+
+
+##
+## parseM( text, dict ) - if text is in dict (assumed to be of type MsgDict)
+##   then (subj,body) list is returned, else empty list is returned.
+def parseM( text, dict ):
+    try:
+	# is text a key in dict ?
+	body = dict[text]
+    except KeyError:
+	# if no, return empty list
+	return ()
+    if body == None:
+	# not in dictionary, return empty list
+	return ()
+    return (dict.subj(text), body)
+
 
 ##
 ## END - definition.py
