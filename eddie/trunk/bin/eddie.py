@@ -260,7 +260,7 @@ def scheduler(q, Config, die_event):
 
 	if c.args.numchecks > 0:
 	    # start check in a new thread
-	    thr = threading.Thread(group=None, target=c.safeCheck, name=None, args=(Config,), kwargs={})
+	    thr = threading.Thread(group=None, target=c.safeCheck, name="%s"%(c), args=(Config,), kwargs={})
 	    log.log( "<eddie>scheduler(), Starting new thread for %s, %s" % (c,thr), 8 )
 	    thr.setDaemon(1)	# mark thread as Daemon-thread so Eddie will not block when trying to terminate
 	    			# with still-running threads.
