@@ -2,15 +2,16 @@
 ## 
 ## File         : elvinrrd.py
 ## Author       : Chris Miles <chris@psychofx.com>
-## Start Date   : 20010827
-## Description  : Elvin4 consumer to insert data sent via Elvin into RRDtool databases.
+## Start Date   : 2001-08-27
+## Description  : Elvin4 consumer to store data sent via Elvin into RRDtool databases.
+## Home         : http://www.psychofx.com/elvinrrd/
 ##
 ## $Id$
 ##
 
 ################################################################
 
-__version__ = """2.2"""
+__version__ = """2.3"""
 
 ################################################################
 
@@ -36,8 +37,7 @@ ELVIN_SCOPE='elvin'
 ################################################################
 
 class RRDstore:
-    """
-    Object with details of what to match in the Elvin message and
+    """Object with details of what to match in the Elvin message and
     how to store the data in RRD.
     """
 
@@ -60,15 +60,13 @@ class RRDstore:
 
 
 class BaseElvin:
-    """
-    Base Elvin class to handle opening and closing Elvin connections.
+    """Base Elvin class to handle opening and closing Elvin connections.
     This should be sub-classed and consumer and/or producer functionality
     added.
     """
 
     def __init__(self, elvinurl=ELVIN_URL, elvinscope=ELVIN_SCOPE):
-	"""
-	Initialise connection to Elvin server, using (in order of preference):
+	"""Initialise connection to Elvin server, using (in order of preference):
 	- An Elvin server URL specified by elvinurl;
 	- An Elvin scope specified by elvinscope;
 	- Auto discovery if the above not set.
@@ -99,16 +97,14 @@ class BaseElvin:
 
 
     def cleanExit(self):
-	"""
-	Close the Elvin connection cleanly.
+	"""Close the Elvin connection cleanly.
 	"""
 
 	self.elvinc.close()	# close Elvin connection
 
 
 class storeconsumer(BaseElvin):
-    """
-    An Elvin consumer to receive "ELVINRRD" messages from the Elvin network.
+    """An Elvin consumer to receive "ELVINRRD" messages from the Elvin network.
     """
 
     def __init__(self, elvinurl=ELVIN_URL, elvinscope=ELVIN_SCOPE):
@@ -116,8 +112,7 @@ class storeconsumer(BaseElvin):
 
 
     def register(self):
-	"""
-	Subscribe for Elvin messages containing the key "ELVINRRD".
+	"""Subscribe for Elvin messages containing the key "ELVINRRD".
 	"""
 
 	self.subscription = 'require(ELVINRRD)'
@@ -128,8 +123,7 @@ class storeconsumer(BaseElvin):
 
 
     def deliver(self, sub, msg, insec, rock):
-	"""
-	This method handles any received "ELVINRRD" messages.
+	"""This method handles any received "ELVINRRD" messages.
 	It parses a valid message and stores the information in the appropriate
 	RRD database, as defined by the elvinrrd configuration.
 
@@ -231,8 +225,7 @@ class storeconsumer(BaseElvin):
 
 
 def ReadConfig( filename ):
-    """
-    Read the configuration from the given filename.
+    """Read the configuration from the given filename.
     """
 
     if verbose:
@@ -316,8 +309,7 @@ def ReadConfig( filename ):
 
 
 def log( text ):
-    """
-    Log text to either logfile (if defined) or stdout.
+    """Log text to either logfile (if defined) or stdout.
     """
 
     if logfile != None:
@@ -410,15 +402,17 @@ def main():
 if __name__ == "__main__":
     try:
 	main()
+    except SystemExit:
+	pass
     except:
 	e = sys.exc_info()
 	tb = traceback.format_list( traceback.extract_tb( e[2] ) )
 	errstr = "Uncaught exception:\ %s, %s\n%s" % (e[0], e[1], tb)
-	sys.stderr.write( "elvinrrd.py: "+errstr )
+	sys.stderr.write( "elvinrrd.py: " + errstr + "\n" )
 	if logfile:
 	    log( errstr )
 	sys.exit(1)
 
 ###
-### End of estored.py
+### End of elvinrrd.py
 ###
