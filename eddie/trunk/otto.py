@@ -45,7 +45,11 @@ def SigHandler( sig, frame ):
 	# SIGHUP (Hangup) - reload config
 	log.log( '<otto>SigHandler(), SIGHUP encountered - reloading config', 2 )
 	#
-	# read in config and rules
+	# reset lists and read in config and rules
+	ourList = directive.Rules()
+	defDict = {}
+	MDict = definition.MsgDict()
+	ADict = {}
 	parseConfig.readFile(config_file, ourList, defDict, MDict, ADict)
 	directive.ADict = ADict		# make ADict viewable in directive module
 	action.MDict = MDict		# make MDict viewable in action module
