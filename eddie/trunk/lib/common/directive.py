@@ -378,8 +378,11 @@ class Directive:
 
 	actionEnv['_Action'] = self.Action		# add Action object
 	acall = "_Action.%s" % (actioncall)		# the string to be evaluated
+
+	evalenv = {}
+	evalenv.update(actionEnv)			# copy actionEnv for eval()
 	try:
-	    ret = eval( acall, actionEnv )		# Call the Action
+	    ret = eval( acall, evalenv )		# Call the Action
 	except:
 	    # Handle any action evaluation exceptions neatly
 	    e = sys.exc_info()
@@ -604,9 +607,9 @@ class FS(Directive):
 
 	self.parseRule()
 
-	#print "used='%d', avail='%d', capac='%d', useddelta='%d', availdelta='%d', capacdelta='%d'" % (dfenv['used'],dfenv['avail'],dfenv['capac'],dfenv['useddelta'],dfenv['availdelta'],dfenv['capacdelta'])
-
-	result = eval( self.args.rule, dfenv )
+	evalenv = {}
+	evalenv.update(dfenv)			# copy dfenv for eval()
+	result = eval( self.args.rule, evalenv )
 
 	# assign variables
 	self.Action.varDict['fsused'] = df.getUsed()
@@ -873,7 +876,9 @@ class PROC(Directive):
 		    log.log( "<directive>PROC.check() warning, no process '%s'." % (self.args.procname), 5 )
 		    return
 
-		result = eval( self.checkstring, procenv )
+		evalenv = {}
+		evalenv.update(procenv)			# copy procenv for eval()
+		result = eval( self.checkstring, evalenv )
 
 		# build varDict from procenv
 		for i in procenv.keys():
@@ -1048,8 +1053,11 @@ class COM(Directive):
         comenv['err'] = err
         comenv['ret'] = retval
 	result=None
+
+	evalenv = {}
+	evalenv.update(comenv)			# copy comenv for eval()
 	try:
-	    result = eval( self.args.rule, comenv )
+	    result = eval( self.args.rule, evalenv )
 	except:
 	    log.log( "<directive>COM.docheck() : an error occured with rule '%s' exception type: '%s' exception value: '%s' - env was: %s"%(self.args.rule,sys.exc_type,sys.exc_value,comenv), 3 )
 	    return
@@ -1286,7 +1294,9 @@ class IF(Directive):
 
 	ifenv = i.ifinfo()	# get dictionary of interface details
 
-	result = eval( self.checkstring, ifenv )
+	evalenv = {}
+	evalenv.update(ifenv)		# copy ifenv for eval()
+	result = eval( self.checkstring, evalenv )
 
 	# build varDict from ifenv
 	for i in ifenv.keys():
@@ -1340,7 +1350,9 @@ class NET(Directive):
 
 	netenv = nlist.statstable.getHash()	# get dictionary of network stats
 
-	result = eval( self.args.rule, netenv )
+	evalenv = {}
+	evalenv.update(netenv)			# copy netenv for eval()
+	result = eval( self.args.rule, evalenv )
 
 	# build varDict from netenv
 	for i in netenv.keys():
@@ -1391,17 +1403,20 @@ class SYS(Directive):
     def docheck(self, Config):
 	"""Perform the check."""
 
-	log.log( "<directive>SYS.docheck(), rule '%s'" % (self.args.rule), 7 )
+	log.log( "<directive>SYS.docheck(): rule '%s'" % (self.args.rule), 7 )
 
 	if self.state.checkcount > 0:
 	    system.refresh()	# force refresh of data if re-checking
 
 	sysenv = system.getHash()		# get dictionary of system stats
 
+	evalenv = {}
+	evalenv.update(sysenv)			# copy sysenv for eval()
+
 	try:
-	    result = eval( self.args.rule, sysenv )
+	    result = eval( self.args.rule, evalenv )
 	except SyntaxError:
-	    log.log( "<directive>SYS(), docheck(), SyntaxError evaluating rule '%s'" % (self.args.rule), 4 )
+	    log.log( "<directive>SYS.docheck(): SyntaxError evaluating rule '%s'" % (self.args.rule), 4 )
 	    return
 
 	# build varDict from sysenv
