@@ -290,6 +290,52 @@ def safe_getstatusoutput( cmd ):
 
     return (r, output)
 
+
+# default sendmail binary location
+# can be overriden from eddie.cf
+SENDMAIL = '/usr/lib/sendmail'
+EMAIL_FROM = None
+EMAIL_REPLYTO = None
+
+def sendmail( headers, body ):
+    """Function to standardize email sending for EDDIE functions.
+
+    Calls sendmail (from the SENDMAIL setting) passing it the headers
+    and body strings.  headers should contain all the relevent headers
+    (at least "To:" and usually "Subject:").
+    """
+
+    if not os.path.exists( SENDMAIL ):
+	raise "utils.sendmail exception", "sendmail not found, check SENDMAIL setting: '%s'"%(SENDMAIL)
+
+    # make sure headers ends in carriage-return
+    if headers[-1] != '\n':
+	headers = headers + '\n'
+
+    # add default headers if not already specified
+    global EMAIL_FROM
+    if not re.search( "^From:", headers, re.M ):
+	if EMAIL_FROM == None:
+	    EMAIL_FROM = os.getenv("USER")
+	    if EMAIL_FROM == None:
+		EMAIL_FROM = 'root'
+	headers = headers + 'From: %s\n' % (EMAIL_FROM)
+
+    if not re.search( "^Reply-To:", headers, re.M ):
+	if EMAIL_REPLYTO != None:
+	    headers = headers + 'Reply-To: %s\n' % (EMAIL_REPLYTO)
+
+    headers = headers + 'X-Generated-By: %s:%s\n' % (os.uname()[1], sys.argv[0])
+
+    # send the email via the sendmail binary
+    tmp = safe_popen(SENDMAIL+' -t', 'w')
+    tmp.write( headers )
+    tmp.write( '\n' )
+    tmp.write( body )
+    safe_pclose( tmp )
+
+    return 1
+
 ##
 ## END - utils.py
 ##

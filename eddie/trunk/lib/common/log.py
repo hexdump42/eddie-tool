@@ -111,24 +111,19 @@ def sendadminlog( override=0 ):
     if len(adminlog) == 0:
 	return
 
-    #tmp = os.popen('/usr/lib/sendmail -t', 'w')
-    tmp = utils.safe_popen('/usr/lib/sendmail -t', 'w')
-    tmp.write( 'To:'+adminemail+'\n' )
-    tmp.write( 'From:eddie\n' )
-    tmp.write( 'Reply-To:root\n' )
-    tmp.write( 'Subject: [%s] Eddie Admin Messages\n' % hostname )
-    tmp.write( '\n' )
-    tmp.write( "Greetings Eddie Admin '%s', the following log messages are\n" % adminemail )
-    tmp.write( 'being delivered to you for your perusal.  Enjoy.\n\n' )
-    tmp.write( "[Host:%s LogLevel=%d AdminLevel=%d AdminNotify=%s secs]\n" % (hostname,loglevel, adminlevel, admin_notify) )
-    tmp.write( '------------------------------------------------------------------------------\n' )
+    headers = 'To: %s\n' % adminemail
+    headers = headers + 'Subject: [%s] Eddie Admin Messages\n' % hostname
+
+    body = "Greetings Eddie Admin '%s', the following log messages are\n" % adminemail
+    body = body + "being delivered to you for your perusal.  Enjoy.\n\n"
+    body = body + "[Host:%s LogLevel=%d AdminLevel=%d AdminNotify=%s secs]\n" % (hostname,loglevel, adminlevel, admin_notify)
+    body = body + "------------------------------------------------------------------------------\n"
 
     for i in adminlog:
-	tmp.write( "%s" % (i) )
+	body = body + "%s" % (i)
 
-    tmp.write( '------------------------------------------------------------------------------\n' )
-    #tmp.close()
-    utils.safe_pclose( tmp )
+    body = body + "------------------------------------------------------------------------------\n"
+    r = utils.sendmail( headers, body )
 
     # clear adminlog
     adminlog = []

@@ -426,10 +426,9 @@ class EMAIL_FROM(ConfigOption):
 	if len(list) != 3:
 	    raise ParseFailure, "EMAIL_FROM definition has %d tokens when expecting 3" % len(list)
 
-        import action
-	action.action.EMAIL_FROM = utils.stripquote(list[2])	# set value in action class
+	utils.EMAIL_FROM = utils.stripquote(list[2])	# set for sendmail function to use
 
-	log.log( "<config>EMAIL_FROM: email From: set to '%s'" % (action.action.EMAIL_FROM), 8 )
+	log.log( "<config>EMAIL_FROM: email From: set to '%s'" % (utils.EMAIL_FROM), 8 )
 
 
 class EMAIL_REPLYTO(ConfigOption):
@@ -441,10 +440,25 @@ class EMAIL_REPLYTO(ConfigOption):
 	if len(list) != 3:
 	    raise ParseFailure, "EMAIL_REPLYTO definition has %d tokens when expecting 3" % len(list)
 
-        import action
-	action.action.EMAIL_REPLYTO = utils.stripquote(list[2])	# set value in action class
+	utils.EMAIL_REPLYTO = utils.stripquote(list[2])	# set for sendmail function to use
 
-	log.log( "<config>EMAIL_REPLYTO: email From: set to '%s'" % (action.action.EMAIL_REPLYTO), 8 )
+	log.log( "<config>EMAIL_REPLYTO: email From: set to '%s'" % (utils.EMAIL_REPLYTO), 8 )
+
+
+
+class SENDMAIL(ConfigOption):
+    """Set the location of the sendmail binary."""
+
+    def __init__( self, list, typelist ):
+	apply( ConfigOption.__init__, (self,list, typelist) )
+
+	# if we don't have 3 elements ['SENDMAIL', '=', <string>] then raise an error
+	if len(list) != 3:
+	    raise ParseFailure, "SENDMAIL definition has %d tokens when expecting 3" % len(list)
+
+	utils.SENDMAIL = utils.stripquote(list[2])	# set for sendmail function to use
+
+	log.log( "<config>SENDMAIL: set to '%s'" % (utils.SENDMAIL), 8 )
 
 
 
@@ -510,6 +524,7 @@ settings = {
 		"CONSOLE_PORT"	: CONSOLE_PORT,
 		"EMAIL_FROM"	: EMAIL_FROM,
 		"EMAIL_REPLYTO"	: EMAIL_REPLYTO,
+		"SENDMAIL"	: SENDMAIL,
            }
 
 ## Join all the above dictionaries to make the total keywords dictionary

@@ -84,6 +84,15 @@ SCANPERIOD=10m          # by default scan every 10 minutes
 #EMAIL_REPLYTO='sysadmins@my.domain'
 
 
+# SENDMAIL
+#  Define the location of the sendmail binary, which EDDIE uses to send
+#  all email.  This is usually either '/usr/lib/sendmail' (Solaris) or
+#  '/usr/sbin/sendmail' (Redhat Linux).  Defaults to '/usr/lib/sendmail'.
+#  Use: SENDMAIL='/path/to/sendmail'
+
+#SENDMAIL='/usr/lib/sendmail'
+
+
 # ELVINURL, ELVINSCOPE
 #  Specifies how to connect to an Elvin4 server.  See Elvin docs
 #  at http://elvin.dstc.edu.au/

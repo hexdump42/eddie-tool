@@ -41,56 +41,27 @@ class action:
     an Eddie action, called from directive arguments such as 'action'
     and 'act2ok'."""
 
-    def __init__(self):
-	# define a default From: address for email action
-	try:
-	    self.EMAIL_FROM	# do nothing if already set by config
-	except:
-	    self.EMAIL_FROM = os.getenv("USER")
-	    if self.EMAIL_FROM == None:
-		self.EMAIL_FROM = 'root'
-
-	# define a default Reply-To: address for email action
-	try:
-	    self.EMAIL_REPLYTO	# do nothing if already set by config
-	except:
-	    self.EMAIL_REPLYTO = ''
+    # No __init__
 
 
-    def email(self, user, msg, msgbody=None):
+    def email(self, address, subject="", body=""):
 	"""The standard email action.
-	user should be a standard string containing a standard email address
-	or list of email addresses separated by either a ',' or '|' or an
-	ALIAS containing the same.
 
-	msg should be either a standard string which will be used as the
-	email subject (and also the email body if msgbody==None) or the
-	name of a MSG object.
+	address should be a standard string containing a standard email address
+	or list of email addresses separated by ','.
 
-	msgbody should be a string containing the body of the email, assuming
-	that msg is also the subject.
+	subject should be either a standard string which will be used as the
+	email subject the name of a MSG object.
+
+	body should be a string containing the body of the email.
 	"""
 
-	# Multiple email recipients are seperated by '|'.
-	multUsers = string.split( user, '|' )
-
-	for u in multUsers:
-	    string.strip(u)			# strip white space
-
-	# Create user recipient list delimited by ','
-	users = string.join( multUsers, ',' )
-
-	if type(msg) != type("string"):
-	    # if msg is not a string, assume it is a MSG object
-	    body = msg.message
-	    subj = msg.subject
+	if type(subject) != type("string"):
+	    # if subject is not a string, assume it is a MSG object
+	    body = subject.message
+	    subj = subject.subject
 	else:
-	    # msg is a string
-	    subj = msg
-	    if msgbody == None:
-		body = msg
-	    else:
-		body = msgbody
+	    subj = subject
 
 	# Create problem age and other statistics if this is not the first time
 	# the problem was found.
@@ -132,22 +103,18 @@ class action:
 
 
 	# run thru parseVars() to substitute variables from varDict
-	users = parseVars( users, self.varDict )
+	address = parseVars( address, self.varDict )
 	subj = parseVars( subj, self.varDict )
 	body = parseVars( body, self.varDict )
 
-	tmp = utils.safe_popen('/usr/lib/sendmail -t', 'w')
-	tmp.write( 'To: '+users+'\n' )
-	tmp.write( 'From: %s\n' % (self.EMAIL_FROM) )
-	tmp.write( 'Reply-To: %s\n' % (self.EMAIL_REPLYTO) )
-	tmp.write( 'Subject: ['+log.hostname+'] '+subj+'\n' )
-	tmp.write( 'X-Generated-By: %s:%s\n' % (os.uname()[1], sys.argv[0]) )
-	tmp.write( '\n' )
-	tmp.write( body+'\n' )
-	utils.safe_pclose( tmp )
+	#headers = 'To: ' + address + '\n' + 'Subject: [' + log.hostname + '] ' + subj + '\n'
+	headers = 'To: %s\nSubject: [%s] %s\n' % (address,log.hostname,subj)
+	r = utils.sendmail( headers, body )
 
-	if not log.log( "<action>action.email(): email sent to '%s', subject '%s', body '%s'" % (u,subj,body), 9 ):
-	    log.log( "<action>action.email('%s', '%s', '%s')" % (u,subj,body[:20]), 6 )
+	if r:
+	    log.log( "<action>action.email: address='%s' subject='%s' body='%s...' successful)" % (address,subj,body[:20]), 6 )
+	else:
+	    log.log( "<action>action.email: address='%s' subject='%s' body='%s...' failed)" % (address,subj,body[:20]), 4 )
 
 
     def system(self, cmd):
