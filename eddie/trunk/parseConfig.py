@@ -27,6 +27,8 @@ def main():
     conf = open(file, 'r')
     count = 0
 
+    ourList = directive.Rules()
+
     while 1:
 	line = conf.readline()
 	count = count + 1
@@ -57,10 +59,14 @@ def main():
 	    
 		else:
 		    action = directives[d](line)
+		
+		ourList + action
 	    else:
 	       print "Ignoring Unknown Directive %s on line %s of %s" % (d, count, file)
 
 
+    print ourList
+    print ourList['M']
 
 if __name__ == "__main__":
     main()
