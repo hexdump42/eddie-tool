@@ -43,7 +43,13 @@ N COMMONFIXED:
         email(ALERT_EMAIL,FIXED)
 
     Level 1:
-        email(ALERT_EMAIL,FIXED),email(ONCALL_EMAIL,FIXED_P)
+        email(ALERT_EMAIL,FIXED),ticker(FIXED_P)
+
+    Level 2:
+        email(ONCALL_EMAIL,FIXED_P),ticker(FIXED_P)
+                                                                                
+    Level 3:
+        email(ALERT_EMAIL,FIXED),email(ONCALL_EMAIL,FIXED_P),ticker(FIXED_P)
 
 
 # COMMONRESTART definition
