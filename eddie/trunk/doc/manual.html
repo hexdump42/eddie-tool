@@ -396,6 +396,39 @@
      <li> <b><a name="console_arg">console=&lt;display_string&gt;</a></b> - define what is output to
           <a href="#console">EDDIE Console</a> connections for the current directive.
           Set to None to hide this directive from the Console.
+      <li> <b><a name="checkdependson">checkdependson=&lt;directive(s)&gt;</a></b> - don't
+	  perform the check if any of these directives are in a failed state.
+      <li> <b><a name="actiondependson">actiondependson=&lt;directive(s)&gt;</a></b> - skip
+	  action execution if any of these directives are in a failed state.
+      <li> <b><a name="actionperiod">actionperiod=&lt;time expression&gt;</a></b> - an expresion
+	  which defines how long to wait before calling the next consequetive action.  The
+	  variable 't' is the current time between action calls, and defaults to the
+	  scanperiod after the first action call.  The scan period is also available in the
+	  expression with the <i>scanperiod</i> variable. Example: actionperiod='t * 2'
+	  - double the time between consequetive action calls.
+      <li> <b><a name="history">history=&lt;integer&gt;</a></b> - request directive to
+	remember this many previous data samples.  Access them in rules using the terminology
+	'history[n].dataname', where n is how many samples ago, and dataname is the name of
+	the data to retrieve.  Example, alert if a filesystem grows by over 5% between checks:
+	<pre>
+	FS export00_grow:
+	    fs='/export/00'
+	    scanperiod='1m'
+	    history = 1
+	    rule='(pctused - history[1].pctused) > 5'
+	    action=email('root','%(mountpt)s grew to %(pctused)s')</pre>
+	Example 2, alert if average filesystem growth over last 3 sample periods is too high:
+	<pre>
+	FS export01_avg_grow:
+	    fs='/export/01'
+	    scanperiod='1m'
+	    history = 3
+	    rule='(pctused + history[1].pctused + history[2].pctused + history[3].pctused) / 3 > 10'
+	    action=email('root','%(mountpt)s grew to %(pctused)s')</pre>
+	Note that at startup, rules will not run until enough history data is available.
+	So, in the previous example, the directive would wait for three scanperiods before
+	it had enough history data (three sample periods) to be able to evaluate the rule.
+
     </ul>
    </p>
 
