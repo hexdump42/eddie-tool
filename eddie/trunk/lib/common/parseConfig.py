@@ -306,10 +306,10 @@ def parseFailure( msg, (srow, scol), (erow, ecol), line, filename ):
 
     print "  line follows:"
 
-    if line[-1] == '\n':
-	line = line[:-1]
-    print line
-    print " " * (scol-1) + "^" * (ecol-scol+1)
+    if len(line) > 0 and line[-1] == '\n':
+	line = line[:-1]			# strip newline from end
+    print line					# print line
+    print " " * (scol-1) + "^" * (ecol-scol+1)	# print pointer to error
 
     log.log( "<parseConfig>parseFailure(), '%s' File:%s row:%d Line:\n%s" % (msg, filename, srow, line), 1 )
 
