@@ -25,20 +25,20 @@
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 ########################################################################
 
-##############################################################################
-#timeQueue is the queueing class derived from Python's Queue class.  It is as
-#thread-friendly as Queue, the major difference being objects are inserted
-#into the queue based on a given time.  Objects with the lowest times are
-#closest to the front of the queue.
-#
-#To support this, objects have to be added along with their time, so a 
-#2-tuple must be added, eg: q.put( (obj, time) ).  Similarly q.get()
-#returns the same 2-tuple.
-#
-#An extra public method has been added, over what Queue offers, q.head().
-#This method returns the item (and time) from the front of the queue,
-#exactly as q.get(), but does not remove it from the queue.
-##############################################################################
+"""
+timeQueue is the queueing class derived from Python's Queue class.  It is as
+thread-friendly as Queue, the major difference being objects are inserted
+into the queue based on a given time.  Objects with the lowest times are
+closest to the front of the queue.
+
+To support this, objects have to be added along with their time, so a 
+2-tuple must be added, eg: q.put( (obj, time) ).  Similarly q.get()
+returns the same 2-tuple.
+
+An extra public method has been added, over what Queue offers, q.head().
+This method returns the item (and time) from the front of the queue,
+exactly as q.get(), but does not remove it from the queue.
+"""
 
 
 # Imports: Python
@@ -50,7 +50,7 @@ class timeQueue(Queue.Queue):
     our own type of queue.  The parent Queue class handles the rest.
     These will only be called with appropriate locks held."""
 
-    def head(self, block=1):
+    def head(self, block=1, timeout=None):
 	"""Return the head item in the queue without removing it from
 	the queue. (get() will remove item from queue.)
 
@@ -59,19 +59,47 @@ class timeQueue(Queue.Queue):
         return an item if one is immediately available, else raise the
         Empty exception."""
 
-        if block:
-            self.esema.acquire()
-        elif not self.esema.acquire(0):
-            raise Empty
-        self.mutex.acquire()
-        was_full = self._full()
-        item = self._head()
-        if was_full:
-            self.fsema.release()
-        if not self._empty():
-            self.esema.release()
-        self.mutex.release()
-        return item
+	if 'not_empty' in dir(self):
+	    # Python 2.4+ Queue implementation...
+	    self.not_empty.acquire()
+	    try:
+		if not block:
+		    if self._empty():
+			raise Empty
+		elif timeout is None:
+		    while self._empty():
+			self.not_empty.wait()
+		else:
+		    if timeout < 0:
+			raise ValueError("'timeout' must be a positive number")
+		    endtime = _time() + timeout
+		    while self._empty():
+			remaining = endtime - _time()
+			if remaining <= 0.0:
+			    raise Empty
+			self.not_empty.wait(remaining)
+		item = self._get()
+		self.not_full.notify()
+		return item
+	    finally:
+		self.not_empty.release()
+
+	else:
+	    # Pre-Python 2.4 Queue
+	    if block:
+		self.esema.acquire()
+	    elif not self.esema.acquire(0):
+		raise Empty
+	    self.mutex.acquire()
+	    was_full = self._full()
+	    item = self._head()
+	    if was_full:
+		self.fsema.release()
+	    if not self._empty():
+		self.esema.release()
+	    self.mutex.release()
+
+	return item
 
 
     # Initialize the queue representation
