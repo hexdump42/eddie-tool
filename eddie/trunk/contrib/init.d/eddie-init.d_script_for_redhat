@@ -1,0 +1,78 @@
+#!/bin/sh
+##
+## Start/stop script for Eddie ... Chris Miles <cmiles@connect.com.au> 980406
+##
+## $Id$
+##
+
+# Source function library.
+. /etc/rc.d/init.d/functions
+
+
+EDDIERUN=/opt/eddie/bin/eddie_wrapper
+
+start() {
+    echo -n $"Starting Eddie: "
+    if [ -x $EDDIERUN ]; then
+	    daemon --user root "$EDDIERUN &"
+	    RETVAL=$?
+	    [ $RETVAL -eq 0 ] && touch /var/lock/subsys/eddie
+	    echo
+	    return $RETVAL
+    else
+	    echo "Error: $EDDIERUN not found in $EDDIEBASE/bin"
+    fi
+}
+
+stop() {
+    if test "x`pidof -x eddie.py`" != x; then
+	echo -n $"Stopping Eddie: "
+	killproc eddie.py
+	echo
+    fi
+
+    sleep 1
+
+    if test "x`pidof -x eddie_wrapper`" != x; then
+        echo -n $"Stopping eddie_wrapper: "
+	killproc eddie_wrapper
+	echo
+    fi
+
+    RETVAL=$?
+    [ $RETVAL -eq 0 ] && rm -f /var/lock/subsys/eddie
+    return $RETVAL
+}
+
+
+case "$1" in
+        start)
+            start
+            ;;
+        
+        stop)
+            stop
+            ;;
+        
+        status)
+            status eddie.py
+            status eddie_wrapper
+            ;;
+        restart)
+            stop
+            start
+            ;;
+        condrestart)
+            if test "x`pidof -x eddie_wrapper`" != x; then
+                stop
+                start
+            fi
+            ;;
+        
+        *)
+            echo $"Usage: $0 {start|stop|restart|condrestart|status}"
+            exit 1
+
+esac
+
+exit 0
