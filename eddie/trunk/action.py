@@ -288,6 +288,40 @@ def nice(*arg):
     log.log( "<action>nice(), cmd '%s', return value %d" % (cmd,retval), 5 )
 
 
+# ottolog()
+def ottolog(*arg):
+    # if one argument supplied, this text is logged with a loglevel of 0
+    # if two arguments, first is text to log, second is log level.
+
+    if len(arg) < 0 or len(arg) > 2:
+	log.log( "<action>log(), Error, %d arguments found, expecting 1 or 2" % (len(arg)), 2 )
+	return
+
+    logstr = arg[0]
+
+    # if two arguments given, second arg is log level.  Otherwise assume 0.
+    if len(arg) == 2:
+	loglevel = string.atoi(arg[1])
+
+	# If loglevel out of range, error.
+	if loglevel < log.loglevel_min or loglevel > log.loglevel_max:
+	    log.log( "<action>log(), Error, loglevel out of range, loglevel is %d, range is %d-%d" % (loglevel,log.loglevel_min,log.loglevel_max), 2 )
+	    return
+    else:
+	loglevel = log.loglevel_min
+
+    # Parse the text string to replace variables (twice to make sure :)
+    logstr = parseVars( logstr, varDict )
+    logstr = parseVars( logstr, varDict )
+
+    # Log the text
+    retval = log.log( logstr, loglevel )
+
+    # Alert if return value != 0
+    if retval != 1:
+	log.log( "<action>log(), Alert, return value for log.log( '%s', %d ) is %d" % (logstr,loglevel,retval), 3 )
+
+
 ##
 ## END - action.py
 ##

@@ -122,7 +122,7 @@ class Directive:
 	self.varDict['actnm'] = 'The following (non-email) actions are being taken:\n'
 	for a in actionList:
 	    self.varDict['act'] = self.varDict['act'] + '\t' + a + '\n'
-	    if a[:4] != 'email':
+	    if a[:5] != 'email':
 		self.varDict['actnm'] = self.varDict['actnm'] + '\t' + a + '\n'
 
 	# Setup current varDict in action module
@@ -136,7 +136,7 @@ class Directive:
 		eval( 'action.'+a )
 	    except AttributeError:
 		# Not an action function ... error...
-		log.log( "<directive>Directive, Error, '%s' is not a defined action, config line follows,\n%s\n" % (a,self.raw), 2 )
+		log.log( "<directive>Directive, Error, 'action.%s' is not a defined action, config line follows,\n%s\n" % (a,self.raw), 2 )
 
 
 

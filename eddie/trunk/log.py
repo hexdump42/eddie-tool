@@ -20,12 +20,14 @@ import time
 logfile = "/var/log/otto.log"
 loglevel = 9
 
+loglevel_min = 0
+loglevel_max = 9
 
 # log() - if level <= loglevel, text is appended to logfile
 #         with date/time prepended (nothing is ever logged when
 #         loglevel is 0).
 def log(text='', level=1):
-    if level > 0 and level <= loglevel:
+    if loglevel > 0 and level <= loglevel:
 	datetime = time.asctime(time.localtime(time.time()))
 	logtext = "%s [%d]:%s\n" % (datetime,level,text)
 	logf = open( logfile, 'a' )
