@@ -48,7 +48,7 @@ class eddieElvin:
 	                         'TICKERTEXT' : msg,
 				       'USER' : log.hostname,
 				    'TIMEOUT' : 10, 
-				  'MIME_TYPE' : x-elvin/slogin,
+				  'MIME_TYPE' : 'x-elvin/slogin',
 				  'MIME_ARGS' : log.hostname } )
 	    return 0
 
