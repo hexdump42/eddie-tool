@@ -866,6 +866,12 @@
      <li> <b>url=&lt;URL&gt;</b> <i>(required)</i>:
 	  <br>
 	  - the URL to fetch.
+     <li> <b>request_timeout=&lt;seconds&gt;</b> <i>(optional)</i>:
+	  <br>
+	  - how many seconds to wait for a HTTP(S) response before timing out the
+	  connection and returning an error (variable 'timedout' will then be set
+	  to 1).  Requires Python 2.3+ (socket settimeout() functionality).
+	  [Eddie 0.33+]
     </ul><br>
 
     Rule Variables:
@@ -875,7 +881,29 @@
 	  - will be 1 (true) if the connection failed; and 0 (false) if not.
      <li> <b>time</b> (float)
 	  <br>
-	  - the elapsed time of the connection (whether or not if failed).
+	  - the elapsed time of the connection (whether or not it failed).
+     <li> <b>time_resolve</b> (float)
+	  <br>
+	  - the elapsed time to perform a name resolution on the URL hostname.
+	  [Eddie 0.33+]
+     <li> <b>time_connect</b> (float)
+	  <br>
+	  - the elapsed time to connect to the HTTP(S) server.
+	  [Eddie 0.33+]
+     <li> <b>time_request</b> (float)
+	  <br>
+	  - the elapsed time to send the HTTP(S) request (ie: GET /) to the server.
+	  [Eddie 0.33+]
+     <li> <b>time_response</b> (float)
+	  <br>
+	  - the elapsed time to receive the HTTP(S) response from the server.
+	  [Eddie 0.33+]
+     <li> <b>timedout</b> (boolean)
+	  <br>
+	  - will be 1 (true) if the connection failed due to a socket timeout
+	  (timeout can be set with <code>request_timeout</code> argument);
+	  and 0 (false) if not.
+	  [Eddie 0.33+]
      <p>
      <i>If failed:</i>
      <li> <b>exception</b> (string)
