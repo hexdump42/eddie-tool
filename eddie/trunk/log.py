@@ -76,7 +76,7 @@ def sendadminlog():
     tmp.write( '\n' )
     tmp.write( "Greetings Otto Admin '%s', the following log messages are\n" % adminemail )
     tmp.write( 'being delivered to you for your perusal.  Enjoy.\n' )
-    tmp.write( "[LogLevel=%d AdminLevel=%d]\n" % (loglevel, adminlevel) )
+    tmp.write( "[Host:%s LogLevel=%d AdminLevel=%d]\n" % (hostname,loglevel, adminlevel) )
     tmp.write( '------------------------------------------------------------------------------\n' )
 
     for i in adminlog:

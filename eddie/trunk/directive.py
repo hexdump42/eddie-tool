@@ -183,7 +183,7 @@ class FS(Directive):
 	    self.varDict['fsavail'] = df.getAvail()
 	    self.varDict['fscapac'] = df.getPctused()
 	    self.varDict['fssize'] = df.getSize()
-	    self.varDict['fsdf'] = "%s" % df
+	    self.varDict['fsdf'] = "%s%s" % (dlist.dfheader,df)
 
     	    log.log( "<directive>FS(), rule '%s' was false, calling doAction()" % (self.rule), 6 )
     	    self.doAction()

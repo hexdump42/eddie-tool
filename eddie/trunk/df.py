@@ -25,9 +25,10 @@ class dfList:
 	self.hash = {}
 	self.mounthash = {}
 	self.list = []
+	self.dfheader = ""
 	 
 	rawList = os.popen('df -kFufs', 'r')
-	rawList.readline()
+	self.dfheader = rawList.readline()
  
 	for line in rawList.readlines():
 	    fields = string.split(line)
