@@ -80,110 +80,125 @@ N NAMEDRESTART:
 # define a PROC template to make the other PROC definitions much simpler
 #  PROCs using this template will inherit all the settings, but the settings
 #  can still be overridden per directive.
-PROC proctpl:   template=self           # indicates this is a template definition
-		scanperiod='20m'        # check processes every 20 mins
-		numchecks=3             # number of checks to make before alerting
-		checkwait=10            # interval between re-checks
-		rule='not exists'       # default rule to use
-		act2ok=COMMONFIXED(commonmsg.proc,0)
+PROC proctpl:
+    template=self           # indicates this is a template definition
+    scanperiod='20m'        # check processes every 20 mins
+    numchecks=3             # number of checks to make before alerting
+    checkwait=10            # interval between re-checks
+    rule='not exists'       # default rule to use
+    act2ok=COMMONFIXED(commonmsg.proc,0)
 
-PROC cron:	name='cron'
-		template=proctpl
-		action=COMMONRESTART(commonmsg.proc)
-PROC syslogd:	name='syslogd'
-		template=proctpl
-		action=SYSLOGRESTART(commonmsg.proc)
-PROC inetd:	name='inetd'
-		template=proctpl
-		action=COMMONALERT(commonmsg.proc,1)
-PROC sshd:	name='sshd'
-		template=proctpl
-		action=COMMONALERT(commonmsg.proc,1)
+PROC cron:
+    name='cron'
+    template=proctpl
+    action=COMMONRESTART(commonmsg.proc)
+PROC syslogd:
+    name='syslogd'
+    template=proctpl
+    action=SYSLOGRESTART(commonmsg.proc)
+PROC inetd:
+    name='inetd'
+    template=proctpl
+    action=COMMONALERT(commonmsg.proc,1)
+PROC sshd:
+    name='sshd'
+    template=proctpl
+    action=COMMONALERT(commonmsg.proc,1)
 
 
 # FS directives perform checks on filesystems.
-FS root:	fs='/'
-		rule='pctused >= 90'
-		action=COMMONALERT(commonmsg.fs,1)
-		act2ok=COMMONFIXED(commonmsg.fs,0)
-FS var:		fs='/var'
-		rule='pctused >= 90'
-		action=COMMONALERT(commonmsg.fs,2)
-		act2ok=COMMONFIXED(commonmsg.fs,0)
+FS root:
+    fs='/'
+    rule='pctused >= 90'
+    action=COMMONALERT(commonmsg.fs,1)
+    act2ok=COMMONFIXED(commonmsg.fs,0)
+FS var:
+    fs='/var'
+    rule='pctused >= 90'
+    action=COMMONALERT(commonmsg.fs,2)
+    act2ok=COMMONFIXED(commonmsg.fs,0)
 
 
 # PID directives use pidfiles to perform checks.
-PID sshd1:	pidfile='/var/run/sshd.pid'
-		rule='not exists'
-		action=COMMONALERT(commonmsg.pid,0)
-PID sshd2:	pidfile='/var/run/sshd.pid'
-		rule='exists and not running'
-		action=COMMONALERT(commonmsg.pidpr,1)
+PID sshd1:
+    pidfile='/var/run/sshd.pid'
+    rule='not exists'
+    action=COMMONALERT(commonmsg.pid,0)
+PID sshd2:
+    pidfile='/var/run/sshd.pid'
+    rule='exists and not running'
+    action=COMMONALERT(commonmsg.pidpr,1)
 
 
 # SP directives perform service port checks by examining the current list of
 #  active listening ports (eg: 'netstat -anv') and performing actions if the
 #  defined port/protocol/bind-address is not in the list.
-SP ssh:		port='ssh'		# port to check, as defined in /etc/services
-		protocol='tcp'		# protocol, eg: tcp or udp
-		bindaddr='0.0.0.0'	# '*' on Solaris, or '0.0.0.0' on Linux
-		rule='not exists'
-		action=COMMONALERT(commonmsg.sp,1)
+SP ssh:
+    port='ssh'		# port to check, as defined in /etc/services
+    protocol='tcp'		# protocol, eg: tcp or udp
+    bindaddr='0.0.0.0'	# '*' on Solaris, or '0.0.0.0' on Linux
+    rule='not exists'
+    action=COMMONALERT(commonmsg.sp,1)
 
 
 # COM directives can execute any commands and process rules based on the
 #  output (stdout, stderr or return value) of the commands.
 
 # This is one way to check the loadavg of a server.
-COM loadavg:	cmd="uptime | cut -d, -f4 | awk '{print $3}'"
-		rule="float(out) > 6.0"
-		action=elvin("Load on %(h)s is %(out)s")
+COM loadavg:
+    cmd="uptime | cut -d, -f4 | awk '{print $3}'"
+    rule="float(out) > 6.0"
+    action=elvin("Load on %(h)s is %(out)s")
 
 
 # LOGSCAN directive scans logfiles, looking for lines which match the given
 # regex and performs the given actions.
 LOGSCAN daemonlog:
-		file='/var/log/daemonlog'	# logfile to scan
-		regex='.*'			# regex to match
-		scanperiod='12h'		# how often to scan
-		action=email("alert", "daemonlog %(h)s:%(file)s", "-- Logscan matched %(linecount)d lines: --\n%(lines)s")
+    file='/var/log/daemonlog'	# logfile to scan
+    regex='.*'			# regex to match
+    scanperiod='12h'		# how often to scan
+    action=email("alert", "daemonlog %(h)s:%(file)s", "-- Logscan matched %(linecount)d lines: --\n%(lines)s")
 
-LOGSCAN priv:	file='/var/log/messages'	# logfile to scan
-		regex='.*priv.*'		# regex to match
-		scanperiod='2h'			# how often to scan
-		action=email("alert", "priv scan %(h)s:%(file)s", "-- Logscan matched %(linecount)d lines: --\n%(lines)s")
+LOGSCAN priv:
+    file='/var/log/messages'	# logfile to scan
+    regex='.*priv.*'		# regex to match
+    scanperiod='2h'			# how often to scan
+    action=email("alert", "priv scan %(h)s:%(file)s", "-- Logscan matched %(linecount)d lines: --\n%(lines)s")
 
 
 # PING directive pings hosts and allows checks to be made on the results.  The
 # simplest test is "not alive" meaning no pings returned.
-PING hostalive: host='10.1.1.1'
-                rule='not alive'
-                scanperiod='15m'
-                numchecks=2
-                checkwait='1m'
-                action=COMMONALERT(commonmsg.ping,2)
-                act2ok=COMMONFIXED(commonmsg.ping,1)
+PING hostalive:
+    host='10.1.1.1'
+    rule='not alive'
+    scanperiod='15m'
+    numchecks=2
+    checkwait='1m'
+    action=COMMONALERT(commonmsg.ping,2)
+    act2ok=COMMONFIXED(commonmsg.ping,1)
 
 
 # Alert if load-average exceeds 2.00
-SYS loadavg5:   rule="loadavg5 > 2.00"
-                action=email('alert', '%(h)s loadavg: %(loadavg5).02f')
-		scanperiod='5m'
-		console="%(state)s loadavg5=%(loadavg5).02f"
+SYS loadavg5:
+    rule="loadavg5 > 2.00"
+    action=email('alert', '%(h)s loadavg: %(loadavg5).02f')
+    scanperiod='5m'
+    console="%(state)s loadavg5=%(loadavg5).02f"
 
 
 # Check out mail server is responding
-PORT helium_eddie:
-		host='my.mail.server'
-		port=25
-		scanperiod='30m'
-		rule='not alive'
-		action=COMMONALERT(commonmsg.port,1)
-		act2ok=COMMONFIXED(commonmsg.port)
+PORT smtpcheck
+    host='my.mail.server'
+    port=25
+    scanperiod='30m'
+    rule='not alive'
+    action=COMMONALERT(commonmsg.port,1)
+    act2ok=COMMONFIXED(commonmsg.port)
 
 # Alert if /etc/passwd changes
-FILE passwd:    file='/etc/passwd'
-                rule='md5 != lastmd5'
-                scanperiod='1h'
-                action=ticker("%(file)s has changed"), email("alert","%(file)s has changed")
+FILE passwd:
+    file='/etc/passwd'
+    rule='md5 != lastmd5'
+    scanperiod='1h'
+    action=ticker("%(file)s has changed"), email("alert","%(file)s has changed")
 

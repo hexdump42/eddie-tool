@@ -7,24 +7,28 @@
 
 
 # Store root filesystem usage in RRD
-FS root_rrd:    fs='/'
-                rule="1"
-		scanperiod='5m'
-		action=elvinrrd("fs-%(h)s_root","used=%(used)s", "size=%(size)s")
-		console=None
+FS root_rrd:
+    fs='/'
+    rule="1"
+    scanperiod='5m'
+    action=elvinrrd("fs-%(h)s_root","used=%(used)s", "size=%(size)s")
+    console=None
 
 
 # Store 1, 5 and 15 minute load-average stats in RRD
-SYS loadavg1_rrd:       rule="1"        # always true
-                        scanperiod='1m'
-                        action=elvinrrd('loadavg1-%(h)s', 'loadavg1=%(loadavg1)f')
-                        console=None
-SYS loadavg5_rrd:       rule="1"        # always true
-                        scanperiod='5m'
-                        action=elvinrrd('loadavg5-%(h)s', 'loadavg5=%(loadavg5)f')
-                        console=None
-SYS loadavg15_rrd:      rule="1"        # always true
-                        scanperiod='15m'
-                        action=elvinrrd('loadavg15-%(h)s', 'loadavg15=%(loadavg15)f')
-                        console=None
+SYS loadavg1_rrd:
+    rule="1"        # always true
+    scanperiod='1m'
+    action=elvinrrd('loadavg1-%(h)s', 'loadavg1=%(loadavg1)f')
+    console=None
+SYS loadavg5_rrd:
+    rule="1"        # always true
+    scanperiod='5m'
+    action=elvinrrd('loadavg5-%(h)s', 'loadavg5=%(loadavg5)f')
+    console=None
+SYS loadavg15_rrd:
+    rule="1"        # always true
+    scanperiod='15m'
+    action=elvinrrd('loadavg15-%(h)s', 'loadavg15=%(loadavg15)f')
+    console=None
 
