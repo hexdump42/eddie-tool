@@ -241,6 +241,9 @@ class Directive:
 	#         "The following actions were taken:" if any were taken
 	self.Action.varDict['actnm'] = '[actnm not yet defined]'
 
+	# Set default output displayed on console connections
+	self.console_output = '%(state)s'
+
 	# directives keep state information about themselves
 	self.state = State(self)
 
@@ -312,13 +315,13 @@ class Directive:
 		    raise ParseFailure, "Error parsing argument '%s'" % (t)
 
 	# test for actionList which is always required
+	##NOT ANYMORE
 	# (except if directive a template only)
-	try:
-	    self.args.actionList
-	except AttributeError:
-	    if self.args.template != 'self':
-		raise ParseFailure, "Action not specified"
-
+	#try:
+	#    self.args.actionList
+	#except AttributeError:
+	#    if self.args.template != 'self':
+	#	raise ParseFailure, "Action not specified"
 
 	try:
 	    self.args.scanperiod
@@ -344,6 +347,12 @@ class Directive:
 		self.args.checkwait = utils.val2secs( self.args.checkwait )
 	except:
 	    raise ParseFailure, "checkwait argument has incorrect value '%s'"%(self.args.checkwait)
+
+	# Set console_output if possible
+	try:
+	    self.console_output = self.args.console
+	except:
+	    pass	# console argument not set, so leave as default
 
 	if self.args.template == 'self':
 	    # jump out of token parsing if this is a template only
@@ -548,6 +557,23 @@ class Directive:
 	    return
 
 	log.log( "<directive>Directive.safeCheck(), ID '%s', self.docheck() returned successfully" % (self.state.ID), 7 )
+
+
+    def console_str(self):
+	"""Return the string that is to be output on console connections."""
+
+	if self.console_output == None:
+	    return None
+
+	# setup variables available to console_output string
+	vars = {}
+	vars.update(self.Action.varDict)
+	vars['state'] = self.state.status
+
+	# create console string by substituting variables
+	cstr = self.console_output % vars
+	return cstr
+
 
 
 ##

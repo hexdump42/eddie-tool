@@ -30,10 +30,10 @@ import sys, os, string, tokenize
 # Eddie specific modules
 import config, log, utils
 
-#
-# State of tokenization
-#
+
 class State:
+    """Keep state of tokenization as config is being parsed."""
+
     def __init__(self, Config):
 	self.groupStack = utils.Stack()	# Stack to store groups on temporarily
 	self.direcStack = utils.Stack()	# Stack to store direcs on temporarily
@@ -48,7 +48,6 @@ class State:
 
     # Reset state
     def reset(self):
-	#self.state = None	# clear current config state
 	self.toklist = []	# clear token list
 	self.toktypes = []	# clear token types list
 	self.direcmode = 0	# whether currently parsing directive arguments
@@ -58,12 +57,13 @@ class State:
 	self.notfirstdirecline = 0	# first directive line marker
 
 
-    # Eddie's token eater!
-    # - Parses the tokens given to it (from tokenize.tokenize()) and uses them
-    #   to create the configuration information.
-    #
     def tokeneater(self, ttype, token, (srow, scol), (erow, ecol), line):
+	"""Eddie's token eater!
+	   Parses the tokens given to it (from tokenize.tokenize()) and uses them
+	   to create the configuration information."""
+
 	try:
+	    #DEBUG
 	    #print " "
 	    #print "direcmode:",self.direcmode
 	    #print "direcindent:",self.direcindent
@@ -77,32 +77,31 @@ class State:
 	    #print "%d,%d-%d,%d:\t%s\t%s" % \
 	    #    (srow, scol, erow, ecol, toktype, repr(token))
 
-	    # Don't care about single CRs
+	    # Don't care about single CRs (empty lines) so skip over them
 	    if token == '\012' and len(self.toklist) == 0:
 		return
 
 	    # Handle indentation/dedentations...
 	    if toktype == "INDENT":
 		self.indent = self.indent + 1
-		if self.direcmode == 0:		# if not waiting for directive args
-		    self.direcStack.push(self.direc)        # Keep track of direc's
-		    self.reset()            # reset state   
+		if self.direcmode == 0:			# if not waiting for directive args:
+		    self.direcStack.push(self.direc)		# keep track of direc's
+		    self.reset()				# reset state   
 		return
 
-	    elif toktype == "DEDENT":
+	    if toktype == "DEDENT":
 		self.indent = self.indent - 1
-		if self.indent < 0:
-		    print "INDENT ERROR!!!! TODO"
-		    raise 'Indent Error...'
-		if self.direcmode == 0:		# if not waiting for directive args
-		    self.prevdirec = self.direcStack.pop()  # Restore previous direc
+		if self.indent < 0:			# this should not happen...
+		    raise config.ParseFailure, "Indentation error."
+		if self.direcmode == 0:			# if not waiting for directive args:
+		    self.prevdirec = self.direcStack.pop()	# Restore previous direc
 		    if self.prevdirec.type == 'Config':
 			self.Config = self.groupStack.pop()
 		    self.direc = self.prevdirec
-		    self.reset()            # reset state
+		    self.reset()				# reset state
 
 		elif self.indent <= self.direcindent:	# got all directive arguments
-		    #print "!! BACK TO DIREC INDENT - TOKENPARSING NOW"
+		    # Now allow the directive to parse the tokens
 		    try:
 			self.direc.Config = self.Config
 			self.direc.tokenparser(self.direcargs, self.directypes, self.indent)
@@ -110,73 +109,46 @@ class State:
 			log.log( "<parseConfig>tokeneater(), directive is a Template, args: %s" % (dir(self.direc.args)), 8 )
 		    self.prevdirec = self.direcStack.top()
 		    self.direc.parent = self.prevdirec	# show directive its parent
-		    #print "!!  self.direc.parent=",self.direc.parent
 
 		    if self.indent < self.direcindent:	# back to previous directive level
 			self.prevdirec = self.direcStack.pop()
 			self.direc = self.prevdirec
 
-		    self.reset()		# reset state
-		#print "!!!! self.direcStack:",self.direcStack
+		    self.reset()			# reset state
 
 		return
 
-	    elif toktype == "ERRORTOKEN" and token == '$':
-		# Special case for '$' symbols which the standard Python parser
-		# tokenizes as an error token but we will actually use it to
-		# indicate a variable-name following it.
-		# !! This functionality should disappear as it breaks the Python-like flow !!
-		self.toklist.append(token)
-		self.toktypes.append("DOLLAR")	# make up new token type !
-	    elif toktype == "ERRORTOKEN" and (token == ' ' or token == '\011'):
-		# ERRORTOKEN's which are spaces or tabs can be ignored for now.
-		# They are probably found before a '$'...
-		return
-	    elif toktype == "ERRORTOKEN":
-		# Raise a ParseFailure for any other ERRORTOKEN
+	    if toktype == "ERRORTOKEN":
+		# Raise a ParseFailure for ERRORTOKEN
 		raise config.ParseFailure, "Illegal characters in config."
-	    elif toktype != "COMMENT" and token != "\012":
-		# If token not a comment, newline, indent or dedent then add to our list of
-		# tokens.
-		self.toklist.append(token)
-		self.toktypes.append(toktype)
 
-#	    # Substitute $VAR variables for DEF's
-#	    if len(self.toklist) > 1 and self.toktypes[-2] == "DOLLAR":
-#		if toktype != "NAME":
-#		    # '$' must be followed by a "NAME" toktype
-#		    raise config.ParseFailure, "'$' followed by illegal characters."
-#		else:
-#		    # Replace last two tokens with variable substitution
-#		    try:
-#			del self.toklist[-2:]
-#			self.toklist.append(self.Config.defDict[token])
-#		    except KeyError:
-#			raise config.ParseFailure, "Variable substitution error for $%s" % token
-#		    del self.toktypes[-2:]
-#		    self.toktypes.append("NAME")
-
-	    # Substitute ALIAS's
 	    if toktype == "NAME":
-		if self.Config.aliasDict.has_key(token):
+		# Assign 'None' values properly
+		if token == "None":
+		    token = None
+
+		# Substitute ALIAS variables if possible
+		elif self.Config.aliasDict.has_key(token):
 		    aval = self.Config.aliasDict[token]
 
 		    # replace token with value and fix toklist
 		    if type(aval) == type("string"):
 			aval = '"%s"'%(aval)
-		    del self.toklist[-1]
-		    self.toklist.append(aval)
 		    token = aval
 		    log.log( "<parseConfig>tokeneater(), ALIAS substituted %s for %s" % (aval,token), 8 )
+
+	    if toktype != "COMMENT" and token != "\012":
+		# If token not a comment, newline, indent or dedent then add to our list of
+		# tokens.
+		self.toklist.append(token)
+		self.toktypes.append(toktype)
 
 	    # DEBUG
 	    #print "toklist:",self.toklist
 
-	    #if self.direcmode > 0 and token=='\012' and self.indent == self.direcindent and toktype == "NAME":
 	    if self.direcmode > 0 and token=='\012':
 		self.direcargs = self.direcargs + self.toklist
 		self.directypes = self.directypes + self.toktypes
-		#print "**direcargs:",self.direcargs
 		self.toklist = []	# clear token list
 		self.toktypes = []	# clear token types list
 		self.notfirstdirecline = 1	# passed first directive line
@@ -186,7 +158,6 @@ class State:
 	    # indent level, and this not first directive line, directive must be ready
 	    # for creation...
 	    if self.direcmode > 0 and self.indent == self.direcindent and self.notfirstdirecline == 1:
-		#print "!! BACK TO DIREC INDENT AND NOT FIRSTLINE - TOKENPARSING NOW"
 		try:
 		    self.direc.Config = self.Config
 		    self.direc.tokenparser(self.direcargs, self.directypes, self.indent)
@@ -194,7 +165,6 @@ class State:
 		    log.log( "<parseConfig>tokeneater(), directive is a Template, args: %s" % (dir(self.direc.args)), 8 )
 		self.prevdirec = self.direcStack.top()
 		self.direc.parent = self.prevdirec	# show directive its parent
-		#print "!!  self.direc.parent=",self.direc.parent
 
 		savetoklist = self.toklist	# save token list - not parsed yet
 		savetoktypes = self.toktypes	# save token types
@@ -205,7 +175,6 @@ class State:
 
 
 	    # Only continue if the last token is a ':' or CR
-	    #if len(self.toklist) < 1 or self.direcmode > 0 or (self.toklist[-1] != ':' and self.toklist[-1] != '\012'):
 	    if len(self.toklist) < 1 or (self.direcmode > 0 and token != '\012') or (self.direcmode == 0 and token != ':' and token != '\012'):
 		return
 
@@ -277,8 +246,6 @@ class State:
 
 	except config.ParseFailure, msg:
 	    parseFailure( msg, (srow, scol), (erow, ecol), line, self.filename )
-	    #print "PARSEFAILURE: ",msg,(srow, scol), (erow, ecol), line
-	    ## TODO: probably should return to top level properly...?
             log.sendadminlog()
 	    sys.exit(-1)
 

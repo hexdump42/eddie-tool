@@ -29,9 +29,9 @@
 import re, string, threading, os, commands, sys
 
 
-##
-## General purpose stack object
 class Stack:
+    """General purpose stack object."""
+
     def __init__(self):
 	self.stack = []
 
@@ -59,14 +59,14 @@ class Stack:
 	    return self.stack[-1]
 
 
-##
-## trickySplit( line, delim ) - split line by delimiter delim, but ignoring
-## delimiters found inside ()'s, []'s, {}'s, '''s and ""'s.
-##
-## eg: trickySplit( "email(root,'hi there'),system('echo hi, mum')", ',' )
-## would return: [ "email(root,'hi there')", "system('echo hi, mum')" ]
-##
 def trickySplit( line, delim ):
+    """trickySplit( line, delim ) - split line by delimiter delim, but ignoring
+       delimiters found inside ()'s, []'s, {}'s, '''s and ""'s.
+      
+       eg: trickySplit( "email(root,'hi there'),system('echo hi, mum')", ',' )
+       would return: [ "email(root,'hi there')", "system('echo hi, mum')" ]
+    """
+
     parenCnt = 0		# count of ()'s
     curlyCnt = 0		# count of {}'s
     squareCnt = 0		# count of []'s
@@ -108,13 +108,12 @@ def trickySplit( line, delim ):
     return list
 
 
-##
-## quoteArgs( list ) - cycle through list of strings, if the string looks like a
-##   function call (eg: "blah( a, b, c )") then put quotes around each of the
-##   arguments.  [Useful if you want to pass the string to eval()].  eg: the
-##   previous example would be converted to 'blah( "a", "b", "c" )'.
-##
 def quoteArgs( list ):
+    """quoteArgs( list ) - cycle through list of strings, if the string looks like a
+       function call (eg: "blah( a, b, c )") then put quotes around each of the
+       arguments.  [Useful if you want to pass the string to eval()].  eg: the
+       previous example would be converted to 'blah( "a", "b", "c" )'."""
+
     newlist = []
     sre = re.compile( "([\t ]*[A-Za-z0-9_]*[\t ]*\()(.*)([\t ]*\)[\t ]*)" )
     for s in list:
@@ -142,25 +141,29 @@ def quoteArgs( list ):
 	
  
 
-##
-## charpresent( s, chars ) - returns 1 if ANY of the characters present in the string
-##   chars is found in the string s.  If none are found, 0 is returned.
-##
 def charpresent( s, chars ):
+    """charpresent( s, chars ) - returns 1 if ANY of the characters present in the string
+       chars is found in the string s.  If none are found, 0 is returned."""
+
     for c in chars:
 	if string.find( s, c ) != -1:
 	    return 1
     return 0
 
 
-##
-## stripquote( s ) - strips start & end of string s of whitespace then
-##   strips " or ' from start & end of string if found - repeats stripping
-##   " and ' until none left.
-##
 def stripquote( s ):
+    """stripquote( s ) - strips start & end of string s of whitespace then
+       strips " or ' from start & end of string if found - repeats stripping
+       " and ' until none left."""
+
+    # if not a string, don't touch it
+    if type(s) != type("string"):
+	return s
+
+    # strip whitespace from ends
     s = string.strip( s )
 
+    # strip quotes from ends (only in pairs)
     while len(s) > 0 and (s[0] in ["'", '"'] and s[-1] in ["'", '"']):
 	if s[0] == "'" or s[0] == '"':
 	    s = s[1:]
@@ -170,11 +173,10 @@ def stripquote( s ):
     return s
 
 
-##
-## atom( ch ) - ascii-to-multiplyer - converts ascii char to a time multiplyer.
-##   eg: s=seconds, m=minutes, h=hours, d=days, w=weeks, c=calendar=months, y=years
-##
 def atom( ch ):
+    """atom( ch ) - ascii-to-multiplyer - converts ascii char to a time multiplyer.
+       eg: s=seconds, m=minutes, h=hours, d=days, w=weeks, c=calendar=months, y=years"""
+
     if ch == 's' or ch == 'S':
 	mult = 1
     elif ch == 'm' or ch == 'M':
@@ -196,6 +198,8 @@ def atom( ch ):
 	
 
 def val2secs( value ):
+    """Convert a time string to seconds."""
+
     if re.search( '[mshdwcyMSHDWCY]', value ) == None:
 	return string.atoi(value)
     timech = value[-1]

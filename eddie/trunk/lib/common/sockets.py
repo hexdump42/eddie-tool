@@ -75,9 +75,10 @@ def printState(Config, ccsock):
 	list = Config.ruleList[d]
 	if list != None:
 	    for i in list:
-		# if directive template is 'self', do not schedule it
-		if i.args.template != 'self':
-		    ccsock.send("%s%s - %s\n" % (cname, i, i.state.status))
+		# do not show templates or directives where console=None
+		if i.args.template != 'self' and i.console_output != None:
+		    #ccsock.send("%s%s - %s\n" % (cname, i, i.state.status))
+		    ccsock.send("%s%s - %s\n" % (cname, i, i.console_str()))
 
     for c in Config.groups:
 	if c.name == log.hostname or (c.name in Config.classDict.keys() and log.hostname in Config.classDict[c.name]):
@@ -107,7 +108,7 @@ def listen(s, Config, die_event):
             ccsock, addr = s.accept()
 	    log.log( "<sockets>listen(), accepted connection from %s:%d"%addr, 6 )
 
-            ccsock.send('Eddie Console Gateway')
+            ccsock.send('Eddie Console Gateway\n')
 
 	    printState( Config, ccsock )
 
