@@ -12,7 +12,7 @@
 ##
 
 import os, string, re, time
-import log
+import log, utils
 
 # This fetches data by parsing system calls of common commands.  This was done because
 # it was quick and easy to implement and port to multiple platforms.  I know this is
@@ -115,7 +115,8 @@ class tcptable:
 	self.numsockets = 0
 
 	# get the tcp stats
-	rawList = os.popen('netstat -anA inet -t', 'r')
+	#rawList = os.popen('netstat -anA inet -t', 'r')
+	rawList = utils.safe_popen('netstat -anA inet -t', 'r')
 
 	# skip header line
 	rawList.readline()
@@ -133,7 +134,8 @@ class tcptable:
 
 	    self.numsockets = self.numsockets + 1	# count number of tcp sockets
 
-	rawList.close()
+	#rawList.close()
+	utils.safe_pclose( rawList )
 
 
     def __getitem__(self, key):
@@ -180,7 +182,8 @@ class udptable:
 	self.numsockets = 0
 
 	# get the udp stats
-	rawList = os.popen('netstat -anA inet -u', 'r')
+	#rawList = os.popen('netstat -anA inet -u', 'r')
+	rawList = utils.safe_popen('netstat -anA inet -u', 'r')
 
 	# skip header lines (2)
 	rawList.readline()
@@ -199,7 +202,8 @@ class udptable:
 
 	    self.numsockets = self.numsockets + 1	# count number of tcp sockets
 
-	rawList.close()
+	#rawList.close()
+	utils.safe_pclose( rawList )
 
 
     def __getitem__(self, key):
@@ -250,7 +254,8 @@ class iftable:
 	self.numinterfaces = 0
 
 	# get the interface stats
-	rawList = os.popen('netstat -i', 'r')
+	#rawList = os.popen('netstat -i', 'r')
+	rawList = utils.safe_popen('netstat -i', 'r')
 
 	# skip header lines
 	rawList.readline()
@@ -269,7 +274,8 @@ class iftable:
 
 	    self.numinterfaces = self.numinterfaces + 1		# count number of interfaces
 
-	rawList.close()
+	#rawList.close()
+	utils.safe_pclose( rawList )
 
 
     def __getitem__(self, key):

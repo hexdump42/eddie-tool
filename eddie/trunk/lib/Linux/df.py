@@ -1,4 +1,3 @@
-#!/opt/local/bin/python 
 ## 
 ## File		: df.py 
 ## 
@@ -11,10 +10,9 @@
 ## $Id$
 ##
 
-import os
-import string
-import log
-import history
+import os, string
+import log, history, utils
+
 
 # This fetches data by parsing system calls of common commands.  This was done because
 # it was quick and easy to implement and port to multiple platforms.  I know this is
@@ -32,7 +30,8 @@ class dfList:
 	self.list = []
 	self.dfheader = ""
 	 
-	rawList = os.popen('df -text2', 'r')
+	#rawList = os.popen('df -text2', 'r')
+	rawList = utils.safe_popen('df -text2', 'r')
 	self.dfheader = rawList.readline()
  
 	for line in rawList.readlines():
@@ -42,7 +41,8 @@ class dfList:
 	    self.hash[fields[0]] = p		# dict of filesystem devices
 	    self.mounthash[fields[5]] = p	# dict of mount points
 
-	rawList.close()
+	#rawList.close()
+	utils.safe_pclose( rawList )
 
 
     def __str__(self):

@@ -114,7 +114,8 @@ class tcptable:
 	self.numsockets = 0
 
 	# get the tcp stats
-	rawList = os.popen('echo not implemented yet', 'r')
+	#rawList = os.popen('echo not implemented yet', 'r')
+	rawList = utils.safe_popen('echo not implemented yet', 'r')
 
 	# skip header line
 	rawList.readline()
@@ -132,7 +133,8 @@ class tcptable:
 
 	    self.numsockets = self.numsockets + 1	# count number of tcp sockets
 
-	rawList.close()
+	#rawList.close()
+	utils.safe_pclose( rawList )
 
 
     def __getitem__(self, key):
@@ -179,7 +181,8 @@ class udptable:
 	self.numsockets = 0
 
 	# get the udp stats
-	rawList = os.popen('echo not implemented yet', 'r')
+	#rawList = os.popen('echo not implemented yet', 'r')
+	rawList = utils.safe_popen('echo not implemented yet', 'r')
 
 	# skip header lines (2)
 	rawList.readline()
@@ -198,7 +201,8 @@ class udptable:
 
 	    self.numsockets = self.numsockets + 1	# count number of tcp sockets
 
-	rawList.close()
+	#rawList.close()
+	utils.safe_pclose( rawList )
 
 
     def __getitem__(self, key):
@@ -249,7 +253,8 @@ class iftable:
 	self.numinterfaces = 0
 
 	# get the interface stats
-	rawList = os.popen('echo not implemented yet', 'r')
+	#rawList = os.popen('echo not implemented yet', 'r')
+	rawList = utils.safe_popen('echo not implemented yet', 'r')
 
 	# skip header lines
 	rawList.readline()
@@ -268,7 +273,8 @@ class iftable:
 
 	    self.numinterfaces = self.numinterfaces + 1		# count number of interfaces
 
-	rawList.close()
+	#rawList.close()
+	utils.safe_pclose( rawList )
 
 
     def __getitem__(self, key):

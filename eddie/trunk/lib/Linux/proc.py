@@ -1,4 +1,3 @@
-#!/opt/local/bin/python 
 ## 
 ## File		: proc.py 
 ## 
@@ -11,8 +10,8 @@
 ## $Id$
 ##
 
-import os, string, time
-import log
+import os, string, time, threading
+import log, utils
 
 # This fetches data by parsing system calls of common commands.  This was done because
 # it was quick and easy to implement and port to multiple platforms.  I know this is
@@ -21,6 +20,7 @@ import log
 
 # List of interpreters - default empty
 interpreters = []
+
 
 ##
 ## Class procList - holds a list of running processes and related information
@@ -34,68 +34,26 @@ class procList:
     def __init__(self):
 	self.refresh_time = 0	# process list must be refreshed at first request
 
+	self.semaphore = threading.Semaphore()	# must be thread-friendly now
+
+
+    ##################################################################
+    # Public, thread-safe, methods
 
     def refresh(self):
-	"""Refresh the process list"""
+	"""Force a refresh of the process list."""
 
-	self.getProcList()
-
-	# new refresh time is current time + refresh rate (seconds)
-	self.refresh_time = time.time() + self.refresh_rate
-
-
-    def checkCache(self):
-	"""Check if cached procList data is invalid, ie: refresh_time has
-	been exceeded."""
-
-	if time.time() > self.refresh_time:
-	    log.log( "<proc>checkCache(), refreshing procList", 8 )
-	    self.refresh()
-	else:
-	    log.log( "<proc>checkCache(), using cache'd procList", 8 )
-
-
-    def getProcList(self):
-	self.hash = {}		# dict of processes keyed by pid
-	self.list = []		# list of processes
-	self.nameHash = {}	# dict of processes keyed by process name
-	 
-	rawList = os.popen('ps -e -o "s user ruser group rgroup uid ruid gid rgid pid ppid pgid sid pri opri pcpu pmem vsz rss osz time etime stime f c tty addr nice class wchan fname comm args"', 'r')
-	#rawList = os.popen(' ps -e -o "pid user time pcpu s args" ', 'r')
-	rawList.readline()
- 
-	for line in rawList.readlines():
-	    p = proc(line)
-	    self.list.append(p)
-	    self.hash[p.pid] = p
-	    self.nameHash[string.split(p.comm, '/')[-1]] = p
-
-	rawList.close()
-
-	log.log( "<proc>procList(), new proc list created", 8 )
-
-
-    def __str__(self):
-
-	# note: don't do cache check - assume we want to display current data
-
-	rv = 'PID     USER            COMMAND                 TIME            CPU     STATUS\n'
- 	for item in self.list:
- 	    rv = rv + str(item) + '\n'
-
-	return(rv)
-	    
-
-#    def keys(self):
-#        return(self.hash.keys())
+	self.semaphore.acquire()
+	self._refresh()
+	self.semaphore.release()
 
 
     def procExists(self, procname):
 	"""Searches the 'ps' dictionary and returns number of occurrences
 	of procname."""
 
-	#print "** Checking for '%s'" % (procname)
-	self.checkCache()	# refresh process data if necessary
+	self.semaphore.acquire()
+	self._checkCache()	# refresh process data if necessary
 
 	count = 0		# count number of occurrences of 'procname'
 	for i in self.list:
@@ -106,6 +64,8 @@ class procList:
 		#print "command: '%s' i.procname: '%s'  procname: '%s'" % (command,i.comm,procname)
 		count = count + 1
 
+	self.semaphore.release()
+
 	return count
 
 
@@ -113,39 +73,115 @@ class procList:
         """Searches the 'ps' dictionary and returns number of occurrences
 	of pid (should be 0 or 1 for any sane system...)"""
 
-	self.checkCache()	# refresh process data if necessary
+	self.semaphore.acquire()
+	self._checkCache()	# refresh process data if necessary
 
 	count = 0		# count number of occurrences of 'pid'
 	for i in self.list:
 	    if i.pid == pid:
 		count = count + 1
 
+	self.semaphore.release()
+
 	return count
+
+
+    def getList(self):
+	"""Return copy of process list."""
+
+	return self.list
 
 
     def __getitem__(self, name):
 	"""Overload '[]', eg: returns corresponding proc object for given
 	process name."""
 
-	self.checkCache()	# refresh process data if necessary
+	self.semaphore.acquire()
+	self._checkCache()	# refresh process data if necessary
 
 	try:
-	    return self.nameHash[name]
+	    r = self.nameHash[name]
 	except KeyError:
-	    return None
+	    r = None
+
+	self.semaphore.release()
+
+	return r
 
 
     def allprocs(self):
 	"""Return dictionary of all processes (which are dictionaries of each process' details."""
 
-	self.checkCache()	# refresh process data if necessary
+	self.semaphore.acquire()
+	self._checkCache()	# refresh process data if necessary
 
 	allprocs = {}
 
 	for p in self.nameHash.keys():
 	    allprocs[p] = self.nameHash[p].procinfo()
 
+	self.semaphore.release()
+
 	return allprocs
+
+    def __str__(self):
+
+	# note: don't do cache check - assume we want to display current data
+
+	rv = 'PID     USER            COMMAND                 TIME            CPU     STATUS\n'
+	self.semaphore.acquire()
+ 	for item in self.list:
+ 	    rv = rv + str(item) + '\n'
+	self.semaphore.release()
+
+	return(rv)
+	    
+
+
+
+    ##################################################################
+    # Private methods.  No thread safety if not using public methods.
+
+    def _refresh(self):
+	self._getProcList()
+
+	# new refresh time is current time + refresh rate (seconds)
+	self.refresh_time = time.time() + self.refresh_rate
+
+
+    def _checkCache(self):
+	"""Check if cached procList data is invalid, ie: refresh_time has
+	been exceeded."""
+
+	if time.time() > self.refresh_time:
+	    log.log( "<proc>checkCache(), refreshing procList", 8 )
+	    self._refresh()
+	else:
+	    log.log( "<proc>checkCache(), using cache'd procList", 8 )
+
+
+    def _getProcList(self):
+	self.hash = {}		# dict of processes keyed by pid
+	self.list = []		# list of processes
+	self.nameHash = {}	# dict of processes keyed by process name
+	 
+	rawList = utils.safe_popen('ps -e -o "s user ruser group rgroup uid ruid gid rgid pid ppid pgid sid pri opri pcpu pmem vsz rss osz time etime stime f c tty addr nice class wchan fname comm args"', 'r')
+	#rawList = utils.safe_popen(' ps -e -o "pid user time pcpu s args" ', 'r')
+	rawList.readline()
+ 
+	for line in rawList.readlines():
+	    p = proc(line)
+	    self.list.append(p)
+	    self.hash[p.pid] = p
+	    self.nameHash[string.split(p.comm, '/')[-1]] = p
+
+	utils.safe_pclose( rawList )
+	#rawList.close()
+
+	log.log( "<proc>procList(), new proc list created", 8 )
+
+#    def keys(self):
+#        return(self.hash.keys())
 
 
 ##
