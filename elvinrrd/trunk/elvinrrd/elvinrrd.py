@@ -39,6 +39,9 @@ class RRDstore:
 	if '*' in self.elvinrrd:	# if a wildcard, create a reg-exp
 	    self.regexp = string.replace( self.elvinrrd, '*', "(.*)" )
 
+	if debug:
+	    log( "Created RRDstore object %s" % (self) )
+
 
     def __str__(self):
 	return "[elvinrrd=%s rrdfile=%s store=%s create=%s]" % (self.elvinrrd, self.rrdfile, self.store, self.create)
@@ -122,13 +125,33 @@ class storeconsumer(eddieElvin):
 	    if '*' in r.create:
 	        create = str(string.replace( r.create, '*', inx.group(1) ))	# replace all '*' with first string from match
 
-	try:
-	    val = msg[u'%s'%(store)]
-	except KeyError, err:
-	    log( "KeyError: %s, message %s" % (err, msg) )
-	    return 1
+	if len(store) == 1:
+	    # only one variable to store, use default method
+	    try:
+		val = msg[u'%s'%(store[0])]
+	    except KeyError, err:
+		log( "KeyError: %s, message %s" % (err, msg) )
+		return 1
 
-	u = (rrdfile, "N:%s" % (str(val)))
+	    u = (rrdfile, "N:%s" % (str(val)))
+
+	else:
+	    # multiple variables to store - must name them
+	    ds = "-t"
+	    n = "N:"
+	    for s in store:
+		try:
+		    val = msg[u'%s'%(s)]
+		except KeyError, err:
+		    log( "KeyError: %s, message %s" % (err, msg) )
+		    return 1
+		ds = "%s%s:" % (ds,s)
+		n = "%s%s:" % (n,str(val))
+
+	    ds = ds[:-1]    # remove ':' from end
+	    n = n[:-1]      # remove ':' from end
+	    u = (rrdfile, ds, n)
+
 	if debug:
 	    log( 'rrd.update( %s )' % (u,) )
 
@@ -142,19 +165,20 @@ class storeconsumer(eddieElvin):
 		    if logfile:
 			log( "IOError: %s, message %s" % (err, msg) )
 		else:
-                    rrd_dir = os.path.dirname( rrdfile )
+		    rrd_dir = os.path.dirname( rrdfile )
 
-                    if not os.path.exists( rrd_dir ):
+		    if not os.path.exists( rrd_dir ):
 			if verbose:
 			    log( "Creating directory '%s'" % (rrd_dir) )
-                        os.makedirs( rrd_dir )
+			os.makedirs( rrd_dir )
 
 		    createargs = (rrdfile,) + tuple(create.split())
 		    if verbose:
 			log( "Creating rrd: %s" % (createargs,) )
 		    self.rrd.create( createargs )
+		    self.rrd.update( u )
 	    else:
-	        sys.stderr.write( "IOError: %s, message %s\n" % (err, msg) )
+		sys.stderr.write( "IOError: %s, message %s\n" % (err, msg) )
 		if logfile:
 		    log( "IOError: %s, message %s\n" % (err, msg) )
 
@@ -217,6 +241,10 @@ def ReadConfig( filename ):
 		    rrdfile = inx.group(2)
 		elif inx.group(1) == 'store':
 		    store = inx.group(2)
+		    if ',' in store:		# list of multiple store keys
+			store = string.split(store, ',')
+		    else:
+			store = [store,]
 		elif inx.group(1) == 'create':
 		    create = inx.group(2)
 		else:
