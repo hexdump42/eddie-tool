@@ -136,7 +136,9 @@ class procList(datacollect.DataCollect):
 	self.data.nameHash = {}		# dict of processes keyed by process name
 
 	# TODO: read process info from /proc instead of parsing 'ps' output...
-	rawList = utils.safe_popen('ps -e -o "s user ruser group rgroup uid ruid gid rgid pid ppid pgid sid pri opri pcpu pmem vsz rss osz time etime stime f c tty addr nice class wchan fname comm args"', 'r')
+	#rawList = utils.safe_popen('ps -e -o "s user ruser group rgroup uid ruid gid rgid pid ppid pgid sid pri opri pcpu pmem vsz rss osz time etime stime f c tty addr nice class wchan fname comm args"', 'r')
+	# remove wchan field - it sometimes causes kernel warnings
+	rawList = utils.safe_popen('ps -e -o s,user,ruser,group,rgroup,uid,ruid,gid,rgid,pid,ppid,pgid,sid,pri,opri,pcpu,pmem,vsz,rss,osz,time,etime,stime,f,c,tty,addr,nice,class,fname,comm,args', 'r')
 	rawList.readline()
  
 	for line in rawList.readlines():
@@ -194,7 +196,7 @@ class proc:
 	    # Zombied (or <defunct>) processes don't show any information after addr
 	    self.nice =    ""
 	    self.sclass =  ""
-	    self.wchan =   ""
+	    #self.wchan =   ""
 	    self.fname =   "<defunct>"
 	    self.comm =    "<defunct>"
 	    self.args =    "<defunct>"
@@ -202,18 +204,18 @@ class proc:
 	else:
 	    self.nice =    fields[27]       # decimal value of the system scheduling priority of the process
 	    self.sclass =  fields[28]       # scheduling class of the process
-	    self.wchan =   fields[29]       # address of an event for which the process is sleeping (if -, the process is running)
-	    self.fname =   fields[30]       # first 8 bytes of the base name of the process's executable file
-	    self.comm =    fields[31]       # name of the command being executed (argv[0] value) as a string
-	    self.args =    string.join(fields[32:], " ")      # command with all its arguments as a string (truncated to 80 bytes in Solaris)
+	    #self.wchan =   fields[29]       # address of an event for which the process is sleeping (if -, the process is running)
+	    self.fname =   fields[29]       # first 8 bytes of the base name of the process's executable file
+	    self.comm =    fields[30]       # name of the command being executed (argv[0] value) as a string
+	    self.args =    string.join(fields[31:], " ")      # command with all its arguments as a string (truncated to 80 bytes in Solaris)
 
 	    # Actual 'command' name with no path or interpreter - Eddie will mainly use this
 	    self.procname = string.split(self.comm, '/')[-1]
 	    if self.procname in interpreters:
 		# this command is an interpreter (eg: 'perl', 'python', etc)
 		# let's set procname to the name of the script (if there is a script)
-		if len(fields) > 33:
-		    i = 33
+		if len(fields) > 32:
+		    i = 32
 		    self.procname = string.split(fields[i], '/')[-1]
 		    # ignore arguments (strings starting with '-')
 		    try:
@@ -267,7 +269,7 @@ class proc:
 	info['addr'] = self.addr
 	info['nice'] = self.nice
 	info['sclass'] = self.sclass
-	info['wchan'] = self.wchan
+	#info['wchan'] = self.wchan
 	info['fname'] = self.fname
 	info['comm'] = self.comm
 	info['args'] = self.args
