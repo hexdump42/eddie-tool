@@ -21,23 +21,40 @@ import log
 ##
 class netstatList:
     def __init__(self):
-	self.hash = {}		# dict of processes keyed by pid
-	self.list = []		# list of processes
-	 
-	rawList = os.popen('netstat -anf inet', 'r')
-	rawList.readline()
- 
-	for line in rawList.readlines():
-	    fields = string.split(line)
-	    p = netstat(fields)
-	    self.list.append(p)
-	    self.hash[p.port] = p
+	self.hash = {}		# dict of bindings keyed by port
+	self.list = []		# list of bindings
 
-	log.log( "<netstat>netstatList(), created new instance", 8 )
+	self.regexp = ''
+	 
+	# ok first we want the tcp stats
+	rawList = os.popen('netstat -anf inet | grep LISTEN', 'r')
+
+	for line in rawList.readlines():
+	    #print line
+	    # fields = string.split(line)
+	    # p = netstat(fields)
+	    self.list.append(line)
+	    # self.hash[p.port] = p
+
+	# ok first we want the tcp stats
+	rawList = os.popen('netstat -anf inet -P udp', 'r')
+
+	# skip over header gumph
+	rawList.readline()
+	rawList.readline()
+	rawList.readline()
+	rawList.readline()
+
+	for line in rawList.readlines():
+	    #print line
+	    self.list.append(line)
+
+	# log.log( "<netstat>netstatList(), created new instance", 8 )
 	
     def __str__(self):
+	rv = ""
  	for item in self.list:
- 	    rv = rv + str(item) + '\n'
+	    rv = rv + str(item)
 
 	return(rv)
 	    
@@ -46,13 +63,13 @@ class netstatList:
         return(self.hash.keys())
 
     # Searches the 'ps' dictionary and returns number of occurrences of procname
-    def portExists(self, port):
-	count = 0		# count number of occurrences of 'procname'
-	for i in self.list:
-	    if i.port == port:
-		count = count + 1
-
-	return count
+#    def portExists(self, port):
+#	count = 0		# count number of occurrences of 'procname'
+#	for i in self.list:
+#	    if i.port == port:
+#		count = count + 1
+#
+#	return count
 
     # Overload '[]', eg: returns corresponding proc object for given process
     # name
@@ -61,6 +78,21 @@ class netstatList:
 	    return self.hash[port]
 	except KeyError:
 	    return None
+
+    def parseRaw(self):
+	sre = regex.compile( self.regexp )
+	inx = sre.search( self.raw )
+	if inx == -1:
+	    raise ParseFailure, "Error while parsing line: "+self.raw
+	fieldlist = ()
+	i=1
+
+        while( sre.group(i) != None ):
+	    fieldlist = fieldlist + (sre.group(i),)
+	    i = i + 1
+
+	return fieldlist
+
 
 
 ##
