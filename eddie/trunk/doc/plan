@@ -34,10 +34,14 @@ PROJECT PLAN:
 		Variables - %sys, %act, %actnm		Chris	98%
 			- all done I think...
 		netstat class				Rod
-		History...
+		DEF substition				Chris	100%
+		History:
+			fs				Chris	0%
+			proc
+			netstat
 	Directives:
 		D					Chris	100%
-		FS					Rod
+		FS					Chris	50%
 		PID					Chris	100%
 		SP					Rod
 	Actions:
