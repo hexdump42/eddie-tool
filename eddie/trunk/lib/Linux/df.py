@@ -40,7 +40,7 @@
 """
 
 # Python Modules
-import string
+import re, string
 # Eddie Modules
 import datacollect, log, utils
 
@@ -110,11 +110,15 @@ class dfList(datacollect.DataCollect):
 	self.data.datahash = {}
 	self.data.mounthash = {}
 
-	for line in rawList.readlines():
+	lines = rawList.read()
+	lines = re.sub( r'\n    ', '', lines)
+	lines = string.split(lines, '\n')
+	for line in lines:
 	    fields = string.split(line)
-	    p = df(fields)
-	    self.data.datahash[fields[0]] = p	# dictionary of filesystem devices
-	    self.data.mounthash[fields[5]] = p	# dictionary of mount points
+	    if len(fields) == 6:
+		p = df(fields)
+                self.data.datahash[fields[0]] = p	# dictionary of filesystem devices
+                self.data.mounthash[fields[5]] = p	# dictionary of mount points
 
 	utils.safe_pclose( rawList )
 	log.log( "<df>dfList.collectData(): filesystem data collected", 7 )
