@@ -100,10 +100,9 @@ def check(Config):
     for c in Config.groups:
 	if c.name == log.hostname or (c.name in Config.classDict.keys() and log.hostname in Config.classDict[c.name]):
 	    log.log( "<eddie>check(), Calling check() with group %s" % (c.name), 8 )
-	    print "[DEBUG] Calling check() with group %s" % (c.name)
 	    check(c)
 	else:
-	    print "[DEBUG] Not checking group %s" % (c.name)
+	    log.log( "<eddie>check(), Not checking group %s" % (c.name), 8 )
 
 
 
@@ -169,7 +168,7 @@ def main():
     log.hostname = hostname[:-1]	# strip \n off end
     tmp.close()
 
-    print "[DEBUG] hostname:",log.hostname
+    #print "[DEBUG] hostname:",log.hostname
 
     # instantiate global Config object
     global Config
@@ -198,7 +197,7 @@ def main():
 
 	    # sleep for set period - only quits with CTRL-c
 	    log.log( '<eddie>main(), sleeping for %d secs' % (config.scanperiod), 6 )
-	    print '<eddie>main(), sleeping for %d secs' % (config.scanperiod)
+	    #print '<eddie>main(), sleeping for %d secs' % (config.scanperiod)
 
 	    # Sleep by setting SIGALRM to go off in scanperiod seconds
 	    #time.sleep( config.scanperiod )
