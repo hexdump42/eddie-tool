@@ -2,8 +2,9 @@
 ## File		: system.py
 ## 
 ## Author       : Chris Miles  <chris@psychofx.com>
+##                Rod Telford  <rtelford@psychofx.com>
 ## 
-## Date		: 20010709
+## Start Date	: 19990520
 ## 
 ## Description	: Collect current snapshot of system state
 ##
@@ -24,27 +25,110 @@
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 ########################################################################
 
-import os, string, time, re
+# Python modules
+import string, time, re, threading
+# Eddie modules
 import log, utils
 
 
-##
-## Class system - holds information about current system state
-##
 class system:
+    """Gathers system statistics.
+
+        Calls the following external commands to get stats from:
+        /usr/bin/vmstat -s: tested on HPUX 11.00
+	/usr/bin/uptime: tested on HPUX 11.00
+
+	The names of all the stats collected by the system class are:
+
+	    System stats from '/usr/bin/uptime':
+		uptime		- (string)
+		users		- (int)
+		loadavg1	- (float)
+		loadavg5	- (float)
+		loadavg15	- (float)
+
+	    System counters from '/usr/bin/vmstat -s' (see vmstat(1)):
+		ctr_swap_ins					- (long)
+		ctr_swap_outs					- (long)
+		ctr_pages_swapped_in				- (long)
+		ctr_pages_swapped_out				- (long)
+		ctr_total_address_trans_faults_taken		- (long)
+		ctr_page_ins					- (long)
+		ctr_page_outs					- (long)
+		ctr_pages_paged_in				- (long)
+		ctr_pages_paged_out				- (long)
+		ctr_reclaims_from_free_list			- (long)
+		ctr_total_page_reclaims				- (long)
+		ctr_intransit_blocking_page_faults		- (long)
+		ctr_zero_fill_pages_created			- (long)
+		ctr_zero_fill_page_faults			- (long)
+		ctr_executable_fill_pages_created		- (long)
+		ctr_executable_fill_page_faults			- (long)
+		ctr_swap_text_pages_found_in_free_list		- (long)
+		ctr_inode_text_pages_found_in_free_list		- (long)
+		ctr_revolutions_of_the_clock_hand		- (long)
+		ctr_pages_scanned_for_page_out			- (long)
+		ctr_pages_freed_by_the_clock_daemon		- (long)
+		ctr_cpu_context_switches			- (long)
+		ctr_device_interrupts				- (long)
+		ctr_traps					- (long)
+		ctr_system_calls				- (long)
+		ctr_Page_Select_Size_Successes_for_Page_size_4K	- (long)
+		ctr_Page_Select_Size_Successes_for_Page_size_16K - (long)
+		ctr_Page_Select_Size_Successes_for_Page_size_64K - (long)
+		ctr_Page_Select_Size_Successes_for_Page_size_256K - (long)
+		ctr_Page_Select_Size_Failures_for_Page_size_16K	- (long)
+		ctr_Page_Select_Size_Failures_for_Page_size_64K	- (long)
+		ctr_Page_Select_Size_Failures_for_Page_size_256K - (long)
+		ctr_Page_Allocate_Successes_for_Page_size_4K	- (long)
+		ctr_Page_Allocate_Successes_for_Page_size_16K	- (long)
+		ctr_Page_Allocate_Successes_for_Page_size_64K	- (long)
+		ctr_Page_Allocate_Successes_for_Page_size_256K	- (long)
+		ctr_Page_Allocate_Successes_for_Page_size_64M	- (long)
+		ctr_Page_Demotions_for_Page_size_16K		- (long)
+    """
 
     # refresh_rate : amount of time current information will be cached before
     #                being refreshed (in seconds)
-    refresh_rate = 60
+    refresh_rate = 30
 
     def __init__(self):
 	self.refresh_time = 0	# information must be refreshed at first request
+	self.hash_semaphore = threading.Semaphore()  # current thread must lock use of system hash
+	self.cache_semaphore = threading.Semaphore()	# serialize checking of system data cache
 
+
+    ##################################################################
+    # Public, thread-safe, methods
 
     def refresh(self):
-	"""Refresh the information"""
+	"""Force a refresh of the process list."""
 
-	self.getSystemstate()
+	self.hash_semaphore.acquire()
+	self._refresh()
+	self.hash_semaphore.release()
+
+
+    def getHash(self):
+	"""Returns hash of system stats."""
+
+	self.checkCache()	# refresh data if necessary
+
+	self.hash_semaphore.acquire()
+	system_hash = self.hash
+	self.hash_semaphore.release()
+
+	return system_hash
+
+
+    ##################################################################
+    # Private methods.  No thread safety if not using public methods.
+
+    def _refresh(self):
+	"""Refresh the system statistics hash table.
+	   It is assumed only one thread at a time will call this function."""
+
+	self._getSystemstate()
 
 	# new refresh time is current time + refresh rate (seconds)
 	self.refresh_time = time.time() + self.refresh_rate
@@ -53,208 +137,151 @@ class system:
     def checkCache(self):
 	"""Check if cached data is invalid, ie: refresh_time has been exceeded."""
 
+	self.cache_semaphore.acquire()	# serialize refreshing of system cache
 	if time.time() > self.refresh_time:
 	    log.log( "<system>checkCache(), refreshing system data", 7 )
 	    self.refresh()
 	else:
 	    log.log( "<system>checkCache(), using cache'd system data", 7 )
+	self.cache_semaphore.release()
 
 
-    def getSystemstate(self):
+    def _getSystemstate(self):
 	self.hash = {}		# dict of system data
 
-	return	# TODO - not done yet!!!
+	vmstat_dict = self._getvmstat()
+	if vmstat_dict:
+	    self.hash.update(vmstat_dict)
 
-	rawList = utils.safe_popen('/opt/local/bin/top -nud2 -s1', 'r')
+	uptime_dict = self._getuptime()
+	if uptime_dict:
+	    self.hash.update(uptime_dict)
 
-	# the above 'top' command actually performs two 'tops', 1 second apart,
-	# so that we can get current cpu time allocation (idle/etc).
-	# We must skip through the output to the start of the second 'top'.
-
-	rawList.readline()	# skip start of first 'top'
-
-	while 1:
-	    line = rawList.readline()
-	    if len(line) == 0:
-		log.log( "<system>system.getSystemstate() error parsing 'top' output looking for 'load averages:'.", 2 )
-		return
-
-	    #if line[:8] == 'last pid':
-	    if string.find(line, 'load averages:') != -1:
-		break
- 
-	# regexps for parsing top of 'top' output to get info we want
-	#reline1 = "last pid:\s*([0-9]+);\s*load averages:\s*([0-9]+\.[0-9]+),\s*([0-9]+\.[0-9]+),\s*([0-9]+\.[0-9]+)\s+([0-9]+:[0-9]+:[0-9]+)"
-	reline1 = ".*load averages:\s*([0-9]+\.[0-9]+),\s*([0-9]+\.[0-9]+),\s*([0-9]+\.[0-9]+)\s+([0-9]+:[0-9]+:[0-9]+)"
-	reline2 = "([0-9]+)\s+processes:(?:\s+(?P<sleeping>[0-9]+)\s+sleeping,)?(?:\s+(?P<zombie>[0-9]+)\s+zombie,)?(?:\s+(?P<running>[0-9]+)\s+running,)?(?:\s+(?P<stopped>[0-9]+)\s+stopped,)?(?:\s+(?P<oncpu>[0-9]+)\s+on cpu)?.*"
-	reline3 = "CPU states:\s*([0-9.]+)% idle,\s*([0-9.]+)% user,\s*([0-9.]+)% kernel,\s*([0-9.]+)% iowait,\s*([0-9.]+)% swap"
-	reline4 = "Memory:\s*(?P<mem_real>\w+)\s*real,\s*(?P<mem_free>\w+)\s*free,(?:\s*(?P<mem_swapuse>\w+)\s*swap in use,)?\s*(?P<mem_swapfree>\w+)\s*swap free"
-
-	# line 1
-	inx = re.search( reline1, line )
-	if inx == None:
-	    log.log( "<system>system.getSystemstate() error parsing line1 'top' output.", 2 )
-	    return
-	#self.lastpid = int(inx.group(1))
-	self.loadavg1 = float(inx.group(1))
-	self.loadavg5 = float(inx.group(2))
-	self.loadavg15 = float(inx.group(3))
-	self.time = inx.group(4)
-
-	# line 2
-	line = rawList.readline()
-	inx = re.search( reline2, line )
-	if inx == None:
-	    log.log( "<system>system.getSystemstate() error parsing line2 'top' output.", 2 )
-	    return
-	self.processes = int(inx.group(1))
-	try:
-	    self.sleeping = int(inx.group('sleeping'))
-	except:
-	    self.sleeping = 0
-	try:
-	    self.zombie = int(inx.group('zombie'))
-	except:
-	    self.zombie = 0
-	try:
-	    self.running = int(inx.group('running'))
-	except:
-	    self.running = 0
-	try:
-	    self.stopped = int(inx.group('stopped'))
-	except:
-	    self.stopped = 0
-	try:
-	    self.oncpu = int(inx.group('oncpu'))
-	except:
-	    self.oncpu = 0
-
-	# line 3
-	line = rawList.readline()
-	inx = re.search( reline3, line )
-	if inx == None:
-	    log.log( "<system>system.getSystemstate() error parsing line3 'top' output.", 2 )
-	    return
-	self.cpu_idle = float(inx.group(1))
-	self.cpu_user = float(inx.group(2))
-	self.cpu_kernel = float(inx.group(3))
-	self.cpu_iowait = float(inx.group(4))
-	self.cpu_swap = float(inx.group(5))
-
-	# line 4
-	line = rawList.readline()
-	inx = re.search( reline4, line )
-	if inx == None:
-	    log.log( "<system>system.getSystemstate() error parsing line4 'top' output.", 2 )
-	    return
-	mem_real = inx.group('mem_real')
-	mem_free = inx.group('mem_free')
-	mem_swapuse = inx.group('mem_swapuse')
-	mem_swapfree = inx.group('mem_swapfree')
-
-        try:
-	    if mem_real[-1] == 'K':
-	        self.mem_real = int(mem_real[:-1]) * 1024
-	    elif mem_real[-1] == 'M':
-	        self.mem_real = int(mem_real[:-1]) * 1024 * 1024
-	    else:
-	        self.mem_real = int(mem_real)
-        except:
-            self.mem_real = 0
-
-        try:
-	    if mem_free[-1] == 'K':
-	        self.mem_free = int(mem_free[:-1]) * 1024
-	    elif mem_free[-1] == 'M':
-	        self.mem_free = int(mem_free[:-1]) * 1024 * 1024
-	    else:
-	        self.mem_free = int(mem_free)
-        except:
-            self.mem_free = 0
-
-        try:
-	    if mem_swapuse[-1] == 'K':
-	        self.mem_swapuse = int(mem_swapuse[:-1]) * 1024
-	    elif mem_swapuse[-1] == 'M':
-	        self.mem_swapuse = int(mem_swapuse[:-1]) * 1024 * 1024
-	    else:
-	        self.mem_swapuse = int(mem_swapuse)
-        except:
-            self.mem_swapuse = 0
-
-        try:
-	    if mem_swapfree[-1] == 'K':
-	        self.mem_swapfree = int(mem_swapfree[:-1]) * 1024
-	    elif mem_swapfree[-1] == 'M':
-	        self.mem_swapfree = int(mem_swapfree[:-1]) * 1024 * 1024
-	    else:
-	        self.mem_swapfree = int(mem_swapfree)
-        except:
-            self.mem_swapfree = 0
+	log.log( "<system>system(), new system list created", 7 )
 
 
-	utils.safe_pclose( rawList )
+    def _getvmstat(self):
+	"""Get system statistics from the 'vmstat -s' call."""
 
-	#print "system debug:"
-	#print " - lastpid:",self.lastpid
-	#print " - loadavg1:",self.loadavg1
-	#print " - loadavg5:",self.loadavg5
-	#print " - loadavg15:",self.loadavg15
-	#print " - time:",self.time
+	vmstat_cmd = "/usr/bin/vmstat -s"
 
-	#print " - processes:",self.processes
-	#print " - sleeping:",self.sleeping
-	#print " - zombie:",self.zombie
-	#print " - running:",self.running
-	#print " - stopped:",self.stopped
-	#print " - oncpu:",self.oncpu
+	(retval, output) = utils.safe_getstatusoutput( vmstat_cmd )
 
-	#print " - cpu_idle:",self.cpu_idle
-	#print " - cpu_user:",self.cpu_user
-	#print " - cpu_kernel:",self.cpu_kernel
-	#print " - cpu_iowait:",self.cpu_iowait
-	#print " - cpu_swap:",self.cpu_swap
+	if retval != 0:
+	    log.log( "<system>system._getvmstat(), error calling '%s'"%(vmstat_cmd), 4 )
+	    return None
 
-	#print " - mem_real:",self.mem_real
-	#print " - mem_free:",self.mem_free
-	#print " - mem_swapuse:",self.mem_swapuse
-	#print " - mem_swapfree:",self.mem_swapfree
+	vmstat_dict = {}
 
-	# Fill hash
-	#self.hash['lastpid'] = self.lastpid
-	self.hash['loadavg1'] = self.loadavg1
-	self.hash['loadavg5'] = self.loadavg5
-	self.hash['loadavg15'] = self.loadavg15
-	self.hash['time'] = self.time
+	for l in string.split( output, '\n' ):
+	    if string.find( l, 'swap ins' ) != -1:
+		vmstat_dict['ctr_swap_ins'] = long(string.split(l)[0])
+	    elif string.find( l, 'swap outs' ) != -1:
+		vmstat_dict['ctr_swap_outs'] = long(string.split(l)[0])
+	    elif string.find( l, 'pages swapped in' ) != -1:
+		vmstat_dict['ctr_pages_swapped_in'] = long(string.split(l)[0])
+	    elif string.find( l, 'pages swapped out' ) != -1:
+		vmstat_dict['ctr_pages_swapped_out'] = long(string.split(l)[0])
+	    elif string.find( l, 'total address trans. faults taken' ) != -1:
+		vmstat_dict['ctr_total_address_trans_faults_taken'] = long(string.split(l)[0])
+	    elif string.find( l, 'page ins' ) != -1:
+		vmstat_dict['ctr_page_ins'] = long(string.split(l)[0])
+	    elif string.find( l, 'page outs' ) != -1:
+		vmstat_dict['ctr_page_outs'] = long(string.split(l)[0])
+	    elif string.find( l, 'pages paged in' ) != -1:
+		vmstat_dict['ctr_pages_paged_in'] = long(string.split(l)[0])
+	    elif string.find( l, 'pages paged out' ) != -1:
+		vmstat_dict['ctr_pages_paged_out'] = long(string.split(l)[0])
+	    elif string.find( l, 'reclaims from free list' ) != -1:
+		vmstat_dict['ctr_reclaims_from_free_list'] = long(string.split(l)[0])
+	    elif string.find( l, 'total page reclaims' ) != -1:
+		vmstat_dict['ctr_total_page_reclaims'] = long(string.split(l)[0])
+	    elif string.find( l, 'intransit blocking page faults' ) != -1:
+		vmstat_dict['ctr_intransit_blocking_page_faults'] = long(string.split(l)[0])
+	    elif string.find( l, 'zero fill pages created' ) != -1:
+		vmstat_dict['ctr_zero_fill_pages_created'] = long(string.split(l)[0])
+	    elif string.find( l, 'zero fill page faults' ) != -1:
+		vmstat_dict['ctr_zero_fill_page_faults'] = long(string.split(l)[0])
+	    elif string.find( l, 'executable fill pages created' ) != -1:
+		vmstat_dict['ctr_executable_fill_pages_created'] = long(string.split(l)[0])
+	    elif string.find( l, 'executable fill page faults' ) != -1:
+		vmstat_dict['ctr_executable_fill_page_faults'] = long(string.split(l)[0])
+	    elif string.find( l, 'swap text pages found in free list' ) != -1:
+		vmstat_dict['ctr_swap_text_pages_found_in_free_list'] = long(string.split(l)[0])
+	    elif string.find( l, 'inode text pages found in free list' ) != -1:
+		vmstat_dict['ctr_inode_text_pages_found_in_free_list'] = long(string.split(l)[0])
+	    elif string.find( l, 'revolutions of the clock hand' ) != -1:
+		vmstat_dict['ctr_revolutions_of_the_clock_hand'] = long(string.split(l)[0])
+	    elif string.find( l, 'pages scanned for page out' ) != -1:
+		vmstat_dict['ctr_pages_scanned_for_page_out'] = long(string.split(l)[0])
+	    elif string.find( l, 'pages freed by the clock daemon' ) != -1:
+		vmstat_dict['ctr_pages_freed_by_the_clock_daemon'] = long(string.split(l)[0])
+	    elif string.find( l, 'cpu context switches' ) != -1:
+		vmstat_dict['ctr_cpu_context_switches'] = long(string.split(l)[0])
+	    elif string.find( l, 'device interrupts' ) != -1:
+		vmstat_dict['ctr_device_interrupts'] = long(string.split(l)[0])
+	    elif string.find( l, 'traps' ) != -1:
+		vmstat_dict['ctr_traps'] = long(string.split(l)[0])
+	    elif string.find( l, 'system calls' ) != -1:
+		vmstat_dict['ctr_system_calls'] = long(string.split(l)[0])
+	    elif string.find( l, 'Page Select Size Successes for Page size 4K' ) != -1:
+		vmstat_dict['ctr_Page_Select_Size_Successes_for_Page_size_4K'] = long(string.split(l)[0])
+	    elif string.find( l, 'Page Select Size Successes for Page size 16K' ) != -1:
+		vmstat_dict['ctr_Page_Select_Size_Successes_for_Page_size_16K'] = long(string.split(l)[0])
+	    elif string.find( l, 'Page Select Size Successes for Page size 64K' ) != -1:
+		vmstat_dict['ctr_Page_Select_Size_Successes_for_Page_size_64K'] = long(string.split(l)[0])
+	    elif string.find( l, 'Page Select Size Successes for Page size 256K' ) != -1:
+		vmstat_dict['ctr_Page_Select_Size_Successes_for_Page_size_256K'] = long(string.split(l)[0])
+	    elif string.find( l, 'Page Select Size Failures for Page size 16K' ) != -1:
+		vmstat_dict['ctr_Page_Select_Size_Failures_for_Page_size_16K'] = long(string.split(l)[0])
+	    elif string.find( l, 'Page Select Size Failures for Page size 64K' ) != -1:
+		vmstat_dict['ctr_Page_Select_Size_Failures_for_Page_size_64K'] = long(string.split(l)[0])
+	    elif string.find( l, 'Page Select Size Failures for Page size 256K' ) != -1:
+		vmstat_dict['ctr_Page_Select_Size_Failures_for_Page_size_256K'] = long(string.split(l)[0])
+	    elif string.find( l, 'Page Allocate Successes for Page size 4K' ) != -1:
+		vmstat_dict['ctr_Page_Allocate_Successes_for_Page_size_4K'] = long(string.split(l)[0])
+	    elif string.find( l, 'Page Allocate Successes for Page size 16K' ) != -1:
+		vmstat_dict['ctr_Page_Allocate_Successes_for_Page_size_16K'] = long(string.split(l)[0])
+	    elif string.find( l, 'Page Allocate Successes for Page size 64K' ) != -1:
+		vmstat_dict['ctr_Page_Allocate_Successes_for_Page_size_64K'] = long(string.split(l)[0])
+	    elif string.find( l, 'Page Allocate Successes for Page size 256K' ) != -1:
+		vmstat_dict['ctr_Page_Allocate_Successes_for_Page_size_256K'] = long(string.split(l)[0])
+	    elif string.find( l, 'Page Allocate Successes for Page size 64M' ) != -1:
+		vmstat_dict['ctr_Page_Allocate_Successes_for_Page_size_64M'] = long(string.split(l)[0])
+	    elif string.find( l, 'Page Demotions for Page size 16K' ) != -1:
+		vmstat_dict['ctr_Page_Demotions_for_Page_size_16K'] = long(string.split(l)[0])
 
-	self.hash['processes'] = self.processes
-	self.hash['sleeping'] = self.sleeping
-	self.hash['zombie'] = self.zombie
-	self.hash['running'] = self.running
-	self.hash['stopped'] = self.stopped
-	self.hash['oncpu'] = self.oncpu
-
-	self.hash['cpu_idle'] = self.cpu_idle
-	self.hash['cpu_user'] = self.cpu_user
-	self.hash['cpu_kernel'] = self.cpu_kernel
-	self.hash['cpu_iowait'] = self.cpu_iowait
-	self.hash['cpu_swap'] = self.cpu_swap
-
-	self.hash['mem_real'] = self.mem_real
-	self.hash['mem_free'] = self.mem_free
-	self.hash['mem_swapuse'] = self.mem_swapuse
-	self.hash['mem_swapfree'] = self.mem_swapfree
+	return vmstat_dict
 
 
-	log.log( "<proc>system(), new system list created", 7 )
+    def _getuptime(self):
+	"""Get system statistics from the output of the 'uptime' command."""
 
+	uptime_cmd = "/usr/bin/uptime"
 
-    def getHash(self):
-	"""Returns hash of system stats."""
+	(retval, output) = utils.safe_getstatusoutput( uptime_cmd )
 
-	self.checkCache()	# refresh data if necessary
+	if retval != 0:
+	    log.log( "<system>system._getuptime(), error calling '%s'"%(uptime_cmd), 4 )
+	    return None
 
-	return self.hash
+	uptime_re = ".+up (?P<uptime>.+),\s*(?P<users>[0-9]+) users,\s+ load average:\s+(?P<loadavg1>[0-9.]+),\s*(?P<loadavg5>[0-9.]+),\s*(?P<loadavg15>[0-9.]+)"
+	inx = re.compile( uptime_re )
+	sre = inx.search( output )
+	if sre:
+	    uptime_dict = sre.groupdict()
+	else:
+	    log.log( "<system>system._getuptime(), could not parse uptime output '%s'"%(output), 4 )
+	    return None
+
+	# convert types
+	uptime_dict['users'] = int(uptime_dict['users'])
+	uptime_dict['loadavg1'] = float(uptime_dict['loadavg1'])
+	uptime_dict['loadavg5'] = float(uptime_dict['loadavg5'])
+	uptime_dict['loadavg15'] = float(uptime_dict['loadavg15'])
+
+	return uptime_dict
+
 
 
 ##
