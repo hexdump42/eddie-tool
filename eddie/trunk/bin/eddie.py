@@ -275,6 +275,8 @@ def buildCheckQueue(q, Config):
     Build the queue of checks that the scheduler will start with.
     """
 
+    log.log( "<eddie>buildCheckQueue(): Adding directives to Queue for hostname '%s'" % (log.hostname), 8 )
+
     for i in Config.groupDirectives.keys():
 	# if directive template is 'self', do not schedule it
 	d = Config.groupDirectives[i]
@@ -420,7 +422,7 @@ def main():
 	    log.sendadminlog()
 
 	    #time.sleep(10*60)	# sleep for 10 minutes between housekeeping duties
-	    please_die.wait(10*60)	# sleep for 10 minutes between housekeeping duties
+	    please_die.wait(1*60)	# sleep for 1 minute between housekeeping duties
 					# or until all threads signalled to exit
 
 	except KeyboardInterrupt:
