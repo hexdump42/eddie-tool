@@ -7,7 +7,7 @@ PROJECT PLAN:
 
     Milestones:
     ----------
-	mid-Jan-98: Drop-in replacement for Patrol.
+	end-Jan-98: Drop-in replacement for Patrol.
 	    Directives required:
 		FS [F in Patrol]
 		D
@@ -31,14 +31,14 @@ PROJECT PLAN:
 	Core code:
 		Logging - log all actions, etc.		Chris	95%
 			- still defining log levels
-		Variables - %sys, %act, %actnm		Chris	66%
-			- %sys not done
+		Variables - %sys, %act, %actnm		Chris	98%
+			- all done I think...
 		netstat class				Rod
 		History...
 	Directives:
 		D					Chris	100%
 		FS					Rod
-		PID
+		PID					Chris	100%
 		SP					Rod
 	Actions:
 		email()					Chris	100%
@@ -75,7 +75,7 @@ DIRECTIVES:
 
   PID	PID File Check
 	- check if PID file exists,
-	- and/or if PID file contents is actual process
+	- and/or if PID file contents matches actual process pid
 
   FS	Filesystem Usage
 	- over %
