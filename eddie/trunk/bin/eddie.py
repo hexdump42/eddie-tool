@@ -268,7 +268,7 @@ def scheduler(q, Config, die_event):
 	    # when numchecks == 0 we don't do any checks at all...
 	    log.log( "<eddie>scheduler(): Not scheduling checks for %s when numchecks=%d" % (c,c.args.numchecks), 7 )
 
-    log.log( "<eddie>scheduler(): die_event received, scheduler exiting", 4 )
+    log.log( "<eddie>scheduler(): die_event received, scheduler exiting", 8 )
 
 
 def buildCheckQueue(q, Config):
