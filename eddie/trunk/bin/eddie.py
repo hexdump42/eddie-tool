@@ -12,7 +12,7 @@
 ## $Id$
 ##
 ########################################################################
-## (C) Chris Miles 2001
+## (C) Chris Miles 2001-2004
 ## 
 ## The author accepts no responsibility for the use of this software and
 ## provides it on an ``as is'' basis without express or implied warranty.
@@ -30,7 +30,12 @@ __version__='0.33c'
 
 
 # Python modules
-import sys, os, time, signal, re, threading
+import sys
+import os
+import time
+import signal
+import re
+import threading
 
 
 print "EDDIE v%s" % (__version__)
@@ -57,7 +62,9 @@ oslibdirs = [ os.path.join(basedir,'lib',osname,osver,osarch),
 	      os.path.join(basedir,'lib',osname) ]
 
 commonlibdir = os.path.join(basedir, 'lib/common')
-sys.path = oslibdirs + [commonlibdir,] + sys.path
+# chris 2004-09-02: lib/common/Extra/ holds 3rd party modules
+extralibdir = os.path.join(basedir, 'lib/common/Extra')
+sys.path = oslibdirs + [commonlibdir,extralibdir] + sys.path
 
 # EDDIE common modules
 import parseConfig, directive, config, log, timeQueue, sockets, eddieElvin4, datacollect
