@@ -1,20 +1,20 @@
-Eddie - Quick Start Guide
+EDDIE - Quick Start Guide
 2001-06-18 Chris Miles <chris@psychofx.com>
 
-For the impatient, here is a quickstart guide to getting Eddie up & running.
+For the impatient, here is a quickstart guide to getting EDDIE up & running.
 Note that the 'Quickstart' method will only get you a running monitoring system
 but will not get you a monitoring system customized to your environment - that
 is up to you, and usually takes a reasonable amount of effort working out what
 you want to monitor before you can monitor it.
 
 
-1. Unpack Eddie somewhere like /opt or /usr/local, eg:
+1. Unpack EDDIE somewhere like /opt or /usr/local, eg:
        $ cd /opt
        $ gtar xvzf /tmp/eddie.tgz
    will create the eddie directory with all subdirectories like bin, lib, doc.
 
-2. Point Eddie to your Python installation.
-   [Eddie requires Python, and has been tested with most Python versions
+2. Point EDDIE to your Python installation.
+   [EDDIE requires Python, and has been tested with most Python versions
    between 1.5.2 and 2.1]
    So edit the first line of eddie/bin/eddie.py to point to your python.
    Eg:
@@ -53,7 +53,7 @@ FS rootfs:	fs='/'
 		action='email("root", "%(fsf)s is at %(fscapac)s%% on %(h)s")'
 ######################################################
 
-   These are two basic Eddie directives.  The first is a process check which
+   These are two basic EDDIE directives.  The first is a process check which
    will alert if the init process is not running.  procname defines the
    process name, rule defines the type of check (NR means "Not Running") and
    action defines what to do if rule is true.
@@ -66,7 +66,7 @@ FS rootfs:	fs='/'
    will be true if capac is >= 90%.  The action, again, defines what action
    to take if the rule is true.
 
-7. Start Eddie running by starting bin/eddie.py
+7. Start EDDIE running by starting bin/eddie.py
    Eg:
        $ /opt/eddie/bin/eddie.py
    You can watch the log file, at the location you defined in eddie.cf.
@@ -74,9 +74,9 @@ FS rootfs:	fs='/'
    will get no alert emails.  You can force this by changing procname
    to some non-existence process name (say 'foo') and changing the FS
    rule to be a lot lower, like 'capac>=1'.  If you get emails from
-   these tests then the basic Eddie functionality is working.
+   these tests then the basic EDDIE functionality is working.
 
-8. Customize the Eddie configuration by examining the files in config.sample
+8. Customize the EDDIE configuration by examining the files in config.sample
    and reading the other documentation.
 
 
