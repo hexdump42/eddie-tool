@@ -12,7 +12,7 @@
 ## $Id$
 ##
 
-EDDIE_VER='0.24'
+EDDIE_VER='0.25'
 
 
 # Standard Python modules
