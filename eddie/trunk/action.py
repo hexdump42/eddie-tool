@@ -356,7 +356,7 @@ def elvin(msg):
     if retval != 0:
 	log.log( "<action>elvin(), Alert, return value for e.sendmsg('%s') is %d" % (msg,retval), 3 )
     else:
-	log.log( "<action>elvin(), e.sendmsg('%s') succeeded" % (msg), 8 )
+	log.log( "<action>elvin('%s')" % (msg), 5 )
 
 ##
 ## END - action.py
