@@ -206,8 +206,11 @@ def val2secs( value ):
     return string.atoi(value)*mult
 
 
-
-safe_popen_semaphore = threading.Semaphore()
+# any thread performing a system call (i.e., os.system(),
+# os.popen(), commands.getstatusoutput(), etc) must block on
+# the systemcall_semaphore as only one thread appears to be able
+# to do a system call at a time.
+systemcall_semaphore = threading.Semaphore()
 
 def safe_popen( cmd, mode ):
     """A thread-safe wrapper for os.popen() which did not appear to like
@@ -218,14 +221,14 @@ def safe_popen( cmd, mode ):
     released.
     """
 
-    safe_popen_semaphore.acquire()
+    systemcall_semaphore.acquire()
     try:
 	r = os.popen(cmd, mode)
     except:
 	# if popen() raises an exception we must release the
 	# semaphore lock before continuing, otherwise all further calls block -
 	# which will lock up all the available threads...
-	safe_popen_semaphore.release()
+	systemcall_semaphore.release()
 	e = sys.exc_info()
 	raise e[0], e[1]
 
@@ -241,14 +244,14 @@ def safe_pclose( fh ):
 	# if close() raises an exception we must release the
 	# semaphore lock before continuing, otherwise all further calls block -
 	# which will lock up all the available threads...
-	safe_popen_semaphore.release()
+	systemcall_semaphore.release()
 	e = sys.exc_info()
 	raise e[0], e[1]
 
-    safe_popen_semaphore.release()
+    systemcall_semaphore.release()
 
 
-safe_getstatusoutput_semaphore = threading.Semaphore()
+###safe_getstatusoutput_semaphore = threading.Semaphore()
 
 def safe_getstatusoutput( cmd ):
     """A thread-safe wrapper for commands.getstatusoutput() which did not
@@ -259,21 +262,22 @@ def safe_getstatusoutput( cmd ):
     NOTE: It is still not known whether a call to commands.getstatusoutput
     and popen() [and os.system() for that matter] can be called
     simultaneously.  If not, a global semaphore will have to be used to
-    protect them all.
+    protect them all. UPDATE: This appears to be the case, so a global
+    'systemcall' semaphore is now used.
     """
 
-    safe_getstatusoutput_semaphore.acquire()
+    systemcall_semaphore.acquire()
     try:
 	(r, output) = commands.getstatusoutput( cmd )
     except:
 	# if getstatusoutput() raises an exception we must release the
 	# semaphore lock before continuing, otherwise all further calls block -
 	# which will lock up all the available threads...
-	safe_getstatusoutput_semaphore.release()
+	systemcall_semaphore.release()
 	e = sys.exc_info()
 	raise e[0], e[1]
 
-    safe_getstatusoutput_semaphore.release()
+    systemcall_semaphore.release()
 
     return (r, output)
 
