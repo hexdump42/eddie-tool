@@ -127,7 +127,13 @@ class State:
 	    log.log( "<directive>State.stateok(): State changed to OK.  ID '%s'."%(self.ID), 7 )
 
 	    if 'act2okList' in dir(self.thisdirective.args):
-		self.thisdirective.performAction(Config,self.thisdirective.args.act2okList)
+		# chris 2003-10-03: only perform act2ok action if any actions were called.
+		#	In cases where check fails but actiondependson causes actions to
+		#	be skipped, we don't need the act2ok actions to be called.
+		if self.thisdirective.performedactions:
+		    self.thisdirective.performAction(Config,self.thisdirective.args.act2okList)
+		else:
+		    log.log( "<directive>State.stateok(): act2ok actions skipped as no actions were called.", 8 )
 
 	    #TODO: Post an EVENT about problem being resolved
 
@@ -143,6 +149,7 @@ class State:
 	self.failcount = 0		# reset fail count
 	self.thisdirective.current_actionperiod = 0	# reset the current actionperiod
 	self.thisdirective.Action.runcount = 0	# chris 2002-12-29: reset action run counter
+	self.thisdirective.performedactions = 0	# chris 2003-10-03: clear actions called flag
 
 	log.log( "<directive>State.stateok(): ID '%s' status '%s'"%(self.ID, self.status), 7 )
 
@@ -241,6 +248,7 @@ class Directive:
 
 	self.excludehosts = []	# chris 2002-12-24: hosts to exclude from directive execution
 	self.actionmaxcalls = None	# chris 2002-12-24: can set limit on number of action calls
+	self.performedactions = 0	# chris 2003-10-03: clear actions called flag
 
 
     def request_collector(self):
@@ -659,6 +667,7 @@ class Directive:
 	# Make sure there are some actions to perform
 	# (they are not always necessary)
 	if 'actionList' in dir(self.args):
+	    self.performedactions = 1	# chris 2003-10-03: flag that actions have been called
 	    self.performAction(Config, self.args.actionList)
 
 
