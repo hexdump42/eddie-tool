@@ -45,7 +45,7 @@ class pop3:
 
 	tstart = time.time()
 	try:
-	    self.pop3sock.connect(self.host, self.port)
+	    self.pop3sock.connect( (self.host,self.port) )
 	except socket.error, detail:
 	    log.log( "<solaris>pop3.connect(): exception, %d, '%s'" % (detail[0], detail[1]), 3 )
 	    return 0
