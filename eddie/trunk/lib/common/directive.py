@@ -53,7 +53,7 @@ class State:
 	self.status = "fail"
 	self.lastfailtime = timenow
 
-	log.log( "<directive.py>State.statefail(), ID '%s' status '%s' lastfailtime %s faildetecttime %s"%(self.ID, self.status, self.lastfailtime, self.faildetecttime), 6 )
+	log.log( "<directive>State.statefail(), ID '%s' status '%s' lastfailtime %s faildetecttime %s"%(self.ID, self.status, self.lastfailtime, self.faildetecttime), 6 )
 
 	#TODO: Post an EVENT about this failure...
 	#      EVENTS are either: new failure/problem detected
@@ -64,13 +64,13 @@ class State:
 	"""Update state info for check succeeding."""
 
 	if self.status != "ok":
-	    log.log( "<directive.py>State.stateok(), State changed to OK.  ID '%s'."%(self.ID), 6 )
+	    log.log( "<directive>State.stateok(), State changed to OK.  ID '%s'."%(self.ID), 6 )
 	    #TODO: Post an EVENT about problem being resolved
 	    pass
 
 	self.status = "ok"
 
-	log.log( "<directive.py>State.stateok(), ID '%s' status '%s'"%(self.ID, self.status), 8 )
+	log.log( "<directive>State.stateok(), ID '%s' status '%s'"%(self.ID, self.status), 8 )
 
 
     def age(self):
@@ -143,9 +143,15 @@ class Directive:
     def __init__(self, toklist):
 	# Check toklist for valid tokens
 	if len(toklist) < 2:		# need at least 2 tokens
-	    raise ParseFailure, "Directive expected at least 3 tokens, found %d" % len(toklist)
+	    raise ParseFailure, "Directive expected at least 2 tokens, found %d" % len(toklist)
+	if len(toklist) > 3:		# no more than 3 tokens
+	    raise ParseFailure, "Directive expected no more than 3 tokens, found %d" % len(toklist)
 	if toklist[-1] != ':':		# last token should be a ':'
 	    raise ParseFailure, "Directive expected ':' but didn't find one"
+
+	self.ID = None			# No ID by default
+	if len(toklist) == 3:
+	    self.ID = toklist[1]	# grab ID if given
 
 	self.basetype = 'Directive'	# the object can know its own basetype
 	self.type = toklist[0]		# the directive type of this instance
@@ -279,6 +285,34 @@ class Directive:
 	return actlist
 
 
+    def parseArgs( self, toklist ):
+	"""Return dictionary of directive arguments."""
+
+	argdict = {}
+
+	listsize = len(toklist)
+	i = 0
+	while i < listsize:
+	    try:
+		if toklist[i] == '\012':
+		    # skip carriage returns - we can ignore them
+		    i = i + 1
+
+		elif toklist[i+1] == '=':
+		    argdict[toklist[i]] = utils.stripquote(toklist[i+2])
+		    i = i + 3
+
+		else:
+		    log.log( "<directive>parseArgs(), unknown directive token '%s'" % (toklist[i]), 3)
+		    raise ParseFailure, "unknown directive token '%s'" %(toklist[i])
+	    except KeyError:
+		log.log( "<directive>parseArgs(), error parsing directive arguments at i=%d" % (i), 2)
+		raise ParseFailure, "Error parsing directive arguments"
+
+	return argdict
+
+
+
 
 ##
 ## RULE-BASED COMMANDS
@@ -286,13 +320,14 @@ class Directive:
 class FS(Directive):
     def __init__(self, toklist):
 	apply( Directive.__init__, (self, toklist) )
-	self.filesystem = string.join(toklist[1:-1], '')	# the filesystyem to check
 
 
     def tokenparser(self, toklist, toktypes, indent):
 
-	self.rule = utils.stripquote(toklist[0])	# the rule
-	self.actionList = self.parseAction(toklist[1:])
+	tokdict=self.parseArgs(toklist)
+	self.filesystem = tokdict['fs']
+	self.rule = tokdict['rule']
+	self.actionList = self.parseAction( tokdict['action'] )
 
 	# Set any FS-specific variables
 	#  fsf = filesystem
@@ -301,7 +336,9 @@ class FS(Directive):
 	self.Action.varDict['fsrule'] = self.rule
 
 	# define the unique ID
-	self.state.ID = '%s.FS.%s.%s' % (log.hostname,self.filesystem,self.rule)
+	if self.ID == None:
+	    self.ID = '%s.FS.%s' % (log.hostname,self.filesystem)
+	self.state.ID = self.ID
 
 	log.log( "<Directive>FS, ID '%s' filesystem '%s' rule '%s' action '%s'" % (self.state.ID, self.filesystem, self.rule, self.actionList), 8 )
 
@@ -401,19 +438,22 @@ class FS(Directive):
 class PID(Directive):
     def __init__(self, toklist):
 	apply( Directive.__init__, (self, toklist) )
-	self.pidfile = string.join(toklist[1:-1], '')	# the pid file to check for
+
 	self.ruleDict = { 'EX' : None,
 		          'PR' : None }
 
 
     def tokenparser(self, toklist, toktypes, indent):
 
-	# Expect first token to be rule - one of self.ruleDict
-	if toklist[0] not in self.ruleDict.keys():
-	    raise ParseFailure, "PID found unexpected rule '%s'" % toklist[0]
+	tokdict=self.parseArgs(toklist)
 
-	self.rule = toklist[0]			# the rule (EX or PR)
-	self.actionList = self.parseAction(toklist[1:])
+	self.pidfile = tokdict['pid']
+	self.rule = tokdict['rule']
+	self.actionList = self.parseAction( tokdict['action'] )
+
+	# Expect first token to be rule - one of self.ruleDict
+	if self.rule not in self.ruleDict.keys():
+	    raise ParseFailure, "PID found unexpected rule '%s'" % self.rule
 
 	# Set any PID-specific variables
 	#  %pidf = the PID-file
@@ -491,8 +531,6 @@ class PROC(Directive):
 
     def __init__(self, toklist):
 	apply( Directive.__init__, (self, toklist) )
-	self.name = utils.stripquote(toklist[1])			# the daemon to check for
-	self.daemon = utils.stripquote(toklist[1])		# the daemon to check for
 	self.ruleDict = { 'NR' : self.NR,
 		          'R'  : self.R,
 			  'check' : self.check }
@@ -501,18 +539,23 @@ class PROC(Directive):
     def tokenparser(self, toklist, toktypes, indent):
 	"""Parse tokenized input."""
 
+	tokdict=self.parseArgs(toklist)
+
+	self.daemon = tokdict['procname']
+	self.rule = tokdict['rule']
+
 	# Expect first token to be rule
-	if toklist[0] in self.ruleDict.keys():
+	if self.rule in self.ruleDict.keys():
 	    # - either one of self.ruleDict
-	    self.rule = self.ruleDict[toklist[0]]	# Set the rule
-	elif toktypes[0] == 'STRING':
+	    self.rule = self.ruleDict[self.rule]       # Rule is a function
+	elif type(self.rule) == type('STRING'):
 	    # - or a string containing a special check
 	    self.rule = self.ruleDict['check']
-	    self.checkstring = utils.stripquote(toklist[0])
+	    self.checkstring = utils.stripquote(self.rule)
 	else:
-	    raise ParseFailure, "PROC found unexpected rule '%s'" % toklist[0]
+	    raise ParseFailure, "PROC found unexpected rule '%s'" % self.rule
 
-	self.actionList = self.parseAction(toklist[1:])
+	self.actionList = self.parseAction( tokdict['action'] )
 
 	# Set any PROC-specific variables
 	#  %procp = the process name
@@ -521,7 +564,7 @@ class PROC(Directive):
 	self.Action.varDict['procpid'] = '[pid not yet defined]'
 
 	# define the unique ID
-	self.state.ID = '%s.PROC.%s.%s' % (log.hostname,self.name,toklist[0])
+	self.state.ID = '%s.PROC.%s.%s' % (log.hostname,self.daemon,toklist[0])
 
 	log.log( "<Directive>PROC, ID '%s' daemon '%s' rule '%s' action '%s'" % (self.state.ID, self.daemon, self.rule, self.actionList), 8 )
 
@@ -595,31 +638,38 @@ class SP(Directive):
     def __init__(self, toklist):
 	apply( Directive.__init__, (self, toklist) )
 
-	# Must be 5 tokens to make up: ['SP', 'proto', '/', 'port', ':']
-	if len(toklist) < 5:
-	    raise ParseError, "SP proto/port not specified correctly"
-	if toklist[2] != '/':
-	    raise ParseError, "SP proto/port not specified correctly"
-
-	self.proto = utils.stripquote(toklist[1])	# the proto to check
-	self.port_n = utils.stripquote(toklist[3])	# the port to check
-
 
     def tokenparser(self, toklist, toktypes, indent):
 
-	self.addr = utils.stripquote(toklist[0])	# the addr to check
-	self.actionList = self.parseAction(toklist[1:])
+	tokdict=self.parseArgs(toklist)
+
+	try:
+	    self.port_n = tokdict['port']
+	except KeyError:
+	    raise ParseFailure, "Port not specified"
+	try:
+	    self.proto = tokdict['protocol']
+	except KeyError:
+	    raise ParseFailure, "Protocol not specified"
+	try:
+	    self.addr = tokdict['bindaddr']
+	except KeyError:
+	    raise ParseFailure, "Bind address not specified"
+	try:
+	    self.actionList = self.parseAction(tokdict['action'])
+	except KeyError:
+	    raise ParseFailure, "Action not specified"
 
 	# lets try resolving this service port to a number
 	try:
 	    self.port = socket.getservbyname(self.port_n, self.proto)
-	    # print p
 	except socket.error:
 	    self.port = self.port_n
 
 	self.Action.varDict['spport'] = self.port_n
 	self.Action.varDict['spaddr'] = self.addr
 	self.Action.varDict['spprot'] = self.proto
+	self.Action.varDict['spaddr'] = self.addr
 
 	# define the unique ID
 	self.state.ID = '%s.SP.%s/%s.%s' % (log.hostname,self.proto,self.port_n,self.addr)
@@ -656,25 +706,26 @@ COMsemaphore = threading.Semaphore()
 class COM(Directive):
     def __init__(self, toklist):
 	apply( Directive.__init__, (self, toklist) )
-	self.command = utils.stripquote(toklist[1])	# the command
-	self.rule = None
 
 
     def tokenparser(self, toklist, toktypes, indent):
-	toklist = toklist[:-1]		# lose CR
-	toktypes = toktypes[:-1]	# lose CR
 
-	if self.rule == None:
-	    self.rule = utils.stripquote(toklist[0])
-	    toklist = toklist[1:]
+	tokdict=self.parseArgs(toklist)
 
-	if len(toklist) > 0:
-	    self.actionList = self.actionList + self.parseAction(toklist)
+	try:
+	    self.command = tokdict['cmd']
+	except KeyError:
+	    raise ParseFailure, "Command (cmd) not specified"
+	try:
+	    self.rule = tokdict['rule']
+	except KeyError:
+	    raise ParseFailure, "Rule not specified"
+	try:
+	    self.actionList = self.parseAction(tokdict['action'])
+	except KeyError:
+	    raise ParseFailure, "Action not specified"
 
-	#self.rule = utils.stripquote(toklist[0])	# the rule
-	#self.actionList = self.parseAction(toklist[1:])	# the action
-
-	# Set any PID-specific variables
+	# Set any COM-specific variables
 	#  %com = the command
 	#  %rule = the rule
 	self.Action.varDict['com'] = self.command
@@ -683,7 +734,7 @@ class COM(Directive):
 	# define the unique ID
 	self.state.ID = '%s.COM.%s.%s' % (log.hostname,self.command,self.rule)
 
-	log.log( "<Directive>COM, ID '%s' command '%s' rule '%s' action '%s'" % (self.state.ID, self.command, self.rule, self.actionList), 8 )
+	log.log( "<directive>COM, ID '%s' command '%s' rule '%s' action '%s'" % (self.state.ID, self.command, self.rule, self.actionList), 8 )
 
 
     def docheck(self, Config):
@@ -772,36 +823,31 @@ class PORT(Directive):
     def __init__(self, toklist):
 	apply( Directive.__init__, (self, toklist) )
 
-	# Expect only 3 tokens: ( 'PORT', <host>, ':' )
-	if len(toklist) > 3:
-	    raise ParseFailure, "Too many tokens for PORT directive"
-
-	self.host = utils.stripquote(toklist[1])	# the host
-	self.port = None
-	self.sendstr = None
-	self.expect = None
-
 
     def tokenparser(self, toklist, toktypes, indent):
-	toklist = toklist[:-1]		# lose CR
-	toktypes = toktypes[:-1]	# lose CR
 
-	while len(toklist) > 0:
-	    if self.port == None:
-		try:
-		    self.port = int(utils.stripquote(toklist[0]))
-		except ValueError:
-		    raise ParseFailure, "Port should be integer, found '%s'" % toklist[0]
-    		toklist = toklist[1:]
-	    elif self.sendstr == None:
-		self.sendstr = utils.stripquote(toklist[0])
-    		toklist = toklist[1:]
-	    elif self.expect == None:
-		self.expect = utils.stripquote(toklist[0])
-    		toklist = toklist[1:]
-	    else:
-		self.actionList = self.actionList + self.parseAction(toklist)
-    		toklist = []
+	tokdict=self.parseArgs(toklist)
+
+	try:
+	    self.host = tokdict['host']
+	except KeyError:
+	    raise ParseFailure, "Host not specified"
+	try:
+	    self.port = int(tokdict['port'])
+	except KeyError:
+	    raise ParseFailure, "Port not specified"
+	try:
+	    self.sendstr = tokdict['send']
+	except KeyError:
+	    raise ParseFailure, "Send string not specified"
+	try:
+	    self.expect = tokdict['expect']
+	except KeyError:
+	    raise ParseFailure, "Expect string not specified"
+	try:
+	    self.actionList = self.parseAction(tokdict['action'])
+	except KeyError:
+	    raise ParseFailure, "Action not specified"
 
 	# Set any PORT-specific variables
 	#  %porthost = the host
@@ -884,16 +930,6 @@ class IF(Directive):
     def __init__(self, toklist):
 	apply( Directive.__init__, (self, toklist) )
 
-	# Must be 3 tokens to make up: ['SP', 'ifname', ':']
-	if len(toklist) != 3:
-	    raise ParseError, "IF parse error, expected 3 tokens, found %d" % (len(toklist))
-	if toklist[2] != ':':
-	    raise ParseError, "IF parse error, no colon"
-
-	self.name = utils.stripquote(toklist[1])		# the interface name
-	self.rule = None
-	self.checkstring = ''
-
         self.ruleDict = { 'NE' : self.NE,
 			  'EX' : self.EX,
 			  'check' : self.check }
@@ -903,18 +939,33 @@ class IF(Directive):
     def tokenparser(self, toklist, toktypes, indent):
 	"""Parse rest of rule (after ':')."""
 
+	tokdict=self.parseArgs(toklist)
+
+	try:
+	    self.name = tokdict['name']
+	except KeyError:
+	    raise ParseFailure, "Interface name not specified"
+	try:
+	    self.rule = tokdict['rule']
+	except KeyError:
+	    raise ParseFailure, "Rule not specified"
+	try:
+	    self.actionList = self.parseAction(tokdict['action'])
+	except KeyError:
+	    raise ParseFailure, "Action not specified"
+
+	self.checkstring = ""
+
 	# Expect first token to be rule
-        if toklist[0] in self.ruleDict.keys():
+        if self.rule in self.ruleDict.keys():
             # - either one of self.ruleDict
-            self.rule = self.ruleDict[toklist[0]]       # Set the rule
-        elif toktypes[0] == 'STRING':
+            self.rule = self.ruleDict[self.rule]       # Set the rule
+        elif type(self.rule) == type('STRING'):
             # - or a string containing a special check
             self.rule = self.ruleDict['check']
-            self.checkstring = utils.stripquote(toklist[0])
+            self.checkstring = utils.stripquote(self.rule)
         else:
-            raise ParseFailure, "IF found unexpected rule '%s'" % toklist[0]
-
-	self.actionList = self.parseAction(toklist[1:])
+            raise ParseFailure, "IF found unexpected rule '%s'" % self.rule
 
 	self.Action.varDict['ifname'] = self.name
 	self.Action.varDict['ifrule'] = self.rule
@@ -988,25 +1039,26 @@ class NET(Directive):
     def __init__(self, toklist):
 	apply( Directive.__init__, (self, toklist) )
 
-	# Must be 2 tokens to make up: ['NET', ':']
-	if len(toklist) != 2:
-	    raise ParseError, "NET parse error, expected 2 tokens, found %d" % (len(toklist))
-	if toklist[1] != ':':
-	    raise ParseError, "NET parse error, no colon"
-
 	self.rulestring = ''
 
 
     def tokenparser(self, toklist, toktypes, indent):
 	"""Parse rest of rule (after ':')."""
 
-	# Expect first token to be rule (a string)
-        if toktypes[0] != 'STRING':
-	    raise ParseError, "NET parse error, rule is not string."
+	tokdict=self.parseArgs(toklist)
 
-	self.rulestring = utils.stripquote(toklist[0])
+	try:
+	    self.rulestring = tokdict['rule']
+	except KeyError:
+	    raise ParseFailure, "Rule not specified"
+	try:
+	    self.actionList = self.parseAction(tokdict['action'])
+	except KeyError:
+	    raise ParseFailure, "Action not specified"
 
-	self.actionList = self.parseAction(toklist[1:])
+	# Rule should be a string
+        if type(self.rulestring) != type('STRING'):
+	    raise ParseFailure, "NET parse error, rule is not string."
 
 	self.Action.varDict['netrule'] = self.rulestring
 
@@ -1044,25 +1096,26 @@ class SYS(Directive):
     def __init__(self, toklist):
 	apply( Directive.__init__, (self, toklist) )
 
-	# Must be 2 tokens to make up: ['SYS', ':']
-	if len(toklist) != 2:
-	    raise ParseError, "SYS parse error, expected 2 tokens, found %d" % (len(toklist))
-	if toklist[1] != ':':
-	    raise ParseError, "SYS parse error, no colon"
-
 	self.rulestring = ''
 
 
     def tokenparser(self, toklist, toktypes, indent):
 	"""Parse rest of rule (after ':')."""
 
-	# Expect first token to be rule (a string)
-        if toktypes[0] != 'STRING':
-	    raise ParseError, "SYS parse error, rule is not string."
+	tokdict=self.parseArgs(toklist)
 
-	self.rulestring = utils.stripquote(toklist[0])
+	try:
+	    self.rulestring = tokdict['rule']
+	except KeyError:
+	    raise ParseFailure, "Rule not specified"
+	try:
+	    self.actionList = self.parseAction(tokdict['action'])
+	except KeyError:
+	    raise ParseFailure, "Action not specified"
 
-	self.actionList = self.parseAction(toklist[1:])
+	# Rule should be a string
+        if type(self.rulestring) != type('STRING'):
+	    raise ParseFailure, "SYS parse error, rule is not string."
 
 	self.Action.varDict['sysrule'] = self.rulestring
 
@@ -1100,25 +1153,26 @@ class STORE(Directive):
     def __init__(self, toklist):
 	apply( Directive.__init__, (self, toklist) )
 
-	# Must be 2 tokens to make up: ['STORE', ':']
-	if len(toklist) != 2:
-	    raise ParseError, "STORE parse error, expected 2 tokens, found %d" % (len(toklist))
-	if toklist[1] != ':':
-	    raise ParseError, "STORE parse error, no colon"
-
 	self.rulestring = ''
 
 
     def tokenparser(self, toklist, toktypes, indent):
 	"""Parse rest of rule (after ':')."""
 
-	# Expect first token to be rule (a string)
-        if toktypes[0] != 'STRING':
-	    raise ParseError, "STORE parse error, data list is not string."
+	tokdict=self.parseArgs(toklist)
 
-	self.rulestring = utils.stripquote(toklist[0])		# the variable space to store
+	try:
+	    self.rulestring = tokdict['rule']
+	except KeyError:
+	    raise ParseFailure, "Rule not specified"
+	try:
+	    self.actionList = self.parseAction(tokdict['action'])
+	except KeyError:
+	    raise ParseFailure, "Action not specified"
 
-	self.actionList = self.parseAction(toklist[1:])
+	# Rule should be a string
+        if type(self.rulestring) != type('STRING'):
+	    raise ParseFailure, "STORE parse error, rule is not string."
 
 	self.Action.varDict['storerule'] = self.rulestring
 
