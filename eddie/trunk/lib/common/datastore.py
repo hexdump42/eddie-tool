@@ -1,8 +1,8 @@
 ## 
 ## File		: datastore.py
 ## 
-## Author       : Chris Miles  <cmiles@codefx.com.au>
-##                Rod Telford  <rtelford@codefx.com.au>
+## Author       : Chris Miles  <chris@psychofx.com>
+##                Rod Telford  <rtelford@psychofx.com>
 ## 
 ## Date		: 20000520
 ## 

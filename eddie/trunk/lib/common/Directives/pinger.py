@@ -1,7 +1,7 @@
 ##
 ## File         : pinger.py
 ##
-## Author       : Chris Miles  <cmiles@codefx.com.au>
+## Author       : Chris Miles  <chris@psychofx.com>
 ##
 ## Date         : 20010710
 ##

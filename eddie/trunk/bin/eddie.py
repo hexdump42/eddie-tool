@@ -2,8 +2,8 @@
 ##
 ## File         : eddie.py 
 ## 
-## Author       : Rod Telford  <rtelford@codefx.com.au>
-##                Chris Miles  <cmiles@codefx.com.au>
+## Author       : Rod Telford  <rtelford@psychofx.com>
+##                Chris Miles  <cmiles@psychofx.com>
 ## 
 ## Start Date   : 19971204 
 ## 
@@ -329,8 +329,8 @@ def doArgs(args, argflags):
     """Parse command-line arguments."""
     for a in args:
 	if a == '-v' or a == '--version':
-	    print "Eddie (c) Chris Miles and Rod Telford 1998-2000"
-	    print "  cmiles@codefx.com.au / rtelford@codefx.com.au"
+	    print "Eddie (c) Chris Miles and Rod Telford 1998-2001"
+	    print "  chris@psychofx.com / rtelford@psychofx.com"
 	    print "  Version: %s" % EDDIE_VER
 	    eddieexit()
 	elif a == '-h' or a == '--help' or a == '-?':

@@ -1,9 +1,8 @@
-#!/usr/local/bin/python
 ##
 ## File         : sockets.py
 ##
-## Author       : Rod Telford  <rtelford@codefx.com.au>
-##                Chris Miles  <cmiles@codefx.com.au>
+## Author       : Rod Telford  <rtelford@psychofx.com>
+##                Chris Miles  <chris@psychofx.com>
 ##
 ## Start Date   : 20010615
 ##
