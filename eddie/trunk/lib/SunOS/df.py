@@ -35,11 +35,6 @@ import log, history, utils
 ##
 class dfList:
     def __init__(self):
-	self.hash = {}
-	self.mounthash = {}
-	self.list = []
-	self.dfheader = ""
-
 	self.refresh()
 
 
@@ -48,10 +43,13 @@ class dfList:
 
 	# List all UFS and VXFS filesystems
 	# Note: we don't bother with NFS filesystems at this point.
+	# TODO: allow user-specified filesystem types
 	rawList = utils.safe_popen('/usr/bin/df -kFufs | grep -v Filesystem ; /usr/bin/df -kFvxfs | grep -v Filesystem', 'r')
-	#rawList = utils.safe_popen('df -kFufs', 'r')
-	#self.dfheader = rawList.readline()
  
+	self.list = []
+	self.hash = {}
+	self.mounthash = {}
+
 	for line in rawList.readlines():
 	    fields = string.split(line)
 	    p = df(fields)

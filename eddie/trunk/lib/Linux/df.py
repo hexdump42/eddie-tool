@@ -39,11 +39,6 @@ import log, history, utils
 ##
 class dfList:
     def __init__(self):
-	self.hash = {}
-	self.mounthash = {}
-	self.list = []
-	self.dfheader = ""
-
 	self.refresh()
 
 
@@ -51,8 +46,12 @@ class dfList:
 	"""Force df refresh."""
 
 	rawList = utils.safe_popen('df -text2', 'r')
-	self.dfheader = rawList.readline()
+	rawList.readline()	# skip header
  
+	self.list = []
+	self.hash = {}
+	self.mounthash = {}
+
 	for line in rawList.readlines():
 	    fields = string.split(line)
 	    p = df(fields)
@@ -60,7 +59,6 @@ class dfList:
 	    self.hash[fields[0]] = p		# dict of filesystem devices
 	    self.mounthash[fields[5]] = p	# dict of mount points
 
-	#rawList.close()
 	utils.safe_pclose( rawList )
 
 

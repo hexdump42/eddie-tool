@@ -34,11 +34,6 @@ import log, history, utils
 ##
 class dfList:
     def __init__(self):
-	self.hash = {}
-	self.mounthash = {}
-	self.list = []
-	self.dfheader = ""
-
 	self.refresh()
 
 
@@ -48,8 +43,11 @@ class dfList:
 	dfre = "^([/0-9a-zA-Z]+)\s*\(([/0-9a-zA-Z])\s*\)\s*:\s*([0-9]+)\s*total allocated Kb\s*([0-9]+)\s*free allocated Kb\s*([0-9]+)\s*used allocated Kb\s*([0-9]+)\s*% allocation used"
 
 	rawList = utils.safe_popen('bdf', 'r')
-	#self.dfheader = rawList.readline()
  
+	self.hash = {}
+	self.mounthash = {}
+	self.list = []
+
 	prevline = None
 	for line in rawList.readlines():
 	    if prevline:
