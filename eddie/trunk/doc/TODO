@@ -24,6 +24,8 @@ y Directives spanning multiple lines not parsed properly.
 y Problem age/ack details variable for messages, eg: %(probage)s, etc.
 y logfile checking
 
+- df.py: df list needs to cache properly like other data collectors...
+
 - See DEF problems/changes in BUGS
 
 - rule dependencies
