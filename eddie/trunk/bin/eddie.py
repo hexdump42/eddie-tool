@@ -1,4 +1,4 @@
-#!/opt/python2/bin/python
+#!/usr/bin/python
 ##
 ## File         : eddie.py 
 ## 

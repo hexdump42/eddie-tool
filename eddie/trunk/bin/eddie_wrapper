@@ -83,11 +83,10 @@ while [ 1 ]; do
 	start_time=`$GDATE "+%s"`
 
 	cd /opt/eddie/bin
-	./eddie.py >$RUNFILE
+	./eddie.py >>$RUNFILE
 
 	retcode=$?
 	echo "eddie_wrapper: eddie died at `date` return code: $retcode" >> $RUNFILE
-	$MAIL -s "Eddie output on `hostname` at `date`" $EDDIE_ADMIN < $RUNFILE
 
 	curtime=`$GDATE "+%s"`
 	restart_time=`expr $curtime - $start_time`
@@ -98,12 +97,18 @@ while [ 1 ]; do
 	fi
 
 	if [ $tries -gt $MAX_TRIES ]; then
-		echo "Too many restarts ($tries) in a short time. eddie_wrapper quitting." | $MAIL -s "eddie_wrapper on `hostname`: Too many restarts ($tries) in a short time." $EDDIE_ADMIN
+		echo "eddie_wrapper: Too many restarts ($tries) in a short time. eddie_wrapper quitting." >>$RUNFILE
+
+		$MAIL -s "Eddie output on `hostname` at `date`" $EDDIE_ADMIN < $RUNFILE
+		rm $RUNFILE
 		exit 3
 	fi
 
+	$MAIL -s "Eddie output on `hostname` at `date`" $EDDIE_ADMIN < $RUNFILE
+	rm -f $RUNFILE
+
 	sleep 30
-	echo "eddie_wrapper: restarting Eddie at `date`."
+	echo "eddie_wrapper: restarting Eddie at `date` [tries=$tries]." >> $RUNFILE
 done
 
 # clean up some more
