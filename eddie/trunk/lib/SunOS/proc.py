@@ -219,6 +219,25 @@ class proc:
 			# can't determine procname.....
 			self.procname = ''
 
+    def timeconv(self,str):
+    	""" 
+	Convert something vaguely in the format [dd-]hh:mm:ss into
+	something usable - ie pure seconds.
+	"""
+
+	s=0
+	t=string.split(str,"-")
+	if len(t)>1:
+	    s=s+86400*int(t[0])	
+	    str=t[1]
+	else:
+	    str=t[0]
+	t=string.split(str,":")
+	s=s+int(t[-1])
+	s=s+60*int(t[-2])
+	if len(t)==3:
+	    s=s+3600*int(t[0])
+    	return s
 
     def __str__(self):
 	# display process details (OLD, doesn't show many details)
@@ -256,7 +275,9 @@ class proc:
 	info['rss'] = self.rss
 	info['osz'] = self.osz
 	info['time'] = self.time
+	info['timesec'] = self.timeconv(self.time)
 	info['etime'] = self.etime
+	info['etimesec'] = self.timeconv(self.etime)
 	info['stime'] = self.stime
 	info['f'] = self.f
 	info['c'] = self.c
