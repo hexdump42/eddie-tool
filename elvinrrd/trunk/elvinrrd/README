@@ -1,0 +1,86 @@
+#### ElvinRRD ####
+
+Author: Chris Miles <chris@psychofx.com>
+Home: http://www.psychofx.com/elvinrrd/
+
+
+## Description ##
+
+ElvinRRD is a tool to provide the transportation of data across a network to be
+stored in an RRD database. ElvinRRD works with (and requires) both
+Elvin (http://elvin.dstc.edu.au/) and
+RRDtool (http://people.ee.ethz.ch/~oetiker/webtools/rrdtool/).
+
+Any Elvin producer (client) can send data for ElvinRRD to store (e.g.,
+E.D.D.I.E. http://eddie-tool.net/); and any RRD-aware software can process the
+resulting RRD databases (e.g., Cricket http://cricket.sourceforge.net/).
+
+ElvinRRD is an Elvin consumer, meaning it subscribes for messages on an Elvin
+messaging network.  Any matching messages (containing at least the key
+ELVINRRD) are delivered to ElvinRRD, and if they match an entry in the ElvinRRD
+config file, will have their data stored to the corresponding RRD database.
+
+
+## Requirements ##
+
+Python: http://www.python.org/
+ - ElvinRRD is written in Python.
+
+RRDtool: http://people.ee.ethz.ch/~oetiker/webtools/rrdtool/
+ - ElvinRRD requires librrd from the rrdtool build.
+
+Elvin: http://elvin.dstc.edu.au/
+ - ElvinRRD is an Elvin consumer, and needs an Elvin network to connect to and
+   the Python Elvin module package (http://elvin.dstc.edu.au/projects/pe4/).
+
+
+## Installation ##
+
+1. Unpack the elvinrrd tarball somewhere.  Only elvinrrd.py and elvinrrd.cf are
+   needed to actually run it.
+2. Edit the first line of elvinrrd.py to point to your Python interpreter.
+3. Edit elvinrrd.cf to setup what RRD messages to capture and where to store
+   them.
+4. Run it with a command like:
+   $ ./elvinrrd.py -v -d -c ./elvinrrd.cf -e elvin://elvin.dstc.edu.au/
+   -v enabled verbose output
+   -d enables debugging (more verbose) output
+   -c tells it where to find the config file (and is a required argument)
+   -e gives the location of an Elvin server; elvin://elvin.dstc.edu.au/ is
+      a public Elvin server setup by the Elvin authors and can be used for
+      testing if you do not have your own Elvin server running.
+   Note: you may have to setup your LD_LIBRARY_PATH so that elvinrrd.py can
+   find librrd.  For example:
+   $ LD_LIBRARY_PATH=/opt/rrdtool/lib ./elvinrrd.py -v -d -c ./elvinrrd.cf \
+     -e elvin://elvin.dstc.edu.au/
+
+
+## Testing ##
+
+Using the sample config elvinrrd.cf, a simple test to insert some data would
+be:
+    $ python
+    Python 2.1 (#1, May 27 2001, 23:27:30) 
+    [GCC 2.96 20000731 (Red Hat Linux 7.0)] on linux2
+    Type "copyright", "credits" or "license" for more information.
+    >>> import elvin
+    >>> e=elvin.connect('elvin://elvin.server.domain')
+    >>> e.notify( ELVINRRD='loadavg1-test', loadavg1=1.0 )
+
+The elvinrrd logfile should show something like:
+    2001-11-01 15:24:38 rrd.update( ('/export/rrd/loadavg/loadavg1-test.rrd', 'N:1.0') )
+    2001-11-01 15:24:38 Creating rrd: ('/export/rrd/loadavg/loadavg1-test.rrd', '-s', '60', 'DS:loadavg1:GAUGE:120:0:200', 'RRA:AVERAGE:0.5:1:1440', 'RRA:AVERAGE:0.5:10:1008', 'RRA:AVERAGE:0.5:60:720', 'RRA:AVERAGE:0.5:480:1095')
+
+which means the RRD database for loadavg1 data samples on host 'test' has been
+created and the first data inserted.
+
+
+## Support ##
+
+ElvinRRD: for problems with ElvinRRD specifically, email elvinrrd@psychofx.com
+Elvin: for problems with Elvin, see http://elvin.dstc.edu.au/ or email
+  elvin@dstc.edu.au
+RRDtool: for problems with RRDtool, see
+  http://people.ee.ethz.ch/~oetiker/webtools/rrdtool/
+Python: for Python problems, see http://www.python.org/Help.html
+
