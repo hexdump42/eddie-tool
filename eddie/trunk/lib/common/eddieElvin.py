@@ -41,13 +41,13 @@ ElvinError = 'ElvinError'
 class elvinConnection:
     """A shared object which maintains a single connection to the Elvin server."""
 
-    def __init__(self, host='elvin.connect.com.au', port=5678):
+    #def __init__(self, host='elvin.connect.com.au', port=5678):
+    def __init__(self, host='elvin.connect.com.au', port=50000):
 	self.host = host
 	self.port = port
 
 	try:
-	    self.elvin = Elvin.Elvin(Elvin.EC_NAMEDHOST, self.host, self.port,
-				     None, self._error_cb)
+	    self.elvin = Elvin.Elvin(Elvin.EC_NAMEDHOST, self.host, self.port, None, None, self._error_cb)
 	except:
 	    sys.stderr.write("Connection to elvin failed\nIs there an elvin server running at %s:%d %s/%s\n" %(self.host, self.port, sys.exc_type, sys.exc_value))
 	    #self._exit()
@@ -58,16 +58,16 @@ class elvinConnection:
     def _error_cb(self, code, msg):
 	"""Elvin error callback. We reconnect"""
 
-	sys.stderr.write("Elvin has gone ... will atempt to reconnect\n")
+	sys.stderr.write("Elvin has gone ... will attempt to reconnect\n")
 	self.connected = 0
 	self._destroy()
-	backoff = 4
+	backoff = 10
 	while not self._reconnect():
 	    time.sleep(backoff)
 	    backoff = backoff * 2
-	    if backoff > 36000: # 10 mins
-		sys.stderr.write("Elvin is really dead.  Giving up\n")
-		os.kill(os.getpid(), signal.SIGUSR1)
+#	    if backoff > 36000: # 10 mins
+#		sys.stderr.write("Elvin is really dead.  Giving up\n")
+#		os.kill(os.getpid(), signal.SIGUSR1)
 
     def _reconnect(self):
 	"""Do the reconnection"""
@@ -75,7 +75,7 @@ class elvinConnection:
 	try:
 	    #sys.stderr.write(" Reconnecting at %s\n"%(time.ctime(time.time()),))
 	    log.log( "<eddieElvin>_reconnect(), Reconnecting to Elvin: %s:%d" % (self.host,self.port), 4 )
-	    self.elvin = Elvin.Elvin(Elvin.EC_NAMEDHOST, self.host, self.port, None, self._error_cb)
+	    self.elvin = Elvin.Elvin(Elvin.EC_NAMEDHOST, self.host, self.port, None, None, self._error_cb)
 	except:
 	    sys.exc_traceback = None
 	    return 0
@@ -118,13 +118,17 @@ class eddieElvin:
     # must override this method
     def sendmsg(self,msg):
 	if self.connected:
-	    #self.elvin.notify( { 'TICKERTAPE' : 'EddieTest',
-	    ec.elvin.notify( { 'TICKERTAPE' : 'Eddie',
+	    try:
+		ec.elvin.notify( { 'TICKERTAPE' : 'Eddie',
 	                         'TICKERTEXT' : msg,
 				       'USER' : log.hostname,
 				    'TIMEOUT' : 10, 
 				  'MIME_TYPE' : 'x-elvin/slogin',
 				  'MIME_ARGS' : log.hostname } )
+	    except Elvin.LostConnectionException:
+		log.log( "<eddieElvin>eddieElvin.sendmsg(), notify failed, LostConnectionException.", 3 )
+		return 1
+
 	    return 0
 
 	else:
@@ -138,12 +142,17 @@ class elvinTicker(eddieElvin):
     def sendmsg(self,msg):
 	if self.connected:
 	    #self.elvin.notify( { 'TICKERTAPE' : 'Eddie',
-	    self.elvin.notify( { 'TICKERTAPE' : 'EddieTest',
+	    try:
+		self.elvin.notify( { 'TICKERTAPE' : 'EddieTest',
 	                         'TICKERTEXT' : msg,
 				       'USER' : log.hostname,
 				    'TIMEOUT' : 10, 
 				  'MIME_TYPE' : 'x-elvin/slogin',
 				  'MIME_ARGS' : log.hostname } )
+	    except Elvin.LostConnectionException:
+		log.log( "<eddieElvin>elvinTicker.sendmsg(), notify failed, LostConnectionException.", 3 )
+		return 1
+
 	    return 0
 
 	else:
@@ -153,8 +162,13 @@ class elvinPage(eddieElvin):
 
     def sendmsg(self,pager, msg):
 	if self.connected:
-	    self.elvin.notify( { 'ELVINPAGE'  : pager,
+	    try:
+		self.elvin.notify( { 'ELVINPAGE'  : pager,
 	                              'MESS'  : msg    } )
+	    except Elvin.LostConnectionException:
+		log.log( "<eddieElvin>elvinPage.sendmsg(), notify failed, LostConnectionException.", 3 )
+		return 1
+
 	    return 0
 
 	else:
@@ -234,12 +248,21 @@ class elvindb(eddieElvin):
 		    edictcopy.update(extrahashes[e])		# add all the system data
 
 		    #self.elvin.notify( edictcopy )
-		    ec.elvin.notify( edictcopy )
+		    try:
+			ec.elvin.notify( edictcopy )
+		    except Elvin.LostConnectionException:
+			log.log( "<eddieElvin>elvindb.send(), notify failed, LostConnectionException.", 3 )
+			return 1
+
 	    else:
 		edict.update(data)		# add all the system data
 
 		#self.elvin.notify( edict )
-		ec.elvin.notify( edict )
+		try:
+		    ec.elvin.notify( edict )
+		except Elvin.LostConnectionException:
+		    log.log( "<eddieElvin>elvindb.send(), notify failed, LostConnectionException.", 3 )
+		    return 1
 
 	    return 0
 
