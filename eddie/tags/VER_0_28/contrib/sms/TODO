@@ -1,0 +1,12 @@
+
+This is unfinished work :-)  I still need to do the following things:
+
+o Write pdu utils for decoding
+o Write code to instantiate PDU with an encoded pdu
+o Clean up code
+o Write documentation
+
+-----------------------------------------
+24/05/98
+Rod Telford <rtelford@connect.com.au>
+$Id$
