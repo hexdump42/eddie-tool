@@ -441,6 +441,10 @@ class FS(Directive):
 
     def docheck(self, Config):
 	log.log( "<directive>FS(), docheck(), fs '%s', rule '%s'" % (self.fs,self.rule), 7 )
+
+	if self.state.checkcount > 0:
+	    dlist.refresh()	# force refresh of list if re-checking
+
 	df = dlist[self.fs]
 	if df == None:
 	    log.log( "<directive>FS(), Error, no df with fs '%s'" % (self.fs), 2 )
@@ -568,6 +572,7 @@ class PID(Directive):
 
     def docheck(self, Config):
 	log.log( "<directive>PID(), docheck(), pid '%s', rule '%s'" % (self.pid,self.rule), 7 )
+
 	if self.rule == "EX":
 	    # Check if pidfile exists
 	    try:
@@ -607,18 +612,13 @@ class PID(Directive):
 
 		# Search for pid from process list
 		if plist.pidExists( pid ) == 0:
-		    # pid not found - to make sure, let's sleep a bit then check again
-		    log.log( "<directive>PID(), PR, pid %s not in process list - sleeping and checking again..." % (pid), 7 )
-		    time.sleep( 30 )
-		    plist.refresh()		# force refresh of proc list
-		    if plist.pidExists( pid ) == 0:
-			# there is no process with pid == pid
-			log.log( "<directive>PID(), PR, pid %s not in process list" % (pid), 6 )
-			self.state.statefail()	# update state info for check failed
-			self.doAction(Config)
-		    else:
-			log.log( "<directive>PID(), PR, pid %s is in process list" % (pid), 7 )
-			self.state.stateok()		# update state info for check passed
+		    # there is no process with pid == pid
+		    log.log( "<directive>PID(), PR, pid %s not in process list" % (pid), 6 )
+		    self.state.statefail()	# update state info for check failed
+		    self.doAction(Config)
+		else:
+		    log.log( "<directive>PID(), PR, pid %s is in process list" % (pid), 7 )
+		    self.state.stateok()		# update state info for check passed
 
 	    self.putInQueue( Config.q )	# put self back in the Queue
 
@@ -688,7 +688,7 @@ class PROC(Directive):
 	"""Call action if process is found to be NOT running."""
 
 	if self.state.checkcount > 0:
-	    plist.refresh()	# force refresh of proc list if re-checking
+	    plist.refresh()	# force refresh of list if re-checking
 
 	if plist.procExists( self.procname ) == 0:
 	    log.log( "<directive>NR(PROC) procname not running, '%s'" % (self.procname), 6 )
@@ -781,23 +781,19 @@ class SP(Directive):
     def docheck(self, Config):
 	log.log( "<directive>SP(), docheck(), protocol '%s', port '%s', addr '%s'" % (self.protocol,self.port_n,self.bindaddr), 7 )
 
+	if self.state.checkcount > 0:
+	    nlist.refresh()	# force refresh of list if re-checking
+
 	ret = nlist.portExists(self.protocol, self.port, self.bindaddr) != None
 	if ret != 0:
 	    log.log( "<directive>SP(), port %s/%s listener found bound to %s" % (self.protocol , self.port_n, self.bindaddr), 8 )
 	    self.state.stateok()	# update state info for check passed
 	else:
 	    log.log( "<directive>SP(), port %s/%s no listener found bound to %s - sleeping before recheck..." % (self.protocol , self.port_n, self.bindaddr), 7 )
-	    time.sleep( 30 )
-	    nlist.refresh()		# force refresh of network stats
 
-	    ret = nlist.portExists(self.protocol, self.port, self.bindaddr) != None
-	    if ret != 0:
-		log.log( "<directive>SP(), port %s/%s listener found bound to %s" % (self.protocol , self.port_n, self.bindaddr), 7 )
-		self.state.stateok()	# update state info for check passed
-	    else:
-		log.log( "<directive>SP(), port %s/%s no listener found bound to %s" % (self.protocol , self.port_n, self.bindaddr), 6 )
-		self.state.statefail()	# update state info for check failed
-		self.doAction(Config)
+	    log.log( "<directive>SP(), port %s/%s no listener found bound to %s" % (self.protocol , self.port_n, self.bindaddr), 6 )
+	    self.state.statefail()	# update state info for check failed
+	    self.doAction(Config)
 
 	self.putInQueue( Config.q )	# put self back in the Queue
 
@@ -1082,6 +1078,9 @@ class IF(Directive):
     def NE(self, Config):
 	"""Check that an interface currently does not exist."""
 
+	if self.state.checkcount > 0:
+	    nlist.refresh()	# force refresh of list if re-checking
+
 	if nlist.getInterface(self.name) == None:
 	    # interface doesn't exist
 	    log.log( "<directive>IF.NE() interface '%s' does not exist" % (self.name), 6 )
@@ -1094,6 +1093,9 @@ class IF(Directive):
     def EX(self, Config):
 	"""Check that an interface currently exists."""
 
+	if self.state.checkcount > 0:
+	    nlist.refresh()	# force refresh of list if re-checking
+
 	if nlist.getInterface(self.name) != None:
 	    # interface exists
 	    log.log( "<directive>IF.EX() interface '%s' exists" % (self.name), 6 )
@@ -1105,6 +1107,9 @@ class IF(Directive):
 
     def check(self, Config):
 	"""Execute a check supplied by the user as a string."""
+
+	if self.state.checkcount > 0:
+	    nlist.refresh()	# force refresh of list if re-checking
 
 	i = nlist.getInterface(self.name)
 	if i == None:
@@ -1161,6 +1166,9 @@ class NET(Directive):
 
 	log.log( "<directive>NET(), docheck(), rule '%s'" % (self.rule), 7 )
 
+	if self.state.checkcount > 0:
+	    nlist.refresh()	# force refresh of list if re-checking
+
 	netenv = nlist.statstable.getHash()	# get dictionary of network stats
 
 	result = eval( self.rule, netenv )
@@ -1214,6 +1222,9 @@ class SYS(Directive):
 
 	log.log( "<directive>SYS(), docheck(), rule '%s'" % (self.rule), 7 )
 
+	if self.state.checkcount > 0:
+	    system.refresh()	# force refresh of data if re-checking
+
 	sysenv = system.getHash()		# get dictionary of system stats
 
 	try:
@@ -1247,7 +1258,7 @@ class STORE(Directive):
 
     def tokenparser(self, toklist, toktypes, indent):
 	"""Parse rest of rule (after ':')."""
-	Apply( Directive.tokenparser, (self, toklist, toktypes, indent) )
+	apply( Directive.tokenparser, (self, toklist, toktypes, indent) )
 
 	# test required arguments
 	try:

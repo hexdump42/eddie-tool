@@ -114,7 +114,8 @@ class IPF(directive.Directive):
     	    log.log( "<ipf>IPF.docheck(): rule '%s' was false, calling doAction()" % (self.rule), 6 )
     	    self.doAction(Config)
 
-	Config.q.put( (self,time.time()+self.scanperiod) )	# put self back in the Queue
+        self.putInQueue( Config.q )     # put self back in the Queue
+
 
     # Parse the rule line and replace/remove certain characters
     def parseRule(self):

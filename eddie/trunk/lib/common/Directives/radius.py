@@ -95,11 +95,6 @@ class RADIUS(directive.Directive):
 	tend = time.time()
 	timing = tend - tstart
 
-	if z:
-	    self.state.stateok()	# update state info for check passed
-	else:
-	    self.state.statefail()	# update state info for check failed
-
 	# Values are set to None if there was some problem performing the
 	# commands.
 	if timing == None:
@@ -111,9 +106,15 @@ class RADIUS(directive.Directive):
 
 	log.log( "<radius>RADIUS.docheck(): timing=%s z=%s" % (timing,z), 8 )
 
+
+	self.state.statefail()	# set to fail before calling doAction()
 	self.doAction(Config)
 
-        Config.q.put( (self,time.time()+self.scanperiod) )      # put self back in the Queue
+	if z:
+	    self.state.stateok()	# update state info for check passed
+
+        self.putInQueue( Config.q )     # put self back in the Queue
+
 
 
 ##

@@ -254,7 +254,6 @@ class POP3TIMING(directive.Directive):
 
 
 
-	self.state.stateok()	# update state info for check passed
 
 	# assign variables
 	self.Action.varDict['pop3timingconnecttime'] = connecttime
@@ -279,9 +278,12 @@ class POP3TIMING(directive.Directive):
 
 	log.log( "<pop3>POP3TIMING.docheck(): connecttime=%s authtime=%s listtime=%s retrtime=%s" % (connecttime, authtime, listtime, retrtime), 8 )
 
+	self.state.statefail()	# set state to fail before calling doAction()
 	self.doAction(Config)
+	self.state.stateok()	# reset state info
 
-	Config.q.put( (self,time.time()+self.scanperiod) )	# put self back in the Queue
+        self.putInQueue( Config.q )     # put self back in the Queue
+
 
 
 ##

@@ -87,7 +87,8 @@ class CRON(directive.Directive):
 	else:
 	    self.state.stateok()	# update state info for check passed
 
-	Config.q.put( (self,time.time()+self.scanperiod) )	# put self back in the Queue
+        self.putInQueue( Config.q )     # put self back in the Queue
+
 
 
 
@@ -154,7 +155,8 @@ class METASTAT(directive.Directive):
 	    else:
 		self.state.stateok()	# update state info for check passed
 
-	Config.q.put( (self,time.time()+self.scanperiod) )	# put self back in the Queue
+        self.putInQueue( Config.q )     # put self back in the Queue
+
 
 ##
 ## END - solaris.py

@@ -66,5 +66,7 @@ BUGS:
  - Unknown directives are not handled properly.
  - Directives spanning multiple lines not parsed properly.
 
- - core dumps from iostat/kstat library sometimes...
+ - Bus Error/core dump from iostat/kstat library sometimes when
+   collecting iostat data.
+
 
