@@ -104,7 +104,7 @@ def listen(s, Config, die_event):
 
         if r:
             ccsock, addr = s.accept()
-	    print "connection:",addr
+	    log.log( "<sockets>listen(), accepted connection from %s:%d"%addr, 7 )
 
             ccsock.send('Eddie Console Gateway - eddie v%s CodeFX 2001\n' % "0.25")
 
