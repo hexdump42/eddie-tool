@@ -12,7 +12,7 @@
 ##
 ##
 ########################################################################
-## (C) Chris Miles 2001
+## (C) Chris Miles 2001-2004
 ##
 ## The author accepts no responsibility for the use of this software and
 ## provides it on an ``as is'' basis without express or implied warranty.
@@ -26,8 +26,19 @@
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 ########################################################################
 
-import re, string, threading, os, commands, sys, smtplib
+## Python Modules
+import re
+import string
+import threading
+import os
+import commands
+import sys
+import smtplib
+## Eddie Modules
 import log
+
+
+## Classes
 
 class Stack:
     """General purpose stack object."""
@@ -58,6 +69,8 @@ class Stack:
 	else:
 	    return self.stack[-1]
 
+
+## Functions
 
 def trickySplit( line, delim ):
     """trickySplit( line, delim ) - split line by delimiter delim, but ignoring
@@ -391,25 +404,31 @@ def sendmail_smtp( headers, body ):
 
     m=re.search("^To: (.*)$",headers, re.M)
     toaddr=m.group(1)	
+    if toaddr.find(','):
+	toaddr=toaddr.split(',')
 
     headers = headers + 'X-Generated-By: %s:%s\n' % (os.uname()[1], sys.argv[0])
 
     msg="%s\r\n%s" % (headers, body)
 
     # Try and send to each server in turn until we succeed
+    errmsg=[]
     for server in SMTP_SERVERS:
     	try:
 	    smtpserv = smtplib.SMTP(server)
 	    smtpserv.sendmail(EMAIL_FROM, toaddr, msg)
 	    smtpserv.quit()
 	except:
-	    log.log("<utils>sendmail_smtp: Couldn't send mail via %s [%s]" % (server, sys.exc_info()[0]),5)
+	    errmsg.append("<utils>sendmail_smtp: Tried via %s: %s" % (server, sys.exc_info()[0]))
 	    continue
 	else:
 	    log.log("<utils>sendmail_smtp: Sent mail via %s" % server,6)
 	    return 1
 
-    log.log("<utils>sendmail_smtp: Could not send email via any servers %s" % (SMTP_SERVERS),4)
+    # Don't complain unless we can't send mail via any server
+    log.log("<utils>sendmail_smtp: Could not send email to %s via any servers %s" % (`toaddr`, SMTP_SERVERS),4)
+    for msg in errmsg:
+	log.log(msg,4)
     return 0
 
 
