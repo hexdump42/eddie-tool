@@ -1,4 +1,4 @@
-#!/opt/local/bin/python
+#!/opt/python/bin/python
 ## 
 ## File         : eddie.py 
 ## 
