@@ -60,10 +60,10 @@ class netstat:
         been exceeded."""
 
         if time.time() > self.refresh_time:
-            log.log( "<netstat>netstat.checkCache(), refreshing network data", 7 )
+            log.log( "<netstat>netstat.checkCache(): refreshing network data", 7 )
             self.refresh()
         else:
-            log.log( "<netstat>netstat.checkCache(), using cache'd network data", 7 )
+            log.log( "<netstat>netstat.checkCache(): using cached network data", 7 )
 
 
     def __str__(self):
@@ -82,7 +82,7 @@ class netstat:
 	elif proto == 'udp':
 	    return self.udptable[key]
 	else:
-	    log.log( "<netstat>netstat.portExists(), error, proto not supported '%s'" % (proto), 3 )
+	    log.log( "<netstat>netstat.portExists(): Error, proto not supported '%s'" % (proto), 3 )
 	    raise "Netstat Exception", "proto not supported '%s'" % (proto)
 	
 
@@ -353,7 +353,7 @@ class statstable:
 	while 1:
 	    inx = sre.search( line )
 	    if inx == None:
-		log.log("<netstat>statstable.init() getting udp stats: no re match for line '%s'" % (line), 9)
+		log.log("<netstat>statstable.init(): getting udp stats, no re match for line '%s'" % (line), 9)
 		line = rawList.readline()
 		if len(line) == 0:
 		    break

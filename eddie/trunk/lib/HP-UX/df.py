@@ -138,10 +138,10 @@ class dfList:
         been exceeded."""
 
         if time.time() > self.refresh_time:
-            log.log( "<df>dfList._checkCache(), refreshing dfList", 7 )
+            log.log( "<df>dfList._checkCache(): refreshing dfList", 7 )
             self._refresh()
         else:
-            log.log( "<df>dfList._checkCache(), using cache'd dfList", 7 )
+            log.log( "<df>dfList._checkCache(): using cache'd dfList", 7 )
 
 
 

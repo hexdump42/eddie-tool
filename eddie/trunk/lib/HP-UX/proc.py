@@ -162,10 +162,10 @@ class procList:
 	been exceeded."""
 
 	if time.time() > self.refresh_time:
-	    log.log( "<proc>procList._checkCache(), refreshing procList", 7 )
+	    log.log( "<proc>procList._checkCache(): refreshing procList", 7 )
 	    self._refresh()
 	else:
-	    log.log( "<proc>procList._checkCache(), using cache'd procList", 7 )
+	    log.log( "<proc>procList._checkCache(): using cached procList", 7 )
 
 
     def _getProcList(self):
@@ -185,7 +185,7 @@ class procList:
 
 	utils.safe_pclose( rawList )
 
-	log.log( "<proc>procList._procList(), new proc list created", 7 )
+	log.log( "<proc>procList._procList(): new proc list created", 7 )
 
 
 
