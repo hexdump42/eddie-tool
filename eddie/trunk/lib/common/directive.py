@@ -1085,8 +1085,8 @@ class PORT(Directive):
             and returns TRUE or FALSE accordingly """
         #print "Trying to connect to %s:%d send:'%s' exp:'%s'" % (host,port,send,expect)   #DEBUG
         try:
+	    s = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
             try:
-                s = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
                 s.connect( (host,port) )
                 if expect == "":
                     s.close()
@@ -1096,10 +1096,11 @@ class PORT(Directive):
 		    sendlist = string.split(send, '\n')		# split each line
 		    # send each line - only compare last output received
 		    for line in sendlist:
-			log.log( "<directive>PORT.isalive(): sending '%s'" % (line), 7 )
+			log.log( "<directive>PORT.isalive(): sending '%s'" % (line), 8 )
 			s.send(line+'\n')
+			data=''
 			data=s.recv(1024)
-			log.log( "<directive>PORT.isalive(): received '%s'" % (data), 7 )
+			log.log( "<directive>PORT.isalive(): received '%s'" % (data), 8 )
 
                     self.Action.varDict['portrecv'] = data
 
@@ -1108,13 +1109,15 @@ class PORT(Directive):
                         return 1
                     else:
                         return 0
-            finally:
-                try:
-                    s.close()
-                except: 
-                    pass
+            except:
+		s.close()
+		e = sys.exc_info()
+		tb = traceback.format_list( traceback.extract_tb( e[2] ) )
+		log.log( "<Directive>PROC.isalive(), ID '%s', Uncaught exception: %s, %s, %s" % (self.state.ID, e[0], e[1], tb), 3 )
         except:
-            return 0
+	    e = sys.exc_info()
+	    tb = traceback.format_list( traceback.extract_tb( e[2] ) )
+	    log.log( "<Directive>PROC.isalive(), ID '%s', Uncaught exception: %s, %s, %s" % (self.state.ID, e[0], e[1], tb), 3 )
 
 	return 0
 
