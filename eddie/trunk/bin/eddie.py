@@ -1,4 +1,4 @@
-#!/opt/python/bin/python1.5.0
+#!/opt/python/bin/python
 ## 
 ## File         : eddie.py 
 ## 
@@ -28,26 +28,18 @@ syscmd = os.popen( basedir + '/bin/systype', 'r' )
 systype = syscmd.readline()[:-1]
 syscmd.close()
 if systype == '':
-    os.stdout.write( 'Eddie: could not determine system type.\n' )
+    os.stderr.write( 'Eddie: could not determine system type.\n' )
 
 commonlibdir = os.path.join(basedir, 'lib/common')
 oslibdir = os.path.join(basedir, 'lib/' + systype)
 
 sys.path = [commonlibdir, oslibdir] + sys.path
 
-# Python common modules
-import parseConfig
-import directive
-import definition
-import config
-import action
-import log
-import history
+# Python common Eddie modules
+import parseConfig, directive, definition, config, action, log, history
 
-# Python OS-specific modules
-import proc
-import df
-import netstat
+# Python OS-specific Eddie modules
+import proc, df, netstat
 
 # Main config file - this file INCLUDEs all other config files
 configdir = os.path.join(basedir, 'config')
@@ -63,23 +55,17 @@ def eddieexit():
 
 # Signal Handler
 def SigHandler( sig, frame ):
-    global ourList		# global list of all directives
-    global defDict		# global dictionary of DEFinitions
-    global MDict		# global dictionary of Messages
-    global ADict		# global dictionary of Actions
 
     if sig == signal.SIGHUP:
 	# SIGHUP (Hangup) - reload config
 	log.log( '<eddie>SigHandler(), SIGHUP encountered - reloading config', 3 )
 	#
-	# reset lists and read in config and rules
-	ourList = directive.Rules()
-	defDict = {}
-	MDict = definition.MsgDict()
-	ADict = {}
-	parseConfig.readFile(config_file, ourList, defDict, MDict, ADict)
-	directive.ADict = ADict		# make ADict viewable in directive module
-	action.MDict = MDict		# make MDict viewable in action module
+	# reset config and read in config and rules
+	global Config
+	Config = config.Config( '__main__' )
+
+	# read in config and rules
+	parseConfig.readConf(config_file, Config)
 
     elif sig == signal.SIGINT:
 	# SIGINT (CTRL-c) - quit now
@@ -98,7 +84,9 @@ def SigHandler( sig, frame ):
 	log.log( '<eddie>SigHandler(), unknown signal received, %d - ignoring' % sig, 3 )
 
 
+## Perform checks
 def check(Config):
+    # perform checks in current config group
     for d in Config.ruleList.keys():
 	list = Config.ruleList[d]
 	if list != None:
@@ -108,9 +96,15 @@ def check(Config):
 	else:
 	    log.log( "<eddie>check(), Config.ruleList['%s'] is empty" % (d), 4 )
 
+    # perform checks for appropriate groups/hostnames
     for c in Config.groups:
-	log.log( "<eddie>check(), Calling check() with group %s" % (c.name), 8 )
-	check(c)
+	if c.name == log.hostname or (c.name in Config.classDict.keys() and log.hostname in Config.classDict[c.name]):
+	    log.log( "<eddie>check(), Calling check() with group %s" % (c.name), 8 )
+	    print "[DEBUG] Calling check() with group %s" % (c.name)
+	    check(c)
+	else:
+	    print "[DEBUG] Not checking group %s" % (c.name)
+
 
 
 # Parse command-line arguments
@@ -147,21 +141,8 @@ def eddieguts(Config, eddieHistory):
     log.log( "<eddie>eddieguts(), creating netstat list", 8 )
     directive.nlist = netstat.netstatList()
 
-    ## debugging ##
-    #print "-- The following DEFs are defined: --"
-    #for i in defDict.keys():
-    #	print "%s=%s" % (i, defDict[i])
-    #print "-- The following Ms are defined: --"
-    #for i in MDict.keys():
-    #	print "%s: Subject \"%s\"\n---BODY---\n%s\n----------" % (i, MDict.subj(i), MDict[i])
-    #print "-- The following As are defined: --"
-    #for i in ADict.keys():
-    #	print "%s=%s" % (i, ADict[i])
-
     # Now do all the checking
-    # note ... directive order is not defined (we don't currently care do we?)
     log.log( "<eddie>eddieguts(), beginning checks", 7 )
-
     check(Config)
 
     # Save history (debug.. FS only for now...)
@@ -169,6 +150,7 @@ def eddieguts(Config, eddieHistory):
 
 
 
+## Startup routine - setup then start main loop.
 def main():
     # Catch most important signals
     signal.signal( signal.SIGALRM, signal.SIG_IGN )
@@ -187,6 +169,8 @@ def main():
     log.hostname = hostname[:-1]	# strip \n off end
     tmp.close()
 
+    print "[DEBUG] hostname:",log.hostname
+
     # instantiate global Config object
     Config = config.Config( '__main__' )
 
@@ -202,9 +186,6 @@ def main():
 	print Config
 	eddieexit()
 
-    #directive.ADict = ADict		# make ADict viewable in directive module
-    #action.MDict = MDict		# make MDict viewable in action module
-
     # Main Loop
     while 1:
 	try:
@@ -217,7 +198,6 @@ def main():
 	    # sleep for set period - only quits with CTRL-c
 	    log.log( '<eddie>main(), sleeping for %d secs' % (config.scanperiod), 6 )
 	    print '<eddie>main(), sleeping for %d secs' % (config.scanperiod)
-	    #print 'Press CTRL-C to quit'
 
 	    # Sleep by setting SIGALRM to go off in scanperiod seconds
 	    #time.sleep( config.scanperiod )
@@ -232,18 +212,9 @@ def main():
 
 
 
+## Start...
 if __name__ == "__main__":
     main()
-
-    # Catch most important signals
-    #signal.signal( signal.SIGALRM, signal.SIG_IGN )
-    #signal.signal( signal.SIGHUP, SigHandler )
-    #signal.signal( signal.SIGINT, SigHandler )
-    #signal.signal( signal.SIGTERM, SigHandler )
-    # Run the thing in a separate thread
-    #thread.start_new_thread(main, ())
-    # Handle keyboard signals
-    #signal.pause()
 
     # email admin anything else...
     log.sendadminlog()
