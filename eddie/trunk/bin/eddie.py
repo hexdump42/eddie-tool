@@ -348,6 +348,7 @@ def main():
     # don't log till now because log file location is defined in configuration
     log.log( "<eddie>main(): Configuration complete from '%s'" % (config_file), 6 )
     log.log( "<eddie>main(): EDDIE %s, systype: %s" % (__version__, systype), 5 )
+    log.log( "<eddie>main(): Python version: %s" % (sys.version), 5 )
     log.log( "<eddie>main(): oslibdirs: %s" % (oslibdirs), 8 )
 
     if 'showconfig' in argflags.keys() and argflags['showconfig'] == 1:
