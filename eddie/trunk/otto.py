@@ -19,13 +19,12 @@ import parseConfig
 import directive
 import definition
 import config
+import time
 
 # main config file - this file INCLUDEs all other config files
 config_file = 'config/otto.cf'
 
-def main():
-
-
+def ottoguts():
     global ourList		# global list of all directives
     global defDict		# global dictionary of DEFinitions
     global MDict		# global dictionary of Messages
@@ -65,6 +64,21 @@ def main():
     #for d in ourList.keylist():
     #    print "d = ",d
     #    #eval('directive.'+d+'.docheck()')
+
+def main():
+
+    # Main Loop
+    while 1:
+	try:
+	    ottoguts()
+	    print 'Sleeping for %d secs' % (config.scanperiod)
+	    print 'Press CTRL-C to quit'
+	    time.sleep( config.scanperiod )
+	except KeyboardInterrupt:
+	    print "Otto quitting ... bye bye"
+	    break
+
+
 
 if __name__ == "__main__":
     main()

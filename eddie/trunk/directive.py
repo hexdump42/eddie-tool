@@ -78,13 +78,6 @@ class Directive:
 	    i = i + 1
 	return fieldlist
 
-##
-## COMMANDS - TODO : move this somewhere else!!
-##
-class SCANPERIOD(Directive):
-    def setConfig( self, line ):
-	print "SCANPERIOD:setConfig( "+line+" )"
-
 
 
 ##

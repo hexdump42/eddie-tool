@@ -92,6 +92,9 @@ def readFile(file, ruleList, defDict, MDict):
 			MDict + action
 		    else:
 			print "Do wot with action : ",action," ??"
+		elif action.basetype == 'ConfigOption':
+		    # ummm... do nothing!
+		    pass
 		else:
 		    print "Unknown type '"+action.basetype+"' for action: "+action
 
