@@ -71,7 +71,9 @@ class action:
 	# run thru parseVars() to substitute variables from varDict
 	users = parseVars( users, self.varDict )
 	subj = parseVars( subj, self.varDict )
+	subj = parseVars( subj, self.varDict )	# twice to substitute substituted variables!!
 	body = parseVars( body, self.varDict )
+	body = parseVars( body, self.varDict )	# twice to substitute substituted variables!!
 
 	# Show problem age and other statistics if this is not the first time
 	# the problem was found.
