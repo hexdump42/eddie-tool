@@ -193,6 +193,25 @@ Eddie.
 
 	MSG ALERT_P: "Alert: Port %(portport)s on %(porthost)s not responding" ""
 
+    M ping:
+        MSG ALERT: "%(pinghost)s FAILED Ping"
+            """Alert: %(pinghost)s has failed ping.
+
+%(problemage)s
+%(problemfirstdetect)s
+"""
+
+        MSG ALERT_P: "%(pinghost)s FAILED Ping %(problemage)s" ""
+
+        MSG FIXED: "%(pinghost)s PASSED Ping"
+            """OK: %(pinghost)s has passed ping.
+
+%(problemage)s
+%(problemfirstdetect)s
+"""
+
+        MSG FIXED_P: "%(pinghost)s PASSED Ping %(problemage)s" ""
+
 
 ###########################################################################
 # Notification Definitions
@@ -215,6 +234,15 @@ N COMMONALERT:
     # Serious Alert
     Level 3:
 	email(ALERT_EMAIL,ALERT),email(SYSSUP_EMAIL,ALERT_P),ticker(ALERT_P)
+
+
+N COMMONFIXED:
+    # The rule has changed state to OK
+    Level 0:
+        email(ALERT_EMAIL,FIXED)
+
+    Level 1:
+        email(ALERT_EMAIL,FIXED),email(SYSSUP_EMAIL,FIXED_P)
 
 
 
@@ -327,4 +355,15 @@ LOGSCAN priv:		file='/var/log/messages'	# logfile to scan
 			regex='.*priv.*'		# regex to match
 			scanperiod='2h'			# how often to scan
 			action='email("alert", "priv scan %(h)s:%(logscanfile)s", "-- Logscan matched %(logscanlinecount)d lines: --\n%(logscanlines)s")'
+
+
+# PING directive pings hosts and allows checks to be made on the results.  The
+# simplest test is "not alive" meaning no pings returned.
+PING hostalive:     host='10.1.1.1'
+                    rule='not alive'
+                    scanperiod='15m'
+                    numchecks=2
+                    checkwait='1m'
+                    action="COMMONALERT(commonmsg.ping,2)"
+                    act2ok="COMMONFIXED(commonmsg.ping,1)"
 
