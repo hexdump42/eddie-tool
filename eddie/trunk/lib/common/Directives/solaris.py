@@ -81,7 +81,7 @@ class CRON(directive.Directive):
 	    self.ID = '%s.CRON.%s' % (log.hostname,self.args.rule)
 	self.state.ID = self.ID
 
-	log.log( "<solaris>CRON.tokenparser(): ID '%s' rule '%s' action '%s'" % (self.ID, self.args.rule, self.args.actionList), 8 )
+	log.log( "<solaris>CRON.tokenparser(): ID '%s' rule '%s'" % (self.ID, self.args.rule), 8 )
 
 
     def getData(self):
@@ -225,7 +225,7 @@ class PRTDIAG(directive.Directive):
 	    self.ID = '%s.PRTDIAG' % (log.hostname)
 	self.state.ID = self.ID
 
-	log.log( "<solaris>PRTDIAG.tokenparser(): ID '%s' rule '%s' action '%s'" % (self.ID, self.args.rule, self.args.actionList), 8 )
+	log.log( "<solaris>PRTDIAG.tokenparser(): ID '%s' rule '%s'" % (self.ID, self.args.rule), 8 )
 
 
     def getData(self):
