@@ -15,6 +15,7 @@
 import os
 import string
 import log
+import regex
 
 ##
 ## Class procList - instantiates with a list or procs running
@@ -30,26 +31,33 @@ class netstatList:
 	rawList = os.popen('netstat -anf inet | grep LISTEN', 'r')
 
 	for line in rawList.readlines():
-	    #print line
-	    # fields = string.split(line)
-	    # p = netstat(fields)
-	    self.list.append(line)
-	    # self.hash[p.port] = p
+	    f = string.split(line)
 
-	# ok first we want the tcp stats
-	rawList = os.popen('netstat -anf inet -P udp', 'r')
+	    self.parseLine( f[0] )
 
-	# skip over header gumph
-	rawList.readline()
-	rawList.readline()
-	rawList.readline()
-	rawList.readline()
+	    self.proto = "tcp"
+	    p = netstat(self.proto, self.port, self.host)
+
+	    key = self.proto + self.port
+	    self.hash[key] = p
+	    self.list.append(p)
+
+	# ok now we want the udp stuff
+	rawList = os.popen('netstat -anf inet -P udp | grep Idle', 'r')
 
 	for line in rawList.readlines():
-	    #print line
-	    self.list.append(line)
+	    f = string.split(line)
 
-	# log.log( "<netstat>netstatList(), created new instance", 8 )
+	    self.parseLine( f[0] )
+
+	    self.proto = "udp"
+	    p = netstat(self.proto, self.port, self.host)
+
+	    key = self.proto + self.port
+	    self.hash[key] = p
+	    self.list.append(p)
+
+	log.log( "<netstat>netstatList(), created new instance", 8 )
 	
     def __str__(self):
 	rv = ""
@@ -62,38 +70,31 @@ class netstatList:
     def keys(self):
         return(self.hash.keys())
 
-    # Searches the 'ps' dictionary and returns number of occurrences of procname
-#    def portExists(self, port):
-#	count = 0		# count number of occurrences of 'procname'
-#	for i in self.list:
-#	    if i.port == port:
-#		count = count + 1
-#
-#	return count
 
     # Overload '[]', eg: returns corresponding proc object for given process
     # name
-    def __getitem__(self, port):
+    def __getitem__(self, key):
 	try:
-	    return self.hash[port]
+	    return self.hash[key]
 	except KeyError:
 	    return None
 
-    def parseRaw(self):
-	sre = regex.compile( self.regexp )
-	inx = sre.search( self.raw )
+    def parseLine(self, line):
+  	re  = '\([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+\)\.\([0-9]+\)'
+	sre = regex.compile( re )
+	inx = sre.search( line )
+
 	if inx == -1:
-	    raise ParseFailure, "Error while parsing line: "+self.raw
+            re  = '\(\*\)\.\([0-9]+\)'
+	    sre = regex.compile( re )
+	    inx = sre.search( line )
 	fieldlist = ()
 	i=1
 
-        while( sre.group(i) != None ):
-	    fieldlist = fieldlist + (sre.group(i),)
-	    i = i + 1
 
-	return fieldlist
-
-
+	if inx != -1:
+	    self.host = sre.group(1)
+	    self.port = sre.group(2)
 
 ##
 ## Class netstat : holds a netstat record
@@ -103,14 +104,14 @@ class netstatList:
 ##
 class netstat:
     def __init__(self, *arg):
-	self.raw = arg[0]
 
-	self.port = self.raw[0]		# port this entry is listening to 
-	self.proto = self.raw[1]	# the proto UDP or TCP
-	self.addr = self.raw[2]		# The address this port is bound to
+	self.proto = arg[0]	        # the proto UDP or TCP
+	self.port  = arg[1]		# port this entry is listening to 
+	self.addr  = arg[2]		# The address this port is bound to
 
     def __str__(self):
-	return(self.raw )
+        str = "P: " + self.proto + " p: " + self.port + " a: " + self.addr + "\n"
+	return(str)
 
 ##
 ## END - netstat.py
