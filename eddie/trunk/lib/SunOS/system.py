@@ -62,14 +62,16 @@ class system:
 	while 1:
 	    line = rawList.readline()
 	    if len(line) == 0:
-		log.log( "<system>system.getSystemstate() error parsing 'top' output looking for 'last pid'.", 2 )
+		log.log( "<system>system.getSystemstate() error parsing 'top' output looking for 'load averages:'.", 2 )
 		return
 
-	    if line[:8] == 'last pid':
+	    #if line[:8] == 'last pid':
+	    if string.find(line, 'load averages:') != -1:
 		break
  
 	# regexps for parsing top of 'top' output to get info we want
-	reline1 = "last pid:\s*([0-9]+);\s*load averages:\s*([0-9]+\.[0-9]+),\s*([0-9]+\.[0-9]+),\s*([0-9]+\.[0-9]+)\s+([0-9]+:[0-9]+:[0-9]+)"
+	#reline1 = "last pid:\s*([0-9]+);\s*load averages:\s*([0-9]+\.[0-9]+),\s*([0-9]+\.[0-9]+),\s*([0-9]+\.[0-9]+)\s+([0-9]+:[0-9]+:[0-9]+)"
+	reline1 = ".*load averages:\s*([0-9]+\.[0-9]+),\s*([0-9]+\.[0-9]+),\s*([0-9]+\.[0-9]+)\s+([0-9]+:[0-9]+:[0-9]+)"
 	reline2 = "([0-9]+)\s+processes:(?:\s+(?P<sleeping>[0-9]+)\s+sleeping,)?(?:\s+(?P<zombie>[0-9]+)\s+zombie,)?(?:\s+(?P<running>[0-9]+)\s+running,)?(?:\s+(?P<stopped>[0-9]+)\s+stopped,)?(?:\s+(?P<oncpu>[0-9]+)\s+on cpu)?.*"
 	reline3 = "CPU states:\s*([0-9.]+)% idle,\s*([0-9.]+)% user,\s*([0-9.]+)% kernel,\s*([0-9.]+)% iowait,\s*([0-9.]+)% swap"
 	reline4 = "Memory:\s*(?P<mem_real>\w+)\s*real,\s*(?P<mem_free>\w+)\s*free,(?:\s*(?P<mem_swapuse>\w+)\s*swap in use,)?\s*(?P<mem_swapfree>\w+)\s*swap free"
@@ -79,11 +81,11 @@ class system:
 	if inx == None:
 	    log.log( "<system>system.getSystemstate() error parsing line1 'top' output.", 2 )
 	    return
-	self.lastpid = int(inx.group(1))
-	self.loadavg1 = float(inx.group(2))
-	self.loadavg5 = float(inx.group(3))
-	self.loadavg15 = float(inx.group(4))
-	self.time = inx.group(5)
+	#self.lastpid = int(inx.group(1))
+	self.loadavg1 = float(inx.group(1))
+	self.loadavg5 = float(inx.group(2))
+	self.loadavg15 = float(inx.group(3))
+	self.time = inx.group(4)
 
 	# line 2
 	line = rawList.readline()
@@ -205,7 +207,7 @@ class system:
 	#print " - mem_swapfree:",self.mem_swapfree
 
 	# Fill hash
-	self.hash['lastpid'] = self.lastpid
+	#self.hash['lastpid'] = self.lastpid
 	self.hash['loadavg1'] = self.loadavg1
 	self.hash['loadavg5'] = self.loadavg5
 	self.hash['loadavg15'] = self.loadavg15
