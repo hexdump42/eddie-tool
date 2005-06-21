@@ -40,6 +40,8 @@
 # Python modules
 import string
 import re
+import sys
+import platform
 # Eddie modules
 import datacollect
 import log
@@ -315,23 +317,39 @@ class Interface:
 	"""Collect all the statistics from a call to 'netstat -k <intname>'.
 	"""
 
-	# interfaces stats
-	rawList = utils.safe_popen( '/usr/bin/netstat -k %s'%(self.name), 'r' )
+	if int(platform.release().split('.')[1]) <= 9:  # Sol <= 9
+	    # interfaces stats
+	    rawList = utils.safe_popen( '/usr/bin/netstat -k %s'%(self.name), 'r' )
 
-	# skip header line - but bail if there is no output at all
-	if not rawList.readline():
-	    utils.safe_pclose( rawList )
-	    #raise InterfaceError, "No stats for interface '%s'" %(name)
-	    return
+	    # skip header line - but bail if there is no output at all
+	    if not rawList.readline():
+		utils.safe_pclose( rawList )
+		#raise InterfaceError, "No stats for interface '%s'" %(name)
+		return
 
-	# collect all non-logical interface names
-	for line in rawList.readlines():
-	    f = string.split(line)
-	    try:
-	        d = dict( [(f[x],int(f[x+1])) for x in range(0, len(f), 2)] )
-	        self.stats.update( d )
-	    except:
-        	log.log( "<netstat>Interface.collect_stats(): Could not parse line (skipped), %s: %s" %(sys.exc_info()[0],line), 5 )
+	    # collect all non-logical interface names
+	    for line in rawList.readlines():
+		f = string.split(line)
+		try:
+		    d = dict( [(f[x],int(f[x+1])) for x in range(0, len(f), 2)] )
+		    self.stats.update( d )
+		except:
+		    log.log( "<netstat>Interface.collect_stats(): Could not parse line (skipped), %s: %s" %(sys.exc_info()[0],line), 5 )
+
+	else:	# Sol 10+
+	    # interfaces stats
+	    rawList = utils.safe_popen( '/usr/bin/kstat -p -c net -n %s'%(self.name), 'r' )
+
+	    # collect all non-logical interface names
+	    for line in rawList.readlines():
+		try:
+		    k,v = string.split(line)
+		    interface,num,instance,key = string.split(k, ':')
+		    self.stats[key] = v
+		except ValueError:
+		    pass
+		except:
+		    log.log( "<netstat>Interface.collect_stats(): Could not parse line (skipped), %s: %s" %(sys.exc_info()[0],line), 5 )
 
 	utils.safe_pclose( rawList )
 
