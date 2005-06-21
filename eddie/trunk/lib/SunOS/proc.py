@@ -168,8 +168,14 @@ class proc:
 	self.sid = int(fields[12])      # process ID of the session leader
 	self.pri = int(fields[13])      # priority of the process
 	self.opri =int(fields[14])      # obsolete priority of the process
-	self.pcpu =float(fields[15])       # ratio of CPU time used recently to CPU time available in the same period, expressed as a percentage
-	self.pmem =float(fields[16])       # ratio of the process's resident set size to the physical memory on the machine, expressed as a percentage
+	try:
+	    self.pcpu =float(fields[15])       # ratio of CPU time used recently to CPU time available in the same period, expressed as a percentage
+	except ValueError:
+	    self.pcpu = 0.0
+	try:
+	    self.pmem =float(fields[16])       # ratio of the process's resident set size to the physical memory on the machine, expressed as a percentage
+	except ValueError:
+	    self.pmem = 0.0
 	self.vsz = int(fields[17])      # size of the process in (virtual) memory in kilobytes as a decimal integer
 	self.rss = int(fields[18])      # resident set size of the process, in kilobytes as a decimal integer
 	self.osz = int(fields[19])      # size (in pages) of the swappable process's image in main memory
