@@ -12,7 +12,7 @@
 ## $Id$
 ##
 ########################################################################
-## (C) Chris Miles 2001-2004
+## (C) Chris Miles 2001-2005
 ## 
 ## The author accepts no responsibility for the use of this software and
 ## provides it on an ``as is'' basis without express or implied warranty.
@@ -48,13 +48,26 @@ basedir = os.path.join(fullp, '..')
 basedir = os.path.normpath(basedir)
 
 # Determine system type
-uname = os.uname()
-osname = uname[0]
-osver = uname[2]
-osarch = uname[4]
+try:
+    import platform
+except ImportError:
+    try:
+        uname = os.uname()
+    except AttributeError,err:
+        raise Exception( "Cannot determine platform: %s" %(err) )
+    else:
+        osname = uname[0]
+        osver = uname[2]
+        osarch = uname[4]
+else:
+    osname = platform.uname()[0]
+    osver = platform.uname()[2]
+    osarch = ''
+
 systype = "%s/%s/%s" % (osname,osver,osarch)
 #print "systype:", systype
-
+ 
+    
 oslibdirs = [ os.path.join(basedir,'lib',osname,osver,osarch),
 	      os.path.join(basedir,'lib',osname,osarch,osver),
 	      os.path.join(basedir,'lib',osname,osver),
@@ -132,7 +145,7 @@ def SigHandler( sig, frame ):
     """Handle all the signals we are interested in.
     """
 
-    if sig == signal.SIGHUP:
+    if 'SIGHUP' in dir(signal) and sig == signal.SIGHUP:
 	# SIGHUP (Hangup) - reload config
 	log.log( '<eddie>SigHandler(): SIGHUP encountered - reloading config', 5 )
 
@@ -155,21 +168,21 @@ def SigHandler( sig, frame ):
 
         start_threads(sargs, cargs)
 
-    elif sig == signal.SIGINT:
+    elif 'SIGINT' in dir(signal) and sig == signal.SIGINT:
 	# SIGINT (CTRL-c) - quit now
 	log.log( '<eddie>SigHandler(): SIGINT (KeyboardInterrupt) encountered - quitting', 1 )
 	log.log( '<eddie>SigHandler(): signalling scheduler thread to die', 6 )
         stop_threads()
 	eddieexit()
 
-    elif sig == signal.SIGTERM:
+    elif 'SIGTERM' in dir(signal) and sig == signal.SIGTERM:
 	# SIGTERM (Terminate) - quit now
 	log.log( '<eddie>SigHandler(): SIGTERM (Terminate) encountered - quitting', 1 )
 	log.log( '<eddie>SigHandler(): signalling scheduler thread to die', 6 )
         stop_threads()
 	eddieexit()
 
-    elif sig == signal.SIGALRM:
+    elif 'SIGALRM' in dir(signal) and sig == signal.SIGALRM:
 	# SIGALRM (Alarm) - return to force a continue
 	return
 
@@ -321,10 +334,9 @@ def main():
     log.version = __version__	# Make version string available to other modules
 
     # Catch most important signals
-    signal.signal( signal.SIGALRM, SigHandler )
-    signal.signal( signal.SIGHUP, SigHandler )
-    signal.signal( signal.SIGINT, SigHandler )
-    signal.signal( signal.SIGTERM, SigHandler )
+    for sig in ('SIGALRM', 'SIGHUP', 'SIGINT', 'SIGTERM'):
+        if sig in dir(signal):
+            signal.signal( eval("signal.%s" %(sig)), SigHandler )
 
     argflags = {}			# dict of argument flags
 
@@ -332,7 +344,14 @@ def main():
     doArgs(sys.argv[1:], argflags)	# parse arg-list (not program name)
 
     # Get local hostname
-    log.hostname = os.uname()[1]
+    try:
+        log.hostname = os.uname()[1]
+    except AttributeError:
+        try:
+            import platform
+            log.hostname = platform.node()
+        except ImportError,msg:
+            raise Exception( "Cannot determine hostname: %s" %(msg) )
 
     # instantiate global Config object
     global Config
