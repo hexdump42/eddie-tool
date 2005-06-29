@@ -195,7 +195,7 @@ class State:
 		if file[0] ==  '/':
 		    readFile(file, newstate)
 		else:
-		    readFile(self.dir+file, newstate)
+		    readFile(os.path.join(self.dir, file), newstate)
 
 		# Reset state and token lists
 		self.reset()		# reset state
@@ -351,7 +351,8 @@ def readFile(file, state):
     """
 
     # Get the directory name of the current config file
-    state.dir = file[:string.rfind(file, '/')]+'/'
+    #state.dir = file[:string.rfind(file, '/')]+'/'
+    state.dir = os.path.dirname( file )
 
     try:
     	conf = open(file, 'r')
