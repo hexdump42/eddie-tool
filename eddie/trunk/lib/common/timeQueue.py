@@ -1,7 +1,7 @@
 ## 
 ## File		: timeQueue.py 
 ## 
-## Author       : Chris Miles  <chris@psychofx.com>
+## Author       : Chris Miles - http://chrismiles.info/
 ## 
 ## Start Date	: 20001005
 ## 
@@ -11,7 +11,7 @@
 ##
 ##
 ########################################################################
-## (C) Chris Miles 2001
+## (C) Chris Miles 2001-2005
 ##
 ## The author accepts no responsibility for the use of this software and
 ## provides it on an ``as is'' basis without express or implied warranty.
@@ -38,6 +38,19 @@ returns the same 2-tuple.
 An extra public method has been added, over what Queue offers, q.head().
 This method returns the item (and time) from the front of the queue,
 exactly as q.get(), but does not remove it from the queue.
+
+doctests:
+
+>>> q = timeQueue(0)
+>>> q.put( ('a',0) )
+>>> q.head()
+('a', 0)
+>>> q.get(block=0)
+('a', 0)
+>>> q.get(block=0)
+Traceback (most recent call last):
+    ...
+Empty
 """
 
 
@@ -78,7 +91,7 @@ class timeQueue(Queue.Queue):
 			if remaining <= 0.0:
 			    raise Empty
 			self.not_empty.wait(remaining)
-		item = self._get()
+		item = self._head()
 		self.not_full.notify()
 		return item
 	    finally:
@@ -154,6 +167,14 @@ class timeQueue(Queue.Queue):
         item = self.object_list[0]
         return (item,time)
 
+
+## doctest:
+def _test():
+    import doctest
+    doctest.testmod()
+
+if __name__ == "__main__":
+    _test()
 
 ##
 ## END - timeQueue.py
