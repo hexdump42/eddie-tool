@@ -361,7 +361,12 @@ def sendmail_bin( headers, body ):
 	if EMAIL_REPLYTO != None:
 	    headers = headers + 'Reply-To: %s\n' % (EMAIL_REPLYTO)
 
-    headers = headers + 'X-Generated-By: %s:%s\n' % (os.uname()[1], sys.argv[0])
+    try:
+	hostname = os.uname()[1]
+    except AttributeError:
+	import platform
+	hostname = platform.node()
+    headers = headers + 'X-Generated-By: %s:%s\n' % (hostname, sys.argv[0])
 
     # send the email via the sendmail binary
     tmp = safe_popen(SENDMAIL+' -t', 'w')
@@ -407,7 +412,12 @@ def sendmail_smtp( headers, body ):
     if toaddr.find(','):
 	toaddr=toaddr.split(',')
 
-    headers = headers + 'X-Generated-By: %s:%s\n' % (os.uname()[1], sys.argv[0])
+    try:
+	hostname = os.uname()[1]
+    except AttributeError:
+	import platform
+	hostname = platform.node()
+    headers = headers + 'X-Generated-By: %s:%s\n' % (hostname, sys.argv[0])
 
     msg="%s\r\n%s" % (headers, body)
 
