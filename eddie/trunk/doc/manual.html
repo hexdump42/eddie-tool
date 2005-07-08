@@ -1557,7 +1557,7 @@
 	PORT smtpcheck:
 		host='ahost.domain.name'
 		port=25
-		expect='220.*'
+		expect='220 '
 		rule='not alive or not matched'
 		action=email('alert', 'port 25 problem on 10.0.0.5')
     </pre>
