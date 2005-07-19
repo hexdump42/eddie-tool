@@ -251,3 +251,27 @@ rrdfile=/export/rrd/load/load-*.rrd
 store=load
 create=-s 300 DS:load:GAUGE:600:0:U RRA:AVERAGE:0.5:1:600 RRA:AVERAGE:0.5:6:600 RRA:AVERAGE:0.5:24:600 RRA:AVERAGE:0.5:288:600 RRA:MAX:0.5:24:600 RRA:MAX:0.5:288:600
 
+#### Windows Statistics
+# Win Context Switches [1min]
+elvinrrd=wincs-*
+rrdfile=/export/rrd/wincs/wincs-*.rrd
+store=wincs
+create=-s 60 DS:wincs:GAUGE:120:0:U RRA:AVERAGE:0.5:1:1440 RRA:AVERAGE:0.5:10:1008 RRA:AVERAGE:0.5:60:720 RRA:AVERAGE:0.5:480:1095
+
+# Win System Calls [1min]
+elvinrrd=winsyscalls-*
+rrdfile=/export/rrd/winsyscalls/winsyscalls-*.rrd
+store=winsyscalls
+create=-s 60 DS:winsyscalls:GAUGE:120:0:U RRA:AVERAGE:0.5:1:1440 RRA:AVERAGE:0.5:10:1008 RRA:AVERAGE:0.5:60:720 RRA:AVERAGE:0.5:480:1095
+
+# Win Processes [1min]
+elvinrrd=winprocs-*
+rrdfile=/export/rrd/winprocs/winprocs-*.rrd
+store=winprocs
+create=-s 60 DS:winprocs:GAUGE:120:0:U RRA:AVERAGE:0.5:1:1440 RRA:AVERAGE:0.5:10:1008 RRA:AVERAGE:0.5:60:720 RRA:AVERAGE:0.5:480:1095
+
+# Win Threads [1min]
+elvinrrd=winthreads-*
+rrdfile=/export/rrd/winthreads/winthreads-*.rrd
+store=winthreads
+create=-s 60 DS:winthreads:GAUGE:120:0:U RRA:AVERAGE:0.5:1:1440 RRA:AVERAGE:0.5:10:1008 RRA:AVERAGE:0.5:60:720 RRA:AVERAGE:0.5:480:1095
