@@ -275,3 +275,15 @@ elvinrrd=winthreads-*
 rrdfile=/export/rrd/winthreads/winthreads-*.rrd
 store=winthreads
 create=-s 60 DS:winthreads:GAUGE:120:0:U RRA:AVERAGE:0.5:1:1440 RRA:AVERAGE:0.5:10:1008 RRA:AVERAGE:0.5:60:720 RRA:AVERAGE:0.5:480:1095
+
+# Win CPU Interrupts [1min]
+elvinrrd=winints-*
+rrdfile=/export/rrd/winints/winints-*.rrd
+store=winints
+create=-s 60 DS:winints:GAUGE:120:0:U RRA:AVERAGE:0.5:1:1440 RRA:AVERAGE:0.5:10:1008 RRA:AVERAGE:0.5:60:720 RRA:AVERAGE:0.5:480:1095
+
+# CPU Win [1min]
+elvinrrd=cpuwin-*
+rrdfile=/export/rrd/cpuwin/cpuwin-*.rrd
+store=cpu_processor,cpu_interrupt,cpu_user,cpu_priv,cpu_idle
+create=-s 60 DS:cpu_processor:GAUGE:120:U:1000 DS:cpu_interrupt:GAUGE:120:U:1000 DS:cpu_user:GAUGE:120:U:1000 DS:cpu_priv:GAUGE:120:U:1000 DS:cpu_idle:GAUGE:120:U:1000 RRA:AVERAGE:0.5:1:1440 RRA:AVERAGE:0.5:10:1008 RRA:AVERAGE:0.5:60:720 RRA:AVERAGE:0.5:480:1095
