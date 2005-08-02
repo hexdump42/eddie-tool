@@ -11,7 +11,7 @@
 ##
 ##
 ########################################################################
-## (C) Chris Miles 2001-2004
+## (C) Chris Miles 2001-2005
 ##
 ## The author accepts no responsibility for the use of this software and
 ## provides it on an ``as is'' basis without express or implied warranty.
@@ -26,10 +26,34 @@
 ########################################################################
 
 
+"""
+Implements the FILE directive for Eddie.
+FILE provides a mechanism to monitor files, testing for changes to
+files.
+
+doctest:
+
+>>> f = FILE( ('FILE', 'filetest', ':' ) )
+>>> f
+filetest
+>>> f.tokenparser( (('file', '=', "'file.py'"), ('rule','=',"'exists'"), ('scanperiod', '=', 1)), None, None )
+>>> f
+filetest
+>>> f.args.file
+'file.py'
+>>> f.args.rule
+'exists'
+
+"""
+
+
 # Imports: Python
 import string
 import os
 import time
+import sys
+
+sys.path.append('..')	# for Eddie common modules
 
 # Imports: Eddie
 import log
@@ -277,6 +301,14 @@ class FILE(directive.Directive):
 	    self.lastischardevice = data['ischardevice']
 	    self.lastisfifo = data['isfifo']
 
+
+## doctest:
+def _test():
+    import doctest
+    doctest.testmod()
+
+if __name__ == "__main__":
+    _test()
 
 
 ##
