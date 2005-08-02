@@ -36,6 +36,7 @@ import utils
 ##
 logfile = "/var/log/eddie.log"
 loglevel = 2
+hostname = None		# normally overwritten during startup
 
 adminemail = 'root'
 adminlevel = 0
