@@ -107,7 +107,7 @@ class dfList(datacollect.DataCollect):
 	self.data.mounthash = {}
 
 	drives = win32perf.getDriveNames(filter=(win32perf.DRIVE_FIXED,win32perf.DRIVE_REMOVABLE))
-	drives = [d[:-1] for d in drives]	# remove '\'
+	drives = [d[:-1] for d in drives if d not in ('A:\\', 'B:\\')]	# remove '\'; ignore A: & B:
 
 	for fs in drives:
 	    try:
