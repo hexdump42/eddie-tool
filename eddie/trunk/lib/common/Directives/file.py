@@ -51,6 +51,7 @@ filetest
 import string
 import os
 import time
+import shutil
 import sys
 
 sys.path.append('..')	# for Eddie common modules
@@ -76,13 +77,26 @@ class FILE(directive.Directive):
                      action="email('alert', 'ALERT: /etc/passwd is 0 bytes')"
 
     Optional arguments:
-	None
+	keepdiff={true|false}
+	  - flag whether to keep a copy of the file to produce diffs
+	context_lines=<integer>
+	  - how many context lines to show around the changed lines
+	difftype={context|unified|full}
+	  - which diff method to use (see Python difflib module for more information)
     """
 
     def __init__(self, toklist):
 	apply( directive.Directive.__init__, (self, toklist) )
 
 	self.lastmode = None	# keep copy of stats from last check
+	self.md5file = 0	# boolean: whether to md5 file contents or not
+	self.md5 = None		# pointer to md5 module, if required and available
+	self.difflib = None	# pointer to difflib module, if required and available
+	self.difftypes = ( 'context', 'unified', 'full' )	# available diff methods
+	self.difftype = 'context'	# default diff method
+	self.context_lines = 0	# how many context lines to show around the changed lines
+
+	self.lastmtime = None	# clear previous file mtime
 
 
     def tokenparser(self, toklist, toktypes, indent):
@@ -101,9 +115,68 @@ class FILE(directive.Directive):
         except AttributeError:
             raise directive.ParseFailure, "Rule not specified"
 
+	# import md5 if necessary and if md5 module available
+	if string.find(self.args.rule, 'md5') != -1:
+	    # rule contains 'md5', so we need it
+	    try:
+		import md5
+		self.md5 = md5
+		self.md5file = 1
+	    except ImportError, err:
+		# no md5 module available when it was requested
+		raise directive.ParseFailure, "md5 module needed but not available, '%s'" % (err)
+
+	# Optional arguments
+
+	# chris 2005-02-11: option to keep diffs between changed files
+	try:
+	    self.args.keepdiff		# boolean: whether to track file change diffs
+	    if self.args.keepdiff == '1' or self.args.keepdiff == 'true' or self.args.keepdiff == 'on':
+		self.args.keepdiff = 1
+	    elif self.args.keepdiff == '0' or self.args.keepdiff == 'false' or self.args.keepdiff == 'off':
+		self.args.keepdiff = 0
+	    else:
+		raise directive.ParseFailure, "Unknown argument '%s' to keepdiff option" % (self.args.keepdiff)
+	    try:
+		import difflib
+		self.difflib = difflib
+	    except ImportError, err:
+		raise directive.ParseFailure, "difflib module not avaiable, '%s'" % (err)
+	    # also need md5 module to hash filenames (with full path)
+	    if not self.md5:
+		try:
+		    import md5
+		    self.md5 = md5
+		except ImportError, err:
+		    # no md5 module available
+		    raise directive.ParseFailure, "md5 module needed for diff functionality, '%s'" % (err)
+        except AttributeError:
+            self.args.keepdiff = 0
+
+	# chris 2005-02-12: how many context lines to show around the change
+	try:
+	    self.context_lines = int(self.args.contextlines)
+	    if self.context_lines < 0:
+		raise directive.ParseFailure, "Illegal value for contextlines, '%s'" % (self.args.contextlines)
+        except AttributeError:
+            pass
+        except ValueError:
+	    raise directive.ParseFailure, "Illegal value for contextlines (expecting an integer number) '%s'" % (self.args.contextlines)
+
+	# chris 2005-02-12: diff method to use
+	try:
+	    self.difftype = self.args.difftype
+	    if self.difftype not in self.difftypes:
+		raise directive.ParseFailure, "Illegal value for difftype, '%s', must be one of %s" % (self.args.difftype, self.difftypes)
+        except AttributeError:
+            pass
+
 	# Set variables for Actions to use
 	self.defaultVarDict['file'] = self.args.file
 	self.defaultVarDict['rule'] = self.args.rule
+	self.defaultVarDict['keepdiff'] = self.args.keepdiff
+	self.defaultVarDict['contextlines'] = self.context_lines
+	self.defaultVarDict['difftype'] = self.difftype
 
 	# define the unique ID
         if self.ID == None:
@@ -142,7 +215,6 @@ class FILE(directive.Directive):
 	data['isdir'] = None
 	data['ischardevice'] = None
 	data['isfifo'] = None
-	data['now'] = None
 
 	data['lastmode'] = None
 	data['lastino'] = None
@@ -167,6 +239,7 @@ class FILE(directive.Directive):
 	data['lastisfifo'] = None
 
 	data['now'] = time.time()	# get current time for comparing with file times
+	data['diff'] = ''
 
 	if os.path.exists( self.args.file ):
 	    data['exists'] = 1		# true
@@ -203,26 +276,54 @@ class FILE(directive.Directive):
 	    data['ischardevice'] = data['type'] & 002 == 002
 	    data['isfifo'] = data['type'] & 001 == 001
 
-	    # md5 the file too if necessary and if md5 module available
-	    if string.find(self.args.rule, 'md5') != -1:
-		# rule contains 'md5', so we need to calculate it
+	    # md5 the file if necessary
+	    if self.md5file:
 		try:
-		    import md5
-		except ImportError, err:
-		    # no md5 module - log error and don't re-schedule
-		    log.log( "<file>FILE.getData(): ID '%s' ImportError, md5 module needed but not available" % (self.ID), 4 )
-		    raise directive.DirectiveError, "ImportError, md5 module needed but not available"
-		else:
-		    try:
-			fp = open(self.args.file)
-		    except IOError, err:
-			log.log( "<file>FILE.getData(): ID '%s' IOError reading file '%s': %s" % (self.ID, self.args.file, err), 4 )
-			raise directive.DirectiveError, "IOError reading file '%s': %s" % (self.args.file, err)
+		    fp = open(self.args.file)
+		except IOError, err:
+		    log.log( "<file>FILE.getData(): ID '%s' IOError reading file '%s': %s" % (self.ID, self.args.file, err), 4 )
+		    raise directive.DirectiveError, "IOError reading file '%s': %s" % (self.args.file, err)
 
-		    m = md5.md5(fp.read()).hexdigest()
-		    fp.close()
-		    log.log( "<file>FILE.getData(): ID '%s' md5='%s'" % (self.ID, m), 9 )
-		    data['md5'] = m
+		m = self.md5.md5(fp.read()).hexdigest()
+		fp.close()
+		log.log( "<file>FILE.getData(): ID '%s' md5='%s'" % (self.ID, m), 9 )
+		data['md5'] = m
+
+	    # chris 2005-02-11: create diffs for file changes, if required
+	    if self.difflib and (data['mtime'] != self.lastmtime):
+		tmpdir = '/var/tmp/eddietmp'	# TODO: use global temp dir setting
+		prevfile = "%s/%s" % (tmpdir, self.md5.md5( self.args.file ).hexdigest())
+		# store copy of file to perform diff next time round
+		if not os.path.exists( tmpdir ):
+		    os.mkdir( tmpdir )
+
+		if self.lastmtime != None:
+		    if os.path.exists( prevfile ):
+			fpp = open( prevfile )
+			fp = open( self.args.file )
+			#diff = self.difflib.Differ()
+			#difflines = list( diff.compare(fpp.readlines(), fp.readlines()) )
+			try:
+			    if self.difftype == 'context':
+				difflines = self.difflib.context_diff( fpp.readlines(), fp.readlines(), n=self.context_lines )
+			    elif self.difftype == 'unified':
+				difflines = self.difflib.unified_diff( fpp.readlines(), fp.readlines(), n=self.context_lines )
+			    else:
+				difflines = self.difflib.ndiff( fpp.readlines(), fp.readlines() )
+			except AttributeError:
+			    # The old diff function within difflib
+			    difflines = self.difflib.ndiff( fpp.readlines(), fp.readlines() )
+			fp.close()
+			fpp.close()
+
+    #		    difftext = ""
+    #		    for l in difflines:
+    #			if l[0] != ' ':
+    #			    difftext = difftext + l
+			difftext = string.join( difflines )
+			data['diff'] = difftext
+
+		shutil.copyfile( self.args.file, prevfile )
 
 	    if self.lastmode == None:
 		# if no lastxxx variables set, set them to same as current
