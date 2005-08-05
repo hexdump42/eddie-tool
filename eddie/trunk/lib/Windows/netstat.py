@@ -122,13 +122,13 @@ class Interface:
 
 	self.name = name
 
-	self.rx_bytes		= stats['Network Interface Bytes Received/sec %s' %(name)]
-	self.rx_packets		= stats['Network Interface Packets Received/sec %s' %(name)]
-	self.rx_errs		= stats['Network Interface Packets Received Errors %s' %(name)]
+	self.rx_bytes		= stats.get( 'Network Interface Bytes Received/sec %s' %(name), None )
+	self.rx_packets		= stats.get( 'Network Interface Packets Received/sec %s' %(name), None )
+	self.rx_errs		= stats.get( 'Network Interface Packets Received Errors %s' %(name), None )
 
-	self.tx_bytes		= stats['Network Interface Bytes Sent/sec %s' %(name)]
-	self.tx_packets		= stats['Network Interface Packets Sent/sec %s' %(name)]
-	self.tx_errs		= stats['Network Interface Packets Outbound Errors %s' %(name)]
+	self.tx_bytes		= stats.get( 'Network Interface Bytes Sent/sec %s' %(name), None )
+	self.tx_packets		= stats.get( 'Network Interface Packets Sent/sec %s' %(name), None )
+	self.tx_errs		= stats.get( 'Network Interface Packets Outbound Errors %s' %(name), None )
 
 
     def ifinfo(self):
