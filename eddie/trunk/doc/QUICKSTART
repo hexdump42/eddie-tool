@@ -7,6 +7,8 @@ but will not get you a monitoring system customized to your environment - that
 is up to you, and usually takes a reasonable amount of effort working out what
 you want to monitor before you can monitor it.
 
+If you are installing on Windows, also read README.win32.txt
+
 
 1. Unpack EDDIE somewhere like /opt or /usr/local, eg:
        $ cd /opt
