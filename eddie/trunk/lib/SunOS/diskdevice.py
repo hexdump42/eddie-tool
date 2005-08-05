@@ -82,7 +82,7 @@ class DiskStatistics(datacollect.DataCollect):
 
     def collectData(self):
 
-	self.data.datalist = []		# list of disk objects
+	#self.data.datalist = []		# list of disk objects
 	self.data.datahash = {}		# hash of same objects keyed on device name (eg: sd100, md10)
 	self.data.numdisks = 0
 
@@ -116,7 +116,7 @@ class DiskStatistics(datacollect.DataCollect):
 		# create new Disk object if needed
 		disk = Disk( type, index, name )
 	        self.data.datahash[name] = disk
-	        self.data.datalist.append( disk )
+	        #self.data.datalist.append( disk )
 	        self.data.numdisks = self.data.numdisks + 1
 
 	    disk.setStat( key, value )
@@ -147,7 +147,7 @@ class TapeStatistics(datacollect.DataCollect):
 
     def collectData(self):
 
-	self.data.datalist = []		# list of tape objects
+	#self.data.datalist = []		# list of tape objects
 	self.data.datahash = {}		# hash of same objects keyed on device name (eg: sd100, md10)
 	self.data.numtapes = 0
 
@@ -181,7 +181,7 @@ class TapeStatistics(datacollect.DataCollect):
 		# create new Disk object if needed
 		tape = Disk( type, index, name )
 	        self.data.datahash[name] = tape
-	        self.data.datalist.append( tape )
+	        #self.data.datalist.append( tape )
 	        self.data.numtapes = self.data.numtapes + 1
 
 	    tape.setStat( key, value )
