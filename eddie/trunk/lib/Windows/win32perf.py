@@ -15,7 +15,7 @@ doctests:
 >>> ctrs = getCounters('Network Interface')
 >>> inst = getInstances('Network Interface')
 >>> getDriveNames()					#doctest: +ELLIPSIS
-['C:\\\\'...]
+[...'C:\\\\'...]
 >>> getDriveNames(DRIVE_FIXED)				#doctest: +ELLIPSIS
 ['C:\\\\'...]
 >>>
