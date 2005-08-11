@@ -2,7 +2,7 @@ Notes on installing Eddie-Tool for Win32 (Windows XP/2000/2003/Server/etc).
 - Chris Miles 2005-08-05
 
 Download and install Python for Windows.  Latest release version is
-recommended.
+recommended.  Eddie on win32 requires Python 2.3 or newer.
   http://www.python.org
 
 Download and install the Python for Windows Extensions (aka win32all or

@@ -18,6 +18,7 @@ If you are installing on Windows, also read README.win32.txt
 2. Point EDDIE to your Python installation.
    [EDDIE requires Python 1.6+, and has been tested with most Python versions
    between 1.6.1 and 2.2]
+   [EDDIE on Win32 requires Python 2.3 or newer]
    So edit the first line of eddie/bin/eddie.py to point to your python.
    Eg:
        $ which python
