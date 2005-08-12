@@ -16,8 +16,8 @@ If you are installing on Windows, also read README.win32.txt
    will create the eddie directory with all subdirectories like bin, lib, doc.
 
 2. Point EDDIE to your Python installation.
-   [EDDIE requires Python 2.2+, and has been tested with most Python versions
-   between 2.2 and 2.4.  Python 2.3+ is recommended.]
+   [EDDIE requires Python 2.2.1+, and has been tested with most Python versions
+   between 2.2.1 and 2.4.  Python 2.3+ is recommended.]
    [EDDIE on Win32 requires Python 2.3 or newer.]
    So edit the first line of eddie/bin/eddie.py to point to your python.
    Eg:
