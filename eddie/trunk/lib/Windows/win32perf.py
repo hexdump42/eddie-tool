@@ -140,7 +140,14 @@ class Win32Counter:
 	"""Return the value of the counter.
 	"""
 
-	type, val = win32pdh.GetFormattedCounterValue(self.hc, format)
+	try:
+	    type, val = win32pdh.GetFormattedCounterValue(self.hc, format)
+	except pywintypes.error:
+	    # Sometimes this query randomly fails with unhelpful error messages such as:
+	    #  (-2147481640, 'GetFormattedCounterValue', 'No error message is available')
+	    type = None
+	    val = None
+
 	return val
 
 
