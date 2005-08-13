@@ -219,6 +219,7 @@ class FILE(directive.Directive):
 
 	# Initialize the data
 	data = {}
+	data['missing'] = False
 	data['mode'] = None
 	data['ino'] = None
 	data['dev'] = None
@@ -270,7 +271,6 @@ class FILE(directive.Directive):
 
 	if os.path.exists( self.args.file ):
 	    data['exists'] = True
-	    data['missing'] = False
 	else:
 	    data['exists'] = False
 	    if self.lastexists or self.lastmissing:
