@@ -186,9 +186,11 @@
     <li> <b>SMTP_SERVERS</b> - a comma-separated list of SMTP servers to use to make SMTP connections for email sending.  Defaults to 'localhost'.
     <li> <b>ELVINURL</b> - the URL of an Elvin server (if required).
     <li> <b>ELVINSCOPE</b> - the scope of an Elvin server (if required).
-    <li> <b><a name="#INTERPRETERS">INTERPRETERS</a></b>
+    <li> <b><a name="INTERPRETERS">INTERPRETERS</a></b>
 	 - commands classed as "interpreters" by process checking rules
 	 (see the <a href="#PROC">PROC</a> directive).
+    <li> <b><a name="WORKDIR">WORKDIR</a></b>
+	 - directory where Eddie can store temporary files.  [Eddie 0.35+]
     <li> <b>CLASS</b> - a grouping of hosts which share the same directives.
     <li> <b>ALIAS</b> - global aliases can be set here, if required.
     <li> <b>INCLUDE</b> - include another configuration file; it is common to split the rules
@@ -642,6 +644,17 @@
      <li> <b>file=&lt;file name&gt;</b> <i>(required)</i>:
 	  <br>
 	  - the file to be checked.
+     <li> <b>keepdiff=true | false</b> <i>(optional)</i>:
+	  <br>
+	  - if true Eddie will generate diffs of changed files.
+	  Previous copies are stored in the <a href="#WORKDIR">WORKDIR</a>
+	  directory. [Eddie 0.35+]
+     <li> <b>difftype=context | unified | full</b> <i>(optional)</i>:
+	  <br>
+	  - the type of diff to generate. [Eddie 0.35+]
+     <li> <b>context_lines=&lt;integer&gt;</b> <i>(optional)</i>:
+	  <br>
+	  - how many context lines to show around the changed lines in a diff. [Eddie 0.35+]
     </ul><br>
 
     Rule Variables:
@@ -729,6 +742,9 @@
      <li> <b>file</b> (string)
 	  <br>
 	  - the value of the file argument.
+     <li> <b>diff</b> (string)
+	  <br>
+	  - the diff between changed file and previous copy - if keepdiff is true. [Eddie 0.35+]
      <li> Plus all the rule variables as usual.
     </ul>
 
