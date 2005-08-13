@@ -59,6 +59,7 @@ sys.path.append('..')	# for Eddie common modules
 # Imports: Eddie
 import log
 import directive
+import utils
 
 
 ##
@@ -98,6 +99,8 @@ class FILE(directive.Directive):
 
 	self.lastmtime = None	# clear previous file mtime
 
+	self.tmpdir = None	# directory to store temporary files
+
 
     def tokenparser(self, toklist, toktypes, indent):
 	"""Parse directive arguments.
@@ -132,16 +135,39 @@ class FILE(directive.Directive):
 	try:
 	    self.args.keepdiff		# boolean: whether to track file change diffs
 	    if self.args.keepdiff == '1' or self.args.keepdiff == 'true' or self.args.keepdiff == 'on':
-		self.args.keepdiff = 1
+		self.args.keepdiff = True
 	    elif self.args.keepdiff == '0' or self.args.keepdiff == 'false' or self.args.keepdiff == 'off':
-		self.args.keepdiff = 0
+		self.args.keepdiff = False
 	    else:
 		raise directive.ParseFailure, "Unknown argument '%s' to keepdiff option" % (self.args.keepdiff)
+        except AttributeError:
+            self.args.keepdiff = False
+
+	if self.args.keepdiff:
 	    try:
 		import difflib
 		self.difflib = difflib
+		try:
+		    self.tmpdir = utils.set_sub_work_dir( 'FILEprevs' )
+		except utils.WorkdirError, err:
+		    raise directive.ParseFailure, "keepdiff option unavailable for FILE directive, %s" % (err)
+		# Construct a unique 'name' to identify this file
+		#  another option is self.md5.md5(filename).hexdigest()
+		#  but I wanted something semi-readable
+		#  So is this method unique enough?  Please prove it isn't.
+		self.savefilename = self.args.file.replace( '_', '__' )
+		self.savefilename = self.args.file.replace( os.path.sep, '_' )
+		self.prevfile = os.path.join(self.tmpdir, self.savefilename)
+		try:
+		    # remove old copy of save file if it exists
+		    if os.stat( self.prevfile ):
+			os.unlink( self.prevfile )
+		except OSError:
+		    pass	# no problem if it doesn't exist
 	    except ImportError, err:
+		# no difflib module in this Python build
 		raise directive.ParseFailure, "difflib module not avaiable, '%s'" % (err)
+
 	    # also need md5 module to hash filenames (with full path)
 	    if not self.md5:
 		try:
@@ -150,8 +176,6 @@ class FILE(directive.Directive):
 		except ImportError, err:
 		    # no md5 module available
 		    raise directive.ParseFailure, "md5 module needed for diff functionality, '%s'" % (err)
-        except AttributeError:
-            self.args.keepdiff = 0
 
 	# chris 2005-02-12: how many context lines to show around the change
 	try:
@@ -290,16 +314,10 @@ class FILE(directive.Directive):
 		data['md5'] = m
 
 	    # chris 2005-02-11: create diffs for file changes, if required
-	    if self.difflib and (data['mtime'] != self.lastmtime):
-		tmpdir = '/var/tmp/eddietmp'	# TODO: use global temp dir setting
-		prevfile = "%s/%s" % (tmpdir, self.md5.md5( self.args.file ).hexdigest())
-		# store copy of file to perform diff next time round
-		if not os.path.exists( tmpdir ):
-		    os.mkdir( tmpdir )
-
-		if self.lastmtime != None:
-		    if os.path.exists( prevfile ):
-			fpp = open( prevfile )
+	    if self.difflib:
+		if self.lastmtime != None and data['mtime'] != self.lastmtime:  # file has changed
+		    if os.path.exists( self.prevfile ):
+			fpp = open( self.prevfile )
 			fp = open( self.args.file )
 			#diff = self.difflib.Differ()
 			#difflines = list( diff.compare(fpp.readlines(), fp.readlines()) )
@@ -316,14 +334,20 @@ class FILE(directive.Directive):
 			fp.close()
 			fpp.close()
 
-    #		    difftext = ""
-    #		    for l in difflines:
-    #			if l[0] != ' ':
-    #			    difftext = difftext + l
 			difftext = string.join( difflines )
-			data['diff'] = difftext
+			if difftext == '':
+			    data['diff'] = '[File contents did not change]'
+			else:
+			    data['diff'] = difftext
+		    else:
+			data['diff'] = '[Could not create diff - previous copy of file unavailable]'
 
-		shutil.copyfile( self.args.file, prevfile )
+		    # save copy of changed file
+		    shutil.copyfile( self.args.file, self.prevfile )
+
+		elif not os.path.exists( self.prevfile ):
+		    # if saved file missing make sure to copy it again
+		    shutil.copyfile( self.args.file, self.prevfile )
 
 	    if self.lastmode == None:
 		# if no lastxxx variables set, set them to same as current
