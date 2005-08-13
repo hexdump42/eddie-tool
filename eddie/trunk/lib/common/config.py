@@ -504,6 +504,41 @@ class SMTP_SERVERS(ConfigOption):
 
 
 
+class WORKDIR(ConfigOption):
+    """Set the location of the temporary work directory."""
+
+    def __init__( self, list, typelist ):
+	apply( ConfigOption.__init__, (self,list, typelist) )
+
+	self.workdir = None
+
+	# if we don't have 3 elements ['WORKDIR', '=', <str> ]
+	# then raise an error
+	if len(list) != 3:
+	    raise ParseFailure, "WORKDIR definition has %d tokens when expecting only 3" % len(list)
+	if list[1] != '=':
+	    raise ParseFailure, "WORKDIR statement invalid"
+	workdir = utils.stripquote(list[2])
+
+	if os.path.isdir( workdir ):
+	    self.workdir = workdir
+	else:
+	    try:
+		os.makedirs( workdir, 0700 )	# create all dirs - access by user only
+	    except OSError, err:
+		log.log( "<config>WORKDIR: cannot create '%s', %s" % (workdir, err), 4 )
+	    else:
+		self.workdir = workdir
+		log.log( "<config>WORKDIR: created WORKDIR '%s'" % (workdir), 8 )
+
+	# set workdir location in utils module - utils.get_work_dir() is best way
+	#  to retrieve this.  This isn't terribly elegant and needs to be re-written
+	#  properly.
+	utils.WORKDIR = self.workdir
+	log.log( "<config>WORKDIR: set to '%s'" % (self.workdir), 8 )
+
+
+
 def loadExtraDirectives( directivedir ):
     """Load extra directives from given directory.  Each file
     in this directory must be an importable (.py) Python module
@@ -566,6 +601,7 @@ settings = {
 		"EMAIL_REPLYTO"	: EMAIL_REPLYTO,
 		"SENDMAIL"	: SENDMAIL,
 		"SMTP_SERVERS"	: SMTP_SERVERS,
+		"WORKDIR"	: WORKDIR,
            }
 
 ## Join all the above dictionaries to make the total keywords dictionary
