@@ -661,7 +661,10 @@
     <ul>
      <li> <b>exists</b> (boolean)
 	  <br>
-	  - will be 1 (true) if the file exists; and 0 (false) if not.
+	  - will be True if the file exists; and False if not.
+     <li> <b>missing</b> (boolean)
+	  <br>
+	  - will be True if an already existing file has disappeared. [Eddie 0.35+]
      <li> <b>mode</b> (integer)
 	  <br>
 	  - the mode (permissions) of the file.
@@ -781,6 +784,12 @@
 	    file='/etc/passwd'
 	    rule='issymlink'
 	    action=email('alert','%(file)s should not be a symlink !!')
+
+        # Alert if a file disappears
+	FILE file_missing:
+	    file='/etc/passwd'
+	    rule='missing'
+	    action=email('alert','%(file)s has disappeared')
     </pre>
     </p>
 
