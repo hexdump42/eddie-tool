@@ -134,6 +134,17 @@ SCANPERIOD=10m          # by default scan every 10 minutes
 INTERPRETERS='sh,bash,perl,perl5.001,perl5.003,perl5.004,python,python1.5,python1.5.2'
 
 
+# WORKDIR
+#  Defines a location where Eddie can store temporary files.  This is used
+#  by various directives that need to save some information or state to
+#  the filesystem.  The directory can be safely removed when Eddie is not
+#  running.  Eddie does not clean up the directory itself (it may clean up
+#  some files before shutting down).  The whole directory tree will be
+#  created on startup if it doesn't already exist.
+
+WORKDIR="/var/tmp/eddieworkdir"
+
+
 # CLASS
 #  Define classes of hosts which share the same Eddie config.  The name of the
 #  class will match the name of a "group" definition.  Each host whose hostname
