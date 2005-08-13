@@ -98,6 +98,8 @@ class FILE(directive.Directive):
 	self.context_lines = 0	# how many context lines to show around the changed lines
 
 	self.lastmtime = None	# clear previous file mtime
+	self.lastexists = None	# clear previous exists flag
+	self.lastmissing = None	# clear previous missing flag
 
 	self.tmpdir = None	# directory to store temporary files
 
@@ -217,7 +219,6 @@ class FILE(directive.Directive):
 
 	# Initialize the data
 	data = {}
-	data['exists'] = None
 	data['mode'] = None
 	data['ino'] = None
 	data['dev'] = None
@@ -240,6 +241,8 @@ class FILE(directive.Directive):
 	data['ischardevice'] = None
 	data['isfifo'] = None
 
+	data['lastexists'] = None
+	data['lastmissing'] = None
 	data['lastmode'] = None
 	data['lastino'] = None
 	data['lastdev'] = None
@@ -266,9 +269,12 @@ class FILE(directive.Directive):
 	data['diff'] = ''
 
 	if os.path.exists( self.args.file ):
-	    data['exists'] = 1		# true
+	    data['exists'] = True
+	    data['missing'] = False
 	else:
-	    data['exists'] = 0		# false
+	    data['exists'] = False
+	    if self.lastexists or self.lastmissing:
+		data['missing'] = True	# file existed previously but is now missing (or is still missing)
 	    return data			# cannot check anything else
 
 	try:
@@ -373,6 +379,8 @@ class FILE(directive.Directive):
 		self.lastischardevice = data['ischardevice']
 		self.lastisfifo = data['isfifo']
 
+	    data['lastexists'] = self.lastexists
+	    data['lastmissing'] = self.lastmissing
 	    data['lastmode'] = self.lastmode
 	    data['lastino'] = self.lastino
 	    data['lastdev'] = self.lastdev
@@ -404,6 +412,8 @@ class FILE(directive.Directive):
 
 	# save variables for next time (if they were collected)
 	if 'mode' in data.keys():
+	    self.lastexists = data['exists']
+	    self.lastmissing = data['missing']
 	    self.lastmode = data['mode']
 	    self.lastino = data['ino']
 	    self.lastdev = data['dev']
