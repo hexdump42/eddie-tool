@@ -38,6 +38,13 @@ import smtplib
 import log
 
 
+## Exceptions
+class WorkdirError(Exception):
+    """An operation involved WORKDIR could not be completed.
+    """
+
+
+
 ## Classes
 
 class Stack:
@@ -440,6 +447,40 @@ def sendmail_smtp( headers, body ):
     for msg in errmsg:
 	log.log(msg,4)
     return 0
+
+
+
+# Should be set by WORKDIR paramter in eddie.cf.  By default is None which
+#  will throw if get_work_dir() is called without setting WORKDIR in eddie.cf.
+WORKDIR=None
+
+def get_work_dir():
+    """Return the temporary working directory as a string.  This is the
+    directory location set by WORKDIR in eddie.cf.  If this is not defined
+    then an exception will be raised.
+    """
+
+    if WORKDIR:
+	return str(WORKDIR)	# make sure we return a string
+    else:
+	raise WorkdirError( "WORKDIR has not been defined" )
+
+
+
+def set_sub_work_dir( subdir ):
+    """Return the full path to a directory (subdir) beneath WORKDIR.
+    subdir will be created if it doesn't exist.
+    """
+
+    workdir = get_work_dir()
+    worksubdir = os.path.join( workdir, subdir )
+    if not os.path.isdir( worksubdir ):
+	try:
+	    os.makedirs( worksubdir, 0700 )	# create all dirs - access by user only
+	except OSError, err:
+	    raise WorkdirError( "Cannot create WORKDIR subdirectory '%s', %s" % (worksubdir, err) )
+
+    return worksubdir
 
 
 ##
