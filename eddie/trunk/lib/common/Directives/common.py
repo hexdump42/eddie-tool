@@ -329,10 +329,17 @@ class SP(directive.Directive):
 	    log.log( "<directive>SP.getData(): Zero connections for protocol '%s'" % (self.args.protocol), 6 )
 	    return None
 
-	key = "%s:%s" % (self.args.bindaddr, self.port)
-
 	data = {}
-	data['exists'] = key in connections.keys()	# true or false
+	if self.args.bindaddr=='any':
+	    # only compare port part of connection - ignore bind address
+	    data['exists'] = False
+	    for key in connections.keys():
+		if key.find(":%s" % self.port) >= 0:
+		    data['exists'] = True
+	else:
+	    # compare bind address and port for match
+	    key = "%s:%s" % (self.args.bindaddr, self.port)
+	    data['exists'] = key in connections.keys()  # true or false
 
 	return data
 
