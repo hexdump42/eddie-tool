@@ -1,7 +1,7 @@
 ## 
 ## File		: common.py 
 ## 
-## Author       : Chris Miles  <chris@psychofx.com>
+## Author       : Chris Miles - http://chrismiles.info/
 ## 
 ## Start Date	: 20020418 
 ## 
@@ -11,7 +11,7 @@
 ##
 ##
 ########################################################################
-## (C) Chris Miles 2002-2004
+## (C) Chris Miles 2002-2005
 ##
 ## The author accepts no responsibility for the use of this software and
 ## provides it on an ``as is'' basis without express or implied warranty.
