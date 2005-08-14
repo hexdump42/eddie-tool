@@ -236,7 +236,7 @@ def scheduler(q, Config, die_event):
 		# threads are locked badly and something is wrong.  Force an
 		# exit...
 		# (there is no ability to kill threads in current Python implementation)
-		log.log( "<eddie>scheduler(): active thread count has been %d for over %d mins - forcing exit" % (threading.activeCount(),time.time() - loop_start), 1 )
+		log.log( "<eddie>scheduler(): active thread count has been %d for over %d mins - forcing exit" % (threading.activeCount(), (time.time()-loop_start)/60), 1 )
 		eddieexit()
 
 	    try:
