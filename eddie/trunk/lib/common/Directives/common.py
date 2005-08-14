@@ -173,9 +173,9 @@ class PID(directive.Directive):
 	    pidfile = open( self.args.pidfile, 'r' )
 	except IOError:
 	    # pidfile not found
-	    data['exists'] = 0		# false
+	    data['exists'] = False
 	else:
-	    data['exists'] = 1		# true
+	    data['exists'] = True
 	    pid = pidfile.readline()
 	    pidfile.close()
 	    pid = string.strip(pid)
@@ -186,10 +186,10 @@ class PID(directive.Directive):
 	    # Search for pid in process list
 	    if self.data_collectors['proc.procList'].pidExists( pid ) == 0:
 		# there is no process with pid == pid
-		data['running'] = 0	# false
+		data['running'] = False
 		log.log( "<directive>PID.getData(): pid %s not in process list" % (pid), 7 )
 	    else:
-		data['running'] = 1	# true
+		data['running'] = True
 		log.log( "<directive>PID.getData(): pid %s is in process list" % (pid), 7 )
 
 	return data
@@ -247,10 +247,10 @@ class PROC(directive.Directive):
 	proc = self.data_collectors['proc.procList'][self.args.name]
 	if proc == None:
 	    log.log( "<directive>PROC.getData(): process not in process table, '%s'" % (self.args.name), 7 )
-	    data['exists'] = 0		# false
+	    data['exists'] = False
 	else:
 	    log.log( "<directive>PROC.getData(): process is in process table, '%s'" % (self.args.name), 7 )
-	    data['exists'] = 1		# true
+	    data['exists'] = True
 	    data.update(proc.procinfo())
 
 	return data
@@ -657,9 +657,9 @@ class IF(directive.Directive):
 	try:
 	    i = self.data_collectors['netstat.IntTable'].getHash()[self.args.name]
 	except KeyError:
-	    data['exists'] = 0		# false
+	    data['exists'] = False
 	else:
-	    data['exists'] = 1		# true
+	    data['exists'] = True
 	    data.update(i.ifinfo())	# get interface statistics
 
 	return data
