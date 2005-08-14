@@ -1533,7 +1533,12 @@
      <li> <b>expect=&lt;string to expect&gt;</b> <i>(optional)</i>:
 	  <br>
 	  - a string to expect in response from the remote TCP connection.
-	  The string can be a regular expression.
+	  The string can match a substring of the response.
+     <li> <b>expectrexp=&lt;regexp string to expect&gt;</b> <i>(optional)</i>:
+	  <br>
+	  - a regular expression string to expect in response from the remote TCP connection.
+	  See Python re module documentation for more information.
+	  [Eddie 0.35+]
     </ul><br>
 
     Rule Variables:
