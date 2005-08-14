@@ -37,6 +37,7 @@ import time
 import threading
 import traceback
 import errno
+import re
 
 ##
 ## Imports: Eddie
@@ -498,6 +499,10 @@ class PORT(directive.Directive):
 	if 'expect' in dir(self.args):
 	    self.defaultVarDict['expect'] = self.args.expect
 
+	if 'expectrexp' in dir(self.args):
+	    self.defaultVarDict['expectrexp'] = self.args.expectrexp
+	    self.regexp=re.compile(self.args.expectrexp)
+
 	# define the unique ID
 	if self.ID == None:
 	    self.ID = '%s.PORT.%s.%d' % (log.hostname,self.args.host,self.args.port)
@@ -521,17 +526,20 @@ class PORT(directive.Directive):
 	data['connect_time'] = connect_time	# time for socket connect
 	data['error'] = error		# error code if connect failed
 	data['errorstr'] = errorstr	# error text for above
+	data['matched'] = 0		# Default
 
-	if 'expect' in dir(self.args):
+	if 'expectrexp' in dir(self.args):
+	    if recv_string and self.args.expectrexp:
+	    	m=self.regexp.search(recv_string)
+		if m:
+		    data['matched']=1
+		    for i in range(len(m.groups())):
+		    	data['match_%d' % i]=m.groups()[i]
+
+	elif 'expect' in dir(self.args):
 	    if recv_string and self.args.expect:
 		if string.find( recv_string, self.args.expect ) != -1:
 		    data['matched'] = 1	# true
-		else:
-		    data['matched'] = 0	# false
-	    else:
-		data['matched'] = 0	# false
-	else:
-	    data['matched'] = 0
 
 	return data
 
