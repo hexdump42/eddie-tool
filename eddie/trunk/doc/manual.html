@@ -1763,14 +1763,18 @@
 	  <br>
 	  - specifies the port number (or name as defined in /etc/services,
 	  which should be a string) to perform the check on.
-     <li> <b>bindaddr=&lt;IP address&gt;</b> <i>(required)</i>:
+     <li> <b>bindaddr=&lt;IP address&gt; | any</b> <i>(required)</i>:
 	  <br>
 	  - specifies the IP address this port should be bound to.  Usually
 	  this is the wildcard address, '0.0.0.0'.  Note, under Solaris '*'
 	  represents the wildcard address.
-	  (New in 0.33+: if '*' is used it will be automatically converted to
+	  <br>
+	  New in 0.33+: if '*' is used it will be automatically converted to
 	  '0.0.0.0', same with the data collected from the system; so either
-	  format should be valid.)
+	  format should be valid now.
+	  <br>
+	  New in 0.35: if set to string "any" then the bind address will
+	  be ignored when matching.  Only the port will be compared.
     </ul><br>
 
     Rule Variables:
