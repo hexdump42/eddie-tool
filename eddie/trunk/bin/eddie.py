@@ -94,6 +94,14 @@ global cthread
 # Read directive definitions from lib/common/Directives/
 config.loadExtraDirectives(os.path.join(commonlibdir, "Directives"))
 
+# Read system specific directives
+# This is for directive modules in lib/<system>/Directives/ if it exists
+#  for any <system>.
+for pth in oslibdirs:
+    subdir = os.path.join(pth, "Directives")
+    if os.path.isdir(subdir):
+	config.loadExtraDirectives(subdir)
+
 
 def start_threads(sargs, cargs):
     """Start any support threads that are required.
