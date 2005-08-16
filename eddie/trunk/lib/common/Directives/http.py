@@ -224,12 +224,18 @@ class HTTP(directive.Directive):
 	time_connect_start = time.time()
 	try:
 	    conn.connect()
+	except AttributeError, err:
+	    raise directive.DirectiveError, "cannot open HTTPS connection, %s" % str(err)
+		
 	except:
 	    time_connect_end = time.time()
 	    e = sys.exc_info()
 	    data['exception'] = e[0]
 	    data['errno'] = e[1][0]
-	    data['errstr'] = e[1][1]
+	    try:
+		data['errstr'] = e[1][1]
+	    except IndexError:
+	    	data['errstr'] = str(e[0])
 	    data['time_connect'] = time_connect_end - time_connect_start
 	    data['time'] = time_connect_end - time_start
 	    data['failed'] = 1
