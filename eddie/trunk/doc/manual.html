@@ -522,6 +522,7 @@
     <li> <b><a href="#POP3TIMING">POP3TIMING</a></b> - time &amp; check POP3 connections.
     <li> <b><a href="#PORT">PORT</a></b> - remote TCP port checking rule.
     <li> <b><a href="#RADIUS">RADIUS</a></b> - perform radius authentication tests.
+    <li> <b><a href="#SMTP">SMTP</a></b> - test and measure SMTP connections to servers.
     <li> <b><a href="#SNMP">SNMP</a></b> - retrieve and test SNMP data from remote hosts and devices.
    </ul>
 
@@ -1826,6 +1827,56 @@
 	    action=email('alert', '%(protocol)s port %(bindaddr)s:%(port)s not listening')
     </pre>
    </p>
+
+
+
+   <p>
+    <b><a name="SMTP">SMTP</a></b><br>
+
+    This directive makes a connection to an SMTP server and returns
+    the elapsed response time.
+
+    <br><br>
+    SMTP-specific Arguments:
+    <ul>
+     <li> <b>host=&lt;hostname:port&gt;</b> <i>(required)</i>:
+	  <br>
+	  - the remote host to poll.  Specifying the port is optional, and defaults
+	  to 25.
+    </ul><br>
+
+    Rule Variables:
+    <ul>
+     <li> <b>connected</b> (boolean)
+	  <br>
+	  - is True if the SMTP connection was successful; False if not.
+    </ul>
+
+    Action Variables:
+    <ul>
+     <li> <b>host</b> (string)
+	  <br>
+	  - the hostname part of the host argument.
+     <li> <b>port</b> (integer)
+	  <br>
+	  - the port part of the host argument.
+     <li> <b>connecttime</b> (float)
+	  <br>
+	  - the elapsed time taken to connect to the server and retrieve a response (only if connection was successful).
+     <li> <b>rule</b> (string)
+	  <br>
+	  - the value of the rule argument.
+     <li> Plus all the rule variables as usual.
+    </ul>
+
+    <i>Directive Examples:</i>
+    <pre>
+	SMTP smtp_test:
+	    server='mail.mydomain.com'
+	    rule='connected'
+	    action=email('alert', "SMTP connection to %(server)s:%(port)s took %(connecttime)s secs")
+    </pre>
+    </p>
 
 
 
