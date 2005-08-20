@@ -280,7 +280,7 @@ class PRTDIAG(directive.Directive):
 		continue
 
 	return prtdiag_dict
-		
+
 
     def parse_prtdiag_u280r(self):
 	"""Parse prtdiag for a U280R."""
@@ -300,13 +300,136 @@ class PRTDIAG(directive.Directive):
 	prtdiag_dict = {}
 	prtdiag_dict['temp_cpu0'] = None
 	prtdiag_dict['temp_cpu1'] = None
+	prtdiag_dict['failure'] = ""
 
 	inx = re.search( "cpu([0-9])\s+([0-9])\s*-+\s*([0-9]+)\s+([0-9]+)", output)
 	if inx:	# CPU temps
 	    prtdiag_dict['temp_cpu%s'%(inx.group(1))] = int(inx.group(3))
 	    prtdiag_dict['temp_cpu%s'%(inx.group(2))] = int(inx.group(4))
 
+	inx = re.findall("\n(.*?)\s+\[(\w+_FAULT)\]",output)
+	for device, fault in inx:
+	    if fault=='NO_FAULT':
+	    	continue
+	    prtdiag_dict['failure']+="%s: %s " % (device, fault)
+
 	return prtdiag_dict
+
+
+    def parse_prtdiag_u480r(self):
+	"""Parse prtdiag for a U480R."""
+
+	prtdiag = "/usr/platform/sun4u/sbin/prtdiag"
+
+	try:
+	    os.stat( prtdiag )
+	except:
+	    log.log( "<solaris>PRTDIAG.parse_prtdiag_u480r(): %s not found, directive cancelled" % (prtdiag), 4 )
+	    return None
+
+	cmd = "%s -v" % (prtdiag)
+	(retval, output) = utils.safe_getstatusoutput( cmd )
+
+	# Initialise prtdiag dictionary of values
+	prtdiag_dict = {}
+	prtdiag_dict['cpu0_temp'] = -1
+	prtdiag_dict['cpu1_temp'] = -1
+	prtdiag_dict['cpu2_temp'] = -1
+	prtdiag_dict['cpu3_temp'] = -1
+	prtdiag_dict['dbp0_temp'] = -1
+	prtdiag_dict['cpu0_status'] = 'unknown'
+	prtdiag_dict['cpu1_status'] = 'unknown'
+	prtdiag_dict['cpu2_status'] = 'unknown'
+	prtdiag_dict['cpu3_status'] = 'unknown'
+	prtdiag_dict['dbp0_status'] = 'unknown'
+	prtdiag_dict['cpu0_fan_rpm'] = -1
+	prtdiag_dict['cpu1_fan_rpm'] = -1
+	prtdiag_dict['cpu2_fan_rpm'] = -1
+	prtdiag_dict['io0_fan_rpm'] = -1
+	prtdiag_dict['io1_fan_rpm'] = -1
+	prtdiag_dict['cpu0_fan_status'] = 'unknown'
+	prtdiag_dict['cpu1_fan_status'] = 'unknown'
+	prtdiag_dict['cpu2_fan_status'] = 'unknown'
+	prtdiag_dict['io0_fan_status'] = 'unknown'
+	prtdiag_dict['io1_fan_status'] = 'unknown'
+	prtdiag_dict['ps0_status'] = 'unknown'
+	prtdiag_dict['ps1_status'] = 'unknown'
+	prtdiag_dict['disk0_status'] = 'unknown'
+	prtdiag_dict['disk1_status'] = 'unknown'
+	prtdiag_dict['failure'] = ""
+
+	# Search for hardware faults
+	inx = re.findall("\n(.*?)\s+\[(\w+_FAULT)\]",output)
+	for device, fault in inx:
+	    if fault=='NO_FAULT':
+	    	continue
+	    prtdiag_dict['failure']+="%s: %s " % (device, fault)
+
+	for line in output.splitlines():
+	    if line.startswith('CPU0'):
+	    	bits=line.split()
+		prtdiag_dict['cpu0_temp'] = int(bits[1])
+		prtdiag_dict['cpu0_status'] = bits[2]
+	    if line.startswith('CPU1'):
+	    	bits=line.split()
+		prtdiag_dict['cpu1_temp'] = int(bits[1])
+		prtdiag_dict['cpu1_status'] = bits[2]
+	    if line.startswith('CPU2'):
+	    	bits=line.split()
+		prtdiag_dict['cpu2_temp'] = int(bits[1])
+		prtdiag_dict['cpu2_status'] = bits[2]
+	    if line.startswith('CPU3'):
+	    	bits=line.split()
+		prtdiag_dict['cpu3_temp'] = int(bits[1])
+		prtdiag_dict['cpu3_status'] = bits[2]
+	    if line.startswith('DBP0'):
+	    	bits=line.split()
+		prtdiag_dict['dbp0_temp'] = int(bits[1])
+		prtdiag_dict['dbp0_status'] = bits[2]
+	    if line.startswith('DISK 0'):
+	    	bits=line.split()
+		prtdiag_dict['disk0_status'] = self.squarebracks(line)
+	    if line.startswith('DISK 1'):
+	    	bits=line.split()
+		prtdiag_dict['disk1_status'] = self.squarebracks(line)
+	    if line.startswith('FAN_TRAY_0'):
+	    	if line.find('CPU0_FAN')>1:
+		    bits=line.split()
+		    prtdiag_dict['cpu0_fan_status'] = self.squarebracks(line)
+		    prtdiag_dict['cpu0_fan_rpm'] = int(bits[2])
+	    	if line.find('CPU1_FAN')>1:
+		    bits=line.split()
+		    prtdiag_dict['cpu1_fan_status'] = self.squarebracks(line)
+		    prtdiag_dict['cpu1_fan_rpm'] = int(bits[2])
+	    	if line.find('CPU2_FAN')>1:
+		    bits=line.split()
+		    prtdiag_dict['cpu2_fan_status'] = self.squarebracks(line)
+		    prtdiag_dict['cpu2_fan_rpm'] = int(bits[2])
+	    if line.startswith('FAN_TRAY_1'):
+	    	if line.find('IO0_FAN')>1:
+		    bits=line.split()
+		    prtdiag_dict['io0_fan_status'] = self.squarebracks(line)
+		    prtdiag_dict['io0_fan_rpm'] = int(bits[2])
+	    	if line.find('IO1_FAN')>1:
+		    bits=line.split()
+		    prtdiag_dict['io1_fan_status'] = self.squarebracks(line)
+		    prtdiag_dict['io1_fan_rpm'] = int(bits[2])
+	    if line.startswith('PS0'):
+		prtdiag_dict['ps0_status'] = self.squarebracks(line)
+	    if line.startswith('PS1'):
+		prtdiag_dict['ps1_status'] = self.squarebracks(line)
+
+	return prtdiag_dict
+
+
+    def squarebracks(self, line):
+	""" Return what is between the square brackets - stripped of white space.
+	Can only handle one set of [] in the line
+	"""
+
+	line=line[line.find('[')+1:]
+	line=line[:line.find(']')]
+	return line.strip()
 
 
     def parse_prtdiag_Enterprise(self):
