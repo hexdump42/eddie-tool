@@ -1100,6 +1100,11 @@
 	  - a string to use to filter scanned lines.  The string can be
 	  some text to match anywhere on the line, or a more complex regular
 	  expression.  If all lines are required, regex='.*' should be used.
+     <li> <b>regfile=&lt;filename string&gt;</b> <i>(required)</i>:
+	  <br>
+	  - a filename containing multiple regular expressions (one per line)
+	  which will be used to perform log file line matching.
+	  [Eddie 0.35+]
      <li> <b>negate=&lt;true or false&gt;</b> <i>(optional)</i>:
 	  <br>
 	  - if set to 'true', the regex filter is used to exclude matching
@@ -1116,8 +1121,17 @@
     <ul>
      <li> <b>linecount</b> (integer)
 	  <br>
+	  - the number of lines scanned.
+     <li> <b>matchedcount</b> (integer)
+	  <br>
 	  - this variable contains the number of lines which matched the
-	  regex for this scan.
+	  regular expression(s) for this scan.
+	  [Eddie 0.35+]
+     <li> <b>unmatchedcount</b> (integer)
+	  <br>
+	  - this variable contains the number of lines which did not match the
+	  regular expression(s) for this scan.
+	  [Eddie 0.35+]
      <li> <b>lines</b> (string)
 	  <br>
 	  - the actual lines of the file that matched the regex are stored in
