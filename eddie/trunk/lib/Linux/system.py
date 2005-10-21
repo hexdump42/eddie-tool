@@ -139,10 +139,12 @@ class system(datacollect.DataCollect):
 			self.data.datahash['ctr_cpu_nice'] = long(nice)
 			self.data.datahash['ctr_cpu_system'] = long(system)
 			self.data.datahash['ctr_cpu_idle'] = long(idle)
-		    elif len(cpusplit) == 8:
+		    elif len(cpusplit) >= 8:
 			# Redhat Enterprise Linux (not sure if this is specific to RHEL
 			# or is a change in kernel 2.4.21+)
-			( foo, user, nice, system, idle, iowait, hardirq, softirq ) = cpusplit
+			# CM 20051021: kernel 2.6.11+ has an extra counter - it is not
+			#   documented and seems always 0, so ignore for now
+			( user, nice, system, idle, iowait, hardirq, softirq ) = cpusplit[1:8]
 			self.data.datahash['ctr_cpu_user'] = long(user)
 			self.data.datahash['ctr_cpu_nice'] = long(nice)
 			self.data.datahash['ctr_cpu_system'] = long(system)
@@ -166,10 +168,12 @@ class system(datacollect.DataCollect):
 			self.data.datahash['ctr_cpu%d_nice'%cpunum] = long(nice)
 			self.data.datahash['ctr_cpu%d_system'%cpunum] = long(system)
 			self.data.datahash['ctr_cpu%d_idle'%cpunum] = long(idle)
-		    elif len(cpusplit) == 8:
+		    elif len(cpusplit) >= 8:
 			# Redhat Enterprise Linux (not sure if this is specific to RHEL
 			# or is a change in kernel 2.4.21+)
-			( foo, user, nice, system, idle, iowait, hardirq, softirq ) = cpusplit
+			# CM 20051021: kernel 2.6.11+ has an extra counter - it is not
+			#   documented and seems always 0, so ignore for now
+			( user, nice, system, idle, iowait, hardirq, softirq ) = cpusplit[1:8]
 			self.data.datahash['ctr_cpu%d_user'%cpunum] = long(user)
 			self.data.datahash['ctr_cpu%d_nice'%cpunum] = long(nice)
 			self.data.datahash['ctr_cpu%d_system'%cpunum] = long(system)
