@@ -157,8 +157,12 @@ class FILE(directive.Directive):
 		#  another option is self.md5.md5(filename).hexdigest()
 		#  but I wanted something semi-readable
 		#  So is this method unique enough?  Please prove it isn't.
+		try:
+		    pathsep = os.path.sep	# only available in Py 2.3+
+		except AttributeError:
+		    pathsep = '/'		# otherwise just assume
 		self.savefilename = self.args.file.replace( '_', '__' )
-		self.savefilename = self.args.file.replace( os.path.sep, '_' )
+		self.savefilename = self.args.file.replace( pathsep, '_' )
 		self.prevfile = os.path.join(self.tmpdir, self.savefilename)
 		try:
 		    # remove old copy of save file if it exists
