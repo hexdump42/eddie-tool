@@ -1,7 +1,7 @@
 ## 
 ## File		: logscanning.py 
 ## 
-## Author       : Chris Miles  <chris@psychofx.com>
+## Author       : Chris Miles - http://chrismiles.info/
 ## 
 ## Start Date	: 20010529
 ## 
@@ -11,7 +11,7 @@
 ##
 ##
 ########################################################################
-## (C) Chris Miles 2001
+## (C) Chris Miles 2001-2005
 ##
 ## The author accepts no responsibility for the use of this software and
 ## provides it on an ``as is'' basis without express or implied warranty.
@@ -46,12 +46,12 @@ class LOGSCAN(directive.Directive):
     Sample rule:
        LOGSCAN messages: file="/var/log/messages"
                          regex=".*error.*"
-			 rule='linecount > 0'
-                         action="email('alert', 'Log matched %(linecount)d lines', '%(lines)s')"
+			 rule='matchedcount > 0'
+                         action="email('alert', 'Log matched %(matchedcount)d lines', '%(lines)s')"
 
     Optional arguments:
 	negate=true		# only lines NOT matching regex will cause action
-	rule=<rule string>	# defaults to 'linecount > 0' if not specified
+	rule=<rule string>	# defaults to 'matchedcount > 0' if not specified
     """
 
     def __init__(self, toklist):
@@ -59,7 +59,8 @@ class LOGSCAN(directive.Directive):
 
 	self.filepos = 0	# position in file saved between checks
 	self.filestat = None	# stat of log file
-
+	self.reglist=[]
+	self.regfile=None
 
     def tokenparser(self, toklist, toktypes, indent):
 	"""Parse directive arguments.
@@ -72,10 +73,26 @@ class LOGSCAN(directive.Directive):
 	    self.args.file		# filename
         except AttributeError:
             raise directive.ParseFailure, "Filename not specified"
-	try:
-	    self.args.regex		# regular expression
-        except AttributeError:
-            raise directive.ParseFailure, "Regex not specified"
+
+	if not hasattr(self.args, 'regex') and not hasattr(self.args, 'regfile'):
+	    raise directive.ParseFailure, "Regex or regfile required"
+
+	if hasattr(self.args, 'regfile'):
+	    self.defaultVarDict['regfile'] = self.args.regfile
+	    self.regfile=self.args.regfile
+	    try:
+		f=open(self.args.regfile)
+		data=f.readlines()
+		f.close()
+	    except IOError, err:
+	    	raise directive.DirectiveError, "Couldn't process %s: %s" % (self.args.regfile, str(err))
+
+	    for i in data:
+	    	self.reglist.append(re.compile(i.strip()))
+
+	if hasattr(self.args, 'regex'):
+	    self.reglist=[re.compile(self.args.regex)]
+	    self.defaultVarDict['regex'] = self.args.regex
 
 	try:
 	    self.args.negate		# whether to negate rule
@@ -92,20 +109,25 @@ class LOGSCAN(directive.Directive):
 	try:
 	    self.args.rule
 	except AttributeError:
-	    self.args.rule = "linecount > 0"		# default rule
+	    self.args.rule = "matchedcount > 0"		# default rule
 
 	# Set variables for Actions to use
 	self.defaultVarDict['file'] = self.args.file
-	self.defaultVarDict['regex'] = self.args.regex
 	self.defaultVarDict['negate'] = self.args.negate
 	self.defaultVarDict['rule'] = self.args.rule
 
 	# define the unique ID
         if self.ID == None:
-	    self.ID = '%s.LOGSCAN.%s.%s' % (log.hostname,self.args.file,self.args.regex)
+	    if self.regfile:
+		self.ID = '%s.LOGSCAN.%s.%s' % (log.hostname,self.args.file,self.args.regfile)
+	    else:
+		self.ID = '%s.LOGSCAN.%s.%s' % (log.hostname,self.args.file,self.args.regex)
 	self.state.ID = self.ID
 
-	log.log( "<logscanning>LOGSCAN.tokenparser(): ID '%s' file '%s' regex '%s'" % (self.ID, self.args.file, self.args.regex), 8 )
+	if self.regfile:
+	    log.log( "<logscanning>LOGSCAN.tokenparser(): ID '%s' file '%s' regfile '%s' reglist %d records" % (self.ID, self.args.file, self.args.regfile, len(self.reglist)), 7 )
+	else:
+	    log.log( "<logscanning>LOGSCAN.tokenparser(): ID '%s' file '%s' regex '%s'" % (self.ID, self.args.file, self.args.regex), 7 )
 
 
     def getData(self):
@@ -120,6 +142,8 @@ class LOGSCAN(directive.Directive):
 	data = {}
 	data['lines'] = ""
 	data['linecount'] = 0
+	data['unmatchedcount'] = 0
+	data['matchedcount'] = 0
 
 	try:
 	    s = os.stat( self.args.file )
@@ -140,7 +164,6 @@ class LOGSCAN(directive.Directive):
 		    self.filestat = s
 		    self.filepos = 0
 
-		sre = re.compile( self.args.regex )
 		matchedlines = []
 
 		try:
@@ -159,9 +182,21 @@ class LOGSCAN(directive.Directive):
 			line = fp.readline()
 
 		    while len(line) > 0:
-			inx = sre.search( line )
-			if (inx and not self.args.negate) or (not inx and self.args.negate):
-			    matchedlines.append( line )
+			data['linecount'] = data['linecount'] + 1
+			matched=0
+			for i in self.reglist:
+			    inx=i.search( line )
+			    if inx:
+				data['matchedcount'] = data['matchedcount'] + 1
+				matched=1
+				if not self.args.negate:
+				    matchedlines.append( line )
+				break
+			if not matched:
+			    data['unmatchedcount'] = data['unmatchedcount'] + 1
+			    if self.args.negate:
+				matchedlines.append( line )
+
 			line = fp.readline()
 
 		    # remember position of EOF so we can jump here next time
@@ -172,11 +207,8 @@ class LOGSCAN(directive.Directive):
 
 		    # assign variables
 		    data['lines'] = string.join(matchedlines, "")
-		    data['linecount'] = matchedcount
 
 	return data
-
-
 
 ##
 ## END - logscanning.py
