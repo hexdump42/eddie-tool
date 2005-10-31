@@ -1,6 +1,246 @@
 Eddie CHANGES
 (reverse chronological order)
 
+Eddie-0.35 (31-Oct-2005)
+ - Linux: Added a dummy diskdevice module for Linux.  The implementation of
+   this is still yet to be done.
+ - Fixed compatibility issue with FILE directive and Python pre 2.3.  Those
+   versions do not have os.path.sep.
+ - Added regfile to LOGSCAN directive, which points to a file containing
+   multiple regular expressions to match against.  Patch submitted by
+   Dougal Scott.
+ - Linux: Fix to handle /proc/stat changes on Linux kernel 2.6.11+.
+ - Enhancements to PRTDIAG directive:
+    * Report details of any hardware failures on U280R.
+    * Added support for U480R hardware.
+   Patch submitted by Dougal Scott.
+ - Improvement to HTTP directive handling if the Python does not support SSL
+   connections.  Patch submitted by Dougal Scott.
+ - Added SMTP directive which provides a simple facility to measure the response
+   time of an SMTP connection to a server.  Submitted by Dougal Scott.
+ - Fixed minor bug where length of time of thread count over threshold was
+   not being shown in minutes when it was expected to be.
+   Patch submitted by Dougal Scott.
+ - System specific Directives are now automatically loaded from a Directives
+   subdirectory beneath the system lib directory if it exists.
+   Example: Linux-specific directive modules will be loaded from:
+     lib/Linux/Directives/
+   Patch submitted by Dougal Scott.
+ - SP directive now supports a bindaddr value of "any".  This will cause the
+   directive to ignore the bind address when testing (ie: compare port only).
+   Patch submitted by Dougal Scott.
+ - Use Python True/False instead of 1/0 for booleans in common directives.
+ - Added 'expectrexp' option to PORT directive.  This allows regular expression
+   matching against the response of a PORT connection.
+   Patch submitted by Dougal Scott.
+ - Added a 'missing' flag to FILE directive which indicates when an existing
+   file has disappeared.
+   Also added a 'lastexists' variable for use in FILE rules.
+ - Improvements to the keepdiff option of the FILE directive.
+   * Keep copies of files being monitored in WORKDIR/FILEprevs/ where
+     WORKDIR is the new option defined in eddie.cf.
+   * If the copy of a file in FILEprevs disappears then set an appropriate
+     message for action output.
+   * If the copy of a file in FILEprevs disappears then make sure another
+     copy is saved.
+   * Use semi-readable unique filenames for the saved copies.
+ - Added get_work_dir() and set_sub_work_dir() functions to utils.py for
+   directive code to call to retrieve the WORKDIR location.  set_sub_work_dir()
+   is used to create a subdirectory within WORKDIR.  It will raise WorkdirError
+   if it fails.  Otherwise it returns the full directory path.
+ - Added config option WORKDIR which defines a location where Eddie can
+   store temporary files.  This can be used by directives that need to
+   save some information or state to the filesystem.  The directory can
+   be safely removed when Eddie is not running.  Eddie does not clean
+   up the directory itself (it may clean up some files before shutting
+   down).  The whole directory tree will be created on startup if it
+   doesn't already exist.  Eddie may create subdirectories within this
+   WORKDIR directory.  Example:
+       WORKDIR="/var/tmp/eddieworkdir"
+ - Win32: Catch an exception that is randomly generatede by
+   win32pdh.GetFormattedCounterValue() sometimes. The returned error is
+   unhelpful,
+   (-2147481640, 'GetFormattedCounterValue', 'No error message is available')
+   so just return None values instead of letting the thread die.
+ - Added capability for FILE directive to keep diffs of changes to a file.
+   The diffs can then be sent in an email when a change is detected.
+   New FILE arguments:
+   keepdiff={true|false}
+    - flag whether to keep a copy of the file to produce diffs
+   context_lines=<integer>
+    - how many context lines to show around the changed lines
+   difftype={context|unified|full}
+    - which diff method to use (see Python difflib module for more information)
+ - Added README.win32.txt for Win32 platform install information.
+ - Added rules/win32_sample.rules - a sample set of Win32 rules.
+ - Win32 df collector: ignore A: and B: drives when collecting stats.
+   Otherwise Windows prompts for the media to be inserted! (Unless a
+   floppy is in the drive ... yeah right)
+ - Win32: Fix win32perf doctest for systems that have an A: drive.
+ - Win32: Added support for Win32 systems with datacollectors: df,
+   diskdevice, netstat, proc and system.  Most of them use win32perf
+   module which is a wrapper for Mark Hammond's win32all package.
+ - Added doctests for FILE directive.
+ - Fetch hostname from platform.node() if os.uname() is not available.
+   (Fix for Win32 compatibility.)
+ - Added a doctest for timeQueue module.
+ - Fixed bug in timeQueue in Python 2.4+ support where head() call was
+   actually performing a get().
+ - Use platform-independent method (ie: os.path) for constructing config
+   paths, rather than assuming '/' is path separator.  (Fix for Win32
+   compatibility.)
+ - Added support for systems that do not support os.uname() - try to use
+   the platform module instead (ie: Win32).  Check that the system handles
+   each signal before trying to register signal handlers for them (Win32
+   doesn't support some of the signals).
+ - Solaris: Catch some more possible errors when parsing 'ps' output for
+   Solaris.  The %CPU field can be a '-' instead of a decimal number (seems
+   to be that way for zombie processes).
+ - Solaris: Handle parsing netstat output for Solaris 10.
+ - Fixed small bug with eddie_wrapper when EDDIE_ADMIN was not defined.
+ - Big improvements to the Redhat init.d script in the contrib directory,
+   making it much more compatible with all new versions of Redhat Linux.
+ - Added chkconfig lines to sample init.d script for Redhat Linux.
+ - Linux: Detecting interpreters in Linux process lists was broken.
+ - Linux: added support for new netstat formats in newer kernels.
+ - Linux: Get VM statistics from /proc/vmstat (on newer kernels).
+ - Added support for Python 2.4 Queue class, which Eddie's timeQueue class is
+   derived from.  The implementation of Queue changed slightly in Python 2.4.
+ - Log the version of Python in use at startup, along with systype.
+ - Added optional definition of EDDIE_ADMIN environment variable in the rc
+   startup scripts to receive Eddie restart/exception notifications from
+   eddie_wrapper.
+ - Eddie now prints no output to stdout by default.  Any global exceptions
+   are printed to stderr on exiting.
+ - eddie_wrapper improvements: eddie output on exit is only emailed to
+   $EDDIE_ADMIN if the Eddie return-code is non-zero.  By default no
+   $EDDIE_ADMIN is set (so no email is sent by default) and $EDDIE_ADMIN
+   can now be defined outside the eddie_wrapper script (ie: in a startup
+   script).
+ - Bugfix: console now shows groups that match special hostnames, those that
+   contain '.' or '-' characters.  A shortcut hack that will be replaced in
+   the future.
+ - FreeBSD: Added fetching of more system counters from '/sbin/sysctl -a'.
+ - FreeBSD: process list parsing was broken.
+ - FreeBSD: proc module needed to import sys so that exceptions could
+   be logged.
+ - Added a bit of a hack (sorry) which allows hostnames containing '-' to be
+   used as group names.  The '-' must be replaced with '_' for the match to
+   work.  This is because group names in the config cannot contain characters
+   like '-'.  This will be resolved in the future when proper matching options
+   are implemented fully.
+ - Solaris: Better handling of Solaris process date/time parsing errors.
+   Patch submitted by Dougal Scott.
+ - Solaris: PRTDIAG directive: added support for Sun Blade servers
+   (SUNW,Serverblade1).  Patch submitted by Dougal Scott.
+ - When sending email by the SMTP method and multiple SMTP servers are
+   available, only log failure if all SMTP servers are unavailable to
+   send the message.  Patch submitted by Dougal Scott.
+ - FreeBSD: Added collecting swap usage stats from '/usr/sbin/pstat -sk'.
+ - Bugfix: Elvin ElvinConnectMaxRetries exceptions were not being caught
+   properly.
+ - Solaris: SunOS df data collector would fail when a CD was inserted, as
+   total files is reported as -1.  Patch submitted by Dougal Scott.
+ - FreeBSD raises a socket exception ('Host is down') when a host is
+   unreachable, which can be safely ignored by the ping code.
+ - Improved the sample config for N COMMONFIXED.
+ - FreedBSD: Added support for FreeBSD system, proc, netstat, df modules.
+ - A quick fix to the config parser which means that Eddie will run on systems
+   that do not yet have system-specific modules.  Non system-specific
+   directives will still work on these systems, such as all the network
+   directives (PING, SNMP, etc) and others like FILE.
+ - Solaris: Fixed DataFailure exception when kstat command cannot be found.
+ - Catch an exception properly in FS directive when filesystem was not
+   found.
+ - Fixed fstpl directive in common.rules example file.
+ - Modified eddie_wrapper to use a Python call to fetch the current time
+   rather than relying on GNU date.  This has improved compatability with
+   more types of systems, as it can be assumed that Python will be available
+   to run EDDIE !
+ - Handle Elvin connection problems more gracefully, backing off before
+   retrying.
+ - Disabled counting of file descriptors in use, which is only needed for
+   debugging on rare occasions.
+ - Bugfix in HTTP when trying to determine error string for some types of
+   exceptions.
+ - Improved PING multi-threaded reliability on platforms that were causing
+   problems because they simply used the current pid as the icmp_id.
+   On platforms where all threads share the same process id this was causing
+   unreliable ping results as the wrong threads would accept the wrong icmp
+   replies.  It now uses the current thread object's memory address for the
+   icmp_id to make them as unique as possible and avoid such confusion.
+ - New directive: TAPE - functions almost exactly like the DISK directive
+   but fetches stats from the TapeStatistics class from the diskdevice
+   module (which is currently only available for Solaris).
+   Example:
+    TAPE st52_thruput:
+        device='st52'
+        scanperiod='5m'
+        rule='1'        # always perform action
+        action='elvinrrd("tape-%(h)s_%(device)s", "rbytes=%(nread)s", "wbytes=%(nwritten)s")'
+ - New directive, DISK.  This uses the new DiskStatistics data collector from
+   a diskdevice module (available for Solaris-only so far) to enable rules
+   to be created using disk device activity stats.
+   Example: a directive which collects bytes read/written to the disk device
+   md20 and sends these counters to elvinrrd
+    DISK md20_thruput:
+        device='md20'
+        scanperiod='5m'
+        rule='1'        # always perform action
+        action='elvinrrd("disk-%(h)s_%(device)s", "rbytes=%(nread)s", "wbytes=%(nwritten)s")'
+ - Solaris: added a new Data Collector, DiskStatistics, in module diskdevice.py
+   (for Solaris only so far).  On Solaris this collects disk activity statistics
+   from a call to kstat, ie, '/usr/bin/kstat -p -c disk'.  All stats generated
+   by that command are collected for each disk and made available to directives.
+ - Solaris: enhanced the network interface statistics collection to fetch
+   more detailed stats from 'netstat -k' for each physical interface.
+   An example of the statistics now available for an interface (hme0 on 5.7)
+   are:
+     ipackets 65360226 ierrors 25 opackets 77502512 oerrors 0 collisions 0
+     defer 0 framing 0 crc 0 sqe 0 code_violations 0 len_errors 0
+     ifspeed 100 buff 0 oflo 0 uflo 0 missed 25 tx_late_collisions 0
+     retry_error 0 first_collisions 0 nocarrier 0 inits 7 nocanput 440
+     allocbfail 0 runt 0 jabber 0 babble 0 tmd_error 0 tx_late_error 0
+     rx_late_error 0 slv_parity_error 0 tx_parity_error 0 rx_parity_error 0
+     slv_error_ack 0 tx_error_ack 0 rx_error_ack 0 tx_tag_error 0
+     rx_tag_error 0 eop_error 0 no_tmds 0 no_tbufs 0 no_rbufs 0
+     rx_late_collisions 0 rbytes 1726897560 obytes 834302609 multircv 7535 multixmt 0
+     brdcstrcv 248816 brdcstxmt 1667 norcvbuf 440 noxmtbuf 0 phy_failures 0
+   as well as info from 'netstat -in' such as mtu, network, etc.
+ - Solaris: now collects more detailed filesystem information in SunOS/df.py,
+   including inode usage, filesystem type, flags, and blocks as well as kBytes
+   used.  The full list of variables now available to directives is:
+     fsname  - filesystem name (string)
+     mountpt - mount point (string)
+     size    - size of filesystem in kBytes (int)
+     used    - kBytes used (int)
+     avail   - kBytes free (int)
+     pctused - percentage of filesystem used (float)
+     totalblocks - total amount of physical blocks (512 Bytes/block) (int)
+     usedblocks - number of physical blocks used (int)
+     availblocks - number of physical blocks available for unprivileged users (int)
+     freeblocks - number of physical blocks free (int)
+     blocksize - filesystem (logical) block size (int)
+     fragsize - filesystem fragmentation size (int)
+     totalinodes - total inodes on filesystem (int)
+     usedinodes - number of inodes used (int)
+     availinodes - number of inodes left available (int)
+     pctinodes - percentage of inodes used (float)
+     filesysid - filesystem id (int)
+     fstype - type of filesystem (string)
+     flag - filesystem flags (string)
+     filelen - max filename length (int)
+   Thanks to Dougal Scott for submitting this patch.
+ - When matching hostnames to group names, ignore any domain parts of the
+   hostname it is fully-qualified.  Group names cannot contain
+   non-alphanumeric characters, so will only match the host part of a FQDN.
+ - Bugfix: clear checkdependson if it is assigned an empty string.
+ - Solaris: improvement to uptime/loadavg stats collection where it is
+   possible for the "day(s)" section of /usr/bin/uptime output to be
+   missing (usually if wtmpx rotated more often than the system boot,
+   thus losing the last 'reboot' entry) so SunOS/system.py now handles
+   this exceptional case.
+
 Eddie-0.34 (13-Sep-2004)
  - OpenBSD: collect in/out byte counters for network interfaces, which
    requires an extra netstat call.
