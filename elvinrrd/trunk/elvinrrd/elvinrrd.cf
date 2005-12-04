@@ -9,6 +9,13 @@
 #  create=<string>              # rrd create args if rrd file does not exist
 #########################
 
+# This sample config file writes RRD files to /export/rrd/ in a
+#  subdirectory per data type.  This is the format supported by
+#  eddiebrowser.cgi.
+# The subdirectories and RRD files will be automatically created if
+#  they do not exist.
+#########################
+
 #### Load Averages
 elvinrrd=loadavg1-*
 rrdfile=/export/rrd/loadavg/loadavg1-*.rrd
