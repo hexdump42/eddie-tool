@@ -1,6 +1,6 @@
 # elvinrrd.cf - Config File for elvinrrd.py
 # $Id$
-# $Source$
+# $URL$
 #
 # Fields per entry (entries separated by a blank line):
 #  elvinrrd=<string>            # elvin key to match against
@@ -50,16 +50,24 @@ rrdfile=/export/rrd/cpulinux2/cpulinux2-*.rrd
 store=cpu_user,cpu_nice,cpu_system,cpu_idle,cpu_iowait,cpu_hardirq,cpu_softirq
 create=-s 60 DS:cpu_user:COUNTER:120:0:1000 DS:cpu_nice:COUNTER:120:0:1000 DS:cpu_system:COUNTER:120:0:1000 DS:cpu_idle:COUNTER:120:0:1000 DS:cpu_iowait:COUNTER:120:0:1000 DS:cpu_hardirq:COUNTER:120:0:1000 DS:cpu_softirq:COUNTER:120:0:1000 RRA:AVERAGE:0.5:1:1440 RRA:AVERAGE:0.5:10:1008 RRA:AVERAGE:0.5:60:720 RRA:AVERAGE:0.5:480:1095
 
+# Solaris cpu counters for 4 stats: user, system, wait, idle
 elvinrrd=cpusolaris-*
 rrdfile=/export/rrd/cpusolaris/cpusolaris-*.rrd
 store=cpu_user,cpu_system,cpu_wait,cpu_idle
 create=-s 60 DS:cpu_user:COUNTER:120:0:1000 DS:cpu_system:COUNTER:120:0:1000 DS:cpu_wait:COUNTER:120:0:1000 DS:cpu_idle:COUNTER:120:0:1000 RRA:AVERAGE:0.5:1:1440 RRA:AVERAGE:0.5:10:1008 RRA:AVERAGE:0.5:60:720 RRA:AVERAGE:0.5:480:1095
 
+# BSD (ie: FreeBSD) cpu counters for 5 stats: user, nice, system, interrupt, idle
+elvinrrd=cpubsd-*
+rrdfile=/mrtg/rrd/cpubsd/cpubsd-*.rrd
+store=cpu_user,cpu_nice,cpu_system,cpu_interrupt,cpu_idle create=-s 60 DS:cpu_user:COUNTER:120:0:1000 DS:cpu_nice:COUNTER:120:0:1000 DS:cpu_system:COUNTER:120:0:1000 DS:cpu_interrupt:COUNTER:120:0:1000 DS:cpu_idle:COUNTER:120:0:1000 RRA:AVERAGE:0.5:1:1440 RRA:AVERAGE:0.5:10:1008 RRA:AVERAGE:0.5:60:720 RRA:AVERAGE:0.5:480:1095
+
+# Netapp cpu counters for 2 stats: busy, idle
 elvinrrd=cpunetapp-*
 rrdfile=/export/rrd/cpunetapp/cpunetapp-*.rrd
 store=cpu_busy,cpu_idle
 create=-s 60 DS:cpu_busy:COUNTER:120:U:1000 DS:cpu_idle:COUNTER:120:U:1000 RRA:AVERAGE:0.5:1:1440 RRA:AVERAGE:0.5:10:1008 RRA:AVERAGE:0.5:60:720 RRA:AVERAGE:0.5:480:1095
 
+# Windows NT/2000 cpu counters for 4 CPU system
 elvinrrd=cpuwinnt-*
 rrdfile=/export/rrd/cpuwinnt/cpuwinnt-*.rrd
 store=cpu1_busy,cpu2_busy,cpu3_busy,cpu4_busy
