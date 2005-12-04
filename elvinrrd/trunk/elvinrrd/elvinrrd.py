@@ -1,12 +1,13 @@
 #! /usr/bin/env python
 ## 
 ## File         : elvinrrd.py
-## Author       : Chris Miles <chris@psychofx.com>
+## Author       : Chris Miles - http://chrismiles.info/
 ## Start Date   : 2001-08-27
 ## Description  : Elvin4 consumer to store data sent via Elvin into RRDtool databases.
 ## Home         : http://www.psychofx.com/elvinrrd/
 ##
 ## $Id$
+## $URL$
 ##
 
 ################################################################

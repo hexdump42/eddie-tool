@@ -1,6 +1,15 @@
 ElvinRRD CHANGES
 (reverse chronological order)
 
+ElvinRRD-2.3 (04-Dec-2005)
+- Added cpubsd-* for FreeBSD cpu stats.
+- Added various entries for storing Win32 system data: cpuwinnt-*
+  winints-* cpuwin-* wincs-* winsyscalls-* winprocs-* winthreads-*.
+- Bugfix: SystemExit exceptions are now ignored by the global exception
+  catcher.
+- Various tidying up of comments and docstrings.
+
+
 ElvinRRD-2.2 (30-Nov-2004)
  - Added many more config entries to elvinrrd.cf.
  - Changed the Python RRDtool module it uses.  The old one, PyRRDtool, seems
