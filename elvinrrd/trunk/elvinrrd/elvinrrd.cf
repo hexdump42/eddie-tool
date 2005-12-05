@@ -66,7 +66,8 @@ create=-s 60 DS:cpu_user:COUNTER:120:0:1000 DS:cpu_system:COUNTER:120:0:1000 DS:
 # BSD (ie: FreeBSD) cpu counters for 5 stats: user, nice, system, interrupt, idle
 elvinrrd=cpubsd-*
 rrdfile=/mrtg/rrd/cpubsd/cpubsd-*.rrd
-store=cpu_user,cpu_nice,cpu_system,cpu_interrupt,cpu_idle create=-s 60 DS:cpu_user:COUNTER:120:0:1000 DS:cpu_nice:COUNTER:120:0:1000 DS:cpu_system:COUNTER:120:0:1000 DS:cpu_interrupt:COUNTER:120:0:1000 DS:cpu_idle:COUNTER:120:0:1000 RRA:AVERAGE:0.5:1:1440 RRA:AVERAGE:0.5:10:1008 RRA:AVERAGE:0.5:60:720 RRA:AVERAGE:0.5:480:1095
+store=cpu_user,cpu_nice,cpu_system,cpu_interrupt,cpu_idle
+create=-s 60 DS:cpu_user:COUNTER:120:0:1000 DS:cpu_nice:COUNTER:120:0:1000 DS:cpu_system:COUNTER:120:0:1000 DS:cpu_interrupt:COUNTER:120:0:1000 DS:cpu_idle:COUNTER:120:0:1000 RRA:AVERAGE:0.5:1:1440 RRA:AVERAGE:0.5:10:1008 RRA:AVERAGE:0.5:60:720 RRA:AVERAGE:0.5:480:1095
 
 # Netapp cpu counters for 2 stats: busy, idle
 elvinrrd=cpunetapp-*
