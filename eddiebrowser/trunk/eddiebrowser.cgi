@@ -9,7 +9,7 @@
 ##  See http://psychofx.com/eddiebrowser/ for more details/docs.
 ##
 ## $Id$
-## $Source$
+## $URL$
 
 
 #### Settings ####
@@ -24,7 +24,7 @@ GLOBAL_CONFIG = '/opt/eddiebrowser/configs/eddiebrowser.cfg'
 #### End of settings ####
 
 
-__version__ = '0.5.0'
+__version__ = '0.6.0'
 __copyright__ = 'Chris Miles 2002-2005'
 
 
@@ -162,10 +162,10 @@ class GlobalConfig:
 	    for s in self.settings.keys():
 		if s not in exclude:
 		    settingstr += '<input type="hidden" name="%s" value="%s">\n' % (s,self.settings[s])
-	    if self.filter:
-		for g in self.filter.filtergroups:
-		    settingstr += '<input type="hidden" name="fltgroup" value="%s">\n' % (g)
-		#TODO
+#	    if self.filter:
+#		for g in self.filter.filtergroups:
+#		    settingstr += '<input type="hidden" name="fltgroup" value="%s">\n' % (g)
+#		#TODO
 
 	elif type=='get':
 	    settings = []
@@ -239,7 +239,7 @@ class GlobalConfig:
 	return self.hosts
 
 
-    def getFilter( self, form ):
+    def parseFilter( self, form ):
 	"""Create a filter if required."""
 
 	self.filter = Filter( form )
@@ -297,9 +297,27 @@ def controlPanel(cfg):
     print "<HEAD><Title>eddiebrowser control panel</Title>"
     print """<SCRIPT TYPE="text/javascript">
 	<!--
-	function cbclear(cbname){
-		document.getElementById(cbname).checked=false;
-		return true;
+	function eb_selectallfltgroups() {
+	    // Select all checkboxes in the selecthost form with ids beginning
+	    //   with 'fltgroup_'
+	    changeAllFormChecks( 'selecthost', 'fltgroup_', true );
+	}
+	function eb_unselectallfltgroups() {
+	    // Un-select all checkboxes in the selecthost form with ids beginning
+	    //   with 'fltgroup_'
+	    changeAllFormChecks( 'selecthost', 'fltgroup_', false );
+	}
+	function changeAllFormChecks(formid, checkid, checked) {
+	    // Select or unselect all checkboxes within a form.
+	    //  form : form id
+	    //  checkid : partial id of checkboxes to match
+	    //  checked : true or false
+	    form = document.getElementById(formid);
+	    for(i=0; i<form.elements.length; i++) {
+		if(form[i].type == 'checkbox' && form[i].id.substring(0,checkid.length) == checkid) {
+		    form[i].checked = checked;
+		}
+	    }
 	}
 	//-->
 	</SCRIPT>"""
@@ -311,12 +329,13 @@ def controlPanel(cfg):
     cfg.readDirConfigs()
     hosts = cfg.getAllHosts()
 
-    print "<form name='selecthost' action='%s' method=GET>" % (os.environ['SCRIPT_NAME'])
+
+    print "<form id='selecthost' name='selecthost' action='%s' method=GET>" % (os.environ['SCRIPT_NAME'])
 
     print '<Table width="100%" align="center" border="0">'
     print '<tr valign="top"><td><p>Select a host</p>'
 
-    print cfg.keepSettings(type='form')	# print settings as hidden fields
+    print cfg.keepSettings(type='form', exclude=('fltgroup',))	# print settings as hidden fields
 
     print "<select name='hostname' onChange=selecthost.submit()>"
 
@@ -351,14 +370,20 @@ def controlPanel(cfg):
     # chris 2003-06-22: show options for restricting to selected data types
     #	or data groups.
 
-    print '<td align="left">Limit DataTypes to: <input type="checkbox" name="noflt">ALL, or:'
+    print '<td align="left">Limit DataTypes to:'
+    print """<input type="button" value="Select all" onclick="javascript:eb_selectallfltgroups()"> """
+    print """<input type="button" value="Select None" onclick="javascript:eb_unselectallfltgroups()"> """
     print "<dl>"
     groups = cfg.datagroups.keys()
     groups.sort()
     numgroups = len(groups)
     i = 0
     for g in groups:
-	print '<dt><input type="checkbox" name="fltgroup" value="%s" onchange="cbclear(\'noflt\')">%s'%(g,g)
+	if cfg.filter and g in cfg.filter.filtergroups:
+	    checked = 'checked'
+	else:
+	    checked = ''
+	print '<dt><input type="checkbox" name="fltgroup" id="fltgroup_%s" value="%s" %s>%s'%(g,g,checked,g)
 	print "<dl>"
 	for d in cfg.datagroups[g]:
 	    print '<dd><input type="checkbox" name="fltgrp%s" value="%s">%s'%(g,d,d)
@@ -847,12 +872,13 @@ def main():
     elif 'hostname' in form.keys():
 	hostname = form['hostname'].value
 
+    cfg.parseFilter( form )		# get groups/datatypes to filter by
+
     if hostname:
 	if 'start' in form.keys():
 	    start = form['start'].value
 	else:
 	    start = "-151200"		# default to daily
-	filter = cfg.getFilter( form )		# get groups/datatypes to filter by
 	showHost( hostname, start, cfg )
     else:
         controlPanel(cfg)
