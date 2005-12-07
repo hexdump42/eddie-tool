@@ -162,17 +162,16 @@ class GlobalConfig:
 	    for s in self.settings.keys():
 		if s not in exclude:
 		    settingstr += '<input type="hidden" name="%s" value="%s">\n' % (s,self.settings[s])
-#	    if self.filter:
-#		for g in self.filter.filtergroups:
-#		    settingstr += '<input type="hidden" name="fltgroup" value="%s">\n' % (g)
-#		#TODO
+	    if self.filter and 'fltgroup' not in exclude:
+		for g in self.filter.filtergroups:
+		    settingstr += '<input type="hidden" name="fltgroup" value="%s">\n' % (g)
 
 	elif type=='get':
 	    settings = []
 	    for s in self.settings.keys():
 		if s not in exclude:
 		    settings.append( '%s=%s' % (s,self.settings[s]) )
-	    if self.filter:
+	    if self.filter and 'fltgroup' not in exclude:
 		for g in self.filter.filtergroups:
 		    settings.append( 'fltgroup=%s' % (g) )
 	    settingstr = string.join( settings, '&' )
@@ -332,8 +331,8 @@ def controlPanel(cfg):
 
     print "<form id='selecthost' name='selecthost' action='%s' method=GET>" % (os.environ['SCRIPT_NAME'])
 
-    print '<Table width="100%" align="center" border="0">'
-    print '<tr valign="top"><td><p>Select a host</p>'
+    print '<Table border="0">'
+    print '<tr valign="top"><td rowspan="2"><p>Select a host</p>'
 
     print cfg.keepSettings(type='form', exclude=('fltgroup',))	# print settings as hidden fields
 
@@ -370,9 +369,11 @@ def controlPanel(cfg):
     # chris 2003-06-22: show options for restricting to selected data types
     #	or data groups.
 
-    print '<td align="left">Limit DataTypes to:'
+    print '<td align="left" colspan="2">Limit DataTypes to:'
     print """<input type="button" value="Select all" onclick="javascript:eb_selectallfltgroups()"> """
     print """<input type="button" value="Select None" onclick="javascript:eb_unselectallfltgroups()"> """
+    print '</td></tr>'
+    print '<tr><td valign="top">'
     print "<dl>"
     groups = cfg.datagroups.keys()
     groups.sort()
@@ -384,15 +385,19 @@ def controlPanel(cfg):
 	else:
 	    checked = ''
 	print '<dt><input type="checkbox" name="fltgroup" id="fltgroup_%s" value="%s" %s>%s'%(g,g,checked,g)
-	print "<dl>"
-	for d in cfg.datagroups[g]:
-	    print '<dd><input type="checkbox" name="fltgrp%s" value="%s">%s'%(g,d,d)
-	print "</dl>"
+	# Display all data types within groups to filter on
+	# - commented out for now; needs a good clean up.
+#	print "<dl>"
+#	for d in cfg.datagroups[g]:
+#	    print '<dd><input type="checkbox" name="fltgrp%s" value="%s">%s'%(g,d,d)
+#	print "</dl>"
 	i += 1
 	if i == numgroups/2:
-	    print "</dl></td><td>&nbsp;<dl>"
+	    print '</dl></td><td valign="top">'
+	    print '<dl>'
 
     print "</dl></td></tr>"
+    print "<tr><td>&nbsp;</td><td><i>If none are selected, all DataTypes will be shown.</td></tr>"
     print "</Table>"
     print "</form>"
     print "</BODY>"
@@ -707,11 +712,12 @@ def showHost( hostname, start, cfg ):
 
     cursettings = cfg.keepSettings(type='get')
 
+    # build list of hosts as <option>s
     # chris 2003-06-22: moved host list to cfg object
     cfg.readDirConfigs()
     # chris 2003-05-26: get hosts to make selection list and next/previous links
     hosts = cfg.getAllHosts()
-    hostselect_options = ""		# build list of hosts as <option>s
+    hostselect_options = ""
     if cfg.settings['ho'] == 'a':
 	# sort by aliases
 	hosts.sort(cfg.aliasSort)
@@ -742,6 +748,7 @@ def showHost( hostname, start, cfg ):
     hostselect_top = "<select name='hostname' onChange=selecthost.submit()>" + hostselect_options
     hostselect_bot = "<select name='hostname' onChange=selecthostbot.submit()>" + hostselect_options
 
+    # Build previous and next links
     prev = ''
     next = ''
     for i in range(0,len(hosts)):
