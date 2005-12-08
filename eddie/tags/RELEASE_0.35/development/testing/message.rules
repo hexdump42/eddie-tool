@@ -1,0 +1,146 @@
+# Eddie config file
+#  Common Message Definitions
+#
+# $Id$
+# $Source$
+
+
+###########################################################################
+# MESSAGES
+
+M commonmsg:
+    M proc:
+	MSG WARN: "Warning: %(name)s on %(hostname)s not running"
+	    """The %(name)s process on %(hostname)s is not running
+
+---
+%(problemage)s
+%(problemfirstdetect)s
+"""
+
+	MSG WARN_P: "Warn: The %(name)s daemon on %(hostname)s is not running." ""
+
+	MSG ALERT: "Alert: %(name)s on %(hostname)s not running"
+	    """ALERT: The %(name)s daemon on %(hostname)s is not running.
+
+%(actnm)s
+
+---
+%(problemage)s
+%(problemfirstdetect)s
+"""
+
+	MSG ALERT_P: "ALERT: The %(name)s daemon on %(hostname)s is not running." ""
+
+	MSG RE_WARN: "Alert: %(name)s on %(hostname)s not running and is being restarted"
+	    """ALERT: The %(name)s daemon on %(hostname)s not running and is being restarted.
+
+%(actnm)s
+
+---
+%(problemage)s
+%(problemfirstdetect)s
+"""
+
+	MSG RE_WARN_P: "ALERT: The %(name)s daemon on %(hostname)s not running and is being restarted." ""
+
+	MSG RE_ERR: "Alert: %(name)s on %(hostname)s not restarting"
+	    """ALERT: The %(name)s daemon on %(hostname)s will not restart.
+
+%(actnm)s
+
+---
+%(problemage)s
+%(problemfirstdetect)s
+"""
+
+	MSG RE_ERR_P: "ALERT: The %(name)s daemon on %(hostname)s will not restart." ""
+
+	MSG OK: "OK: The %(name)s on %(hostname)s is running" ""
+
+	MSG FIXED: "FIXED: The %(name)s daemon on %(hostname)s is running again" ""
+
+
+    M pid:
+	MSG WARN: "Warning: pid file %(pidfile)s not found on %(hostname)s"
+	    "Pid file %(pidfile)s not found on %(hostname)s."
+
+	MSG WARN_P: "%(hostname)s: pid file %(pidfile)s not found" ""
+
+	MSG ALERT: "ALERT: pid file %(pidfile)s not found on %(hostname)s"
+	    "Pid file %(pidfile)s not found on %(hostname)s."
+
+	MSG ALERT_P: "%(hostname)s: pid file %(pidfile)s not found" ""
+
+    M pidpr:
+	MSG WARN: "Warning: process %(pid)s (from %(pidfile)s) on %(hostname)s not running"
+	    "Warning: The process with pid %(pid)s (from pidfile '%(pidfile)s') on %(hostname)s is not running."
+
+	MSG WARN_P: "%(hostname)s warn: pid %(pid)s from %(pidfile)s not running" ""
+
+	MSG ALERT: "Warning: process %(pid)s (from %(pidfile)s) on %(hostname)s not running"
+	    """ALERT: The process with pid %(pid)s (from pidfile '%(pidfile)s') on %(hostname)s is not running.
+
+%(act)s
+"""
+
+	MSG ALERT_P: "%(hostname)s alert: pid %(pid)s from %(pidfile)s not running" ""
+
+    M fs:
+	MSG WARN: "Warning: %(hostname)s:%(mountpt)s at %(pctused)s%% - %(avail)s of %(size)s remain"
+	    """Filesystem %(mountpt)s on %(hostname)s has failed this FS rule:
+    %(rule)s
+
+----------------------------------------------------------------------
+%(df)s
+----------------------------------------------------------------------
+
+---
+%(problemage)s
+%(problemfirstdetect)s
+"""
+
+	MSG WARN_P: "Warn: %(hostname)s:%(mountpt)s at %(pctused)s%% - %(avail)s of %(size)s remain" ""
+
+	MSG ALERT: "Alert: %(hostname)s:%(mountpt)s at %(pctused)s%% - %(avail)s of %(size)s remain"
+	    """Filesystem %(mountpt)s on %(hostname)s has failed this FS rule:
+    %(rule)s
+
+----------------------------------------------------------------------
+%(df)s
+----------------------------------------------------------------------
+
+---
+%(problemage)s
+%(problemfirstdetect)s
+"""
+
+	MSG ALERT_P: "Alert: %(hostname)s:%(mountpt)s at %(pctused)s%% - %(avail)s of %(size)s remain" ""
+
+    M sp:
+	MSG WARN: "Warning: Port %(protocol)s/%(port)s on %(hostname)s not responding"
+	    "The service port %(protocol)s/%(port)s on %(hostname)s is not responding."
+	MSG WARN_P: "%(hostname)s warn: Port %(protocol)s/%(port)s not responding" ""
+	MSG ALERT: "ALERT: Port %(protocol)s/%(port)s on %(hostname)s not responding"
+	    """The service port %(protocol)s/%(port)s on %(hostname)s is not responding.
+Please fix this immediately.
+"""
+                    
+	MSG ALERT_P: "%(hostname)s ALERT: Port %(protocol)s/%(port)s not responding" ""
+
+    M port:
+	MSG WARN: "Warning: Port %(port)s on %(host)s not responding"
+	    "The service port %(port)s on %(host)s is not responding."
+	MSG WARN_P: "Warn: Port %(port)s on %(host)s not responding" ""
+	MSG ALERT: "Alert: Port %(port)s on %(host)s not responding"
+	    """Alert: The service port %(port)s on %(host)s is not responding.
+
+Send data: %(send)s
+Expecting: %(expect)s
+Actually received: %(recv)s
+
+Please examine if appropriate.
+"""
+
+	MSG ALERT_P: "Alert: Port %(port)s on %(host)s not responding" ""
+

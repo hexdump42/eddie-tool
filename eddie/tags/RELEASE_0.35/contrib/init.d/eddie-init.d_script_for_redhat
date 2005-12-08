@@ -1,0 +1,147 @@
+#!/bin/sh
+##
+## Start/stop script for Eddie ... Chris Miles http://chrismiles.info/ 19980406
+##
+## $Id$
+##
+# chkconfig: 345 99 1
+# description: EDDIE-Tool monitoring agent
+
+# Source function library.
+. /etc/rc.d/init.d/functions
+
+# Set EDDIE_ADMIN to receive Eddie restart/exception notifications from eddie_wrapper
+#EDDIE_ADMIN=eddie-adm@mydomain.com
+#export EDDIE_ADMIN
+
+EDDIERUN=/opt/eddie/bin/eddie_wrapper
+
+# Replace /sbin/pidof - it just doesn't work for scripts in newer Redhats...
+#	Redhat: your inconsistency sucks
+mypidof() {
+    ps auxwww | grep -v grep | grep "$1" | awk '{if(NR>1) printf " "; printf $2}'
+}
+
+myfail() {
+    failure
+    echo
+    exit $?
+}
+
+mywait() {
+    apid=$1
+    trytimes=5
+    waittime=1
+    for j in `seq $trytimes`
+    do
+	sleep $waittime
+	chck=`ps --noheading -p $apid`
+	[ "$chck" = "" ] && return
+	waittime=`expr $waittime \* 2`
+    done
+    echo "Process took too long to die - kill pid $apid manually"
+    exit 1
+}
+
+# Replace status from functions - it doesn't work coz pidof is broken
+status() {
+    pids=`mypidof $1`
+    if [ "$pids" = "" ]
+    then
+	echo "$1 is not running"
+    else
+	echo "$1 is running ($pids)"
+    fi
+}
+
+start() {
+    echo -n $"Starting Eddie: "
+    if [ -x $EDDIERUN ]; then
+	    daemon --user root --check $EDDIERUN "$EDDIERUN &"
+	    RETVAL=$?
+	    [ $RETVAL -eq 0 ] && touch /var/lock/subsys/eddie
+	    echo
+	    return $RETVAL
+    else
+	    echo "Error: $EDDIERUN not found in $EDDIEBASE/bin"
+    fi
+}
+
+stop() {
+    eddiepid=`mypidof eddie.py`
+    if test "x$eddiepid" != x; then
+	echo -n $"Stopping Eddie: "
+	kill -TERM $eddiepid
+	[ $? -eq 0 ] || myfail $?
+	mywait $eddiepid
+	success
+	echo
+    else
+        echo "eddie.py not running"
+    fi
+
+    ewrappid=`mypidof eddie_wrapper`
+    if test "x$ewrappid" != x; then
+        echo -n $"Stopping eddie_wrapper: "
+	kill -TERM $ewrappid
+	[ $? -eq 0 ] || myfail $?
+	success
+	echo
+    else
+        echo "eddie_wrapper not running"
+    fi
+
+    RETVAL=$?
+    [ $RETVAL -eq 0 ] && rm -f /var/lock/subsys/eddie
+    return $RETVAL
+}
+
+restart() {
+    # kill eddie and rely on eddie_wrapper to restart it
+    echo -n $"Restarting Eddie: "
+    eddiepid=`mypidof eddie.py`
+    if test "x$eddiepid" != x; then
+	kill -TERM $eddiepid
+	[ $? -eq 0 ] || myfail $?
+	mywait $eddiepid
+	success
+	echo
+    else
+        echo "eddie.py not running"
+    fi
+
+    if test "x`mypidof eddie_wrapper`" = x; then
+        echo "eddie_wrapper not running - performing full startup"
+	start
+    fi
+}
+
+case "$1" in
+        start)
+            start
+            ;;
+        
+        stop)
+            stop
+            ;;
+        
+        status)
+            status eddie.py
+            status eddie_wrapper
+            ;;
+        restart)
+            restart
+            ;;
+        condrestart)
+            if test "x`mypidof eddie_wrapper`" != x; then
+                restart
+            fi
+            ;;
+        
+        *)
+            echo $"Usage: $0 {start|stop|restart|condrestart|status}"
+            exit 1
+
+esac
+
+exit 0
