@@ -4,7 +4,7 @@
 ## 
 ## Author       : Rod Telford  <rtelford@psychofx.com>
 ##                Chris Miles  <chris@psychofx.com>
-## 
+## 	
 ## Start Date   : 19971204 
 ## 
 ## Description  : EDDIE main program
@@ -36,6 +36,16 @@ import time
 import signal
 import re
 import threading
+# optparse is only available in 2.3+, but optik provides the same 
+# functionality for python 2.2
+try:
+    import optparse
+except ImportError:
+    try:
+        import optik as optparse
+    except ImportError:
+        print "Error: EDDIE requires Optik on Python 2.2.x (http://optik.sf.net)"
+        sys.exit(1)
 
 
 #print "EDDIE v%s" % (__version__)
@@ -83,8 +93,9 @@ sys.path = oslibdirs + [commonlibdir,extralibdir] + sys.path
 import parseConfig, directive, config, log, timeQueue, sockets, eddieElvin4, datacollect
 
 # Main config file - this file INCLUDEs all other config files
+# We set the default here, but this can be overridden on the command line
 configdir = os.path.join(basedir, 'config')
-config_file = os.path.join(configdir, 'eddie.cf')
+default_config_file = os.path.join(configdir, 'eddie.cf')
 
 # Globals
 global Config
@@ -315,24 +326,35 @@ def buildCheckQueue(q, Config):
 	    log.log( "<eddie>buildCheckQueue(): Not queueing group %s" % (c.name), 8 )
 
 
-def doArgs(args, argflags):
+def doArgs():
     """Parse command-line arguments.
     """
-
-    for a in args:
-	if a == '-v' or a == '--version':
-	    print "EDDIE (c) Chris Miles and Rod Telford 1998-2002"
-	    print "  chris@psychofx.com / rtelford@psychofx.com"
-	    print "  Version: %s" % __version__
-	    eddieexit()
-	elif a == '-h' or a == '--help' or a == '-?':
-	    print "EDDIE: help not yet available..."
-	    eddieexit()
-	elif a == '-sc' or a == '--showconfig':
-	    argflags['showconfig'] = 1
-	else:
-	    print "EDDIE: bad argument '%s'" % a
-	    eddieexit()
+    # define usage and version messages
+    usageMsg = "usage: %prog [options]"
+    versionMsg = """EDDIE (c) Chris Miles and Rod Telford 1998-2002
+  chris@psychofx.com / rtelford@psychofx.com
+  Version: %s""" % __version__
+    
+    # get a parser object and define our options
+    parser = optparse.OptionParser(usage=usageMsg, version=versionMsg)
+    parser.add_option('-c', '--config', dest='config', 		\
+			metavar="FILE", help="Load config from FILE")
+    parser.add_option('--showconfig', action="store_true", 	\
+			help="Dump config")
+    parser.add_option('-v', '--verbose', action="store_true",	\
+			help="Enable verbose output")
+    parser.set_defaults(showconfig=False, verbose=False,	\
+			config=default_config_file)
+    
+    # Parse.  We dont accept arguments, so we complain if they're found.
+    (options, args) = parser.parse_args()
+    if len(args) != 0:
+	parser.error()
+    if options.version == True:
+	print(versionMsg)
+	eddieexit()
+    # All good - return the option dict
+    return options
 
 
 def main():
@@ -341,15 +363,14 @@ def main():
 
     log.version = __version__	# Make version string available to other modules
 
+    # Parse command-line arguments
+    options = doArgs()
+    config_file = options.config
+
     # Catch most important signals
     for sig in ('SIGALRM', 'SIGHUP', 'SIGINT', 'SIGTERM'):
         if sig in dir(signal):
             signal.signal( eval("signal.%s" %(sig)), SigHandler )
-
-    argflags = {}			# dict of argument flags
-
-    # Parse command-line arguments
-    doArgs(sys.argv[1:], argflags)	# parse arg-list (not program name)
 
     # Get local hostname
     try:
@@ -378,7 +399,7 @@ def main():
     log.log( "<eddie>main(): Python version: %s" % (sys.version), 5 )
     log.log( "<eddie>main(): oslibdirs: %s" % (oslibdirs), 8 )
 
-    if 'showconfig' in argflags.keys() and argflags['showconfig'] == 1:
+    if options.showconfig == True:
 	# Just display the configuration and exit
 	print "---Displaying EDDIE Configuration---"
 	print Config
