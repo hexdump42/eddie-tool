@@ -1,20 +1,21 @@
 eddiebrowser.cgi
-http://www.psychofx.com/eddiebrowser/
-(c) Chris Miles 2002-2004 http://chrismiles.info/
+http://eddie-tool.net/eddiebrowser/
+(c) Chris Miles 2002-2005 http://chrismiles.info/
 
 Requirements:
 
  o Python 2+
    http://www.python.org/
 
- o py-rrdtool - to generate graphical images from RRD files using Python
-   http://sourceforge.net/projects/py-rrdtool/
-   or http://www.nongnu.org/py-rrdtool/
-
  o The above module requires RRDtool
    http://people.ee.ethz.ch/~oetiker/webtools/rrdtool/
 
- o A web server (eddiebrowser.cgi is a cgi program!)
+ o py-rrdtool - to generate graphical images from RRD files using Python.
+   This is part of the RRDtool distribution, but if need be it can be found
+   at http://sourceforge.net/projects/py-rrdtool/
+   or http://www.nongnu.org/py-rrdtool/
+
+ o A web server (eddiebrowser.cgi is a CGI program!)
 
 
 Optional Requirements:
@@ -32,12 +33,18 @@ Optional Requirements:
  o Any other data collector / RRD software.
 
 
-INSTALLATION
+INFORMATION
 
  eddiebrowser is used to browse and display data stored in
- RRD database files.  It does not write or create RRD database
- files.  To do this use EDDIE Tool/Elvin/ElvinRRD or many of the
- other data collection and RRD packages available.
+ RRD database files.  It does not write or create RRD databases.
+ To do this use EDDIE Tool/Elvin/ElvinRRD or many of the other
+ data collection and RRD packages available.
+
+ eddiebrowser is part of the EDDIE Tool project.  Contact the
+ EDDIE Tool team for more assistance.  http://eddie-tool.net/
+
+
+INSTALLATION
 
  eddiebrowser expects a certain directory structure which is
  simple to create, and allows eddiebrowser to automatically
@@ -56,63 +63,21 @@ INSTALLATION
  hosts.
 
  Example:
-    $ ls -al /export/rrd/cpulinux/
-    -rw-r--r--  1 cmiles  root      1972 Jun 21 18:22 .eddiebrowser.cfg
+    $ ls -l /export/rrd/cpulinux/
     -rwxrwxrwx  1 cmiles  users   139188 Jun 22 16:36 cpulinux-crazy.rrd
 
  This shows the RRD database file, cpulinux-crazy.rrd, for
  'cpulinux' data for host 'crazy'.
- It also shows a .eddiebrowser.cfg file.  Each directory needs
- a .eddiebrowser.cfg file to tell eddiebrowser how to find and
- display RRD data of that type.
 
- In this example the /export/rrd/cpulinux/.eddiebrowser.cfg file looks
- like:
+ eddiebrowser needs to know how to display the data.  The config files
+ specify the fields, colours and labels to use for graphing each
+ type of RRD data.
 
-NAME=CPU Use
-GROUP=System
-FILES=cpulinux-(?P<hostname>[a-zA-Z0-9.-_]+).rrd
+ The config file used is chosen by the name of the directory (aka data
+ type name) appended with ".cfg" from the configs directory.  For
+ the example above the config file would be: configs/cpulinux.cfg 
 
-GRAPH_TITLE=%(hostname)s
-GRAPH_VERTICAL_LABEL=cpu use (%)
-GRAPH_DEFS=A,B,C,D
+ Many example config files are provided which can be used out-of-the-box
+ with the Eddie Tool/ElvinRRD setup.  Alternatively you can customise
+ and create your own.
 
-GRAPH_LABEL_A=cpu_user
-GRAPH_TYPE_A=AREA
-GRAPH_COLOR_A=0000FF
-GRAPH_SOURCE_A=cpu_user
-GRAPH_SOURCETYPE_A=AVERAGE
-GRAPH_GPRINT_A1=MIN:  (min=%.1lf
-GRAPH_GPRINT_A2=AVERAGE:avg=%.1lf
-GRAPH_GPRINT_A3=MAX:max=%.1lf
-GRAPH_GPRINT_A4=LAST:last=%.1lf)
-
-GRAPH_LABEL_B=cpu_nice
-GRAPH_TYPE_B=STACK
-GRAPH_COLOR_B=00FFFF
-GRAPH_SOURCE_B=cpu_nice
-GRAPH_SOURCETYPE_B=AVERAGE
-GRAPH_GPRINT_B1=MIN:  (min=%.1lf
-GRAPH_GPRINT_B2=AVERAGE:avg=%.1lf
-GRAPH_GPRINT_B3=MAX:max=%.1lf
-GRAPH_GPRINT_B4=LAST:last=%.1lf)
-
-GRAPH_LABEL_C=cpu_system
-GRAPH_TYPE_C=STACK
-GRAPH_COLOR_C=00FF00
-GRAPH_SOURCE_C=cpu_system
-GRAPH_SOURCETYPE_C=AVERAGE
-GRAPH_GPRINT_C1=MIN:(min=%.1lf
-GRAPH_GPRINT_C2=AVERAGE:avg=%.1lf
-GRAPH_GPRINT_C3=MAX:max=%.1lf
-GRAPH_GPRINT_C4=LAST:last=%.1lf)
-
-GRAPH_LABEL_D=cpu_idle
-GRAPH_TYPE_D=LINE1
-GRAPH_COLOR_D=A0522D
-GRAPH_SOURCE_D=cpu_idle
-GRAPH_SOURCETYPE_D=AVERAGE
-GRAPH_GPRINT_D1=MIN:  (min=%.1lf
-GRAPH_GPRINT_D2=AVERAGE:avg=%.1lf
-GRAPH_GPRINT_D3=MAX:max=%.1lf
-GRAPH_GPRINT_D4=LAST:last=%.1lf)
