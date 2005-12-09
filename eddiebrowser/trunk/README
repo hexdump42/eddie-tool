@@ -73,6 +73,10 @@ INSTALLATION
  specify the fields, colours and labels to use for graphing each
  type of RRD data.
 
+ Edit configs/eddiebrowser.cfg to define the correct paths to the
+ rrd and config directories.  Then edit eddiebrowser.cgi and make
+ sure that GLOBAL_CONFIG points to the eddiebrowser.cfg file.
+
  The config file used is chosen by the name of the directory (aka data
  type name) appended with ".cfg" from the configs directory.  For
  the example above the config file would be: configs/cpulinux.cfg 
