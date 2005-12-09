@@ -428,7 +428,7 @@ def error_rrd( rrdtool, msg ):
 	    )
 
     #rrd = RRDtool.RRDtool()
-    rrd = RRDtool
+    rrd = rrdtool
     print "Content-Type: image/png"     # PNG data is following
     print                               # blank line, end of headers
     #rrd.graph( tuple(rrdopt) )
