@@ -16,12 +16,12 @@
 #### Settings ####
 
 ## GLOBAL_CONFIG: location of global config file
-GLOBAL_CONFIG = 'configs/eddiebrowser.cfg'
+GLOBAL_CONFIG = '/opt/eddiebrowser/configs/eddiebrowser.cfg'
 
 #### End of settings ####
 
 
-__version__ = '0.6.1'
+__version__ = '0.6.2-svn'
 __copyright__ = 'Chris Miles 2002-2005'
 
 
@@ -414,18 +414,26 @@ def error_html( msg ):
 def error_rrd( rrdtool, msg ):
     """Display an error as image/png, using RRD to display the message."""
 
+    sys.stderr.write( "eddiebrowser.cgi: %s\n" %(msg) )
+
     # Return the raw PNG image
     if type(msg) == type( (1,2) ):
 	rrdopt = [ '--imgformat', 'PNG',
 	    '-',	# stdout
 	    ]
 	for m in msg:
+	    m = m.replace( ':', ';' )	# comments can't contain ":" !
 	    rrdopt.append( 'COMMENT:%s' % (m) )
     else:
-	rrdopt = ( '--imgformat', 'PNG',
+	msg = msg.replace( ':', ';' )	# comments can't contain ":" !
+	rrdopt = [ '--imgformat', 'PNG',
 	    '-',	# stdout
 	    'COMMENT:%s' % (msg)
-	    )
+	    ]
+
+    dummy_rrd = '/opt/eddiebrowser/dummy.rrd'	# TODO: from config
+    rrdopt.append( "DEF:dummy=%s:dummy:AVERAGE" %(dummy_rrd) )
+    rrdopt.append( 'LINE1:dummy#ffffff' )
 
     #rrd = RRDtool.RRDtool()
     rrd = rrdtool
