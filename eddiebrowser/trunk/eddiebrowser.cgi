@@ -1,30 +1,27 @@
 #! /usr/bin/env python
 
-## EDDIE RRD Browser - Chris Miles <chris@psychofx.com> 2002-06-16
-##  A smart CGI interface for browsing and graphing RRD stats.  Can be used
-##  with any RRDs but commonly used in conjuction with EDDIE Tool and
-##  elvinrrd generated system/network RRD stats.
-##  (c) Chris Miles 2002-2005
-##
-##  See http://psychofx.com/eddiebrowser/ for more details/docs.
-##
-## $Id$
-## $URL$
+"""
+   eddiebrowser - http://eddie-tool.net/eddiebrowser/
+
+    A smart CGI interface for browsing and graphing RRD stats.  Can be used
+    with any RRDs but commonly used in conjuction with EDDIE Tool and
+    ElvinRRD generated system/network RRD stats.
+    (c) Chris Miles 2002-2005 http://chrismiles.info/
+  
+   $Id$
+   $URL$
+"""
 
 
 #### Settings ####
 
-# GLOBAL_CONFIG: location of global config file
-GLOBAL_CONFIG = '/opt/eddiebrowser/configs/eddiebrowser.cfg'
-
-# RRD_DIR: a directory containing all the subdirectories of RRD files.
-# ** This should be defined in the global config as 'rrd_dir' now.
-#RRD_DIR = '/export/rrd'
+## GLOBAL_CONFIG: location of global config file
+GLOBAL_CONFIG = 'configs/eddiebrowser.cfg'
 
 #### End of settings ####
 
 
-__version__ = '0.6.0'
+__version__ = '0.6.1'
 __copyright__ = 'Chris Miles 2002-2005'
 
 
