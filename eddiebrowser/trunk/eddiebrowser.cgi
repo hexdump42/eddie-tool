@@ -414,7 +414,7 @@ def error_html( msg ):
 def error_rrd( rrdtool, msg ):
     """Display an error as image/png, using RRD to display the message."""
 
-    sys.stderr.write( "eddiebrowser.cgi: %s\n" %(msg) )
+    sys.stderr.write( "eddiebrowser.cgi: %s\n" %(str(msg)) )
 
     # Return the raw PNG image
     if type(msg) == type( (1,2) ):
@@ -437,14 +437,15 @@ def error_rrd( rrdtool, msg ):
 
     #rrd = RRDtool.RRDtool()
     rrd = rrdtool
-    print "Content-Type: image/png"     # PNG data is following
-    print                               # blank line, end of headers
     #rrd.graph( tuple(rrdopt) )
     rrd.graph( *rrdopt )
 
 
 def graph( form, globalcfg ):
     """Graph an RRD data source using pyrrdtool module."""
+
+    print "Content-Type: image/png"     # PNG data is following
+    print                               # blank line, end of headers
 
     try:
 	rrd = form['rrd'].value
@@ -603,10 +604,10 @@ def graph( form, globalcfg ):
 
     #error_html( "graphoptions: %s"%(graphoptions) )
 
+    graphoptions.append( '--font=LEGEND:7' )
+
     try:
 	# Return the raw PNG image
-	print "Content-Type: image/png"     # PNG data is following
-	print                               # blank line, end of headers
 
 	#rrd = RRDtool.RRDtool()
 	rrd = rrdtool
