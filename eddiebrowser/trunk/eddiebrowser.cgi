@@ -63,6 +63,7 @@ class GlobalConfig:
 	except NameError:
 	    self.rrd_dir = None
 	self.rrd_conf_dir = None
+	self.dummy_rrd = 'dummy.rrd'
 
 
     def parseGlobalConfig(self,cfgfile):
@@ -92,6 +93,8 @@ class GlobalConfig:
 			self.rrd_dir = sre.group(2)
 		    elif sre.group(1) == 'rrd_conf_dir':
 			self.rrd_conf_dir = sre.group(2)
+		    elif sre.group(1) == 'dummy_rrd':
+			self.dummy_rrd = sre.group(2)
 
 	    line = fp.readline()
 
@@ -411,7 +414,7 @@ def error_html( msg ):
     print "</BODY></HTML>"
 
 
-def error_rrd( rrdtool, msg ):
+def error_rrd( rrdtool, msg, dummy_rrd ):
     """Display an error as image/png, using RRD to display the message."""
 
     sys.stderr.write( "eddiebrowser.cgi: %s\n" %(str(msg)) )
@@ -431,7 +434,6 @@ def error_rrd( rrdtool, msg ):
 	    'COMMENT:%s' % (msg)
 	    ]
 
-    dummy_rrd = '/opt/eddiebrowser/dummy.rrd'	# TODO: from config
     rrdopt.append( "DEF:dummy=%s:dummy:AVERAGE" %(dummy_rrd) )
     rrdopt.append( 'LINE1:dummy#ffffff' )
 
@@ -478,8 +480,7 @@ def graph( form, globalcfg ):
 	cfg = parseConfig( conf2 )
 
     if not cfg:
-	#error_rrd( RRDtool, 'Error reading config in dir: %s'%(dir) )
-	error_rrd( rrdtool, 'Error reading config in dir: %s'%(dir) )
+	error_rrd( rrdtool, 'Error reading config in dir: %s'%(dir), globalcfg.dummy_rrd )
 	return
 
     files = cfg['FILES']
@@ -553,7 +554,7 @@ def graph( form, globalcfg ):
 
 	if not os.path.isfile( graphdef['file'] ):
 	    #error_rrd( RRDtool, 'ERROR: cannot read RRD file: %s' % (graphdef['file']) )
-	    error_rrd( rrdtool, 'ERROR: cannot read RRD file: %s' % (graphdef['file']) )
+	    error_rrd( rrdtool, 'ERROR: cannot read RRD file: %s' % (graphdef['file']), globalcfg.dummy_rrd )
 	    return 1
 
 	if 'GRAPH_LABEL_%s'%d in cfg.keys():
@@ -621,7 +622,7 @@ def graph( form, globalcfg ):
 	msg1 = "%s" % e[0]
 	msg2 = "%s" % e[1]
 	#error_rrd( RRDtool, (msg1,msg2) )
-	error_rrd( rrdtool, (msg1,msg2) )
+	error_rrd( rrdtool, (msg1,msg2), globalcfg.dummy_rrd )
 	return 1
 
 #    rrd = RRDtool.RRDtool()
