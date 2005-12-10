@@ -36,13 +36,10 @@ import cgitb
 cgitb.enable()
 
 try:
-    # chris 2004-09-30: Now using py-rrdtool instead of out-of-date RRDtool module
-    #import RRDtool		# http://projects.gasperino.org/
-    import rrdtool		# py-rrdtool from http://sourceforge.net/projects/py-rrdtool/
+    import rrdtool		# Included in rrdtool package; or
+    				# py-rrdtool from http://sourceforge.net/projects/py-rrdtool/
 				#              or http://www.nongnu.org/py-rrdtool/
 except ImportError,msg:
-    #error_html( "<b>Cannot import RRDtool python module, error follows:<br>%s</b>"%(msg) )
-    #error_html( "<b>Cannot import rrdtool module - get this from http://sourceforge.net/projects/py-rrdtool/ - error follows:<br>%s</b>"%(msg) )
     raise "Cannot import rrdtool module - get this from http://sourceforge.net/projects/py-rrdtool/",msg
     sys.exit( -1 )
 
@@ -437,9 +434,7 @@ def error_rrd( rrdtool, msg, dummy_rrd ):
     rrdopt.append( "DEF:dummy=%s:dummy:AVERAGE" %(dummy_rrd) )
     rrdopt.append( 'LINE1:dummy#ffffff' )
 
-    #rrd = RRDtool.RRDtool()
     rrd = rrdtool
-    #rrd.graph( tuple(rrdopt) )
     rrd.graph( *rrdopt )
 
 
@@ -553,7 +548,6 @@ def graph( form, globalcfg ):
 	    graphdef['file'] = sourcefile
 
 	if not os.path.isfile( graphdef['file'] ):
-	    #error_rrd( RRDtool, 'ERROR: cannot read RRD file: %s' % (graphdef['file']) )
 	    error_rrd( rrdtool, 'ERROR: cannot read RRD file: %s' % (graphdef['file']), globalcfg.dummy_rrd )
 	    return 1
 
@@ -610,9 +604,7 @@ def graph( form, globalcfg ):
     try:
 	# Return the raw PNG image
 
-	#rrd = RRDtool.RRDtool()
 	rrd = rrdtool
-	#r = rrd.graph( tuple(graphoptions) )
 	r = rrd.graph( *graphoptions )
 	sys.stderr.write( 'r=%s'%(r) )
 
@@ -621,25 +613,9 @@ def graph( form, globalcfg ):
 	tb = traceback.format_list( traceback.extract_tb( e[2] ) )
 	msg1 = "%s" % e[0]
 	msg2 = "%s" % e[1]
-	#error_rrd( RRDtool, (msg1,msg2) )
 	error_rrd( rrdtool, (msg1,msg2), globalcfg.dummy_rrd )
 	return 1
 
-#    rrd = RRDtool.RRDtool()
-#    rrd.graph( ( '--imgformat', 'PNG',
-#	'--vertical-label=cpu use (%)',
-#	'--start=-151200',
-#	'-',	# stdout
-#	'DEF:A=/export/rrd/cpulinux/cpulinux-crazy.rrd:cpu_user:AVERAGE',
-#	'DEF:B=/export/rrd/cpulinux/cpulinux-crazy.rrd:cpu_nice:AVERAGE',
-#	'DEF:C=/export/rrd/cpulinux/cpulinux-crazy.rrd:cpu_system:AVERAGE',
-#	'DEF:D=/export/rrd/cpulinux/cpulinux-crazy.rrd:cpu_idle:AVERAGE',
-#	'AREA:A#0000FF:crazy cpu_user',
-#	'STACK:B#00FFFF:crazy cpu_nice',
-#	'STACK:C#00FF00:crazy cpu_system',
-#	'LINE1:D#A0522D:crazy cpu_idle',
-#	'GPRINT:A:MAX:(max=%lf)'
-#	) )
 
 
 def showHostInfo(dir, hostname, start, globalcfg, filter=None):
