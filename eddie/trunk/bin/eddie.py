@@ -331,10 +331,8 @@ def doArgs():
     """
     # define usage and version messages
     usageMsg = "usage: %prog [options]"
-    versionMsg = """EDDIE (c) Chris Miles and Rod Telford 1998-2002
-  chris@psychofx.com / rtelford@psychofx.com
-  Version: %s""" % __version__
-    
+    versionMsg = """EDDIE Tool %s""" % __version__
+
     # get a parser object and define our options
     parser = optparse.OptionParser(usage=usageMsg, version=versionMsg)
     parser.add_option('-c', '--config', dest='config', 		\
@@ -345,14 +343,12 @@ def doArgs():
 			help="Enable verbose output")
     parser.set_defaults(showconfig=False, verbose=False,	\
 			config=default_config_file)
-    
+
     # Parse.  We dont accept arguments, so we complain if they're found.
     (options, args) = parser.parse_args()
     if len(args) != 0:
-	parser.error()
-    if options.version == True:
-	print(versionMsg)
-	eddieexit()
+	parser.error('No extra arguments should be given')
+
     # All good - return the option dict
     return options
 
