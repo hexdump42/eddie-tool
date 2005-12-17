@@ -1,46 +1,53 @@
-## 
-## File		: snmp.py 
-## 
-## Author       : Dougal Scott <dwagon@connect.com.au>
-## 
-## Date		: 20020430
-## 
-## Description	: Directives for SNMP polling
-##
-## $Id$
-##
-##
-########################################################################
-##
-## The author accepts no responsibility for the use of this software and
-## provides it on an ``as is'' basis without express or implied warranty.
-##
-## Redistribution and use in source and binary forms are permitted
-## provided that this notice is preserved and due credit is given
-## to the original author and the contributors.
-##
-## This program is distributed in the hope that it will be useful,
-## but WITHOUT ANY WARRANTY; without even the implied warranty of
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-########################################################################
-#
-# This uses pysnmp available from http://sourceforge.net/projects/pysnmp/
-# as it requires no external libraries (such as net-snmp) to work.
-#
-# snmpresponse	- What SNMP returned
-# snmpdelta     - Change in values since last call (useful for COUNTER types)
-# snmplastresponse - The last SNMP response
-#
-# Configuration options:
-# oid  - SNMP oid to poll. This has to be the full OID in numeric format.
-#        SNMP tables are not traversed. What you see is what you get
-#        Required argument
-# community - The community string to use to get access to the SNMP 
-#             Defaults to 'public'
-# port - UDP Port to connect to on the host. Defaults to 161
-# maxretry - Number of consecutive timeouts before we give up and assume there
-#            is a problem
-# host - Host running the SNMP server. Localhost by default.
+
+'''
+File		: snmp.py 
+
+Start Date	: 20020430
+
+Description	: Directives for SNMP polling
+  This uses pysnmp available from http://sourceforge.net/projects/pysnmp/
+  as it requires no external libraries (such as net-snmp) to work.
+ 
+  snmpresponse	- What SNMP returned
+  snmpdelta     - Change in values since last call (useful for COUNTER types)
+  snmplastresponse - The last SNMP response
+ 
+  Configuration options:
+  oid  - SNMP oid to poll. This has to be the full OID in numeric format.
+         SNMP tables are not traversed. What you see is what you get
+         Required argument
+  community - The community string to use to get access to the SNMP 
+              Defaults to 'public'
+  port - UDP Port to connect to on the host. Defaults to 161
+  maxretry - Number of consecutive timeouts before we give up and assume there
+             is a problem
+  host - Host running the SNMP server. Localhost by default.
+
+$Id$
+'''
+
+__version__ = '$Revision$'
+
+__copyright__ = 'Copyright (c) Chris Miles 2004-2005'
+
+__author__ = 'Dougal Scott'
+
+__license__ = '''
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 2 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+'''
+
 
 import string
 import log, directive

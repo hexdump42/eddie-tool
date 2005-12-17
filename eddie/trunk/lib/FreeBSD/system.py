@@ -1,37 +1,42 @@
-## 
-## File		: system.py
-## 
-## Author       : Chris Miles <chris@psychofx.com>
-## 
-## Start Date	: 20041206
-## 
-## Description	: Collect current snapshot of system state for FreeBSD
-##
-## $Id$
-##
-########################################################################
-## (C) Chris Miles 2004
-##
-## The author accepts no responsibility for the use of this software and
-## provides it on an ``as is'' basis without express or implied warranty.
-##
-## Redistribution and use in source and binary forms are permitted
-## provided that this notice is preserved and due credit is given
-## to the original author and the contributors.
-##
-## This program is distributed in the hope that it will be useful,
-## but WITHOUT ANY WARRANTY; without even the implied warranty of
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-########################################################################
 
-"""
+'''
+File		: system.py
+
+Start Date	: 20041206
+
+Description	:
   This is an Eddie data collector.  It collects System data and statistics on
   a FreeBSD system.
   The following statistics are currently collected and made available to
   directives that request it (e.g., SYS):
 
   (See system class doc info below.)
-"""
+
+$Id$
+'''
+
+__version__ = '$Revision$'
+
+__copyright__ = 'Copyright (c) Chris Miles 2004-2005'
+
+__author__ = 'Chris Miles'
+
+__license__ = '''
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 2 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+'''
+
 
 
 # Python modules

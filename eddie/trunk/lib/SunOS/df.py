@@ -1,32 +1,10 @@
-## 
-## File		: df.py 
-## 
-## Author(s)    : Rod Telford  <rtelford@eddie-tool.net>
-##                Chris Miles  <chris@eddie-tool.net>
-##                Dougal Scott
-## 
-## Start Date	: 19971204 
-## 
-## Description	: Library of classes that deal with a solaris df list
-##
-## $Id$
-##
-########################################################################
-## (C) Chris Miles 2001-2004
-##
-## The author accepts no responsibility for the use of this software and
-## provides it on an ``as is'' basis without express or implied warranty.
-##
-## Redistribution and use in source and binary forms are permitted
-## provided that this notice is preserved and due credit is given
-## to the original author and the contributors.
-##
-## This program is distributed in the hope that it will be useful,
-## but WITHOUT ANY WARRANTY; without even the implied warranty of
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-########################################################################
 
-"""
+'''
+File		: df.py 
+
+Start Date	: 19971204 
+
+Description	:
   This is an Eddie data collector.  It collects filesystem usage statistics
   using a call to '/usr/bin/df'.
 
@@ -55,7 +33,32 @@
     fstype - type of filesystem (string)
     flag - filesystem flags (string)
     filelen - max filename length (int)
-"""
+
+$Id$
+'''
+
+__version__ = '$Revision$'
+
+__copyright__ = 'Copyright (c) Chris Miles 1997-2005'
+
+__author__ = 'Chris Miles; Rod Telford; Dougal Scott'
+
+__license__ = '''
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 2 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+'''
+
 
 
 # Python Modules
