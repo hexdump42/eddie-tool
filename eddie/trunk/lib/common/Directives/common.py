@@ -843,8 +843,6 @@ class STORE(directive.Directive):
 	    datahash = self.data_collectors['proc.procList'].allprocs()	# get dictionary of process details
 	elif self.args.rule[:2] == 'if':
 	    datahash = self.data_collectors['netstat.netstat'].getAllInterfaces() # get dictionary of interface details
-	elif self.args.rule[:6] == 'iostat':
-	    datahash = iostat.getHash()				# get dictionary of iostat data
 
 	if datahash == None:
 	    log.log( "<directive>STORE.getData(): rule '%s' is invalid." % (self.args.rule), 4 )
