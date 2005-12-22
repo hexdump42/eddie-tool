@@ -50,6 +50,9 @@ class GlobalConfig:
 
 	self.settings['ho'] = 'h'		# order by hosts (default)
 	self.settings['start'] = "-151200"	# daily view (default)
+	self.settings['width'] = None
+	self.settings['zoom'] = None
+	self.settings['smooth'] = None
 	self.aliases = {}
 	self.hosts = []				# list of all hostnames
 	self.datanames = []			# list of all data names
@@ -157,7 +160,7 @@ class GlobalConfig:
 
 	if type=='form':
 	    for s in self.settings.keys():
-		if s not in exclude:
+		if s not in exclude and self.settings[s]:
 		    settingstr += '<input type="hidden" name="%s" value="%s">\n' % (s,self.settings[s])
 	    if self.filter and 'fltgroup' not in exclude:
 		for g in self.filter.filtergroups:
@@ -166,7 +169,7 @@ class GlobalConfig:
 	elif type=='get':
 	    settings = []
 	    for s in self.settings.keys():
-		if s not in exclude:
+		if s not in exclude and self.settings[s]:
 		    settings.append( '%s=%s' % (s,self.settings[s]) )
 	    if self.filter and 'fltgroup' not in exclude:
 		for g in self.filter.filtergroups:
@@ -461,6 +464,26 @@ def graph( form, globalcfg ):
     except KeyError:
 	start = None	# optional
 
+    try:
+	zoom = form['zoom'].value
+    except KeyError:
+	zoom = None	# optional
+
+    try:
+	width = form['width'].value
+    except KeyError:
+	width = None	# optional
+
+    try:
+	step = form['step'].value
+    except KeyError:
+	step = None	# optional
+
+    try:
+	smooth = form['smooth'].value
+    except KeyError:
+	smooth = None	# optional
+
     if '/' in rrd or '/' in dir:
 	# security check - directories not permitted
 	error_html( "illegal rrd or dir" )
@@ -487,6 +510,20 @@ def graph( form, globalcfg ):
 	vars = {}
 
     graphoptions = [ '--imgformat', 'PNG' ]
+    graphoptions += [ '--alt-autoscale-max' ]
+    graphoptions += [ '--alt-y-grid' ]
+
+    if width:
+	graphoptions += [ '--width', width ]
+
+    if zoom:
+	graphoptions += [ '--zoom', zoom ]
+
+    if step:
+	graphoptions += [ '--step', step ]
+
+    if smooth:
+	graphoptions += [ '--slope-mode' ]
 
     # parse general options
     sourcefile = os.path.join( globalcfg.rrd_dir, dir, rrd )
@@ -618,7 +655,7 @@ def graph( form, globalcfg ):
 
 
 
-def showHostInfo(dir, hostname, start, globalcfg, filter=None):
+def showHostInfo(dir, hostname, graph_options, globalcfg, filter=None):
     conf1 = os.path.join( globalcfg.rrd_conf_dir, dir + ".cfg" )
     if os.path.exists( conf1 ):
 	cfg = parseConfig( conf1 )
@@ -645,7 +682,7 @@ def showHostInfo(dir, hostname, start, globalcfg, filter=None):
 	if sre != None:
 	    h = sre.group('hostname')
 	    if h == hostname:
-		vars = { 'filename': f, 'start': start }
+		vars = { 'filename': f }
 		vars.update( sre.groupdict() )
 		if 'SHOW:%s'%(hostname) in cfg.keys():
 		    # use a hostname-specific SHOW if available
@@ -655,13 +692,24 @@ def showHostInfo(dir, hostname, start, globalcfg, filter=None):
 		    img = '<img src="%s" border=0>' % (cfg['SHOW'])
 		else:
 		    # otherwise use built-in
-		    show = "%s?mode=graph&dir=%s&rrd=%%(filename)s&start=%%(start)s" % (os.environ['SCRIPT_NAME'],dir.split('/')[-1])
+		    show = "%s?mode=graph&dir=%s&rrd=%%(filename)s" % (os.environ['SCRIPT_NAME'],dir.split('/')[-1])
+		    if graph_options['start']:
+			show += "&start=%s" % (graph_options['start'])
+		    if graph_options['width']:
+			show += "&width=%s" % (graph_options['width'])
+		    if graph_options['zoom']:
+			show += "&zoom=%s" % (graph_options['zoom'])
+		    if graph_options['step']:
+			show += "&step=%s" % (graph_options['step'])
+		    if graph_options['smooth']:
+			show += "&smooth=1"
+
 		    img = '<img src="%s" border=0>' % (show)
 		print img % vars
 
 
 
-def showTypes( hostname, start, globalcfg, filter=None ):
+def showTypes( hostname, graph_options, globalcfg, filter=None ):
     """Get types of data to show for <hostname>."""
 
     types = {}
@@ -669,12 +717,12 @@ def showTypes( hostname, start, globalcfg, filter=None ):
     dirs = os.listdir( globalcfg.rrd_dir )
     for d in dirs:
 	#dir = os.path.join( globalcfg.rrd_dir, d )
-	showHostInfo(d, hostname, start, globalcfg, filter)
+	showHostInfo(d, hostname, graph_options, globalcfg, filter)
 
     return
 
 
-def showHost( hostname, start, cfg ):
+def showHost( hostname, form, cfg ):
     """Show graphs/info for host <hostname>."""
 
     #print '<!-- GENERATED-BY="%s" -->' % (sys.argv[0])
@@ -692,6 +740,37 @@ def showHost( hostname, start, cfg ):
 
 <BODY bgcolor="white">
 """ % (hostname)
+
+
+    # Graph options
+    graph_options = {}
+
+    # Parse the CGI values
+    try:
+	graph_options['start'] = form['start'].value
+    except KeyError:
+	#graph_options['start'] = "-151200"		# default to daily
+	graph_options['start'] = None
+
+    try:
+	graph_options['width'] = form['width'].value
+    except KeyError:
+	graph_options['width'] = None
+
+    try:
+	graph_options['step'] = form['step'].value
+    except KeyError:
+	graph_options['step'] = None
+
+    try:
+	graph_options['zoom'] = form['zoom'].value
+    except KeyError:
+	graph_options['zoom'] = None
+
+    try:
+	graph_options['smooth'] = form['smooth'].value
+    except KeyError:
+	graph_options['smooth'] = None
 
     cursettings = cfg.keepSettings(type='get')
 
@@ -762,29 +841,65 @@ def showHost( hostname, start, cfg ):
 
     cursettings = cfg.keepSettings( type='get', exclude=('start',) )
 
-    if start == "-14400":
+    if graph_options['start'] == "-14400":
 	print "[&nbsp;hourly&nbsp;]"
     else:
 	print '[&nbsp;<a href="%s?hostname=%s&start=-14400&%s">hourly</a>&nbsp;]' % (os.environ['SCRIPT_NAME'], hostname, cursettings)
-    if start == "-151200":
+    if graph_options['start'] == "-151200":
 	print "[&nbsp;daily&nbsp;]"
     else:
 	print '[&nbsp;<a href="%s?hostname=%s&start=-151200&%s">daily</a>&nbsp;]' % (os.environ['SCRIPT_NAME'], hostname, cursettings)
-    if start == "-864000":
+    if graph_options['start'] == "-864000":
 	print "[&nbsp;weekly&nbsp;]"
     else:
 	print '[&nbsp;<a href="%s?hostname=%s&start=-864000&%s">weekly</a>&nbsp;]' % (os.environ['SCRIPT_NAME'], hostname, cursettings)
-    if start == "-3628800":
+    if graph_options['start'] == "-3628800":
 	print "[&nbsp;monthly&nbsp;]"
     else:
 	print '[&nbsp;<a href="%s?hostname=%s&start=-3628800&%s">monthly</a>&nbsp;]' % (os.environ['SCRIPT_NAME'], hostname, cursettings)
-    if start == "-41472000":
+    if graph_options['start'] == "-41472000":
 	print "[&nbsp;yearly&nbsp;]"
     else:
 	print '[&nbsp;<a href="%s?hostname=%s&start=-41472000&%s">yearly</a>&nbsp;]' % (os.environ['SCRIPT_NAME'], hostname, cursettings)
     print "</center>"
 
-    showTypes( hostname, start, cfg, cfg.filter )
+    showTypes( hostname, graph_options, cfg, cfg.filter )
+
+    if graph_options.has_key('width') and graph_options['width']:
+	narrower = int(graph_options['width']) - 100
+	wider = int(graph_options['width']) + 100
+    else:
+	narrower = 300
+	wider = 500
+
+    if graph_options.has_key('zoom') and graph_options['zoom']:
+	zoomin = float(graph_options['zoom']) * 1.5
+	zoomout = float(graph_options['zoom']) / 1.5
+    else:
+	zoomin = 1.5
+	zoomout = 0.75
+
+    if graph_options.has_key('smooth') and graph_options['smooth']:
+	smooth = ''
+	smoothtext = 'accurate'
+    else:
+	smooth = '&smooth=1'
+	smoothtext = 'smooth'
+
+    print '<br />Graph:'
+    cursettings = cfg.keepSettings( type='get', exclude=('width',) )
+    print 'width <a href="%s?hostname=%s&width=%s&%s">&ndash;</a>' % (os.environ['SCRIPT_NAME'], hostname, narrower, cursettings)
+    print '<a href="%s?hostname=%s&width=%s&%s">+</a>' % (os.environ['SCRIPT_NAME'], hostname, wider, cursettings)
+
+    cursettings = cfg.keepSettings( type='get', exclude=('zoom',) )
+    print '| zoom <a href="%s?hostname=%s&zoom=%s&%s">&ndash;</a>' % (os.environ['SCRIPT_NAME'], hostname, zoomout, cursettings)
+    print '<a href="%s?hostname=%s&zoom=%s&%s">+</a>' % (os.environ['SCRIPT_NAME'], hostname, zoomin, cursettings)
+
+    cursettings = cfg.keepSettings( type='get', exclude=('smooth',) )
+    print '| <a href="%s?hostname=%s&%s%s">%s</a>' % (os.environ['SCRIPT_NAME'], hostname, cursettings, smooth, smoothtext)
+
+    cursettings = cfg.keepSettings( type='get', exclude=('smooth','width','zoom') )
+    print '| (<a href="%s?hostname=%s&%s">reset all</a>)' % (os.environ['SCRIPT_NAME'], hostname, cursettings)
 
     print "<form name='selecthostbot' action='%s' method=GET>" % (os.environ['SCRIPT_NAME'])
     print cfg.keepSettings(type='form')		# pass settings as hidden fields
@@ -865,11 +980,7 @@ def main():
     cfg.parseFilter( form )		# get groups/datatypes to filter by
 
     if hostname:
-	if 'start' in form.keys():
-	    start = form['start'].value
-	else:
-	    start = "-151200"		# default to daily
-	showHost( hostname, start, cfg )
+	showHost( hostname, form, cfg )
     else:
         controlPanel(cfg)
 #    else:
