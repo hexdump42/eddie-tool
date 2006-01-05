@@ -7,7 +7,7 @@
 
 """
 import types
-import whrandom
+import random
 
 # Import package components
 import ber
@@ -23,7 +23,7 @@ class message (ber.ber):
         if type(version) != types.IntType:
             raise error.BadArgument('Bad SNMP version: ' + str(version))
 
-        self.request_id = long (whrandom.random()*0x7fffffff)
+        self.request_id = long (random.random()*0x7fffffff)
         self.version = version
         self.community = community
 

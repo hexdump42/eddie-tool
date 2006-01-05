@@ -37,7 +37,7 @@ __license__ = '''
 
 
 
-import sys,getopt, getpass, select, struct, whrandom, md5, socket, time
+import sys,getopt, getpass, select, struct, random, md5, socket, time
 
 # Constants
 ACCESS_REQUEST	= 1
@@ -99,7 +99,7 @@ class Radius:
 	v = range(0,17)
 	v[0] = '16B'
 	for i in range(1,17):
-	    v[i] = whrandom.randint(1,255)
+	    v[i] = random.randint(1,255)
 
 	return apply(struct.pack,v)
 
@@ -137,7 +137,7 @@ class Radius:
 
 	try:
 	    self.opensocket()
-	    id = whrandom.randint(0,255)
+	    id = random.randint(0,255)
 
 	    authenticator = self.generateAuthenticator()
 
