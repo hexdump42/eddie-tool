@@ -1,0 +1,305 @@
+# elvinrrd.cf - Config File for elvinrrd.py
+# $Id$
+# $URL$
+#
+# Fields per entry (entries separated by a blank line):
+#  elvinrrd=<string>            # elvin key to match against
+#  rrdfile=<filename>           # rrd file to update
+#  store=<string>               # elvin key to store
+#  create=<string>              # rrd create args if rrd file does not exist
+#########################
+
+# This sample config file writes RRD files to /export/rrd/ in a
+#  subdirectory per data type.  This is the format supported by
+#  eddiebrowser.cgi.
+# The subdirectories and RRD files will be automatically created if
+#  they do not exist.
+#########################
+
+#### Load Averages
+elvinrrd=loadavg1-*
+rrdfile=/export/rrd/loadavg/loadavg1-*.rrd
+store=loadavg1
+create=-s 60 DS:loadavg1:GAUGE:120:0:300 RRA:AVERAGE:0.5:1:1440 RRA:AVERAGE:0.5:10:1008 RRA:AVERAGE:0.5:60:720 RRA:AVERAGE:0.5:480:1095
+
+elvinrrd=loadavg5-*
+rrdfile=/export/rrd/loadavg/loadavg5-*.rrd
+store=loadavg5
+create=-s 300 DS:loadavg5:GAUGE:600:0:300 RRA:AVERAGE:0.5:1:600 RRA:AVERAGE:0.5:6:600 RRA:AVERAGE:0.5:24:600 RRA:AVERAGE:0.5:288:600 RRA:MAX:0.5:24:600 RRA:MAX:0.5:288:600
+
+elvinrrd=loadavg15-*
+rrdfile=/export/rrd/loadavg/loadavg15-*.rrd
+store=loadavg15
+create=-s 900 DS:loadavg15:GAUGE:1800:0:300 RRA:AVERAGE:0.5:1:96 RRA:AVERAGE:0.5:10:67 RRA:AVERAGE:0.5:60:49 RRA:AVERAGE:0.5:480:73
+
+#### Scan Rates
+elvinrrd=sr-*
+rrdfile=/export/rrd/scanrate/sr-*.rrd
+store=scanrate
+create=-s 60 DS:scan:COUNTER:120:U:U RRA:AVERAGE:0.5:1:1440 RRA:AVERAGE:0.5:10:1008 RRA:AVERAGE:0.5:60:720 RRA:AVERAGE:0.5:480:1095
+
+#### CPU
+# Basic cpu use as a gauge
+elvinrrd=cpu-*
+rrdfile=/export/rrd/cpu/cpu-*.rrd
+store=cpu
+create=-s 60 DS:cpu:GAUGE:120:0:1000 RRA:AVERAGE:0.5:1:1440 RRA:AVERAGE:0.5:10:1008 RRA:AVERAGE:0.5:60:720 RRA:AVERAGE:0.5:480:1095
+
+# Linux cpu counters for 4 stats: user, nice, system, idle
+elvinrrd=cpulinux-*
+rrdfile=/export/rrd/cpulinux/cpulinux-*.rrd
+store=cpu_user,cpu_nice,cpu_system,cpu_idle
+create=-s 60 DS:cpu_user:COUNTER:120:0:1000 DS:cpu_nice:COUNTER:120:0:1000 DS:cpu_system:COUNTER:120:0:1000 DS:cpu_idle:COUNTER:120:0:1000 RRA:AVERAGE:0.5:1:1440 RRA:AVERAGE:0.5:10:1008 RRA:AVERAGE:0.5:60:720 RRA:AVERAGE:0.5:480:1095
+
+# Linux improved cpu counters for 7 stats: user, nice, system, idle, iowait, hardirq, softirq
+elvinrrd=cpulinux2-*
+rrdfile=/export/rrd/cpulinux2/cpulinux2-*.rrd
+store=cpu_user,cpu_nice,cpu_system,cpu_idle,cpu_iowait,cpu_hardirq,cpu_softirq
+create=-s 60 DS:cpu_user:COUNTER:120:0:1000 DS:cpu_nice:COUNTER:120:0:1000 DS:cpu_system:COUNTER:120:0:1000 DS:cpu_idle:COUNTER:120:0:1000 DS:cpu_iowait:COUNTER:120:0:1000 DS:cpu_hardirq:COUNTER:120:0:1000 DS:cpu_softirq:COUNTER:120:0:1000 RRA:AVERAGE:0.5:1:1440 RRA:AVERAGE:0.5:10:1008 RRA:AVERAGE:0.5:60:720 RRA:AVERAGE:0.5:480:1095
+
+# Solaris cpu counters for 4 stats: user, system, wait, idle
+elvinrrd=cpusolaris-*
+rrdfile=/export/rrd/cpusolaris/cpusolaris-*.rrd
+store=cpu_user,cpu_system,cpu_wait,cpu_idle
+create=-s 60 DS:cpu_user:COUNTER:120:0:1000 DS:cpu_system:COUNTER:120:0:1000 DS:cpu_wait:COUNTER:120:0:1000 DS:cpu_idle:COUNTER:120:0:1000 RRA:AVERAGE:0.5:1:1440 RRA:AVERAGE:0.5:10:1008 RRA:AVERAGE:0.5:60:720 RRA:AVERAGE:0.5:480:1095
+
+# BSD (ie: FreeBSD) cpu counters for 5 stats: user, nice, system, interrupt, idle
+elvinrrd=cpubsd-*
+rrdfile=/mrtg/rrd/cpubsd/cpubsd-*.rrd
+store=cpu_user,cpu_nice,cpu_system,cpu_interrupt,cpu_idle
+create=-s 60 DS:cpu_user:COUNTER:120:0:1000 DS:cpu_nice:COUNTER:120:0:1000 DS:cpu_system:COUNTER:120:0:1000 DS:cpu_interrupt:COUNTER:120:0:1000 DS:cpu_idle:COUNTER:120:0:1000 RRA:AVERAGE:0.5:1:1440 RRA:AVERAGE:0.5:10:1008 RRA:AVERAGE:0.5:60:720 RRA:AVERAGE:0.5:480:1095
+
+# Netapp cpu counters for 2 stats: busy, idle
+elvinrrd=cpunetapp-*
+rrdfile=/export/rrd/cpunetapp/cpunetapp-*.rrd
+store=cpu_busy,cpu_idle
+create=-s 60 DS:cpu_busy:COUNTER:120:U:1000 DS:cpu_idle:COUNTER:120:U:1000 RRA:AVERAGE:0.5:1:1440 RRA:AVERAGE:0.5:10:1008 RRA:AVERAGE:0.5:60:720 RRA:AVERAGE:0.5:480:1095
+
+# Windows NT/2000 cpu counters for 4 CPU system
+elvinrrd=cpuwinnt-*
+rrdfile=/export/rrd/cpuwinnt/cpuwinnt-*.rrd
+store=cpu1_busy,cpu2_busy,cpu3_busy,cpu4_busy
+create=-s 60 DS:cpu1_busy:GAUGE:120:U:120 DS:cpu2_busy:GAUGE:120:U:120 DS:cpu3_busy:GAUGE:120:U:120 DS:cpu4_busy:GAUGE:120:U:120 RRA:AVERAGE:0.5:1:1440 RRA:AVERAGE:0.5:10:1008 RRA:AVERAGE:0.5:60:720 RRA:AVERAGE:0.5:480:1095
+
+#### Filesystems [5min]
+# Filesystem space used
+elvinrrd=fs-*
+rrdfile=/export/rrd/fs/fs-*.rrd
+store=used,size
+create=-s 300 DS:used:GAUGE:600:0:U DS:size:GAUGE:600:0:U RRA:AVERAGE:0.5:1:600 RRA:AVERAGE:0.5:6:600 RRA:AVERAGE:0.5:24:600 RRA:AVERAGE:0.5:288:600 RRA:MAX:0.5:24:600 RRA:MAX:0.5:288:600
+
+# Filesystem inodes used
+elvinrrd=inodes-*
+rrdfile=/export/rrd/inodes/inodes-*.rrd
+store=used,total
+create=-s 300 DS:used:GAUGE:600:0:U DS:total:GAUGE:600:0:U RRA:AVERAGE:0.5:1:600 RRA:AVERAGE:0.5:6:600 RRA:AVERAGE:0.5:24:600 RRA:AVERAGE:0.5:288:600 RRA:MAX:0.5:24:600 RRA:MAX:0.5:288:600
+
+#### CPU Context Switches [5min]
+elvinrrd=cs-*
+rrdfile=/export/rrd/cs/cs-*.rrd
+store=contextswitch
+create=-s 300 DS:contextswitch:COUNTER:600:0:1000000 RRA:AVERAGE:0.5:1:600 RRA:AVERAGE:0.5:6:600 RRA:AVERAGE:0.5:24:600 RRA:AVERAGE:0.5:288:600 RRA:MAX:0.5:24:600 RRA:MAX:0.5:288:600
+
+#### Device Interrupts [5min]
+elvinrrd=ints-*
+rrdfile=/export/rrd/ints/ints-*.rrd
+store=interrupts
+create=-s 300 DS:interrupts:COUNTER:600:0:U RRA:AVERAGE:0.5:1:600 RRA:AVERAGE:0.5:6:600 RRA:AVERAGE:0.5:24:600 RRA:AVERAGE:0.5:288:600 RRA:MAX:0.5:24:600 RRA:MAX:0.5:288:600
+
+#### System Calls [5min]
+elvinrrd=syscalls-*
+rrdfile=/export/rrd/syscalls/syscalls-*.rrd
+store=syscalls
+create=-s 300 DS:syscalls:COUNTER:600:0:U RRA:AVERAGE:0.5:1:600 RRA:AVERAGE:0.5:6:600 RRA:AVERAGE:0.5:24:600 RRA:AVERAGE:0.5:288:600 RRA:MAX:0.5:24:600 RRA:MAX:0.5:288:600
+
+#### Network Interfaces [5min]
+# Packets/s, errors, collisions
+elvinrrd=if-*
+rrdfile=/export/rrd/if/if-*.rrd
+store=ipkts,opkts,ierrs,oerrs,collis
+create=-s 300 DS:ipkts:COUNTER:600:0:1000000 DS:opkts:COUNTER:600:0:1000000 DS:ierrs:COUNTER:600:0:1000000 DS:oerrs:COUNTER:600:0:1000000 DS:collis:COUNTER:600:0:1000000 RRA:AVERAGE:0.5:1:600 RRA:AVERAGE:0.5:6:600 RRA:AVERAGE:0.5:24:600 RRA:AVERAGE:0.5:288:600 RRA:MAX:0.5:24:600 RRA:MAX:0.5:288:600
+
+# network throughput
+elvinrrd=net-*
+rrdfile=/export/rrd/net/net-*.rrd
+store=ibytes,obytes
+create=-s 300 DS:ibytes:COUNTER:600:0:U DS:obytes:COUNTER:600:0:U RRA:AVERAGE:0.5:1:600 RRA:AVERAGE:0.5:6:600 RRA:AVERAGE:0.5:24:600 RRA:AVERAGE:0.5:288:600 RRA:MAX:0.5:24:600 RRA:MAX:0.5:288:600
+
+#### Memory/Swap
+# Free Memory [5min]
+elvinrrd=memfree-*
+rrdfile=/export/rrd/memfree/memfree-*.rrd
+store=memfree
+create=-s 300 DS:memfree:GAUGE:600:0:U RRA:AVERAGE:0.5:1:600 RRA:AVERAGE:0.5:6:600 RRA:AVERAGE:0.5:24:600 RRA:AVERAGE:0.5:288:600 RRA:MAX:0.5:24:600 RRA:MAX:0.5:288:600
+
+# Memory usage for Linux [5min]
+elvinrrd=memlinux-*
+rrdfile=/export/rrd/memlinux/memlinux-*.rrd
+store=memtotal,memfree,memused,memshared,memcached,membuffers
+create=-s 300 DS:memtotal:GAUGE:600:0:U DS:memfree:GAUGE:600:0:U DS:memused:GAUGE:600:0:U DS:memshared:GAUGE:600:0:U DS:memcached:GAUGE:600:0:U DS:membuffers:GAUGE:600:0:U RRA:AVERAGE:0.5:1:600 RRA:AVERAGE:0.5:6:600 RRA:AVERAGE:0.5:24:600 RRA:AVERAGE:0.5:288:600 RRA:MAX:0.5:24:600 RRA:MAX:0.5:288:600
+
+# Swap usage for Linux [5min]
+elvinrrd=swaplinux-*
+rrdfile=/export/rrd/swaplinux/swaplinux-*.rrd
+store=swaptotal,swapfree,swapused
+create=-s 300 DS:swaptotal:GAUGE:600:0:U DS:swapfree:GAUGE:600:0:U DS:swapused:GAUGE:600:0:U RRA:AVERAGE:0.5:1:600 RRA:AVERAGE:0.5:6:600 RRA:AVERAGE:0.5:24:600 RRA:AVERAGE:0.5:288:600 RRA:MAX:0.5:24:600 RRA:MAX:0.5:288:600
+
+# Paging in/out (Linux) [5min]
+elvinrrd=paging-*
+rrdfile=/export/rrd/paging/paging-*.rrd
+store=pages_in,pages_out
+create=-s 300 DS:pages_in:COUNTER:600:0:1000000 DS:pages_out:COUNTER:600:0:1000000 RRA:AVERAGE:0.5:1:600 RRA:AVERAGE:0.5:6:600 RRA:AVERAGE:0.5:24:600 RRA:AVERAGE:0.5:288:600 RRA:MAX:0.5:24:600 RRA:MAX:0.5:288:600
+
+# Swapping in/out (Linux) [5min]
+elvinrrd=swapping-*
+rrdfile=/export/rrd/swapping/swapping-*.rrd
+store=swap_in,swap_out
+create=-s 300 DS:swap_in:COUNTER:600:0:U DS:swap_out:COUNTER:600:0:U RRA:AVERAGE:0.5:1:600 RRA:AVERAGE:0.5:6:600 RRA:AVERAGE:0.5:24:600 RRA:AVERAGE:0.5:288:600 RRA:MAX:0.5:24:600 RRA:MAX:0.5:288:600
+
+
+#### Ping avgtriptime [1min]
+elvinrrd=ping-*
+rrdfile=/export/rrd/ping/ping-*.rrd
+store=avgtriptime
+create=-s 60 DS:avgtriptime:GAUGE:120:0:200 RRA:AVERAGE:0.5:1:1440 RRA:AVERAGE:0.5:10:1008 RRA:AVERAGE:0.5:60:720 RRA:AVERAGE:0.5:480:1095
+
+#### HTTP timing [5min]
+#elvinrrd=http-*
+#rrdfile=/export/rrd/http/http-*.rrd
+#store=time
+#create=-s 300 DS:time:GAUGE:600:0:300 RRA:AVERAGE:0.5:1:600 RRA:AVERAGE:0.5:6:600 RRA:AVERAGE:0.5:24:600 RRA:AVERAGE:0.5:288:600 RRA:MAX:0.5:24:600 RRA:MAX:0.5:288:600
+
+#### HTTP timing [1min]
+elvinrrd=http-*
+rrdfile=/export/rrd/http/http-*.rrd
+store=time
+create=-s 60 DS:time:GAUGE:120:0:200 RRA:AVERAGE:0.5:1:1440 RRA:AVERAGE:0.5:10:1008 RRA:AVERAGE:0.5:60:720 RRA:AVERAGE:0.5:480:1095 RRA:MAX:0.5:24:600 RRA:MAX:0.5:288:600
+
+#### HTTP better timing [1min]
+elvinrrd=httptime-*
+rrdfile=/export/rrd/httptime/httptime-*.rrd
+store=time_resolve,time_connect,time_request,time_response,time
+create=-s 60 DS:time:GAUGE:120:0:300 DS:time_resolve:GAUGE:120:0:300 DS:time_connect:GAUGE:120:0:300 DS:time_request:GAUGE:120:0:300 DS:time_response:GAUGE:120:0:300 RRA:AVERAGE:0.5:1:1440 RRA:AVERAGE:0.5:10:1008 RRA:AVERAGE:0.5:60:720 RRA:AVERAGE:0.5:480:1095 RRA:MAX:0.5:24:600 RRA:MAX:0.5:288:600
+
+#### Disk I/O
+# disk throughput (bytes)
+elvinrrd=disk-*
+rrdfile=/export/rrd/disk/disk-*.rrd
+store=rbytes,wbytes
+create=-s 300 DS:rbytes:COUNTER:600:0:U DS:wbytes:COUNTER:600:0:U RRA:AVERAGE:0.5:1:600 RRA:AVERAGE:0.5:6:600 RRA:AVERAGE:0.5:24:600 RRA:AVERAGE:0.5:288:600 RRA:MAX:0.5:24:600 RRA:MAX:0.5:288:600
+
+#### Tape I/O (Counter)
+# tape throughput (bytes)
+elvinrrd=tape-*
+rrdfile=/export/rrd/tape/tape-*.rrd
+store=ibytes,obytes
+create=-s 300 DS:ibytes:COUNTER:600:0:U DS:obytes:COUNTER:600:0:U RRA:AVERAGE:0.5:1:600 RRA:AVERAGE:0.5:6:600 RRA:AVERAGE:0.5:24:600 RRA:AVERAGE:0.5:288:600 RRA:MAX:0.5:24:600 RRA:MAX:0.5:288:600
+
+#### NFS Operations
+# NFS ops/sec
+elvinrrd=nfsops-*
+rrdfile=/export/rrd/nfsops/nfsops-*.rrd
+store=nfsops
+create=-s 300 DS:nfsops:COUNTER:600:0:100000 RRA:AVERAGE:0.5:1:600 RRA:AVERAGE:0.5:6:600 RRA:AVERAGE:0.5:24:600 RRA:AVERAGE:0.5:288:600 RRA:MAX:0.5:24:600 RRA:MAX:0.5:288:600
+
+# CIFS ops/sec
+elvinrrd=cifsops-*
+rrdfile=/export/rrd/cifsops/cifsops-*.rrd
+store=cifsops
+create=-s 300 DS:cifsops:COUNTER:600:0:100000 RRA:AVERAGE:0.5:1:600 RRA:AVERAGE:0.5:6:600 RRA:AVERAGE:0.5:24:600 RRA:AVERAGE:0.5:288:600 RRA:MAX:0.5:24:600 RRA:MAX:0.5:288:600
+
+# HTTP ops/sec
+elvinrrd=httpops-*
+rrdfile=/export/rrd/httpops/httpops-*.rrd
+store=httpops
+create=-s 300 DS:httpops:COUNTER:600:0:100000 RRA:AVERAGE:0.5:1:600 RRA:AVERAGE:0.5:6:600 RRA:AVERAGE:0.5:24:600 RRA:AVERAGE:0.5:288:600 RRA:MAX:0.5:24:600 RRA:MAX:0.5:288:600
+
+#### NT Stats
+elvinrrd=ntprocs-*
+rrdfile=/export/rrd/ntprocs/ntprocs-*.rrd
+store=num_procs
+create=-s 300 DS:num_procs:GAUGE:600:0:1000 RRA:AVERAGE:0.5:1:600 RRA:AVERAGE:0.5:6:600 RRA:AVERAGE:0.5:24:600 RRA:AVERAGE:0.5:288:600 RRA:MAX:0.5:24:600 RRA:MAX:0.5:288:600
+
+elvinrrd=ntusers-*
+rrdfile=/export/rrd/ntusers/ntusers-*.rrd
+store=num_users
+create=-s 300 DS:num_users:GAUGE:600:0:1000 RRA:AVERAGE:0.5:1:600 RRA:AVERAGE:0.5:6:600 RRA:AVERAGE:0.5:24:600 RRA:AVERAGE:0.5:288:600 RRA:MAX:0.5:24:600 RRA:MAX:0.5:288:600
+
+### Netapp Specific
+elvinrrd=netappcacheage-*
+rrdfile=/export/rrd/netappcacheage/netappcacheage-*.rrd
+store=cacheage
+create=-s 300 DS:cacheage:GAUGE:600:0:10000 RRA:AVERAGE:0.5:1:600 RRA:AVERAGE:0.5:6:600 RRA:AVERAGE:0.5:24:600 RRA:AVERAGE:0.5:288:600 RRA:MAX:0.5:24:600 RRA:MAX:0.5:288:600
+
+#### Connections (general use) (COUNTER)
+elvinrrd=connections-*
+rrdfile=/export/rrd/connections/connections-*.rrd
+store=connections
+create=-s 300 DS:connections:COUNTER:600:0:U RRA:AVERAGE:0.5:1:600 RRA:AVERAGE:0.5:6:600 RRA:AVERAGE:0.5:24:600 RRA:AVERAGE:0.5:288:600 RRA:MAX:0.5:24:600 RRA:MAX:0.5:288:600
+
+#### Connections in use (GAUGE)
+elvinrrd=connsinuse-*
+rrdfile=/export/rrd/connsinuse/connsinuse-*.rrd
+store=connsinuse
+create=-s 300 DS:connsinuse:GAUGE:600:0:100000 RRA:AVERAGE:0.5:1:600 RRA:AVERAGE:0.5:6:600 RRA:AVERAGE:0.5:24:600 RRA:AVERAGE:0.5:288:600 RRA:MAX:0.5:24:600 RRA:MAX:0.5:288:600
+
+#### Temperature (GAUGE)
+elvinrrd=temperature-*
+rrdfile=/export/rrd/temperature/temperature-*.rrd
+store=temperature
+create=-s 300 DS:temperature:GAUGE:600:0:1000 RRA:AVERAGE:0.5:1:600 RRA:AVERAGE:0.5:6:600 RRA:AVERAGE:0.5:24:600 RRA:AVERAGE:0.5:288:600 RRA:MAX:0.5:24:600 RRA:MAX:0.5:288:600
+
+#### Battery Capacity % (GAUGE)
+elvinrrd=battery-*
+rrdfile=/export/rrd/battery/battery-*.rrd
+store=battery
+create=-s 300 DS:battery:GAUGE:600:0:200 RRA:AVERAGE:0.5:1:600 RRA:AVERAGE:0.5:6:600 RRA:AVERAGE:0.5:24:600 RRA:AVERAGE:0.5:288:600 RRA:MAX:0.5:24:600 RRA:MAX:0.5:288:600
+
+#### Voltage In/Out (GAUGE)
+elvinrrd=voltageinout-*
+rrdfile=/export/rrd/voltageinout/voltageinout-*.rrd
+store=ivolts,ovolts
+create=-s 300 DS:ivolts:GAUGE:600:0:10000 DS:ovolts:GAUGE:600:0:10000 RRA:AVERAGE:0.5:1:600 RRA:AVERAGE:0.5:6:600 RRA:AVERAGE:0.5:24:600 RRA:AVERAGE:0.5:288:600 RRA:MAX:0.5:24:600 RRA:MAX:0.5:288:600
+
+#### Generic Load (GAUGE)
+elvinrrd=load-*
+rrdfile=/export/rrd/load/load-*.rrd
+store=load
+create=-s 300 DS:load:GAUGE:600:0:U RRA:AVERAGE:0.5:1:600 RRA:AVERAGE:0.5:6:600 RRA:AVERAGE:0.5:24:600 RRA:AVERAGE:0.5:288:600 RRA:MAX:0.5:24:600 RRA:MAX:0.5:288:600
+
+#### Windows Statistics
+# Win Context Switches [1min]
+elvinrrd=wincs-*
+rrdfile=/export/rrd/wincs/wincs-*.rrd
+store=wincs
+create=-s 60 DS:wincs:GAUGE:120:0:U RRA:AVERAGE:0.5:1:1440 RRA:AVERAGE:0.5:10:1008 RRA:AVERAGE:0.5:60:720 RRA:AVERAGE:0.5:480:1095
+
+# Win System Calls [1min]
+elvinrrd=winsyscalls-*
+rrdfile=/export/rrd/winsyscalls/winsyscalls-*.rrd
+store=winsyscalls
+create=-s 60 DS:winsyscalls:GAUGE:120:0:U RRA:AVERAGE:0.5:1:1440 RRA:AVERAGE:0.5:10:1008 RRA:AVERAGE:0.5:60:720 RRA:AVERAGE:0.5:480:1095
+
+# Win Processes [1min]
+elvinrrd=winprocs-*
+rrdfile=/export/rrd/winprocs/winprocs-*.rrd
+store=winprocs
+create=-s 60 DS:winprocs:GAUGE:120:0:U RRA:AVERAGE:0.5:1:1440 RRA:AVERAGE:0.5:10:1008 RRA:AVERAGE:0.5:60:720 RRA:AVERAGE:0.5:480:1095
+
+# Win Threads [1min]
+elvinrrd=winthreads-*
+rrdfile=/export/rrd/winthreads/winthreads-*.rrd
+store=winthreads
+create=-s 60 DS:winthreads:GAUGE:120:0:U RRA:AVERAGE:0.5:1:1440 RRA:AVERAGE:0.5:10:1008 RRA:AVERAGE:0.5:60:720 RRA:AVERAGE:0.5:480:1095
+
+# Win CPU Interrupts [1min]
+elvinrrd=winints-*
+rrdfile=/export/rrd/winints/winints-*.rrd
+store=winints
+create=-s 60 DS:winints:GAUGE:120:0:U RRA:AVERAGE:0.5:1:1440 RRA:AVERAGE:0.5:10:1008 RRA:AVERAGE:0.5:60:720 RRA:AVERAGE:0.5:480:1095
+
+# CPU Win [1min]
+elvinrrd=cpuwin-*
+rrdfile=/export/rrd/cpuwin/cpuwin-*.rrd
+store=cpu_processor,cpu_interrupt,cpu_user,cpu_priv,cpu_idle
+create=-s 60 DS:cpu_processor:GAUGE:120:U:1000 DS:cpu_interrupt:GAUGE:120:U:1000 DS:cpu_user:GAUGE:120:U:1000 DS:cpu_priv:GAUGE:120:U:1000 DS:cpu_idle:GAUGE:120:U:1000 RRA:AVERAGE:0.5:1:1440 RRA:AVERAGE:0.5:10:1008 RRA:AVERAGE:0.5:60:720 RRA:AVERAGE:0.5:480:1095

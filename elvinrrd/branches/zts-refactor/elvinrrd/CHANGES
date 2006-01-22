@@ -1,0 +1,41 @@
+ElvinRRD CHANGES
+(reverse chronological order)
+
+ElvinRRD-2.3 (04-Dec-2005)
+- Added cpubsd-* for FreeBSD cpu stats.
+- Added various entries for storing Win32 system data: cpuwinnt-*
+  winints-* cpuwin-* wincs-* winsyscalls-* winprocs-* winthreads-*.
+- Bugfix: SystemExit exceptions are now ignored by the global exception
+  catcher.
+- Various tidying up of comments and docstrings.
+
+
+ElvinRRD-2.2 (30-Nov-2004)
+ - Added many more config entries to elvinrrd.cf.
+ - Changed the Python RRDtool module it uses.  The old one, PyRRDtool, seems
+   to have disappeared off the face of the earth.
+ - Now uses py-rrdtool from http://sourceforge.net/projects/py-rrdtool/
+   or http://www.nongnu.org/py-rrdtool/
+ - Added uncaught exception handler to log any critical exceptions before
+   exiting.
+ - Cleaned up some of the docstrings/comments.
+ - Cleaned up a few log() calls (removed extra '\n').
+
+
+ElvinRRD-2.1a (1-Nov-2001)
+ - Fixed support for multiple store keys.  Multiple store keys must be
+   separated by ',' (no spaces).  All keys must be found in the Elvin message,
+   and all will be updated in the RRD at once.
+ - Added full command-line argument support.
+ - Cleaned up logging - can define different logging levels (minimal, verbose,
+   debug) and optionally log to a logfile.
+ - Updated elvinrrd.cf sample configuration file with new config format.
+ - Added a create argument so RRD files are automatically created if they do
+   not already exist.
+ - Changed config format, allowing wildcards to be supplied in the elvinrrd
+   key which can be substituted in the rrdfile, store and create arguments if
+   required.
+
+
+ElvinRRD-1.0 (5-Sep-2001)
+ - Initial test version of elvinrrd.
