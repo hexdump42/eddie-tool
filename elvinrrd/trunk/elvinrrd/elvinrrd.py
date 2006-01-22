@@ -37,7 +37,6 @@ except ImportError:
         sys.exit(1)
 
 # Other modules
-#import RRDtool	# requires PyRRDtool from http://freshmeat.net/projects/pyrrdtool/
 import rrdtool	# requires py-rrdtool from http://sourceforge.net/projects/py-rrdtool/
 		#                       or http://www.nongnu.org/py-rrdtool/
 import elvin	# requires Elvin4 modules from http://elvin.dstc.edu.au/projects/pe4/index.html
@@ -201,13 +200,9 @@ class storeconsumer(BaseElvin):
 
 	if options.debug:
 	    log( 'rrd.update( %s )' % (u,) )
-	    #log( 'rrd.update( %s, %s, %s )' % (rrdfile, ds, n) )
 
 	try:
-	    #self.rrd.update( u )
 	    self.rrd.update( *u )
-	    #self.rrd.update( rrdfile, ds, n )
-	#except IOError, err:
 	except rrdtool.error, err:
 	    if str(err).find('No such file or directory') != -1:
 		if os.path.exists( rrdfile ):
@@ -382,8 +377,6 @@ def main():
 	sys.stderr.write( "error: configuration is empty\n" )
 	sys.exit(1)
 
-    # Create RRDtool object
-    #rrd = RRDtool.RRDtool()
     # Create pointer to rrdtool module
     rrd = rrdtool
 
