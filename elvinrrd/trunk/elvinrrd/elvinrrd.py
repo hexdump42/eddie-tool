@@ -355,7 +355,7 @@ def main():
     
     # --debug implies --verbose
     if options.debug == True:
-        options.verbose = TRUE
+        options.verbose = True
     
     if options.verbose:
         log( "elvinrrd version %s starting" % (__version__) )
@@ -365,7 +365,7 @@ def main():
         sys.stderr.write( "error: No configfile defined\n" )
         sys.exit(1)
     
-    rrddict = ReadConfig( configfile )
+    rrddict = ReadConfig( options.configfile )
     if rrddict == None or rrddict == {}:
         sys.stderr.write( "error: configuration is empty\n" )
         sys.exit(1)
