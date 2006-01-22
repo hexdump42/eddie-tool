@@ -25,6 +25,17 @@ import os
 import getopt
 import time
 
+# optparse is only available in 2.3+, but optik provides the same 
+# functionality for python 2.2
+try:
+    import optparse
+except ImportError:
+    try:
+        import optik as optparse
+    except ImportError:
+        print "Error: EDDIE requires Optik on Python 2.2.x (http://optik.sf.net)"
+        sys.exit(1)
+
 # Other modules
 #import RRDtool	# requires PyRRDtool from http://freshmeat.net/projects/pyrrdtool/
 import rrdtool	# requires py-rrdtool from http://sourceforge.net/projects/py-rrdtool/
@@ -52,7 +63,7 @@ class RRDstore:
 	if '*' in self.elvinrrd:	# if a wildcard, create a reg-exp
 	    self.regexp = string.replace( self.elvinrrd, '*', "(.*)" )
 
-	if debug:
+	if options.debug:
 	    log( "Created RRDstore object %s" % (self) )
 
 
@@ -83,16 +94,16 @@ class BaseElvin:
 	else:
 	    connect_string='*'		# auto discovery
 
-	if verbose:
+	if options.verbose:
 	    log( "Trying Elvin connection to %s" % (connect_string) )
 
 	try:
 	    self.elvinc = elvin.connect( connect_string )
-	    if verbose:
+	    if options.verbose:
 		log( "Elvin connection succeeded to %s" % (connect_string) )
 	except:
 	    sys.stderr.write( "Connection to elvin failed - connection string was '%s'\n" % (connect_string) )
-	    if logfile != None:
+	    if options.logfile != None:
 		log( "Connection to elvin failed - connection string was '%s'" % (connect_string) )
 	    sys.exit(1)
 
@@ -188,7 +199,7 @@ class storeconsumer(BaseElvin):
 	    n = n[:-1]      # remove ':' from end
 	    u = (rrdfile, ds, n)
 
-	if debug:
+	if options.debug:
 	    log( 'rrd.update( %s )' % (u,) )
 	    #log( 'rrd.update( %s, %s, %s )' % (rrdfile, ds, n) )
 
@@ -202,24 +213,24 @@ class storeconsumer(BaseElvin):
 		if os.path.exists( rrdfile ):
 		    # file exists, despite the error...
 		    sys.stderr.write( "IOError: %s, message %s\n" % (err, msg) )
-		    if logfile:
+		    if options.logfile:
 			log( "IOError: %s, message %s" % (err, msg) )
 		else:
 		    rrd_dir = os.path.dirname( rrdfile )
 
 		    if not os.path.exists( rrd_dir ):
-			if verbose:
+			if options.verbose:
 			    log( "Creating directory '%s'" % (rrd_dir) )
 			os.makedirs( rrd_dir )
 
 		    createargs = (rrdfile,) + tuple(create.split())
-		    if verbose:
+		    if options.verbose:
 			log( "Creating rrd: %s" % (createargs,) )
 		    self.rrd.create( *createargs )
 		    self.rrd.update( *u )
 	    else:
 		sys.stderr.write( "IOError: %s, message %s\n" % (err, msg) )
-		if logfile:
+		if options.logfile:
 		    log( "IOError: %s, message %s" % (err, msg) )
 
 	return 0
@@ -229,7 +240,7 @@ def ReadConfig( filename ):
     """Read the configuration from the given filename.
     """
 
-    if verbose:
+    if options.verbose:
 	log( "Reading config from '%s'" % (filename) )
 
     rrddict = {}
@@ -238,7 +249,7 @@ def ReadConfig( filename ):
         fp = open(filename, 'r')
     except IOError:
         sys.stderr.write( "Cannot open configuration file '%s', exiting" % (filename) )
-	if logfile:
+	if options.logfile:
 	    log( "Cannot open configuration file '%s', exiting" % (filename) )
 	sys.exit(1)
 
@@ -290,7 +301,7 @@ def ReadConfig( filename ):
 		    create = inx.group(2)
 		else:
 		    sys.stderr.write( "Parse error, unknown keyword '%s' on following line:\n%s" % (inx.group(1),line) )
-		    if logfile:
+		    if options.logfile:
 			log( "Parse error, unknown keyword '%s' on following line:\n%s" % (inx.group(1),line) )
 		    sys.exit(1)
 
@@ -303,7 +314,7 @@ def ReadConfig( filename ):
 
     fp.close()
 
-    if verbose:
+    if options.verbose:
 	log( "%s parsed, %d entries in config" % (filename,len(rrddict.keys())) )
 
     return rrddict
@@ -313,7 +324,7 @@ def log( text ):
     """Log text to either logfile (if defined) or stdout.
     """
 
-    if logfile != None:
+    if options.logfile != None:
 	try:
 	    fp = open(logfile, 'a')
 	except IOError, err:
@@ -328,56 +339,41 @@ def log( text ):
 
 
 def main():
-    usage_short = "[-dhv] -c elvinrrd.cf [-e elvin_url] [-s elvin_scope] [-l logfile]"
-    usage_long = "[--debug] [--help] [--verbose] --configfile elvinrrd.cf [--elvinurl elvin_url] [--elvinscope elvin_scope] [--logfile logfile]"
-    usage = "usage: %s %s\n   or: %s" % (sys.argv[0], usage_short, usage_long)
+    usage_short = "[-hvd] [-e elvin_url] [-s elvin_scope] [-l logfile] -c elvinrrd.cf"
+    usage = "usage: %s %s" % (sys.argv[0], usage_short)
 
     if len(sys.argv) <= 1:
 	print usage
 	sys.exit(1)
 
-    # Configurable settings
-    global debug
-    debug = 0
-    global verbose
-    verbose = 0
-    configfile = None
-    global logfile
-    logfile = None
-    elvin_url = ELVIN_URL
-    elvin_scope = ELVIN_SCOPE
-
-    # Handle command-line arguments
-    options = "dhvc:e:s:l:"
-    long_options = ["debug", "help", "verbose", "configfile=", "elvin_url=", "elvin_scope=", "logfile="]
-    try:
-	opts, args = getopt.getopt(sys.argv[1:], options, long_options)
-    except getopt.GetoptError:
-	print usage
-	sys.exit(1)
-    for o, a in opts:
-	if o in ("-h", "--help"):
-	    print usage
-	    sys.exit(1)
-	if o in ("-v", "--verbose"):
-	    verbose = 1
-	if o in ("-d", "--debug"):
-	    debug = 1
-	    verbose = 1
-	if o in ("-c", "--configfile"):
-	    configfile = a
-	if o in ("-e", "--elvinurl"):
-	    elvin_url = a
-	if o in ("-s", "--elvinscope"):
-	    elvin_scope = a
-	if o in ("-l", "--logfile"):
-	    logfile = a
-
-    if verbose:
-	log( "elvinrrd version %s starting" % (__version__) )
+    # Parse command-line arguments
+    parser = optparse.OptionParser(usage=usage, version=None)
+    parser.add_option('-v', '--verbose', action="store_true",	\
+    		help="Enable verbose output")
+    parser.add_option('-d', '--debug', action="store_true",	\
+    		help="Enable verbose output")
+    parser.add_option('-e', '--elvinurl', dest='elvin_url',	\
+            metavar="URL", help="Use elvin server at URL")
+    parser.add_option('-s', '--elvinscope', dest='elvin_scope',	\
+            metavar="SCOPE", help="Use elvin scope SCOPE")
+    parser.add_option('-l', '--logfile', dest='logfile',	\
+			metavar="FILE", help="Log to FILE")
+    parser.add_option('-c', '--configfile', dest='configfile',	\
+			metavar="FILE", help="Load config from FILE")
+    parser.set_defaults(verbose=False, debug=False, elvin_url=ELVIN_URL, elvin_scope=ELVIN_SCOPE)
+    
+    global options
+    (options, args) = parser.parse_args()
+    
+    # --debug implies --verbose
+    if options.debug == True:
+        options.verbose = TRUE
+    
+    if options.verbose:
+        log( "elvinrrd version %s starting" % (__version__) )
 
     # Build config
-    if configfile == None:
+    if options.configfile == None:
 	sys.stderr.write( "error: No configfile defined\n" )
 	sys.exit(1)
 
@@ -395,7 +391,7 @@ def main():
     e.rrd = rrd
     e.rrddict = rrddict
     e.register()
-    if verbose:
+    if options.verbose:
 	log( "Starting Elvin main loop" )
     e.elvinc.run()
 
@@ -410,7 +406,7 @@ if __name__ == "__main__":
 	tb = traceback.format_list( traceback.extract_tb( e[2] ) )
 	errstr = "Uncaught exception:\ %s, %s\n%s" % (e[0], e[1], tb)
 	sys.stderr.write( "elvinrrd.py: " + errstr + "\n" )
-	if logfile:
+	if options.logfile:
 	    log( errstr )
 	sys.exit(1)
 
