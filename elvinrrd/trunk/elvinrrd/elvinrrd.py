@@ -37,7 +37,7 @@ except ImportError:
         sys.exit(1)
 
 # Other modules
-#import rrdtool  # requires py-rrdtool from http://sourceforge.net/projects/py-rrdtool/
+import rrdtool  # requires py-rrdtool from http://sourceforge.net/projects/py-rrdtool/
                 #                       or http://www.nongnu.org/py-rrdtool/
 import elvin    # requires Elvin4 modules from http://elvin.dstc.edu.au/projects/pe4/index.html
 
