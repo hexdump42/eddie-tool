@@ -37,7 +37,7 @@ except ImportError:
         sys.exit(1)
 
 # Other modules
-import rrdtool  # requires py-rrdtool from http://sourceforge.net/projects/py-rrdtool/
+#import rrdtool  # requires py-rrdtool from http://sourceforge.net/projects/py-rrdtool/
                 #                       or http://www.nongnu.org/py-rrdtool/
 import elvin    # requires Elvin4 modules from http://elvin.dstc.edu.au/projects/pe4/index.html
 
@@ -316,9 +316,9 @@ def log( text ):
     
     if options.logfile != None:
         try:
-            fp = open(logfile, 'a')
+            fp = open(options.logfile, 'a')
         except IOError, err:
-            sys.stderr.write( "error: IOError opening '%s', %s\n" % (logfile, err) )
+            sys.stderr.write( "error: IOError opening '%s', %s\n" % (options.logfile, err) )
             sys.exit(1)
         t = "%04d-%02d-%02d %02d:%02d:%02d" % (time.localtime()[0:6])
         fp.write( "%s %s\n" % (t, text) )
@@ -373,7 +373,7 @@ def main():
     # Create pointer to rrdtool module
     rrd = rrdtool
     
-    e = storeconsumer(elvin_url, elvin_scope)
+    e = storeconsumer(options.elvin_url, options.elvin_scope)
     e.rrd = rrd
     e.rrddict = rrddict
     e.register()
