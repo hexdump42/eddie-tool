@@ -57,6 +57,7 @@ group news:
 	port='nntp'
 	protocol='tcp'
 	bindaddr='*'
+        rule='not exists'
 	action=COMMONALERT(commonmsg.sp,1)
 
     # Check with ctlinnd if innd is sane or not

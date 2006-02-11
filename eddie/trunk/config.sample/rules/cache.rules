@@ -47,12 +47,12 @@ group host6:
 	checkwait='30s'		# wait 30 secs between 2nd check
 	action=COMMONALERT(commonmsg.proc,2)
 
-    PID syslog1:
+    PID syslog_pid1:
         pidfile='/var/run/syslog.pid'
 	rule='not exists'
 	scanperiod='30m'	# only check every 30min
 	action=COMMONALERT(commonmsg.pid,0)
-    PID syslog1:
+    PID syslog_pid2:
 	pidfile='/var/run/syslog.pid'
 	rule='exists and not running'
 	scanperiod='30m'	# only check every 30min
@@ -111,7 +111,7 @@ group cache:
     SP http:
 	port='http'	# check http port is listening
 	protocol='tcp'	# tcp protocol
-	bindaddr='*'	# '*' on solaris, '0.0.0.0' on linux...
+	bindaddr='*'	# '*' == '0.0.0.0'
 	scanperiod='30m'	# check every 30 mins
 	numchecks=2		# perform 2 checks
 	checkwait='30s'		# wait 30s before 2nd check
@@ -119,7 +119,8 @@ group cache:
 	action=COMMONALERT(commonmsg.sp,1)
     SP proxy:
 	port=8080
-	protocol='*'
+	protocol='tcp'
+	bindaddr='0.0.0.0'
 	scanperiod='30m'
 	numchecks=2
 	checkwait='30s'
