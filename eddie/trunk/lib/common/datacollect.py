@@ -89,9 +89,9 @@ class DataModules:
 
 	try:
 	    exec "import %s" % (module)
-	except ImportError:
-	    log.log( "<datacollect>DataModules.request(): error, collector '%s'/module '%s' not found or not available" % (collector,module), 3 )
-	    raise self.DataModuleError, "Collector '%s', module '%s' not found or not available" % (collector,module)
+	except ImportError, err:
+            log.log( "<datacollect>DataModules.request(): error, collector '%s'/module '%s' not found or not available, import error: %s" % (collector,module,err), 3 )
+            raise self.DataModuleError, "Collector '%s', module '%s' not found or not available, import error: %s" % (collector,module,err)
 
 	# initialise new collector instance
 	initstr = "self.collectors[collector] = %s.%s()" % (module,collector)
