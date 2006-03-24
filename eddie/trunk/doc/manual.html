@@ -31,6 +31,7 @@
 	  <li> <a href="#directivedetails">Directive Details</a>
       </ul>
       <li> <a href="#builtindirectives">Built-in Directives</a>
+      <li> <a href="#actions">Actions</a>
       <li> <a href="#notif_msg_objects">Notification and Message objects</a>
      </ul>
     <li> <a href="#other_features">Other Features</a>
@@ -606,7 +607,7 @@
           action=email("alert", "the command '%(cmd)s' failed.")
     </ul>
 
-    Directive Examples:</i>
+    <i>Directive Examples:</i>
     <pre>
         # Check load average (the hard way, without using SYS)
         COM loadavg:
@@ -2134,6 +2135,332 @@
    </p>
 
 
+  <p>
+   <H4><a name="actions">Actions</a></H4>
+  </p>
+   Actions are performed when rules
+   <ul>
+    <li> fail - execute specified <b>action</b>
+    <li> change state from fail to success - execute specified <b>act2ok</b>
+    <li> subsequent successes - execute specified <b>actelse</b>
+   </ul>
+   <br>
+   Actions currently include:
+   <p>
+    <ul>
+     <li> <b><a href="#action_log">log</a></b> - pass a message into a file, the eddie tty, or syslog
+     <li> <b><a href="#action_email">email</a></b> - generate an email message
+     <li> <b><a href="#action_system">system</a></b> - run a command
+     <li> <b><a href="#action_restart">restart</a></b> - run <i>/etc/init.d/(daemon) start</i> command
+     <li> <b><a href="#action_nice">nice</a></b> - change the priority of a process
+     <li> <b><a href="#action_eddielog">eddielog</a></b> - pass a message to the eddie log file
+     <li> <b><a href="#action_ticker">ticker</a></b> - send a message to an Elvin listener as a ticker
+     <li> <b><a href="#action_page">page</a></b> - send a message to a pager
+     <li> <b><a href="#action_elvindb">elvindb</a></b> - send a message to an Elvin listener
+     <li> <b><a href="#action_elvinrrd">elvinrrd</a></b> - send a message to a RRDtool listener via Elvin
+     <li> <b><a href="#action_netsaint">netsaint</a></b> - send a message to a NetSaint listener via Elvin
+    </ul>
+
+  <p>
+   <H5><a name="actiondetails">Action Details</a></H5>
+  </p>
+
+
+   <p>
+    <b><a name="action_log">log</a></b><br>
+
+    <i>log</i> performs message logging to a file, the tty where eddie was
+    executed, or to syslog. The where depends on the <i>via</i>, which is
+    the second parameter. If <i>via</i> looks like "XXX.YYY", then it is assumed
+    that syslog type logging is desired.  If <i>via</i> begins with a "/",
+    then it is assumed that logging to a file is desired. If <i>via</i> is
+    the string "tty", then the message will go to the tty where eddie
+    was executed.
+
+    <br><br>
+
+    Format:
+    <ul>
+     <li><b>action=log(message, via)</b>
+      <ul>
+       <li><b>message</b> - the string to be logged
+       <li><b>via</b> - the method to use for logging
+        <ul>
+         <li> syslog: <i>FACILITY.LEVEL</i> - see man syslog(3) or syslog.h for a list of facilities and levels
+         <li> file: <i>/path/to/file</i> - append <i>message</i> to the specified file
+         <li> tty: <i>"tty"</i> - write the message to the eddie tty
+        </ul>
+      </ul>
+    </ul>
+
+    Action Examples:
+    <pre>
+        # generate a syslog notification using the LOG_DAEMON facility and LOG_ALERT level
+        action=log("There is a problem on %(h)s", "DAEMON.ALERT")
+
+        # append a message to a log file
+        action=log("There is a problem on %(h)s", "/var/log/eddie_disk.log")
+
+        # display a message on the tty that eddie was started on
+        action=log("There is a problem on %(h)s", "tty")
+    </pre>
+   </p>
+
+   <p>
+    <b><a name="action_email">email</a></b><br>
+
+    <i>email</i> performs message emailing.
+
+    <br><br>
+
+    Format:
+    <ul>
+     <li><b>action=email(address, subject, body)</b>
+      <ul>
+       <li><b>address</b> - the recipient list
+       <li><b>subject</b> - subject of the email
+       <li><b>body</b> - email body text
+      </ul>
+    </ul>
+
+    Action Examples:
+    <pre>
+        # generate an email alert
+        action=email("me@mydomain.com,them@myotherdomain.com", "There is a problem on %(h)s", "Problem age: %(problemage)s")
+    </pre>
+   </p>
+
+   <p>
+    <b><a name="action_system">system</a></b><br>
+
+    <i>system</i> allows execution of operating system commands.
+
+    <br><br>
+
+    Format:
+    <ul>
+     <li><b>action=system(command)</b>
+      <ul>
+       <li><b>command</b> - the command to execute, via Python's <i>os.system()</i> call.
+      </ul>
+    </ul>
+
+    Action Examples:
+    <pre>
+        # run command to rotate the web log file
+        action=system("rotate /var/log/web_log")
+    </pre>
+   </p>
+
+   <p>
+    <b><a name="action_restart">restart</a></b><br>
+
+    Run <i>/etc/init.d/(name) start</i> command. Usually used to restart a dead daemon.
+
+    <br><br>
+
+    Format:
+    <ul>
+     <li><b>action=restart(daemon)</b>
+      <ul>
+       <li><b>daemon</b> - the daemon to restart, which should have a file <i>/etc/init.d/(daemon)</i>
+      </ul>
+    </ul>
+
+    Action Examples:
+    <pre>
+        # restart the httpd server
+        action=restart("httpd")
+    </pre>
+   </p>
+
+   <p>
+    <b><a name="action_nice">nice</a></b><br>
+
+    Change the "nice" value of a running process, either up or down.
+    Note that in order to increase the nice level, eddie has to be running as
+    super-user.
+
+    <br><br>
+
+    The process acted upon is the current <b>pid</b> in the dictionary, so
+    this action only works for <b>PROC</b> and <b>PID</b> directives.
+    
+    <br><br>
+
+    Format:
+    <ul>
+     <li><b>action=nice([relative, ] value)</b>
+      <ul>
+       <li><b>relative</b> - the direction to move the nice value, one of <b>"+"</b> or <b>"-"</b>
+       <li><b>value</b> - if relative was specified, then the magnitude of the change, otherwise the absolute "nice" level
+      </ul>
+    </ul>
+
+    Action Examples:
+    <pre>
+        # change the execution of the process to take a little less time
+        action=nice("+", 5)
+
+        # de-prioritize the process
+        action=nice(20)
+    </pre>
+   </p>
+
+   <p>
+    <b><a name="action_eddielog">eddielog</a></b><br>
+
+    This action allows for logging messages to the log file that eddie is
+    configured to use. Depending on the <b>ADMINLEVEL</b> setting, the message
+    may also (eventually, depending on <b>ADMIN_NOTIFY</b> setting) get emailed
+    to the <b>ADMIN</b>.
+
+    <br><br>
+
+    Format:
+    <ul>
+     <li><b>action=eddielog(message [, loglevel])</b>
+      <ul>
+       <li><b>message</b> - the message to log
+       <li><b>loglevel</b> - "0" (informational) to "9" (critical). Defaults to "0"
+      </ul>
+    </ul>
+
+    Action Examples:
+    <pre>
+        # generate an informational message to the eddie log file
+        action=eddielog("Disk issue on %(h)s: used level is %(pctused)s%%")
+
+        # generate a high-priority message to the eddie log file
+        # (and probably to the ADMIN as well, eventually)
+        action=eddielog("Disk issue on %(h)s: used level is %(pctused)s%%", 9)
+    </pre>
+   </p>
+
+   <p>
+    <b><a name="action_ticker">ticker</a></b><br>
+
+    Send a ticker-type message to an Elvin listener.
+
+    <br><br>
+
+    Format:
+    <ul>
+     <li><b>action=ticker(message [, timeout])</b>
+      <ul>
+       <li><b>message</b> - the message to send
+       <li><b>timeout</b> - the timeout, in minutes. Defaults to 10 minutes
+      </ul>
+    </ul>
+
+    Action Examples:
+    <pre>
+        # send a ticker-type message
+        action=ticker("%(file)s does not exist", timeout=1)
+    </pre>
+   </p>
+
+   <p>
+    <b><a name="action_page">page</a></b><br>
+
+    Send a page to the specified recipients. Currently implemented as an email.
+
+    <br><br>
+
+    Format:
+    <ul>
+     <li><b>action=page(pager, message)</b>
+      <ul>
+       <li><b>pager</b> - email address of the pager
+       <li><b>message</b> - message body to send
+      </ul>
+    </ul>
+
+    Action Examples:
+    <pre>
+        # send a page to the ADMIN_PAGER alias
+        action=pager(ADMIN_PAGER, "Host %(server)s is inaccessable")
+
+        # send a page to a Sprint phone
+        action=pager("734657XXXX@messaging.sprintpcs.com", "Host %(server)s is inaccessable")
+    </pre>
+   </p>
+
+   <p>
+    <b><a name="action_elvindb">elvindb</a></b><br>
+
+    Send information to a database listener via Elvin.
+    Data to insert in db can be specified in the data argument as
+    'col1=data1, col2=data2, col3=data3' or if data is not specified
+    it will use values sent previously.
+
+    <br><br>
+
+    Format:
+    <ul>
+     <li><b>action=elvindb(table [, data])</b>
+      <ul>
+       <li><b>table</b> - specifies the table name to store the data in on the elvindb server
+       <li><b>data</b> - comma-separated "name=value" pairs
+      </ul>
+    </ul>
+
+    Action Examples:
+    <pre>
+        # send data to table "MYTABLE" via elvindb
+        action=elvindb("MYTABLE", "host=%(h)s,load1=%(load1)s,load5=%(load5)s")
+    </pre>
+   </p>
+
+   <p>
+    <b><a name="action_elvinrrd">elvinrrd</a></b><br>
+
+    Send information to a RRDtool database listener via Elvin.
+
+    <br><br>
+
+    Format:
+    <ul>
+     <li><b>action=elvinrrd(key, data [, data ...])</b>
+      <ul>
+       <li><b>key</b> - the RRD name configured in the Elvin consumer to store the data
+       <li><b>data</b> - values to store in "name=value" pairs, where <i>name</i> is the RRD variable name and <i>value</i> is the valure to store there
+      </ul>
+    </ul>
+
+    Action Examples:
+    <pre>
+        # send the one-minute load average every minute for this host
+        SYS loadavg1_rrd:
+            rule='1'        # always true
+            scanperiod='1m'
+            action="elvinrrd('loadavg1-%(h)s', 'loadavg1=%(loadavg1)f')"
+    </pre>
+   </p>
+
+   <p>
+    <b><a name="action_netsaint">netsaint</a></b><br>
+
+    Send information to a NetSaint listener via Elvin.
+
+    <br><br>
+
+    Format:
+    <ul>
+     <li><b>action=netsaint(description, output, return_code)</b>
+      <ul>
+       <li><b>description</b> - short description
+       <li><b>output</b> - message output
+       <li><b>return_code</b> - return code to log
+      </ul>
+    </ul>
+
+    Action Examples:
+    <pre>
+        # send the free memory size to the NetSaint consumer
+        action=netsaint("EddieMem", "Free memory on %(h): %(memfree)s", 1)
+    </pre>
+   </p>
 
 
   <p>
