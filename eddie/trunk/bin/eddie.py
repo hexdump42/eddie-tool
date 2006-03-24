@@ -109,6 +109,7 @@ import parseConfig, directive, config, log, timeQueue, sockets, eddieElvin4, dat
 # We set the default here, but this can be overridden on the command line
 configdir = os.path.join(basedir, 'config')
 default_config_file = os.path.join(configdir, 'eddie.cf')
+config_file = default_config_file
 
 # Globals
 global Config
