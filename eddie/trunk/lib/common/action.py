@@ -33,10 +33,21 @@ __license__ = '''
 
 
 # Python imports
-import os, string, sys
+import os, string, sys, re, time
 
 # Eddie imports
 import log, utils, eddieElvin4
+
+
+## Globals
+UseSyslog = 1
+
+
+## Import syslog python modules if possible
+try:
+    import syslog
+except ImportError:
+    UseSyslog = 0
 
 
 #### DEFINE ALL THE ACTIONS AVAILABLE ####
@@ -49,6 +60,71 @@ class action:
 
     def __init__(self):
 	self.runcount = 0	# chris 2002-12-29: count consecutive action calls
+
+    def log(self, message, via):
+	"""Post messages to log file, eddie tty, or syslog.
+	For logging to the eddie tty:       'via' should be 'tty'
+	For logging by appending to a file: 'via' should begin with a '/'
+	For logging via syslog:             'via' should be 'FACILITY.LEVEL'
+	"""
+
+	# Substitute variables in message string
+	message = parseVars( message, self.varDict )
+
+	# Determine if this is a syslog-type log request
+	syslogmatch = re.match('^([A-Z0-9]+)\.([A-Z]+)$', via.upper())
+
+	# eddie tty logging (via == "tty")
+	if via == 'tty':
+	    # get the current day/time
+	    datetime = time.asctime(time.localtime(time.time()))
+	    print "%s %s" % (datetime,message)
+
+	# file logging (via like "/path/to/logfile")
+	elif via.startswith('/'):
+	    try:
+		f = open(via, 'a')
+		# get the current day/time
+		datetime = time.asctime(time.localtime(time.time()))
+		f.write("%s %s\n" % (datetime,message))
+		f.close()
+	    except:
+		log.log( "<action>action.log(): unable to open file for append '%s'" % (via), 5)
+
+	# syslog logging (via like "USER.INFO")
+	elif syslogmatch != None:
+	    """Post messages via syslog().
+
+	    The parameter priority should be a string in "facility.level" format,
+	    defaulting to USER.INFO.  See man syslog(3) for a list of valid
+	    facilities and levels, or the syslog.h header file.  Feel free to use
+	    upper or lower case.
+
+	    Note that in order to see the log messages, your local syslog daemon
+	    must be configured to do something with the messages: see man
+	    syslog.conf(5) for details.
+	    """
+
+	    global UseSyslog
+	    if UseSyslog == 0:
+	        #log.log( "<action>action.syslog(): syslog not supported on this system", 5)
+	        return
+
+	    # The priority is the syslog.LOG_(facility) | syslog.LOG_(level)
+	    try:
+		prio = eval('syslog.LOG_%s' % (syslogmatch.group(1))) | eval('syslog.LOG_%s' % (syslogmatch.group(2)))
+	    except:
+		log.log( "<action>action.log(): unable to parse valid syslog facility and level from '%s'" % (via), 5)
+		return
+
+	    # Send the message off... note that syslog() is UDP, and therefore not
+	    # acknowledged, so we have no return value
+	    syslog.syslog(prio, message)
+
+	else:
+	    log.log( "<action>action.log(): unknown logging via '%s'" % (via), 5)
+
+	return
 
 
     def email(self, address, subject="", body=""):
@@ -119,9 +195,9 @@ class action:
 	r = utils.sendmail( headers, body )
 
 	if r:
-	    log.log( "<action>action.email: address='%s' subject='%s' body='%s...' successful)" % (address,subj,body[:20]), 6 )
+	    log.log( "<action>action.email(): address='%s' subject='%s' body='%s...' successful)" % (address,subj,body[:20]), 6 )
 	else:
-	    log.log( "<action>action.email: address='%s' subject='%s' body='%s...' failed)" % (address,subj,body[:20]), 4 )
+	    log.log( "<action>action.email(): address='%s' subject='%s' body='%s...' failed)" % (address,subj,body[:20]), 4 )
 
 
     def system(self, cmd):
