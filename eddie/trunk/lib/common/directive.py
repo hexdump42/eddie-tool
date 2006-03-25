@@ -875,8 +875,7 @@ class Directive:
 	# extra variables added specifically by the Directive itself.
 	self.Action.varDict = {}
 	self.Action.varDict.update(self.defaultVarDict)
-	for i in data.keys():
-	    self.Action.varDict.update(data)
+        self.Action.varDict.update(data)
 	self.addVariables()
 
 	if result == 0:
