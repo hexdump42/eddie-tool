@@ -452,7 +452,7 @@ def main():
 
 	    # check if any config/rules files have been modified
 	    # if so, re-read config
-	    if Config.checkfiles():
+	    if config.rescan_configs and Config.checkfiles():
 		log.log( '<eddie>main(): config files modified - signalling scheduler to die', 7 )
                 stop_threads()
 

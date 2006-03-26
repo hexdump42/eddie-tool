@@ -145,6 +145,16 @@ INTERPRETERS='sh,bash,perl,perl5.001,perl5.003,perl5.004,python,python1.5,python
 WORKDIR="/var/tmp/eddieworkdir"
 
 
+# RESCANCONFIGS
+#  Normally Eddie will constantly check its config files for changes, and
+#  re-load them after stopping the threads.  This flag can turn off that
+#  behavior.  If it is set to 1, then you can still send Eddie a HUP signal
+#  to have it reload the configs.
+
+#RESCANCONFIGS=0
+
+
+
 # CLASS
 #  Define classes of hosts which share the same Eddie config.  The name of the
 #  class will match the name of a "group" definition.  Each host whose hostname

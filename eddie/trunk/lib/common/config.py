@@ -73,6 +73,14 @@ num_threads = 10
 ##
 consport=33343
 
+
+##
+## Constantly rescan config files for changes? 0/1
+## Set with RESCANCONFIGS in config.
+##
+rescan_configs = 1
+
+
 ####################################################
 
 
@@ -418,7 +426,11 @@ class NUMTHREADS(ConfigOption):
 
 	# ok, value is 3rd list element
 	global num_threads
-	num_threads = int(list[2])		# set the config option
+	try:
+	   num_threads = int(list[2])		# set the config option
+	except TypeError:				# must be integer
+	    raise ParseFailure, "NUMTHREADS is not an integer, '%s'" % (list[2])
+
 	log.log( "<config>NUMTHREADS: num_threads set to '%d'." % (num_threads), 8 )
 
 class CONSOLE_PORT(ConfigOption):
@@ -546,6 +558,27 @@ class WORKDIR(ConfigOption):
 
 
 
+class RESCANCONFIGS(ConfigOption):
+    """Set the boolean indicating desire to constantly check for config file changes and reload."""
+
+    def __init__( self, list, typelist ):
+	apply( ConfigOption.__init__, (self,list, typelist) )
+
+	# if we don't have 3 elements ['RESCANCONFIGS', '=', <val>] then
+	# raise an error
+	if len(list) != 3:
+	    raise ParseFailure, "RESCANCONFIGS definition has %d tokens when expecting 3" % len(list)
+
+	# ok, value is 3rd list element
+	global rescan_configs
+	try:
+	    rescan_configs = int(list[2])		# set the config option
+	except TypeError:				# must be integer
+	    raise ParseFailure, "RESCANCONFIGS is not an integer, '%s'" % (list[2])
+
+	log.log( "<config>RESCANCONFIGS(): rescan_configs set to '%d'." % (rescan_configs), 8 )
+
+
 def loadExtraDirectives( directivedir ):
     """Load extra directives from given directory.  Each file
     in this directory must be an importable (.py) Python module
@@ -609,6 +642,7 @@ settings = {
 		"SENDMAIL"	: SENDMAIL,
 		"SMTP_SERVERS"	: SMTP_SERVERS,
 		"WORKDIR"	: WORKDIR,
+		"RESCANCONFIGS"	: RESCANCONFIGS,
            }
 
 ## Join all the above dictionaries to make the total keywords dictionary
