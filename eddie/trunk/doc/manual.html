@@ -311,11 +311,11 @@
 	# Filesystem checks
 	FS root:
             fs='/'
-            rule='pctused > 90'
+            rule='pctused &gt; 90'
             action=email('root', '%(mountpt)s over 90%% on %(h)s')
 	FS varlog:
             fs='/var/log'
-            rule='pctused > 90'
+            rule='pctused &gt; 90'
             action=email('root', '%(mountpt)s over 90%% on %(h)s')
 
         # Service Port checks
@@ -334,10 +334,9 @@
 
         # System statistics checks
 	SYS loadaverage:
-            rule="loadavg1 > 3.00"
+            rule="loadavg1 &gt; 3.00"
             scanperiod='1m'
-            action=email('root', '%(h)s load-average > 3.00')
-   </pre>
+            action=email('root', '%(h)s load-average &gt; 3.00')</pre>
   </p>
 
 
@@ -421,7 +420,7 @@
 	    fs='/export/00'
 	    scanperiod='1m'
 	    history = 1
-	    rule='(pctused - history[1].pctused) > 5'
+	    rule='(pctused - history[1].pctused) &gt; 5'
 	    action=email('root','%(mountpt)s grew to %(pctused)s')</pre>
 	Example 2, alert if average filesystem growth over last 3 sample periods is too high:
 	<pre>
@@ -429,7 +428,7 @@
 	    fs='/export/01'
 	    scanperiod='1m'
 	    history = 3
-	    rule='(pctused + history[1].pctused + history[2].pctused + history[3].pctused) / 3 > 10'
+	    rule='(pctused + history[1].pctused + history[2].pctused + history[3].pctused) / 3 &gt; 10'
 	    action=email('root','%(mountpt)s grew to %(pctused)s')</pre>
 	Note that at startup, rules will not run until enough history data is available.
 	So, in the previous example, the directive would wait for three scanperiods before
@@ -461,7 +460,7 @@
 	<br> Some Examples:
 	<pre>
 	    checktime='day=="mon" or day=="tue"'
-	    checktime='day in weekdays and hour&gt;18'
+	    checktime='day in weekdays and hour &gt; 18'
 	</pre>
 	[Eddie 0.33+]
 
@@ -596,6 +595,7 @@
           rule='int(out) &gt; 5'           # true if out (converted to an integer) is &gt; 5
 	  rule='int(ret) != 0'          # true if return value of the cmd is not 0
 	  rule='int(outfield1) != 0'    # true if stdout field 3 is not 0
+	  </pre>
     </ul>
 
     Action Variables:
@@ -606,7 +606,7 @@
      <li> Plus all the rule variables as usual.
      <li> <i>Examples:</i>
 	  <pre>
-          action=email("alert", "the command '%(cmd)s' failed.")
+          action=email("alert", "the command '%(cmd)s' failed.")</pre>
     </ul>
 
     <i>Directive Examples:</i>
@@ -843,7 +843,8 @@
      <li> <i>Examples:</i>
 	  <pre>
           rule='pctused &gt; 95.0'  # true if filesystem over 95% full
-	  rule='avail &lt; 350000'  # true if less than about 350MB available
+	  rule='avail &gt; 350000'  # true if less than about 350MB available
+	  </pre>
   </ul>
 
     Action Variables:
@@ -855,14 +856,15 @@
      <li> <i>Examples:</i>
 	  <pre>
           action=email("alert", "%(mountpt)s at %(pctused)s%% - %(avail)d of %(size)d remain")
+	  </pre>
     </ul>
 
-    Directive Examples:</i>
+    <i>Directive Examples:</i>
     <pre>
         # alert if / over 95% full
         FS root:
             fs='/'
-            rule='pctused > 95'
+            rule='pctused &gt; 95'
             action=email("alert", "%(mountpt)s is over 95%% full on %(h)s")
 
         # alert if /var has less than 100MB available
@@ -1052,7 +1054,7 @@
 	  - the interface name as specified by the name argument.
     </ul>
 
-    Directive Examples:</i>
+    <i>Directive Examples:</i>
     <pre>
 	# alert if eth0 interface has disappeared
 	IF ethexists:
@@ -1262,11 +1264,11 @@
 	  </pre>
     </ul>
 
-    Directive Examples:</i>
+    <i>Directive Examples:</i>
     <pre>
 	# alert if any UDP input errors (Solaris)
 	IF udpinerr:
-		rule="udpInErrors > 0"
+		rule="udpInErrors &gt; 0"
 		action=email('alert', '%(h)s has had %(udpInErrors)s UDP input errors')
     </pre>
    </p>
@@ -1592,7 +1594,7 @@
           rule='connect_time &gt; 0.5' # true if connect time greater than 0.5 seconds</pre>
     </ul>
 
-    Directive Examples:</i>
+    <i>Directive Examples:</i>
     <pre>
 	# check that 10.0.0.5 is accepting connections on port 80
 	PORT webcheck:
@@ -1658,7 +1660,7 @@
           OS-dependent.  You should examine the proc.py module in the
           system-specific lib directory to see what is available.
 	  <br><br>
-          The rule could be something like "vsz > 40000" which would be true
+          The rule could be something like "vsz &gt; 40000" which would be true
           if the memory footprint (vsz) of the program was over 40000 bytes.
      <li> <i>Examples:</i>
 	  <pre>
@@ -1675,9 +1677,10 @@
      <li> <i>Examples:</i>
 	  <pre>
 	  action=email("alert", "the %(name)s process is not running")
+	  </pre>
     </ul>
 
-    Directive Examples:</i>
+    <i>Directive Examples:</i>
     <pre>
         # alert if cron is not running
         PROC cron:
@@ -1823,6 +1826,7 @@
      <li> <i>Examples:</i>
 	  <pre>
 	  action=email("alert", "the port %(protocol)s/%(port)s bound to %(bindaddr)s is not listening on %(h)s")
+	  </pre>
     </ul>
 
     <i>Directive Examples:</i>
@@ -1973,7 +1977,7 @@
         host='alt1.domain.name'
 	oid='1.3.6.1.4.1.1872.2.1.1.6.0'
 	community='private'
-	rule='response > 0'
+	rule='response &gt; 0'
 	maxretry=10
 	action=email('alert', 'Head for the lifeboats: %(snmpresponse)s')
 
@@ -2035,7 +2039,7 @@
      </pre>
     </ul>
 
-    Directive Examples:</i>
+    <i>Directive Examples:</i>
     <pre>
 	# alert if 1 minute load average &gt; 2
 	SYS loadavg1:
@@ -2078,7 +2082,7 @@
      </pre>
     </ul>
 
-    Directive Examples:</i>
+    <i>Directive Examples:</i>
     <pre>
         # /dev/md/dsk/d20 == /var : send read/write counters to RRD
         DISK md20_thruput:
@@ -2125,7 +2129,7 @@
      </pre>
     </ul>
 
-    Directive Examples:</i>
+    <i>Directive Examples:</i>
     <pre>
         # st65 == TAPE : send tape read/write counters to RRD
         TAPE st65_thruput:
@@ -2215,13 +2219,17 @@
 
     <br><br>
 
+    How it goes about sending the email depends on your <b>SENDMAIL</b> and <b>SMTP_SERVERS</b> Eddie config options.
+
+    <br><br>
+
     Format:
     <ul>
      <li><b>action=email(address, subject, body)</b>
       <ul>
        <li><b>address</b> - the recipient list
        <li><b>subject</b> - subject of the email
-       <li><b>body</b> - email body text
+       <li><b>body</b> - email body text<br>Note that embedded "\n" strings will be converted to newlines.
       </ul>
     </ul>
 
@@ -2596,7 +2604,7 @@
     <pre>
     # check root filesystem usage
     FS rootfs:    fs='/'
-                  rule="pctused > 95"
+                  rule="pctused &gt; 95"
                   action=email("root", "%(mountpt)s at %(pctused)s%%")
                   console='%(state)s %(pctused)s%%'
 
