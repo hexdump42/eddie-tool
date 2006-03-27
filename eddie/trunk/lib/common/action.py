@@ -146,6 +146,9 @@ class action:
 	else:
 	    subj = subject
 
+	# replace text that look like newlines with newlines
+	body = body.replace('\\n', '\n')
+
 	# Create problem age and other statistics if this is not the first time
 	# the problem was found.
 	# Stored in %(problemage)s and %(problemfirstdetect)s
