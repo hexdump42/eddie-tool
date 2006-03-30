@@ -75,10 +75,10 @@ consport=33343
 
 
 ##
-## Constantly rescan config files for changes? 0/1
+## Constantly rescan config files for changes? True/False
 ## Set with RESCANCONFIGS in config.
 ##
-rescan_configs = 1
+rescan_configs = True
 
 
 ####################################################
@@ -204,16 +204,6 @@ class Config:
 		    return 0
 
 	return 0
-
-
-    def getDirective(self, id):
-	"""Return directive object with given id."""
-
-	for d in self.groupDirectives.keys():
-	    if d.ID == id:
-		return d
-
-	return None
 
 
     def set_elvin(self, elvin):
@@ -571,12 +561,14 @@ class RESCANCONFIGS(ConfigOption):
 
 	# ok, value is 3rd list element
 	global rescan_configs
-	try:
-	    rescan_configs = int(list[2])		# set the config option
-	except TypeError:				# must be integer
-	    raise ParseFailure, "RESCANCONFIGS is not an integer, '%s'" % (list[2])
+	if str(list[2]) == '1' or str(list[2]).lower() == 'true' or str(list[2]).lower() == 'on':
+	    rescan_configs = True
+	elif str(list[2]) == '0' or str(list[2]).lower() == 'false' or str(list[2]).lower() == 'off':
+	    rescan_configs = False
+	else:
+	    raise ParseFailure, "RESCANCONFIGS must be True [1/True/on] or False [0/False/off]: '%s'" % (list[2])
 
-	log.log( "<config>RESCANCONFIGS(): rescan_configs set to '%d'." % (rescan_configs), 8 )
+	log.log( "<config>RESCANCONFIGS(): rescan_configs set to '%s'." % (rescan_configs), 8 )
 
 
 def loadExtraDirectives( directivedir ):

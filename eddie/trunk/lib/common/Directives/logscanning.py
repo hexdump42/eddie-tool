@@ -66,8 +66,8 @@ class LOGSCAN(directive.Directive):
 
 	self.filepos = 0	# position in file saved between checks
 	self.filestat = None	# stat of log file
-	self.reglist=[]
-	self.regfile=None
+	self.reglist = []
+	self.regfile = None
 
     def tokenparser(self, toklist, toktypes, indent):
 	"""Parse directive arguments.
@@ -86,10 +86,10 @@ class LOGSCAN(directive.Directive):
 
 	if hasattr(self.args, 'regfile'):
 	    self.defaultVarDict['regfile'] = self.args.regfile
-	    self.regfile=self.args.regfile
+	    self.regfile = self.args.regfile
 	    try:
-		f=open(self.args.regfile)
-		data=f.readlines()
+		f = open(self.args.regfile)
+		data = f.readlines()
 		f.close()
 	    except IOError, err:
 	    	raise directive.DirectiveError, "Couldn't process %s: %s" % (self.args.regfile, str(err))
@@ -98,7 +98,7 @@ class LOGSCAN(directive.Directive):
 	    	self.reglist.append(re.compile(i.strip()))
 
 	if hasattr(self.args, 'regex'):
-	    self.reglist=[re.compile(self.args.regex)]
+	    self.reglist = [re.compile(self.args.regex)]
 	    self.defaultVarDict['regex'] = self.args.regex
 
 	try:
@@ -110,7 +110,7 @@ class LOGSCAN(directive.Directive):
 	    else:
 		raise directive.ParseFailure, "Unknown argument '%s' to negate option" % (self.args.negate)
         except AttributeError:
-            self.args.negate=0
+            self.args.negate = 0
 
 	# Default rule for this directive
 	try:
@@ -166,8 +166,8 @@ class LOGSCAN(directive.Directive):
 		self.filepos = s[6]
 
 	    else:
-		if s[6] < self.filestat[6]:
-		    # file has been truncated, read from start of file
+		if s[6] < self.filestat[6] or s[1] != self.filestat[1]:
+		    # file has been truncated or inode number changed: read from start of file
 		    self.filestat = s
 		    self.filepos = 0
 
@@ -190,12 +190,12 @@ class LOGSCAN(directive.Directive):
 
 		    while len(line) > 0:
 			data['linecount'] = data['linecount'] + 1
-			matched=0
+			matched = 0
 			for i in self.reglist:
-			    inx=i.search( line )
+			    inx = i.search( line )
 			    if inx:
 				data['matchedcount'] = data['matchedcount'] + 1
-				matched=1
+				matched = 1
 				if not self.args.negate:
 				    matchedlines.append( line )
 				break

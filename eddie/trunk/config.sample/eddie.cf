@@ -148,10 +148,10 @@ WORKDIR="/var/tmp/eddieworkdir"
 # RESCANCONFIGS
 #  Normally Eddie will constantly check its config files for changes, and
 #  re-load them after stopping the threads.  This flag can turn off that
-#  behavior.  If it is set to 1, then you can still send Eddie a HUP signal
-#  to have it reload the configs.
+#  behavior.  If it is set to 0/false/off, then you can still send Eddie a
+#  HUP signal to have it reload the configs.
 
-#RESCANCONFIGS=0
+#RESCANCONFIGS=false
 
 
 
