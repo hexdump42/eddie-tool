@@ -246,6 +246,7 @@ class Directive:
 	self.args.numchecks = 1	# perform only 1 check at a time by default
 	self.args.checkwait = 0	# time to wait in between multiple checks
 	self.args.template = None	# no template by default
+	self.args.disabled = False	# default "disabled" state to not disabled
 	self.current_actionperiod = 0	# reset the current actionperiod
 	self.lastactiontime = 0		# time previous actions were called
 
@@ -739,12 +740,9 @@ class Directive:
 
 	log.log( "<directive>Directive.safeCheck(): ID '%s', calling self.docheck()" % (self.state.ID), 7 )
 
-	try:
-	    if self.args.disabled:
-	        log.log( "<directive>Directive.safeCheck(): ID '%s', disabled" % (self.state.ID), 5 )
-		return
-	except:
-	    pass
+	if self.args.disabled:
+	    log.log( "<directive>Directive.safeCheck(): ID '%s', disabled" % (self.state.ID), 5 )
+	    return
 
 	self.last_check_time = time.localtime(time.time())	# note time of last check
 
@@ -787,13 +785,15 @@ class Directive:
 	if 'checktime' in dir(self.args):
 	    # Setup variables used to evaluate the checktime rule
 	    timevars = {}
-	    timevars['day'] = time.strftime("%a").lower()
-	    timevars['time'] = int(time.strftime("%H%M"))
-	    timevars['hour'] = int(time.strftime("%H"))
-	    timevars['minute'] = int(time.strftime("%M"))
-	    timevars['second'] = int(time.strftime("%S"))
+	    # get time() once, to prevent possible race condition
+	    ts = time.strftime('%a~%H%M~%H~%M~%S').lower().split('~')
+	    timevars['day']    = ts[0]
+	    timevars['time']   = int(ts[1])
+	    timevars['hour']   = int(ts[2])
+	    timevars['minute'] = int(ts[3])
+	    timevars['second'] = int(ts[4])
 	    timevars['weekdays'] = ('mon','tue','wed','thu','fri')
-	    timevars['weekend'] = ('sat','sun')
+	    timevars['weekend']  = ('sat','sun')
 
 	    try:
 		result = eval( self.args.checktime, {}, timevars )
