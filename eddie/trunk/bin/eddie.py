@@ -103,7 +103,7 @@ extralibdir = os.path.join(basedir, 'lib/common/Extra')
 sys.path = oslibdirs + [commonlibdir,extralibdir] + sys.path
 
 # EDDIE common modules
-import parseConfig, directive, config, log, timeQueue, sockets, eddieElvin4, datacollect
+import parseConfig, directive, config, log, timeQueue, sockets, eddieElvin4, datacollect, utils
 
 # Main config file - this file INCLUDEs all other config files
 # We set the default here, but this can be overridden on the command line
@@ -355,8 +355,10 @@ def doArgs():
 			help="Dump config")
     parser.add_option('-v', '--verbose', action="store_true",	\
 			help="Enable verbose output")
+    parser.add_option('-d', '--daemon', action="store_true",	\
+			help="Run as a daemon")
     parser.set_defaults(showconfig=False, verbose=False,	\
-			config=default_config_file)
+			config=default_config_file, daemon=False)
 
     # Parse.  We dont accept arguments, so we complain if they're found.
     (options, args) = parser.parse_args()
@@ -414,6 +416,14 @@ def main():
 	print "---Displaying EDDIE Configuration---"
 	print Config
 	eddieexit()
+
+    if options.daemon == True:
+	# Create a child process, then have the parent exit
+	cpid = utils.create_child(True)
+	if cpid != 0:
+	    log.log( "<eddie>main(): Created child process %d. Parent exiting..." % (cpid), 6 )
+	    print cpid
+	    sys.exit(0)  # don't call eddieexit(), because its still running (as a daemon)
 
     # Initialise Elvin connections and thread to handle Elvin messaging
     try:

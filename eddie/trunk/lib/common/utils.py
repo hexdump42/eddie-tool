@@ -322,7 +322,7 @@ def safe_getstatusoutput( cmd ):
 # server.  The second is to send mail via a sendmail binary.
 #  sendmail_smtp = use smtplib
 #  sendmail_bin  = use sendmail binary
-SENDMAIL_FUNCTION="sendmail_smtp"
+SENDMAIL_FUNCTION = "sendmail_smtp"
 
 # default sendmail binary location
 # can be overriden from eddie.cf
@@ -420,10 +420,10 @@ def sendmail_smtp( headers, body ):
 	if EMAIL_REPLYTO != None:
 	    headers = headers + 'Reply-To: %s\n' % (EMAIL_REPLYTO)
 
-    m=re.search("^To: (.*)$",headers, re.M)
-    toaddr=m.group(1)	
+    m = re.search("^To: (.*)$",headers, re.M)
+    toaddr = m.group(1)	
     if toaddr.find(','):
-	toaddr=toaddr.split(',')
+	toaddr = toaddr.split(',')
 
     try:
 	hostname = os.uname()[1]
@@ -432,10 +432,10 @@ def sendmail_smtp( headers, body ):
 	hostname = platform.node()
     headers = headers + 'X-Generated-By: %s:%s\n' % (hostname, sys.argv[0])
 
-    msg="%s\r\n%s" % (headers, body)
+    msg = "%s\r\n%s" % (headers, body)
 
     # Try and send to each server in turn until we succeed
-    errmsg=[]
+    errmsg = []
     for server in SMTP_SERVERS:
     	try:
 	    smtpserv = smtplib.SMTP(server)
@@ -458,7 +458,7 @@ def sendmail_smtp( headers, body ):
 
 # Should be set by WORKDIR paramter in eddie.cf.  By default is None which
 #  will throw if get_work_dir() is called without setting WORKDIR in eddie.cf.
-WORKDIR=None
+WORKDIR = None
 
 def get_work_dir():
     """Return the temporary working directory as a string.  This is the
@@ -487,6 +487,67 @@ def set_sub_work_dir( subdir ):
 	    raise WorkdirError( "Cannot create WORKDIR subdirectory '%s', %s" % (worksubdir, err) )
 
     return worksubdir
+
+
+def typeFromString(val):
+    """
+    Is the string "val" an integer, float, or string?  Return appropriate variable
+    of appropriate class.
+    If none of those castings succeed, then return the original object.
+    """
+
+    try:
+	return int(val)         # try as an integer
+    except:
+	try:
+	    return float(val)   # try as a float
+	except:
+	    try:
+		return str(val)  # return a string (almost every object has a __str__ method)
+	    except:
+		log.log( "<utils>typeFromString: unhandled cast", 4 )
+		return None
+
+
+def create_child(doSTDs):
+    """
+    Fork off a child process, and return its PID.
+    Disassociate the child process from the parent process.
+
+    Optionally close the STDIO file descriptors.
+    """
+
+    try:
+	child_pid = os.fork()
+	if child_pid:  # parent gets the child PID returned
+	    return child_pid
+    except OSError, e:
+	raise Exception, "create_child(): fork() failed: %s [%d]" % (e.strerror, e.errno)
+
+    # create a new session for the child process (if available)
+    if hasattr(os, 'setsid'):
+	os.setsid()
+
+    # fork() again so the parent (the session group leader), can exit.
+    # We can now never gain a controlling terminal again.
+#    if os.fork() != 0:
+#	sys.exit(0)
+
+    if doSTDs:
+	# child closes its originating terminal connections:
+	os.close(0)  # stdin
+	os.close(1)  # stdout
+	os.close(2)  # stderr
+	nulld = '/dev/null'
+	if (hasattr(os, 'devnull')):
+	    nulld = os.devnull
+	# This call to open is guaranteed to return the lowest file descriptor,
+	# which will be 0 (stdin), since it was closed above.
+	sys.stdin  = open(nulld, 'r')
+	sys.stdout = open(nulld, 'a+')
+	sys.stderr = open(nulld, 'a+', 0)
+
+    return 0  # child gets "0" returned
 
 
 ##
