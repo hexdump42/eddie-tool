@@ -393,8 +393,15 @@ class Directive:
 		else:
 		    # copy template directive arguments
 		    for t in dir(tpldirective.args):
-			if t != 'template':
-			    exec( 'self.args.%s = tpldirective.args.%s' % (t,t) )
+			if t == 'template':
+			    continue
+			try:
+			    val = eval( 'tpldirective.args.%s' % (t) )
+			    if type( val ) == type( 'STRING' ):
+				val = utils.typeFromString( val )
+			    exec( 'self.args.%s = val' % (t) )
+			except:
+			    raise ParseFailure, "Error parsing template argument '%s'" % (t)
 
 	for t in tokdict.keys():
 	    # Use action parser for any of the action lists
@@ -409,7 +416,10 @@ class Directive:
 		# Not an action, so build directive argument list
 		# to be parsed below.
 		try:
-		    exec( "self.args.%s = tokdict[t]" % (t) )
+		    val = tokdict[t]
+		    if type( val ) == type( 'STRING' ):
+			val = utils.typeFromString( val )
+		    exec( 'self.args.%s = val' % (t) )
 		except:
 		    raise ParseFailure, "Error parsing argument '%s'" % (t)
 
@@ -520,6 +530,17 @@ class Directive:
 	# Set any default action variables
 	if 'rule' in dir(self.args):
 	    self.defaultVarDict['rule'] = str(self.args.rule)
+
+	# For all of the scalar args defined in the config, populate the
+	# defaultVarDict hash with them as "_xxx" name, unless they are
+	# already defined (don't override existing elements).
+	for a in dir(self.args):
+	    try:
+		val = eval( 'self.args.%s' % (a) )
+		if type( val ) in ( type('STRING'), type(1), type(1.1) ) and not self.defaultVarDict.has_key( '_'+a ):
+		    self.defaultVarDict['_'+a] = val
+	    except:
+		pass
 
 	if self.args.template == 'self':
 	    # jump out of token parsing if this is a template only
@@ -642,7 +663,7 @@ class Directive:
 	    # need to wait before re-checking
 	    # when put back in queue only wait checkwait seconds
 	    self.requeueTime = time.time()+self.args.checkwait
-	    log.log( "<directive>doAction(): scheduling for recheck in %d seconds" % self.args.checkwait, 6 )
+	    log.log( "<directive>doAction(): scheduling for recheck in %d seconds" % (self.args.checkwait), 6 )
 	    return
 	else:
 	    self.state.checkcount = 0	# performing action so reset counter
@@ -653,7 +674,7 @@ class Directive:
 	    if timewaited < self.current_actionperiod:
 		# If current_actionperiod has not passed between action calls
 		# then wait a bit longer
-		log.log( "<directive>doAction(): current_actionperiod (%s) not reached, actions not run" % self.current_actionperiod, 6 )
+		log.log( "<directive>doAction(): current_actionperiod (%s) not reached, actions not run" % (self.current_actionperiod), 6 )
 		return
 
 	# record action information
