@@ -68,6 +68,10 @@ class action:
 	For logging via syslog:             'via' should be 'FACILITY.LEVEL'
 	"""
 
+	if type(message) != type("string"):
+	    # if msg is not a string, assume it is a MSG object
+	    message = message.subject
+
 	# Substitute variables in message string
 	message = parseVars( message, self.varDict )
 
