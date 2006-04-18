@@ -306,7 +306,7 @@ class SP(directive.Directive):
 
 	# lets try resolving this service port to a number
 	try:
-	    self.port = socket.getservbyname(self.port_n, self.args.protocol)
+	    self.port = socket.getservbyname(str(self.port_n), self.args.protocol)
 	except socket.error:
 	    self.port = self.port_n
 

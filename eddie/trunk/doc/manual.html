@@ -2105,7 +2105,7 @@
         DISK md20_thruput:
             device='md20'
             scanperiod='5m'
-            rule='1'        # always perform action
+            rule='True'        # always perform action
             action='elvinrrd("disk-%(h)s_%(device)s", "rbytes=%(nread)s", "wbytes=%(nwritten)s")'
     </pre>
    </p>
@@ -2152,7 +2152,7 @@
         TAPE st65_thruput:
             device='st65'
             scanperiod='5m'
-            rule='1'        # always perform action
+            rule='True'        # always perform action
             action=elvinrrd("tape-%(h)s_%(device)s", "rbytes=%(nread)s", "wbytes=%(nwritten)s")
     </pre>
    </p>
@@ -2459,7 +2459,7 @@
     <pre>
         # send the one-minute load average every minute for this host
         SYS loadavg1_rrd:
-            rule='1'        # always true
+            rule='True'        # always true
             scanperiod='1m'
             action="elvinrrd('loadavg1-%(h)s', 'loadavg1=%(loadavg1)f')"
     </pre>
@@ -2626,14 +2626,14 @@
                   console='%(state)s %(pctused)s%%'
 
     # email me load average every 5mins
-    SYS loadavg5: rule="1"
+    SYS loadavg5: rule="True"
                   action=email('chris', '%(h)s loadavg5: %(sysloadavg5).02f')
                   scanperiod='5m'
                   console="loadavg5=%(sysloadavg5).02f"
 
     # store root filesystem data in RRD (don't show on Console)
     FS root_rrd:  fs='/'
-                  rule="1"
+                  rule="True"
                   scanperiod='5m'
                   action=elvinrrd("fs-%(h)s_root", "used=%(fsused)s", "size=%(fssize)s")
                   console=None

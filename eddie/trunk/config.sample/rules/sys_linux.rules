@@ -31,7 +31,7 @@ group linux:
     # Store swap stats
     SYS swap_rrd:
         scanperiod='5m'
-        rule='1'        # always perform action
+        rule='True'        # always perform action
         action=elvinrrd("swaplinux-%(h)s",              \
                         "swaptotal=%(swap_total)s",     \
                         "swapused=%(swap_used)s",       \
@@ -41,7 +41,7 @@ group linux:
     # Store all memory stats
     SYS mem_rrd:
         scanperiod='5m'
-        rule='1'        # always perform action
+        rule='True'        # always perform action
         action=elvinrrd("memlinux-%(h)s",               \
                         "memtotal=%(mem_total)s",       \
                         "memused=%(mem_used)s",         \
@@ -55,7 +55,7 @@ group linux:
     # Newer kernels provide more detailed stats, so choose one of the
     # two directives below by disabling the other.
     SYS cpu_rrd:
-        rule="1"        # always true
+        rule="True"        # always true
         scanperiod='1m'
         action=elvinrrd('cpulinux-%(h)s',		\
                         'cpu_user=%(ctr_cpu_user)d',    \
@@ -66,7 +66,7 @@ group linux:
 
     SYS cpu2_rrd:
         disabled=1
-        rule="1"        # always true
+        rule="True"        # always true
         scanperiod='1m'
         action=elvinrrd('cpulinux2-%(h)s',                \
                         'cpu_user=%(ctr_cpu_user)d',      \
@@ -81,7 +81,7 @@ group linux:
     # Store kernel context switch stats
     SYS contextsw_rrd:
         scanperiod='5m'
-        rule='1'        # always perform action
+        rule='True'        # always perform action
         action=elvinrrd("cs-%(h)s",			\
                         "contextswitch=%(ctr_contextswitches)s" )
         console=None
@@ -89,7 +89,7 @@ group linux:
     # Store kernel pages in/out
     SYS paging_rrd:
         scanperiod='5m'
-        rule='1'        # always perform action
+        rule='True'        # always perform action
         action=elvinrrd("paging-%(h)s",			\
                         "pages_in=%(ctr_pages_in)s",    \
                         "pages_out=%(ctr_pages_out)s" )
@@ -98,7 +98,7 @@ group linux:
     # Store kernel swap in/out
     SYS swapping_rrd:
         scanperiod='5m'
-        rule='1'        # always perform action
+        rule='True'        # always perform action
         action=elvinrrd("swapping-%(h)s",		\
                         "swap_in=%(ctr_pages_swapin)s", \
                         "swap_out=%(ctr_pages_swapout)s" )
@@ -109,14 +109,14 @@ group linux:
     IF eth0_rrd:
         name='eth0'
         scanperiod='5m'
-        rule='1'        # always perform action
+        rule='True'        # always perform action
         action='elvinrrd("if-%(h)s_%(name)s", "ipkts=%(rx_packets)s", "ierrs=%(rx_errs)s", "opkts=%(tx_packets)s", "oerrs=%(tx_errs)s", "collis=%(tx_colls)s")'
         console=None
 
     IF eth0_thru_rrd:
         name='eth0'
         scanperiod='5m'
-        rule='1'        # always perform action
+        rule='True'        # always perform action
         action='elvinrrd("net-%(h)s_%(name)s", "ibytes=%(rx_bytes)s", "obytes=%(tx_bytes)s")'
         console=None
 
