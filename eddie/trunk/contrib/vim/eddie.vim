@@ -4,12 +4,14 @@
 "
 :syn keyword eddieType MSG PROC PID SP METASTAT STORE IPF FILE COM LOGSCAN
 :syn keyword eddieType SYS IOSTAT CPU NIC IF PID group CLASS ALIAS PORT
-:syn keyword eddieType SMTP POP3TIMING RADIUS PING SNMP
+:syn keyword eddieType SMTP POP3TIMING RADIUS PING SNMP HTTP FS NET DISK
+:syn keyword eddieType TAPE
 :highlight link eddieType Type
 
 :syn keyword eddieConfig LOGFILE LOGLEVEL ADMIN ADMINLEVEL ADMIN_NOTIFY
 :syn keyword eddieConfig NUMTHREADS SCANPERIOD CONSOLE_PORT EMAIL_FROM
 :syn keyword eddieConfig EMAIL_REPLYTO ELVINURL ELVINSCOPE INTERPRETERS
+:syn keyword eddieConfig INCLUDE WORKDIR SENDMAIL RESCANCONFIGS
 :highlight link eddieConfig Type
 
 :syn match eddieStatement +rule=+
@@ -43,9 +45,18 @@
 :syn match eddieStatement +file=+
 :syn match eddieStatement +regex=+
 :syn match eddieStatement +fs=+
+:syn match eddieStatement +console=+
+:syn match eddieStatement +request_timeout=+
+:syn match eddieStatement +history=+
+:syn match eddieStatement +checkdependson=+
+:syn match eddieStatement +disabled=+
+:syn match eddieStatement +actionperiod=+
+:syn match eddieStatement +actionmaxcalls=+
+:syn match eddieStatement +checktime=+
+:syn match eddieStatement +excludehosts=+
 :highlight link eddieStatement Statement
 
-:syn keyword eddieAction email ticker netsaint elvinrrd system restart elvindb
+:syn keyword eddieAction email ticker netsaint elvinrrd system restart elvindb log
 :highlight link eddieAction PreProc
 
 :syn match eddieComment /#.*/
