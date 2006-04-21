@@ -532,7 +532,7 @@ class Directive:
 	    self.defaultVarDict['rule'] = str(self.args.rule)
 
 	# For all of the scalar args defined in the config, populate the
-	# defaultVarDict hash with them as "_xxx" name, unless they are
+	# defaultVarDict dirctionary with them as "_xxx" name, unless they are
 	# already defined (don't override existing elements).
 	for a in dir(self.args):
 	    try:
@@ -877,6 +877,10 @@ class Directive:
 	    self.putInQueue( Config.q )	# put self back in the Queue
 	    return
 
+	# Populate the data dictionary with the defaultVarDict.
+	# This get us, among other things, "_xxx" constants.
+	data.update(self.defaultVarDict)
+
 	try:
 	    #result = eval( self.args.rule, {"__builtins__": {}}, data )
 	    result = eval( self.args.rule, {}, data )
@@ -895,8 +899,8 @@ class Directive:
 	# These are a dictionary of data-collection variables along with any
 	# extra variables added specifically by the Directive itself.
 	self.Action.varDict = {}
-	self.Action.varDict.update(self.defaultVarDict)
-        self.Action.varDict.update(data)
+	#self.Action.varDict.update(self.defaultVarDict)
+	self.Action.varDict.update(data)
 	self.addVariables()
 
 	if result == 0:
