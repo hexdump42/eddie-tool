@@ -34,9 +34,9 @@ __license__ = '''
 
 
 # Imports: Python
-import os, string, re, sys, socket, time, threading, traceback, errno
+import string, re, sys, time, traceback
 # Imports: Eddie
-import action, definition, utils, log, ack, datacollect, history
+import action, utils, log, ack, history
 
 
 ##
@@ -380,7 +380,7 @@ class Directive:
 	"""
 
 	# Get all directive arguments
-	tokdict=self.parseArgs(toklist)
+	tokdict = self.parseArgs(toklist)
 
 	# Process template arg first to inherit template arguments
 	if 'template' in tokdict.keys():
@@ -532,7 +532,7 @@ class Directive:
 	    self.defaultVarDict['rule'] = str(self.args.rule)
 
 	# For all of the scalar args defined in the config, populate the
-	# defaultVarDict dirctionary with them as "_xxx" name, unless they are
+	# defaultVarDict dictionary with them as "_xxx" name, unless they are
 	# already defined (don't override existing elements).
 	for a in dir(self.args):
 	    try:
@@ -655,7 +655,6 @@ class Directive:
 			self.evalAction( aa )
 
 
-
     def doAction(self, Config, actionList=None):
     	"""Perform actions for a directive."""
 
@@ -750,6 +749,85 @@ class Directive:
 	    # reschedule in scanperiod seconds
 	    q.put( (self, time.time()+self.scanperiod) )
 	    log.log( "<directive>Directive.putInQueue(): %s re-queued by scanperiod (%d secs)" % (self,self.scanperiod), 7)
+
+
+    def doDirective( self, Config, data ):
+
+	# If historical data is required
+	if self.history:
+	    if self.history.getsize() < self.history_size:
+		# If historical data is required for check, the directive
+		# must wait until enough data is collected
+		log.log( "<directive>Directive.doDirective(): waiting for %d runs to collect enough data for history" % (self.history_size), 7 )
+		self.history.push( data )
+		self.putInQueue( Config.q )	# put self back in the Queue
+		return
+
+	    # Add historical data to data dictionary
+	    data['history'] = self.history
+
+	# If data returned as None, do not perform a check but still
+	# re-schedule directive.
+	if data == None:
+	    self.putInQueue( Config.q )	# put self back in the Queue
+	    return
+
+	# Populate the data dictionary with the defaultVarDict.
+	# This get us, among other things, "_xxx" constants.
+	data.update(self.defaultVarDict)
+
+	try:
+	    #result = eval( self.args.rule, {"__builtins__": {}}, data )
+	    result = eval( self.args.rule, {}, data )
+	except SyntaxError, details:
+	    # Syntax error evaluating rule. Log and end thread without
+	    # submitting broken directive back into queue.
+    	    log.log( "<directive>Directive.doDirective(): SyntaxError evaluating rule '%s', data=%s - not re-queued" % (self.args.rule,data), 4 )
+	    return
+	except NameError, details:
+	    # Name error evaluating rule. Log and end thread without
+	    # submitting broken directive back into queue.
+    	    log.log( "<directive>Directive.doDirective(): NameError evaluating rule '%s', %s, data=%s - not re-queued" % (self.args.rule,details,data), 4 )
+	    return
+
+	# Create action string substitution variables.
+	# These are a dictionary of data-collection variables along with any
+	# extra variables added specifically by the Directive itself.
+	self.Action.varDict = {}
+	#self.Action.varDict.update(self.defaultVarDict)
+	self.Action.varDict.update(data)
+	self.addVariables()
+
+	if result == 0:
+	    self.state.stateok(Config)	# update state info for check passed
+
+	else:
+	    self.state.statefail()	# update state info for check failed
+
+    	    log.log( "<directive>Directive.doDirective(): %s rule failed, calling doAction()" % (self.ID), 7 )
+	    # If any dependencies are also failed, running actions for this
+	    # directive are not required.
+	    failed_deps = self.checkDependencies( self.actiondependson )
+	    if failed_deps:
+    	        log.log( "<directive>Directive.doDirective(): dependencies %s failed, %s not calling actions" % (failed_deps, self.ID), 7 )
+	    else:
+		if self.actionmaxcalls != None and self.Action.runcount >= self.actionmaxcalls:
+		    log.log( "<directive>Directive.doDirective(): actionmaxcalls reached (%d) - actions skipped" % (self.actionmaxcalls), 7 )
+		    self.putInQueue( Config.q )	# put self back in the Queue
+		    return
+		else:
+		    self.doAction(Config)
+		    self.Action.runcount = self.Action.runcount + 1
+		    log.log( "<directive>Directive.doDirective(): Action.runcount=%d" % (self.Action.runcount), 9 )
+
+	# Save historical data
+	if self.history:
+	    del data['history']			# Remove old history data
+	    self.history.push( data )
+
+	self.postAction( data )		# perform any post-action processing
+
+	self.putInQueue( Config.q )	# put self back in the Queue
 
 
     def safeCheck( self, Config ):
@@ -858,81 +936,7 @@ class Directive:
     	    log.log( "<directive>Directive.docheck(): directive %s error, %s, not re-scheduled" % (self.ID,err), 4 )
 	    return
 
-	# If historical data is required
-	if self.history:
-	    if self.history.getsize() < self.history_size:
-		# If historical data is required for check, the directive
-		# must wait until enough data is collected
-		log.log( "<directive>Directive.docheck(): waiting for %d runs to collect enough data for history" % (self.history_size), 7 )
-		self.history.push( data )
-		self.putInQueue( Config.q )	# put self back in the Queue
-		return
-
-	    # Add historical data to data dictionary
-	    data['history'] = self.history
-
-	# If data returned as None, do not perform a check but still
-	# re-schedule directive.
-	if data == None:
-	    self.putInQueue( Config.q )	# put self back in the Queue
-	    return
-
-	# Populate the data dictionary with the defaultVarDict.
-	# This get us, among other things, "_xxx" constants.
-	data.update(self.defaultVarDict)
-
-	try:
-	    #result = eval( self.args.rule, {"__builtins__": {}}, data )
-	    result = eval( self.args.rule, {}, data )
-	except SyntaxError, details:
-	    # Syntax error evaluating rule. Log and end thread without
-	    # submitting broken directive back into queue.
-    	    log.log( "<directive>Directive.docheck(): SyntaxError evaluating rule '%s', data=%s - not re-queued" % (self.args.rule,data), 4 )
-	    return
-	except NameError, details:
-	    # Name error evaluating rule. Log and end thread without
-	    # submitting broken directive back into queue.
-    	    log.log( "<directive>Directive.docheck(): NameError evaluating rule '%s', %s, data=%s - not re-queued" % (self.args.rule,details,data), 4 )
-	    return
-
-	# Create action string substitution variables.
-	# These are a dictionary of data-collection variables along with any
-	# extra variables added specifically by the Directive itself.
-	self.Action.varDict = {}
-	#self.Action.varDict.update(self.defaultVarDict)
-	self.Action.varDict.update(data)
-	self.addVariables()
-
-	if result == 0:
-	    self.state.stateok(Config)	# update state info for check passed
-
-	else:
-	    self.state.statefail()	# update state info for check failed
-
-    	    log.log( "<directive>Directive.docheck(): %s rule failed, calling doAction()" % (self.ID), 7 )
-	    # If any dependencies are also failed, running actions for this
-	    # directive are not required.
-	    failed_deps = self.checkDependencies( self.actiondependson )
-	    if failed_deps:
-    	        log.log( "<directive>Directive.docheck(): dependencies %s failed, %s not calling actions" % (failed_deps, self.ID), 7 )
-	    else:
-		if self.actionmaxcalls != None and self.Action.runcount >= self.actionmaxcalls:
-		    log.log( "<directive>Directive.docheck(): actionmaxcalls reached (%d) - actions skipped" % (self.actionmaxcalls), 7 )
-		    self.putInQueue( Config.q )	# put self back in the Queue
-		    return
-		else:
-		    self.doAction(Config)
-		    self.Action.runcount = self.Action.runcount + 1
-		    log.log( "<directive>Directive.docheck(): Action.runcount=%d" % (self.Action.runcount), 9 )
-
-	# Save historical data
-	if self.history:
-	    del data['history']			# Remove old history data
-	    self.history.push( data )
-
-	self.postAction( data )		# perform any post-action processing
-
-	self.putInQueue( Config.q )	# put self back in the Queue
+	self.doDirective( Config, data )
 
 
     def addVariables(self):
@@ -997,6 +1001,7 @@ class Directive:
 	# create console string by substituting variables
 	cstr = self.console_output % vars
 	return cstr
+
 
     def checkDependencies(self, deplist):
 	"""checkDependencies: return a list of any failed directives which this
