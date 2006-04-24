@@ -93,7 +93,8 @@ class State:
 	timenow = time.localtime(time.time())
 
 	# is this a transition from "ok" to "fail" ?
-	if self.status == "ok":
+	# Include "unknown" to get the faildetecttime, etc., behavior
+	if self.status in ("ok", "unknown"):
 	    # if this is not a repeated failure then record the time of this
 	    # first failure detection
 	    self.faildetecttime = timenow
