@@ -71,11 +71,14 @@ class State:
 	self.failcount = 0		# count number of continuous failed checks
 	self.thisdirective = thisdirective	# pointer to the directive this object belongs to
 
-	# Status can be:
-	#  ok          - no problem
-	#  failinitial - possible failure state (might need more rechecks, for example)
-	#  fail        - check has failed
-	self.status = "ok"		# status of most recent check
+	# status holds the status of the most recent check.
+	# Values can be:
+	#   ok          - no problem
+	#   failinitial - possible failure state (might need more rechecks, for example)
+	#   fail        - check has failed
+	#   unknown     - not executed yet
+	# Initial value cannot be 'ok' because of 'checkdependson' race-condition.
+	self.status = 'unknown'   # Status of most recent check.
 
 
     def ack(self, user=None, details=None):
@@ -89,6 +92,7 @@ class State:
 
 	timenow = time.localtime(time.time())
 
+	# is this a transition from "ok" to "fail" ?
 	if self.status == "ok":
 	    # if this is not a repeated failure then record the time of this
 	    # first failure detection
@@ -118,6 +122,7 @@ class State:
 	"""Update state info for check succeeding.
 	Perform actions depending on previous state."""
 
+	# is this a transition from "fail" to "ok" ?
 	if self.status == "fail":
 	    # This is a state change from "fail" to "ok".
 	    # This is when the 'act2ok' actions should be performed.
@@ -1010,7 +1015,8 @@ class Directive:
 
 	failed = []
         for d in deplist:
-	    if d.state.status == 'fail':
+	    # "bad" status include 'fail', 'failinitial', and 'unknown'
+	    if d.state.status != 'ok':
 	        failed.append(d)
 
 	return failed
