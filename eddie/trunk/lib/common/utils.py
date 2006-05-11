@@ -489,11 +489,11 @@ def set_sub_work_dir( subdir ):
     return worksubdir
 
 
-def typeFromString(val):
+def typeFromString( val ):
     """
     Is the string "val" an integer, float, or string?  Return appropriate variable
     of appropriate class.
-    If none of those castings succeed, then return the original object.
+    If none of those castings succeed, then return 'None'.
     """
 
     try:
@@ -509,7 +509,29 @@ def typeFromString(val):
 		return None
 
 
-def create_child(doSTDs):
+def parseVars(text, vDict):
+    """
+    Substitute variables in vDict dictionary into text string.  Use
+    Python's builtin tricks for this.  Very simple!
+    """
+
+    # Keep parsing the text string until there are no '%(', or we've done a few parses...
+    parses = 0
+    while ( parses == 0 or text.find('%(') >= 0 ) and parses < 5:
+	parses = parses + 1
+	try:
+	    text = text % vDict
+	except KeyError, msg:
+	    log.log( "<utils>parseVars(): KeyError exception for '%s' from string '%s' (%d) with dictionary '%s'" % (msg, text, parses, vDict), 5 )
+	    return text
+	except TypeError, msg:
+	    log.log( "<utils>parseVars(): TypeError exception for '%s' from string '%s' (%d) with dictionary '%s'" % (msg, text, parses, vDict), 5 )
+	    return text
+
+    return text
+
+
+def create_child( doSTDs ):
     """
     Fork off a child process, and return its PID.
     Disassociate the child process from the parent process.

@@ -2194,11 +2194,12 @@
 
     <i>log</i> performs message logging to a file, the tty where eddie was
     executed, or to syslog. The where depends on the <i>via</i>, which is
-    the second parameter. If <i>via</i> looks like "XXX.YYY", then it is assumed
+    the second parameter. If <i>via</i> looks like "<font face="Courier">XXX.YYY</font>", then it is assumed
     that syslog type logging is desired.  If <i>via</i> begins with a "/",
     then it is assumed that logging to a file is desired. If <i>via</i> is
-    the string "tty", then the message will go to the tty where eddie
-    was executed.
+    the string "<font face="Courier">tty</font>", then the message will go to the tty where eddie
+    was executed. You may specify multiple <i>vias</i> by separating them with a ";",
+    as in "<font face="Courier">FACILITY.LEVEL;/path/to/file1.txt;/path/to/file2.log</font>".
 
     <br><br>
 
@@ -2224,8 +2225,8 @@
         # append a message to a log file
         action=log("There is a problem on %(h)s", "/var/log/eddie_disk.log")
 
-        # display a message on the tty that eddie was started on
-        action=log("There is a problem on %(h)s", "tty")
+        # display a message on the tty that eddie was started on, and append to eddie.log
+        action=log("There is a problem on %(h)s", "tty;/var/log/eddie.log")
     </pre>
    </p>
 

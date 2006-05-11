@@ -40,14 +40,14 @@ import log, utils, eddieElvin4
 
 
 ## Globals
-UseSyslog = 1
+UseSyslog = True
 
 
 ## Import syslog python modules if possible
 try:
     import syslog
 except ImportError:
-    UseSyslog = 0
+    UseSyslog = False
 
 
 #### DEFINE ALL THE ACTIONS AVAILABLE ####
@@ -61,11 +61,13 @@ class action:
     def __init__(self):
 	self.runcount = 0	# chris 2002-12-29: count consecutive action calls
 
-    def log(self, message, via):
-	"""Post messages to log file, eddie tty, or syslog.
+    def log(self, message, vias):
+	"""
+	Post messages to log file, eddie tty, or syslog.
 	For logging to the eddie tty:       'via' should be 'tty'
 	For logging by appending to a file: 'via' should begin with a '/'
 	For logging via syslog:             'via' should be 'FACILITY.LEVEL'
+	Note that you may specify multiple vias by separating them with a ';'.
 	"""
 
 	if type(message) != type("string"):
@@ -73,60 +75,65 @@ class action:
 	    message = message.subject
 
 	# Substitute variables in message string
-	message = parseVars( message, self.varDict )
+	message = utils.parseVars( message, self.varDict )
 
-	# Determine if this is a syslog-type log request
-	syslogmatch = re.match('^([A-Z0-9]+)\.([A-Z]+)$', via.upper())
+	for via in vias.split(';'):
 
-	# eddie tty logging (via == "tty")
-	if via == 'tty':
-	    # get the current day/time
-	    datetime = time.asctime(time.localtime(time.time()))
-	    print "%s %s" % (datetime,message)
+	    # remove leading and trailing whitespace
+	    via = via.strip()
 
-	# file logging (via like "/path/to/logfile")
-	elif via.startswith('/'):
-	    try:
-		f = open(via, 'a')
+	    # Determine if this is a syslog-type log request
+	    syslogmatch = re.match('^([A-Z0-9]+)\.([A-Z]+)$', via.upper())
+
+	    # eddie tty logging (via == "tty")
+	    if via == 'tty':
 		# get the current day/time
 		datetime = time.asctime(time.localtime(time.time()))
-		f.write("%s %s\n" % (datetime,message))
-		f.close()
-	    except:
-		log.log( "<action>action.log(): unable to open file for append '%s'" % (via), 5)
+		print "%s %s" % (datetime,message)
 
-	# syslog logging (via like "USER.INFO")
-	elif syslogmatch != None:
-	    """Post messages via syslog().
+	    # file logging (via like "/path/to/logfile")
+	    elif via.startswith('/'):
+		try:
+		    f = open(via, 'a')
+		    # get the current day/time
+		    datetime = time.asctime(time.localtime(time.time()))
+		    f.write("%s %s\n" % (datetime,message))
+		    f.close()
+		except:
+		    log.log( "<action>action.log(): unable to open file for append '%s'" % (via), 5)
 
-	    The parameter priority should be a string in "facility.level" format,
-	    defaulting to USER.INFO.  See man syslog(3) for a list of valid
-	    facilities and levels, or the syslog.h header file.  Feel free to use
-	    upper or lower case.
+	    # syslog logging (via like "USER.INFO")
+	    elif syslogmatch != None:
+		"""Post messages via syslog().
 
-	    Note that in order to see the log messages, your local syslog daemon
-	    must be configured to do something with the messages: see man
-	    syslog.conf(5) for details.
-	    """
+		The parameter priority should be a string in "facility.level" format,
+		defaulting to USER.INFO.  See man syslog(3) for a list of valid
+		facilities and levels, or the syslog.h header file.  Feel free to use
+		upper or lower case.
 
-	    global UseSyslog
-	    if UseSyslog == 0:
-	        #log.log( "<action>action.syslog(): syslog not supported on this system", 5)
-	        return
+		Note that in order to see the log messages, your local syslog daemon
+		must be configured to do something with the messages: see man
+		syslog.conf(5) for details.
+		"""
 
-	    # The priority is the syslog.LOG_(facility) | syslog.LOG_(level)
-	    try:
-		prio = eval('syslog.LOG_%s' % (syslogmatch.group(1))) | eval('syslog.LOG_%s' % (syslogmatch.group(2)))
-	    except:
-		log.log( "<action>action.log(): unable to parse valid syslog facility and level from '%s'" % (via), 5)
-		return
+		global UseSyslog
+		if not UseSyslog:
+		    #log.log( "<action>action.syslog(): syslog not supported on this system", 5)
+		    return
 
-	    # Send the message off... note that syslog() is UDP, and therefore not
-	    # acknowledged, so we have no return value
-	    syslog.syslog(prio, message)
+		# The priority is the syslog.LOG_(facility) | syslog.LOG_(level)
+		try:
+		    prio = eval('syslog.LOG_%s' % (syslogmatch.group(1))) | eval('syslog.LOG_%s' % (syslogmatch.group(2)))
+		except:
+		    log.log( "<action>action.log(): unable to parse valid syslog facility and level from '%s'" % (via), 5)
+		    return
 
-	else:
-	    log.log( "<action>action.log(): unknown logging via '%s'" % (via), 5)
+		# Send the message off... note that syslog() is UDP, and therefore not
+		# acknowledged, so we have no return value
+		syslog.syslog(prio, message)
+
+	    else:
+		log.log( "<action>action.log(): unknown logging via '%s'" % (via), 5)
 
 	return
 
@@ -192,10 +199,10 @@ class action:
 	    self.varDict['problemfirstdetect'] = "First detected: %04d/%02d/%02d %d:%02d:%02d" % (t[0], t[1], t[2], t[3], t[4], t[5])
 
 
-	# run thru parseVars() to substitute variables from varDict
-	address = parseVars( address, self.varDict )
-	subj = parseVars( subj, self.varDict )
-	body = parseVars( body, self.varDict )
+	# run thru utils.parseVars() to substitute variables from varDict
+	address = utils.parseVars( address, self.varDict )
+	subj = utils.parseVars( subj, self.varDict )
+	body = utils.parseVars( body, self.varDict )
 
 	#headers = 'To: ' + address + '\n' + 'Subject: [' + log.hostname + '] ' + subj + '\n'
 	headers = 'To: %s\nSubject: [%s] %s\n' % (address,log.hostname,subj)
@@ -215,7 +222,7 @@ class action:
 	"""
 
 	# Substitute variables in string
-	cmd = parseVars( cmd, self.varDict )
+	cmd = utils.parseVars( cmd, self.varDict )
 
 	if len(cmd) == 0:
 	    log.log( "<action>action.system(): Error, no command given", 5 )
@@ -246,7 +253,7 @@ class action:
 	# is not executed.
 
 	# Substitute variables in string
-	cmd = parseVars( cmd, self.varDict )
+	cmd = utils.parseVars( cmd, self.varDict )
 
 	# Security: if cmd contains any illegal characters, "/#;!$%&*|~`", then we abort.
 	#if string.find( cmd, '/' ) != -1:
@@ -368,7 +375,7 @@ class action:
 	    loglevel = log.loglevel_min
 
 	# Parse the text string to replace variables
-	logstr = parseVars( logstr, self.varDict )
+	logstr = utils.parseVars( logstr, self.varDict )
 
 	# Log the text
 	retval = log.log( logstr, loglevel )
@@ -410,7 +417,7 @@ class action:
 	    return
 
 	# Substitute variables in string
-	body = parseVars( body, self.varDict )
+	body = utils.parseVars( body, self.varDict )
 
 	retval = elvin.Ticker( body, timeout )
 
@@ -445,7 +452,7 @@ class action:
 	    #retval = e.send(table, self.storedict)
 	    retval = elvin.elvindb(table, self.storedict)
 	else:
-	    data = parseVars( data, self.varDict )	# substitute variables
+	    data = utils.parseVars( data, self.varDict )	# substitute variables
 	    datas = string.split(data, ',')		# separate key/val pairs
 	    storedict = {}
 	    for d in datas:
@@ -499,11 +506,11 @@ class action:
 	    (var,val) = string.split(d, '=')
 	    if var == None or var == '' or val == None:
 		raise "elvinrrd exception, data error: var='%s' val='%s'" % (var,val)
-	    var = parseVars( var, self.varDict )	# substitute variables
-	    val = parseVars( val, self.varDict )	# substitute variables
+	    var = utils.parseVars( var, self.varDict )	# substitute variables
+	    val = utils.parseVars( val, self.varDict )	# substitute variables
 	    datadict[var] = val
 
-	key = parseVars( key, self.varDict )	# substitute variables
+	key = utils.parseVars( key, self.varDict )	# substitute variables
 
 	log.log( "<action>action.elvinrrd() sending: key='%s' data=%s"%(key,datadict), 6 )
 	retval = elvin.elvinrrd(key, datadict)
@@ -535,7 +542,7 @@ class action:
 	datadict = {}
 	datadict['hostname']=log.hostname
 	datadict['desc']=desc
-	datadict['output']=parseVars(output, self.varDict)
+	datadict['output']=utils.parseVars(output, self.varDict)
 	datadict['return']=retcode
 
 	retval = elvin.netsaint(datadict)
@@ -544,24 +551,6 @@ class action:
 	    log.log("<action>action.netsaint(%s), Alert, return value for e.send() is %d" % (datadict,retval), 3)
 	else:
 	    log.log("<action>action.netsaint(%s): store ok" % datadict, 7)
-
-
-##
-## General utilities for actions
-##
-
-def parseVars(text, vDict):
-    """Substitute variables in vDict dictionary into text string.  Use
-    Python's builtin tricks for this.  Very simple!"""
-
-    try:
-	return text % vDict
-    except KeyError, msg:
-	log.log( "<action>parseVars(): KeyError exception for '%s' from string '%s' with dictionary '%s'" % (msg, text, vDict), 5 )
-	return text
-    except TypeError, msg:
-	log.log( "<action>parseVars(): TypeError exception for '%s' from string '%s' with dictionary '%s'" % (msg, text, vDict), 5 )
-	return text
 
 
 ##
