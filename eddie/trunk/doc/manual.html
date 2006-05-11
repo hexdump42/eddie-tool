@@ -528,6 +528,7 @@
     <li> <b><a href="#PID">PID</a></b> - perform checks on PID-files.
     <li> <b><a href="#PROC">PROC</a></b> - perform checks on active processes.
     <li> <b><a href="#SP">SP</a></b> - define a local service port checking rule.
+    <li> <b><a href="#DBI">DBI</a></b> - execute a database query.
     <li> <b><a href="#STORE">STORE</a></b> - define a data storage rule.
     <li> <b><a href="#SYS">SYS</a></b> - perform system statistics checks.
     <li> <b><a href="#DISK">DISK</a></b> - perform disk I/O statistics checks.
@@ -1866,6 +1867,77 @@
     </pre>
    </p>
 
+
+   <p>
+    <b><a name="DBI">DBI</a></b><br>
+
+    The DBI directive is used to perform database queries (typically SQL), and check
+    the results.
+
+    <br><br>
+    DBI-specific Arguments:
+    <ul>
+     <li> <b>dbtype=&lt;type&gt;</b> <i>(required)</i>
+	  <br>
+	  - specifies the database type; use anything that Python supports,
+	  such as "pg" and "mysql".<br>
+          Note that you must have the associated &lt;dbtype&gt;db.py Python module installed.
+     <li> <b>host=&lt;hostname&gt;</b>
+	  <br>
+	  - specifies the database server.
+     <li> <b>port=&lt;port#&gt;</b>
+	  <br>
+	  - specifies the port that the database is listening on.
+     <li> <b>user=&lt;user name&gt;</b> <i>(required)</i>
+	  <br>
+	  - specifies the user to log in to the database as.
+     <li> <b>password=&lt;passwd&gt;</b> <i>(required)</i>
+	  <br>
+	  - specifies the user's database login password.
+     <li> <b>query=&lt;SQL query&gt;</b>
+	  <br>
+	  - specifies the single-row or multi-row query to execute.
+    </ul><br>
+
+    Rule Variables:
+    <ul>
+     <li> <b>connected</b> (boolean)
+	  <br>
+	  - this variable will be true if the database could be connected to,
+	  and false otherwise.
+     <li> <b>results</b> (number)
+	  <br>
+	  - indicates the number of results (0 to #).
+     <li> <b>result0 .. resultN</b> (auto-typed)
+	  <br>
+	  - query result variables.<br>
+            If the query returns a single row, then the results are available in result0 .. resultN.<br>
+            If the query returns multiple rows, then the result0 .. resultN contains
+            the first column of every result row.
+    </ul>
+
+    Action Variables:
+    <ul>
+     <li> <b>errmsg</b> (string)
+	  <br>
+	  - the error message, if any, returned by the database connect or query.
+    </ul>
+
+    <i>Directive Examples:</i>
+    <pre>
+        # alert if too many connections to the Postgres database
+        DBI db_connections:
+            dbtype='pg'
+            host='localhost'
+            database='mydb'
+            user='pgsql'
+            password='sekrit'
+	    query='select count(1) from pg_stat_activity'
+	    rule='not connected or results != 1 or result0 &gt; 40'
+            action=email('alert', 'Database %(database)s on %(h)s: too many connections (currently %(result0)s)')
+            console='%(database)s on %(host)s : connections = %(result0)d'
+    </pre>
+   </p>
 
 
    <p>
