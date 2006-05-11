@@ -513,6 +513,12 @@ def parseVars(text, vDict):
     """
     Substitute variables in vDict dictionary into text string.  Use
     Python's builtin tricks for this.  Very simple!
+    Note that it parses the text from one to five times, meaning variables can
+    contain variables, as in:
+      d["x"] = "some string"
+      d["y"] = "x is '%(x)s'"
+      d["z"] = "y is '%(y)s'"
+      parseVars("%(z)s", d) => "y is '%(y)s'" => "y is 'x is '%(x)s''" => "y is 'x is 'some string''"
     """
 
     # Keep parsing the text string until there are no '%(', or we've done a few parses...
