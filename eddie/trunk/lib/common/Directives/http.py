@@ -38,7 +38,6 @@ import httplib
 import re
 import time
 import sys
-import string
 import socket
 # Imports: Eddie
 import directive
@@ -232,7 +231,7 @@ class HTTP(directive.Directive):
 	try:
 	    conn.connect()
 	except AttributeError, err:
-	    raise directive.DirectiveError, "cannot open HTTPS connection, %s" % str(err)
+	    raise directive.DirectiveError, "cannot open HTTP(S) connection, %s" % str(err)
 		
 	except:
 	    time_connect_end = time.time()
