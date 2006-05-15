@@ -971,17 +971,26 @@ class Directive:
 	pass
 
 
-    def console_str(self):
+    def console_str(self, str=None):
 	"""Return the string that is to be output on console connections."""
 
-	if self.console_output == None:
+	if str == None:
+	    str = self.console_output
+
+	if str == None:
 	    return None
 
 	## Setup variables available to console_output string
 	vars = {}
 
+	# If the action was never-ever called, we need to get those vars populated
+	# (otherwise, Action.varDict should already contain all of defaultVarDict).
+	vars.update(self.defaultVarDict)
+
 	# add all the action variables
 	vars.update(self.Action.varDict)
+
+	# Note that if doDirective never got to execute the action, there can still be KeyError issues.
 
 	# add the current state
 	vars['state'] = self.state.status
@@ -1005,7 +1014,7 @@ class Directive:
 
 
 	# create console string by substituting variables
-	cstr = self.console_output % vars
+	cstr = str % vars
 	return cstr
 
 
