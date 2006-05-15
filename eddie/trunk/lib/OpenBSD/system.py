@@ -65,6 +65,7 @@ class system(datacollect.DataCollect):
                 loadavg15       - (float)
 
             System counters from '/usr/bin/vmstat -s' (see vmstat(1)):
+                ctr_bytes_per_page                              - (long)
                 ctr_pages_managed                               - (long)
                 ctr_pages_free                                  - (long)
                 ctr_pages_active                                - (long)
@@ -75,6 +76,7 @@ class system(datacollect.DataCollect):
                 ctr_pages_reserved_for_kernel                   - (long)
                 ctr_swap_pages                                  - (long)
                 ctr_swap_pages_in_use                           - (long)
+                ctr_swap_pages_inactive                         - (long)
                 ctr_total_anons_in_system                       - (long)
                 ctr_free_anons                                  - (long)
                 ctr_page_faults                                 - (long)
@@ -141,10 +143,16 @@ class system(datacollect.DataCollect):
             return None
 
         vmstat_dict = {}
+        bpp = 0
 
         for l in string.split( output, '\n' ):
-            if string.find( l, 'pages managed' ) != -1:
+            if string.find( l, 'bytes per page' ) != -1:
+                vmstat_dict['ctr_bytes_per_page'] = long(string.split(l)[0])
+                bpp = long(string.split(l)[0])
+            elif string.find( l, 'pages managed' ) != -1:
                 vmstat_dict['ctr_pages_managed'] = long(string.split(l)[0])
+            elif string.find( l, 'pages freed by pagedaemon' ) != -1:
+                vmstat_dict['ctr_pages_freed_by_pagedaemon'] = long(string.split(l)[0])
             elif string.find( l, 'pages free' ) != -1:
                 vmstat_dict['ctr_pages_free'] = long(string.split(l)[0])
             elif string.find( l, 'pages active' ) != -1:
@@ -159,10 +167,10 @@ class system(datacollect.DataCollect):
                 vmstat_dict['ctr_pages_reserved_for_pagedaemon'] = long(string.split(l)[0])
             elif string.find( l, 'pages reserved for kernel' ) != -1:
                 vmstat_dict['ctr_pages_reserved_for_kernel'] = long(string.split(l)[0])
-            elif string.find( l, 'swap pages' ) != -1:
-                vmstat_dict['ctr_swap_pages'] = long(string.split(l)[0])
             elif string.find( l, 'swap pages in use' ) != -1:
                 vmstat_dict['ctr_swap_pages_in_use'] = long(string.split(l)[0])
+            elif string.find( l, 'swap pages' ) != -1:
+                vmstat_dict['ctr_swap_pages'] = long(string.split(l)[0])
             elif string.find( l, 'total anon\'s in system' ) != -1:
                 vmstat_dict['ctr_total_anons_in_system'] = long(string.split(l)[0])
             elif string.find( l, 'free anon\'s' ) != -1:
@@ -193,8 +201,6 @@ class system(datacollect.DataCollect):
                 vmstat_dict['ctr_number_of_times_the_pagedaemon_woke_up'] = long(string.split(l)[0])
             elif string.find( l, 'revolutions of the clock hand' ) != -1:
                 vmstat_dict['ctr_revolutions_of_the_clock_hand'] = long(string.split(l)[0])
-            elif string.find( l, 'pages freed by pagedaemon' ) != -1:
-                vmstat_dict['ctr_pages_freed_by_pagedaemon'] = long(string.split(l)[0])
             elif string.find( l, 'pages scanned by pagedaemon' ) != -1:
                 vmstat_dict['ctr_pages_scanned_by_pagedaemon'] = long(string.split(l)[0])
             elif string.find( l, 'pages reactivated by pagedaemon' ) != -1:
@@ -205,6 +211,17 @@ class system(datacollect.DataCollect):
                 vmstat_dict['ctr_total_name_lookups'] = long(string.split(l)[0])
             elif string.find( l, 'select collisions' ) != -1:
                 vmstat_dict['ctr_select_collisions'] = long(string.split(l)[0])
+
+        # derive 'ctr_swap_pages_inactive'
+        if vmstat_dict.has_key('ctr_swap_pages') and vmstat_dict.has_key('ctr_swap_pages_in_use'):
+            vmstat_dict['ctr_swap_pages_inactive'] = long(vmstat_dict['ctr_swap_pages'] - vmstat_dict['ctr_swap_pages_in_use'])
+
+        # If we have bytes-per-page, then for every "XXX_pages_YYY" counter, copy and convert to "XXX_bytes_YYY"
+        if bpp > 0:
+            for k in vmstat_dict.keys():
+                if k.find('_pages_') >= 0 and type(vmstat_dict[k]) == type(long(1)):
+                    k2 = k.replace('_pages_', '_bytes_')
+                    vmstat_dict[k2] = vmstat_dict[k] * bpp
 
         return vmstat_dict
 
