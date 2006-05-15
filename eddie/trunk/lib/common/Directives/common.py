@@ -448,12 +448,10 @@ class COM(directive.Directive):
 
 	# Split output to assist rules
 	outsplit = string.split(out)
+	data['outfield1'] = ""		# Always set outfield1 so rule strings don't break
+	data['outfields'] = len(outsplit)
 	for i in range(0, len(outsplit)):
-	    data['outfield%d'%(i+1)] = outsplit[i]
-
-	# If no output, set outfield1 anyway so rule strings don't break
-	if len(outsplit) == 0:
-	    data['outfield1'] = ""
+	    data['outfield%d'%(i+1)] = utils.typeFromString(outsplit[i])
 
 	return data
 
