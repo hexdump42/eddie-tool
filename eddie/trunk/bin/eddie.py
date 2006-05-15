@@ -113,6 +113,7 @@ config_file = default_config_file
 
 # Globals
 global Config
+global Options
 global sthread
 global cthread
 
@@ -178,8 +179,12 @@ def SigHandler( sig, frame ):
     """Handle all the signals we are interested in.
     """
 
+    global Options
+
     if 'SIGHUP' in dir(signal) and sig == signal.SIGHUP:
 	# SIGHUP (Hangup) - reload config
+	if not Options.daemon:
+	    print "SIGHUP - reloading config"
 	log.log( '<eddie>SigHandler(): SIGHUP encountered - reloading config', 5 )
 
         stop_threads()
@@ -196,7 +201,7 @@ def SigHandler( sig, frame ):
 	buildCheckQueue(q, Config)
 	Config.q = q
 
-        sargs = (q,Config,please_die)
+        sargs = (q, Config, please_die)
         cargs = (Config, please_die, config.consport)
 
         start_threads(sargs, cargs)
@@ -234,10 +239,10 @@ def countFDs():
 	try:
 	    stat = os.fstat( fd )
 	    fdcnt = fdcnt + 1
-	except os.error, ( errnum, str ):
+	except os.error, ( errnum, estr ):
 	    if errnum != errno.EBADF:
-		#raise os.error, ( errnum, str )
-		log.log( '<eddie>countFDs(): exception os.error, %s, %s' %(errnum,str), 5 )
+		#raise os.error, ( errnum, estr )
+		log.log( '<eddie>countFDs(): exception os.error, %s, %s' %(errnum,estr), 5 )
 
     return fdcnt
 
@@ -255,7 +260,7 @@ def scheduler(q, Config, die_event):
 	while threading.activeCount() > config.num_threads:
 	    # do nothing while we have no active threads to play with
 	    # TODO: if we wait too long, something is probably wrong, so do something about it...
-	    log.log( "<eddie>scheduler(): active thread count is %d - waiting till < %d" % (threading.activeCount(),config.num_threads), 8 )
+	    log.log( "<eddie>scheduler(): active thread count is %d - waiting till <= %d" % (threading.activeCount(),config.num_threads), 8 )
 	    if time.time() - loop_start > 30*60:
 		# if this loop has been running for over 30 mins, then all
 		# threads are locked badly and something is wrong.  Force an
@@ -376,8 +381,10 @@ def main():
     log.version = __version__	# Make version string available to other modules
 
     # Parse command-line arguments
-    options = doArgs()
-    config_file = options.config
+    # instantiate global Options object
+    global Options
+    Options = doArgs()
+    config_file = Options.config
 
     # Catch most important signals
     for sig in ('SIGALRM', 'SIGHUP', 'SIGINT', 'SIGTERM'):
@@ -411,13 +418,13 @@ def main():
     log.log( "<eddie>main(): Python version: %s" % (sys.version), 5 )
     log.log( "<eddie>main(): oslibdirs: %s" % (oslibdirs), 8 )
 
-    if options.showconfig == True:
+    if Options.showconfig:
 	# Just display the configuration and exit
 	print "---Displaying EDDIE Configuration---"
 	print Config
 	eddieexit()
 
-    if options.daemon == True:
+    if Options.daemon:
 	# Create a child process, then have the parent exit
 	cpid = utils.create_child(True)
 	if cpid != 0:
@@ -445,9 +452,9 @@ def main():
     please_die = threading.Event()		# Event object to notify the scheduler to die
     global sthread
 
-    sargs = (q,Config,please_die)
+    sargs = (q, Config, please_die)
     cargs = (Config, please_die, config.consport)
-    start_threads(sargs,cargs)
+    start_threads(sargs, cargs)
 
     while not please_die.isSet():
 	try:
