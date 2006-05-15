@@ -47,12 +47,15 @@ __license__ = '''
 # Copyright 1997, Corporation for National Research Initiatives
 # written by Jeremy Hylton, jeremy@cnri.reston.va.us
 
+## Python modules
 import icmp, ip
 import socket
 import time
 import select
 import string
 import os, sys
+## Eddie modules
+
 
 TimedOut = 'TimedOut'
 
@@ -233,12 +236,12 @@ if __name__ == "__main__":
     try:
 	who = sys.argv[1]
     except IndexError:
-	print "ping.py host [#packets]"
+	print "pinger.py host [#packets]"
 	sys.exit(0)
     try:
 	num = string.atoi(sys.argv[2])
     except ValueError:
-	print "ping.py host [#packets]"
+	print "pinger.py host [#packets]"
 	sys.exit(0)
     except IndexError:
 	num = 32
