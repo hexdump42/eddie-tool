@@ -133,7 +133,8 @@ class procList(datacollect.DataCollect):
 	self.data.proclist = []		# list of processes
 	self.data.nameHash = {}		# dict of processes keyed by process name
 
-	rawList = utils.safe_popen('ps -auxww', 'r')
+	# gather data from "ps"
+	rawList = utils.safe_popen('ps -o ppid,nice,ruid,rgid,gid -auxww', 'r')
 	rawList.readline()		# skip header
  
 	for line in rawList.readlines():
@@ -156,20 +157,26 @@ class proc:
 
 	fields = string.split(rawline)
 
-	# fields as defined from "ps -auxww"
-	self.uid =	fields[ 0]	# username or uid 
-	self.pid =	int(fields[ 1])	# 
-	self.pcpu =	float(fields[ 2])	# cpu 
-	self.pmem =	float(fields[ 3])	# mem 
-	self.sz =	int(fields[ 4])	# size 
-	self.rsz =	int(fields[ 5])	# resident size
-	self.tty =	fields[ 6]	# terminal 
-	self.s =	fields[ 7]	# state 
-	self.stime =	fields[ 8]	# start time
-	self.time =	fields[ 9]	# cpu time 
-	self.comdname =	fields[10]	# process name (no arguments)
-	self.comd =	string.join(fields[10:], " ")	# command with all its arguments as a string
-	lastfield = 10
+	# fields as defined from "ps -o ppid,nice,ruid,rgid,gid -auxww"
+	self.ppid =	int(fields[ 0])	# parent process id
+	self.nice =	fields[ 1]	# nice value
+	self.ruid =	fields[ 2]	# real user id
+	self.rgid =	fields[ 3]	# real group id
+	self.gid =	fields[ 4]	# group id
+	self.uid =	fields[ 5]	# username or uid
+	self.pid =	int(fields[ 6])	# pid
+	self.pcpu =	float(fields[ 7])	# cpu
+	self.pmem =	float(fields[ 8])	# mem
+	self.sz =	int(fields[ 9])	# size
+	self.rsz =	int(fields[10])	# resident size
+	self.tty =	fields[11]	# terminal
+	self.s =	fields[12]	# state
+	self.stime =	fields[13]	# start time
+	self.time =	fields[14]	# cpu time
+	self.comdname =	fields[15]	# process name (no arguments)
+	self.comm =	fields[15]	# process name (no arguments)
+	self.comd =	string.join(fields[16:], " ")	# command with all its arguments as a string
+	lastfield = 15
 
 	# Actual 'command' name with no path or interpreter - Eddie will mainly use this
 	self.procname = string.split(self.comdname, '/')[-1]
@@ -215,7 +222,7 @@ class proc:
 	u = string.ljust(self.comm, 20)
 	t = string.ljust(self.time, 10)
 
-	return( '%s\t%s\t%s\t%s\t%s\t%s' % (self.pid, u, c, t, self.pcpu, self.state) )
+	return( '%s\t%s\t%s\t%s\t%s\t%s' % (self.pid, u, c, t, self.pcpu, self.s) )
 
 
     def procinfo(self):
@@ -223,19 +230,10 @@ class proc:
         """
 
 	info = {}
-	info['uid'] = self.uid
-	info['pid'] = self.pid
-	info['pcpu'] = self.pcpu
-	info['pmem'] = self.pmem
-	info['sz'] = self.sz
-	info['rsz'] = self.rsz
-	info['tty'] = self.tty
-	info['s'] = self.s
-	info['stime'] = self.stime
-	info['time'] = self.time
-	info['comdname'] = self.comdname
-	info['comd'] = self.comd
-	info['procname'] = self.procname
+	for k in ('ppid', 'nice', 'ruid', 'rgid', 'uid', 'pid', 'gid', 'pcpu', 'pmem', 'sz', 'vsz:sz', 'rsz', 'rss:rsz', 'tty', 's', 'stime', 'time', 'comdname', 'comd', 'comm:comd', 'procname'):
+	    ks = k.split(':', 2)
+	    ks.append(ks[0])
+	    info[ks[0]] = eval("self.%s" % (ks[1]))
 
 	return info
 

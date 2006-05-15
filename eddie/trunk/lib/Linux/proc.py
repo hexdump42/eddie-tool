@@ -252,40 +252,11 @@ class proc:
 	"""Return process details as a dictionary."""
 
 	info = {}
-	info['s'] = self.s
-	info['user'] = self.user
-	info['ruser'] = self.ruser
-	info['grp'] = self.group
-	info['rgrp'] = self.rgroup
-	info['uid'] = self.uid
-	info['ruid'] = self.ruid
-	info['gid'] = self.gid
-	info['rgid'] = self.rgid
-	info['pid'] = self.pid
-	info['ppid'] = self.ppid
-	info['pgid'] = self.pgid
-	info['sid'] = self.sid
-	info['pri'] = self.pri
-	info['opri'] = self.opri
-	info['pcpu'] = self.pcpu
-	info['pmem'] = self.pmem
-	info['vsz'] = self.vsz
-	info['rss'] = self.rss
-	info['osz'] = self.osz
-	info['time'] = self.time
-	info['etime'] = self.etime
-	info['stime'] = self.stime
-	info['f'] = self.f
-	info['c'] = self.c
-	info['tty'] = self.tty
-	info['addr'] = self.addr
-	info['nice'] = self.nice
-	info['sclass'] = self.sclass
-	#info['wchan'] = self.wchan
-	info['fname'] = self.fname
-	info['comm'] = self.comm
-	info['args'] = self.args
-	info['procname'] = self.procname
+	# 'wchan' is specifically LEFT OUT
+	for k in ('s', 'user', 'ruser', 'grp:group', 'rgrp:rgroup', 'uid', 'ruid', 'gid', 'rgid', 'pid', 'ppid', 'pgid', 'sid', 'pri', 'opri', 'pcpu', 'pmem', 'vsz', 'rss', 'osz', 'time', 'etime', 'stime', 'f', 'c', 'tty', 'addr', 'nice', 'sclass', 'fname', 'comm', 'args', 'procname'):
+	    ks = k.split(':', 2)
+	    ks.append(ks[0])
+	    info[ks[0]] = eval("self.%s" % (ks[1]))
 
 	return info
 
