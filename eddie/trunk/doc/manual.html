@@ -1908,14 +1908,14 @@
 	  <br>
 	  - this variable will be true if the database could be connected to,
 	  and false otherwise.
-     <li> <b>results</b> (number)
+     <li> <b>results</b> (int)
 	  <br>
 	  - indicates the number of results (0 to #).
-     <li> <b>result0 .. resultN</b> (auto-typed)
+     <li> <b>result1 .. resultN</b> (auto-typed)
 	  <br>
 	  - query result variables.<br>
-            If the query returns a single row, then the results are available in result0 .. resultN.<br>
-            If the query returns multiple rows, then the result0 .. resultN contains
+            If the query returns a single row, then the results are available in result1 .. resultN.<br>
+            If the query returns multiple rows, then the result1 .. resultN contains
             the first column of every result row.
     </ul>
 
@@ -1936,9 +1936,9 @@
             user='pgsql'
             password='sekrit'
 	    query='select count(1) from pg_stat_activity'
-	    rule='not connected or results != 1 or result0 &gt; 40'
-            action=email('alert', 'Database %(database)s on %(h)s: too many connections (currently %(result0)s)')
-            console='%(database)s on %(host)s : connections = %(result0)d'
+	    rule='not connected or results != 1 or result1 &gt; 40'
+            action=email('alert', 'Database %(database)s on %(h)s: too many connections (currently %(result1)s)')
+            console='%(database)s on %(host)s : connections = %(result1)d'
     </pre>
    </p>
 

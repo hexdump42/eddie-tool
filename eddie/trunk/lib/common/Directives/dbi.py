@@ -58,7 +58,7 @@ class DBI(directive.Directive):
 	    user='eddie'
 	    passwd='sekrit'
 	    query='SELECT COUNT(1) FROM x WHERE y = z'
-	    rule='result0 > 1000'
+	    rule='result1 > 1000'
 	    action=email(...)
 
     """
@@ -186,21 +186,21 @@ class DBI(directive.Directive):
 	    curs.execute(q)
 	    data['querytime'] = (time.time()-starttime)*1000
 	    result = []
-	    data['result0'] = ''   # populate 'result0' so rule/console string may work instead of causing exception...
+	    data['result1'] = ''   # populate 'result1' so rule/console string may work instead of causing exception...
 	    ans = curs.fetchone()
 	    if curs.rowcount > 1:
-		# Return results as 'result0', 'result1', ..., with *first column* of every row returns:
+		# Return results as 'result1', 'result2', ..., with *first column* of every row returns:
 		count = 0
 		while ans != None:
-		    data['result%d'%(count)] = utils.typeFromString(ans[0])
+		    data['result%d'%(count+1)] = utils.typeFromString(ans[0])
 		    count = count+1
 		    result.append(ans)
 		    ans = curs.fetchone()
 		data['results'] = count
 	    else:
-		# Return results as 'result0', 'result1', ..., with *first row's* returns:
+		# Return results as 'result1', 'result2', ..., with *first row's* returns:
 		for i in range(len(ans)):
-		    data['result%d'%(i)] = utils.typeFromString(ans[i])
+		    data['result%d'%(i+1)] = utils.typeFromString(ans[i])
 		result.append(ans)
 		data['results'] = len(ans)
 
