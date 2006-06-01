@@ -341,8 +341,10 @@ class SP(directive.Directive):
 	    # only compare port part of connection - ignore bind address
 	    data['exists'] = False
 	    for key in connections.keys():
-		if key.find(":%s" % self.port) >= 0:
+		p = key.split(':')[1]
+		if p == str(self.port):
 		    data['exists'] = True
+		    break
 	else:
 	    # compare bind address and port for match
 	    key = "%s:%s" % (self.args.bindaddr, self.port)
