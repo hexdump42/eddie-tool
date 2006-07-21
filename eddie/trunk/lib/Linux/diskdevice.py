@@ -19,7 +19,7 @@ $Id$
 
 __version__ = '$Revision$'
 
-__copyright__ = 'Copyright (c) Chris Miles 2005'
+__copyright__ = 'Copyright (c) Chris Miles 2006'
 
 __author__ = 'Chris Miles'
 
@@ -48,6 +48,8 @@ import string
 import datacollect
 import log
 import utils
+
+from linux_diskio import linux_diskio
 
 
 ##
@@ -81,10 +83,14 @@ class DiskStatistics(datacollect.DataCollect):
 
     def collectData(self):
 
-	# *TODO*
 	self.data.datahash = {}
 
-        log.log( "<diskdevice>DiskStatistics.collectData(): *not yet implemented*", 5 )
+        for device_name in linux_diskio.get_device_names():
+            device_stats = linux_diskio.LinuxDiskIO(device_name)
+            self.data.datahash[device_name] = Disk(device_name)
+            self.data.datahash[device_name].setStats(device_stats.getStats())
+
+        log.log( "<diskdevice>DiskStatistics.collectData(): collected stats for devices %s"%str(self.data.datahash.keys()), 6 )
 
 
 
@@ -109,6 +115,24 @@ class TapeStatistics(datacollect.DataCollect):
 	self.data.datahash = {}
 
         log.log( "<diskdevice>TapeStatistics.collectData(): *not yet implemented*", 5 )
+
+
+class Disk:
+    """Holds information about a raw disk device.
+    """
+
+    def __init__(self, name):
+	self.name = name		# eg, "sd100" or "md50"
+	self.stats = {}
+
+    def setStats(self, stats):
+	"""Set the disk I/O statistics - a dict.
+        """
+	self.stats = stats
+
+    def getHash( self ):
+	"""Returns a dictionary of all the stats for this disk."""
+	return self.stats.copy()
 
 
 ##
