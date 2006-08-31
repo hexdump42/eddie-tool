@@ -128,9 +128,12 @@ class Elvin:
 
 	self.eq = Queue.Queue()		# Elvin message queue
 
-	#-- create Elvin client using ThreadedLoop
-	log.log( "<eddieElvin4>Elvin.__init__(): Creating elvin client (ThreadedLoop)", 8 )
-	self.client = elvin.client(elvin.ThreadedLoop)
+	##-- create Elvin client using ThreadedLoop
+	#log.log( "<eddieElvin4>Elvin.__init__(): Creating elvin client (ThreadedLoop)", 8 )
+	#self.client = elvin.client(elvin.ThreadedLoop)
+	#-- create Elvin client using SyncLoop
+	log.log( "<eddieElvin4>Elvin.__init__(): Creating elvin client (SyncLoop)", 5 )
+	self.client = elvin.client(elvin.SyncLoop)
 
 
     def startup(self):
@@ -185,7 +188,7 @@ class Elvin:
 
 	# Create Elvin connection
 	self.connection = self.client.connection()
-	self.connection.set_discovery(1)	# enable auto-discovery
+	self.connection.set_discovery(0)	# disable auto-discovery
 
 	# Create the connect string; if a URL is specified then use that
 	# otherwise use the Scope if available, otherwise use server
@@ -200,7 +203,7 @@ class Elvin:
 	    self.connect_str = '*'
 
 	# Now open connection to server
-	log.log("<eddieElvin4>Elvin.connect(): Opening connection to Elvin, '%s'" %(self.connect_str), 8)
+	log.log("<eddieElvin4>Elvin.connect(): Opening connection to Elvin, '%s'" %(self.connect_str), 5)
 	status = 0
 
 	try:
