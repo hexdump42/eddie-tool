@@ -185,6 +185,7 @@ class HTTP(directive.Directive):
 	data['timedout'] = 0		# boolean; is true if received socket.timeout exception
 	data['ip'] = ""
 	data['status'] = ""
+	data['reason'] = ""
 
 	e = None
 
