@@ -186,6 +186,7 @@ class HTTP(directive.Directive):
 	data['ip'] = ""
 	data['status'] = ""
 	data['reason'] = ""
+        data['body'] = ""
 
 	e = None
 
