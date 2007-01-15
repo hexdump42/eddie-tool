@@ -36,7 +36,7 @@ __license__ = '''
 import os, string, sys, re, time
 
 # Eddie imports
-import log, utils, eddieElvin4
+import log, utils, eddieElvin4, eddieSpread
 
 
 ## Globals
@@ -482,45 +482,51 @@ class action:
 
 
     def elvinrrd(self, key, *data):
-	"""Send information to remote RRDtool database listener via Elvin.
-	   key is the RRD name configured in the Elvin consumer to store the data.
-           data is a variable length list of strings of the form 'var=data'
-	    where var is the RRD variable name and data is the data to store.
-           Example use in a directive:
-	    SYS loadavg1_rrd:   rule='1'        # always true
-				scanperiod='1m'
-				action="elvinrrd('loadavg1-%(h)s', 'loadavg1=%(sysloadavg1)f')"
-	"""
+        """Send information to remote RRDtool database listener via Elvin.
+           key is the RRD name configured in the Elvin consumer to store the data.
+               data is a variable length list of strings of the form 'var=data'
+            where var is the RRD variable name and data is the data to store.
+               Example use in a directive:
+            SYS loadavg1_rrd:   rule='1'        # always true
+                    scanperiod='1m'
+                    action="elvinrrd('loadavg1-%(h)s', 'loadavg1=%(sysloadavg1)f')"
+        """
 
-	log.log( "<action>action.elvinrrd( key='%s' data='%s' )"%(key,data), 6 )
+        log.log( "<action>action.elvinrrd( key='%s' data='%s' )"%(key,data), 6 )
 
-	if eddieElvin4.UseElvin == 0:
-	    log.log( "<action>action.elvinrrd(): Elvin is not available - skipping.", 5 )
-	    return 0
+        sendrrd = None
+        if eddieSpread.UseSpread:
+            sendrrd = spread.rrd
+        elif eddieElvin4.UseElvin:
+            sendrrd = elvin.elvinrrd
 
-	if len(data) == 0:
-	    raise "elvinrrd exception, no data supplied"
+        if not sendrrd:
+            log.log( "<action>action.elvinrrd(): No messaging system available - skipping.", 5 )
+            return 0
 
-	datadict = {}
-	for d in data:
-	    (var,val) = string.split(d, '=')
-	    if var == None or var == '' or val == None:
-		raise "elvinrrd exception, data error: var='%s' val='%s'" % (var,val)
-	    var = utils.parseVars( var, self.varDict )	# substitute variables
-	    val = utils.parseVars( val, self.varDict )	# substitute variables
-	    datadict[var] = val
+        if len(data) == 0:
+            raise "elvinrrd exception, no data supplied"
 
-	key = utils.parseVars( key, self.varDict )	# substitute variables
+        datadict = {}
+        for d in data:
+            (var,val) = string.split(d, '=')
+            if var == None or var == '' or val == None:
+                raise "elvinrrd exception, data error: var='%s' val='%s'" % (var,val)
+            var = utils.parseVars( var, self.varDict )	# substitute variables
+            val = utils.parseVars( val, self.varDict )	# substitute variables
+            datadict[var] = val
 
-	log.log( "<action>action.elvinrrd() sending: key='%s' data=%s"%(key,datadict), 6 )
-	retval = elvin.elvinrrd(key, datadict)
+        key = utils.parseVars( key, self.varDict )	# substitute variables
 
-	# Alert if return value != 0
-	if retval != 0:
-	    log.log( "<action>action.elvinrrd(%s, %s), Alert, return value for e.send() is %d" % (key,datadict,retval), 5 )
-	else:
-	    log.log( "<action>action.elvinrrd(%s, %s): completed" % (key,datadict), 6 )
+        log.log( "<action>action.elvinrrd() sending: key='%s' data=%s"%(key,datadict), 6 )
+        retval = sendrrd(key, datadict)
 
+        # Alert if return value != 0
+        if retval != 0:
+            log.log( "<action>action.elvinrrd(%s, %s), Alert, return value for e.send() is %d" % (key,datadict,retval), 5 )
+        else:
+            log.log( "<action>action.elvinrrd(%s, %s): completed" % (key,datadict), 6 )
+    
 
 
     ############################################################################

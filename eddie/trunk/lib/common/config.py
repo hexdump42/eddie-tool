@@ -43,6 +43,7 @@ import definition
 import log
 import utils
 import eddieElvin4
+import eddieSpread
 
 # chris 2004-12-03: proc is optional; in fact it should not even be imported
 #	and used in this way, so will have to fix this later.
@@ -213,6 +214,14 @@ class Config:
 	self.elvin = elvin
 	import action
 	action.elvin = elvin
+
+    def set_spread(self, spread):
+	"""Store the Spread connection object, and pass through to other
+	objects which need it (e.g., action module)."""
+
+	self.spread = spread
+	import action
+	action.spread = spread
 
 
 ##
@@ -571,6 +580,37 @@ class RESCANCONFIGS(ConfigOption):
 	log.log( "<config>RESCANCONFIGS(): rescan_configs set to '%s'." % (rescan_configs), 8 )
 
 
+## SPREADSERVER - hostname of Spread server
+class SPREADSERVER(ConfigOption):
+    def __init__( self, list, typelist ):
+        apply( ConfigOption.__init__, (self,list, typelist) )
+
+        # if we don't have 3 elements ['SPREADSERVER', '=', <str>] then
+        # raise an error
+        if len(list) != 3:
+            raise ParseFailure, "SPREADSERVER definition has %d tokens when expecting 3" % len(list)
+        
+        # ok, value is 3rd list element
+        eddieSpread.SPREADSERVER = utils.stripquote(list[2])		# set the config option
+        log.log( "<config>SPREADSERVER(): Spread server set to '%s'." % (eddieSpread.SPREADSERVER), 8 )
+    
+
+## SPREADPORT - port of Spread server
+class SPREADPORT(ConfigOption):
+    def __init__( self, list, typelist ):
+        apply( ConfigOption.__init__, (self,list, typelist) )
+
+        # if we don't have 3 elements ['SPREADPORT', '=', <int>] then
+        # raise an error
+        if len(list) != 3:
+            raise ParseFailure, "SPREADPORT definition has %d tokens when expecting 3" % len(list)
+        
+        # ok, value is 3rd list element
+        eddieSpread.SPREADPORT = int(utils.stripquote(list[2]))		# set the config option
+        log.log( "<config>SPREADPORT(): Spread port set to '%s'." % (eddieSpread.SPREADPORT), 8 )
+    
+
+
 def loadExtraDirectives( directivedir ):
     """Load extra directives from given directory.  Each file
     in this directory must be an importable (.py) Python module
@@ -633,6 +673,8 @@ settings = {
 		"EMAIL_REPLYTO"	: EMAIL_REPLYTO,
 		"SENDMAIL"	: SENDMAIL,
 		"SMTP_SERVERS"	: SMTP_SERVERS,
+		"SPREADPORT"	: SPREADPORT,
+		"SPREADSERVER"	: SPREADSERVER,
 		"WORKDIR"	: WORKDIR,
 		"RESCANCONFIGS"	: RESCANCONFIGS,
            }
