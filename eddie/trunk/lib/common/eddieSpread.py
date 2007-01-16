@@ -255,8 +255,10 @@ class Spread(object):
         """
         
         # Create db entry creation 'command'
-        edict = {      'ELVINRRD' : key
-                }
+        edict = {
+            'ELVINRRD' : key,
+            'timestamp' : time.time(),
+        }
         edict.update(data)                # add data dictionary to edict
         
         r = self.notify( edict )        # Send message

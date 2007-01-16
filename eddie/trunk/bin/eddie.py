@@ -103,7 +103,7 @@ extralibdir = os.path.join(basedir, 'lib/common/Extra')
 sys.path = oslibdirs + [commonlibdir,extralibdir] + sys.path
 
 # EDDIE common modules
-import parseConfig, directive, config, log, timeQueue, sockets, eddieElvin4, datacollect, utils
+import parseConfig, directive, config, log, timeQueue, sockets, eddieElvin4, datacollect, utils, eddieSpread
 
 # Main config file - this file INCLUDEs all other config files
 # We set the default here, but this can be overridden on the command line
@@ -441,6 +441,16 @@ def main():
     else:
 	elvin.startup()		# Start up the Elvin management thread
     Config.set_elvin(elvin)
+
+    # Initialise Spread connection and thread to handle Spread messaging
+    try:
+        spread = eddieSpread.Spread()
+    except eddieSpread.SpreadInitError, details:
+        log.log( "<eddie>main(): Spread init failed, %s, Spread functionality will be disabled."%(details), 5 )
+        spread = None
+    else:
+        spread.startup()		# Start up the Spread management thread
+    Config.set_spread(spread)
 
     # Main Loop
     # Initialise check queue
