@@ -24,6 +24,8 @@ import string
 import os
 import getopt
 import time
+import cPickle
+from cStringIO import StringIO
 
 # optparse is only available in 2.3+, but optik provides the same 
 # functionality for python 2.2
@@ -39,11 +41,28 @@ except ImportError:
 # Other modules
 import rrdtool  # requires py-rrdtool from http://sourceforge.net/projects/py-rrdtool/
                 #                       or http://www.nongnu.org/py-rrdtool/
-import elvin    # requires Elvin4 modules from http://elvin.dstc.edu.au/projects/pe4/index.html
+
+try:
+    import elvin    # Elvin4 modules from http://elvin.dstc.edu.au/projects/pe4/index.html
+except:
+    elvin = None
+
+try:
+    import spread   # Spread module from http://www.python.org/other/spread/
+except:
+    spread = None
+
+if not elvin and not spread:
+    raise Exception("You must install either Spread or Elvin modules for Python.")
 
 # Default Elvin URL and SCOPE
 ELVIN_URL='elvin://localhost'
 ELVIN_SCOPE='elvin'
+
+# Default Spread host/port
+SPREAD_SERVER='localhost'
+SPREAD_PORT=4803
+
 
 ################################################################
 
@@ -69,67 +88,8 @@ class RRDstore:
         return "[elvinrrd=%s rrdfile=%s store=%s create=%s]" % (self.elvinrrd, self.rrdfile, self.store, self.create)
     
 
-class BaseElvin:
-    """Base Elvin class to handle opening and closing Elvin connections.
-    This should be sub-classed and consumer and/or producer functionality
-    added.
-    """
-    
-    def __init__(self, elvinurl=ELVIN_URL, elvinscope=ELVIN_SCOPE):
-        """Initialise connection to Elvin server, using (in order of preference):
-        - An Elvin server URL specified by elvinurl;
-        - An Elvin scope specified by elvinscope;
-        - Auto discovery if the above not set.
-        """
-        
-        self.elvinurl = elvinurl
-        self.elvinscope = elvinscope
-        
-        if self.elvinurl and len(self.elvinurl) > 0:
-            connect_string=self.elvinurl
-        elif self.elvinscope and len(self.elvinscope) > 0:
-            connect_string=self.elvinscope
-        else:
-            connect_string='*'          # auto discovery
-        
-        if options.verbose:
-            log( "Trying Elvin connection to %s" % (connect_string) )
-        
-        try:
-            self.elvinc = elvin.connect( connect_string )
-            if options.verbose:
-                log( "Elvin connection succeeded to %s" % (connect_string) )
-        except:
-            sys.stderr.write( "Connection to elvin failed - connection string was '%s'\n" % (connect_string) )
-            if options.logfile != None:
-                log( "Connection to elvin failed - connection string was '%s'" % (connect_string) )
-            sys.exit(1)
-    
-    def cleanExit(self):
-        """Close the Elvin connection cleanly.
-        """
-        
-        self.elvinc.close()     # close Elvin connection
-    
-
-class storeconsumer(BaseElvin):
-    """An Elvin consumer to receive "ELVINRRD" messages from the Elvin network.
-    """
-    
-    def __init__(self, elvinurl=ELVIN_URL, elvinscope=ELVIN_SCOPE):
-        apply( BaseElvin.__init__, (self, elvinurl, elvinscope) )
-    
-    def register(self):
-        """Subscribe for Elvin messages containing the key "ELVINRRD".
-        """
-        
-        self.subscription = 'require(ELVINRRD)'
-        
-        sub = self.elvinc.subscribe(self.subscription)
-        sub.add_listener(self.deliver)
-        sub.register()
-    
-    def deliver(self, sub, msg, insec, rock):
+class Base(object):
+    def storeRRD(self, msg):
         """This method handles any received "ELVINRRD" messages.
         It parses a valid message and stores the information in the appropriate
         RRD database, as defined by the elvinrrd configuration.
@@ -167,6 +127,12 @@ class storeconsumer(BaseElvin):
             if '*' in r.create:
                 create = str(string.replace( r.create, '*', inx.group(1) ))     # replace all '*' with first string from match
         
+        # Use timestamp if part of message, otherwise rrdtool will use current time
+        if 'timestamp' in msg.keys():
+            timestamp = str(msg[u'timestamp']).strip()
+        else:
+            timestamp = 'N'
+        
         if len(store) == 1:
             # only one variable to store, use default method
             try:
@@ -175,11 +141,11 @@ class storeconsumer(BaseElvin):
                 log( "KeyError: %s, message %s" % (err, msg) )
                 return 1
             
-            u = (rrdfile, "N:%s" % (str(val)))
+            u = (rrdfile, "%s:%s" % (timestamp, str(val)))
         else:
             # multiple variables to store - must name them
             ds = "-t"
-            n = "N:"
+            n = "%s:" %timestamp
             for s in store:
                 try:
                     val = msg[u'%s'%(s)]
@@ -225,6 +191,100 @@ class storeconsumer(BaseElvin):
         
         return 0
     
+    
+
+class storeconsumer(Base):
+    """An Elvin consumer to receive "ELVINRRD" messages from the Elvin network.
+    """
+    
+    def __init__(self, elvinurl=ELVIN_URL, elvinscope=ELVIN_SCOPE):
+        """Initialise connection to Elvin server, using (in order of preference):
+        - An Elvin server URL specified by elvinurl;
+        - An Elvin scope specified by elvinscope;
+        - Auto discovery if the above not set.
+        """
+        
+        self.elvinurl = elvinurl
+        self.elvinscope = elvinscope
+        
+        if self.elvinurl and len(self.elvinurl) > 0:
+            connect_string=self.elvinurl
+        elif self.elvinscope and len(self.elvinscope) > 0:
+            connect_string=self.elvinscope
+        else:
+            connect_string='*'          # auto discovery
+        
+        if options.verbose:
+            log( "Trying Elvin connection to %s" % (connect_string) )
+        
+        try:
+            self.elvinc = elvin.connect( connect_string )
+            if options.verbose:
+                log( "Elvin connection succeeded to %s" % (connect_string) )
+        except:
+            sys.stderr.write( "Connection to elvin failed - connection string was '%s'\n" % (connect_string) )
+            if options.logfile != None:
+                log( "Connection to elvin failed - connection string was '%s'" % (connect_string) )
+            sys.exit(1)
+    
+    def run(self):
+        self.elvinc.run()
+    
+    def cleanExit(self):
+        """Close the Elvin connection cleanly.
+        """
+        self.elvinc.close()     # close Elvin connection
+    
+    def register(self):
+        """Subscribe for Elvin messages containing the key "ELVINRRD".
+        """
+        
+        self.subscription = 'require(ELVINRRD)'
+        
+        sub = self.elvinc.subscribe(self.subscription)
+        sub.add_listener(self.deliver)
+        sub.register()
+    
+    def deliver(self, sub, msg, insec, rock):
+        """This method handles any received "ELVINRRD" messages.
+        Messages are passed to the base class storeRRD() method.
+        """
+        return self.storeRRD(msg)
+    
+
+
+class SpreadStore(Base):
+    '''Handles receiving elvinrrd messages from a Spread service.
+    '''
+    
+    def __init__(self, spread_server='localhost', spread_port=spread.DEFAULT_SPREAD_PORT):
+        if spread_port is None:
+            spread_port = spread.DEFAULT_SPREAD_PORT
+        elif type(spread_port) != type(1):
+            spread_port = int(spread_port)
+        
+        self.spread_server = spread_server
+        self.spread_port = spread_port
+        
+        server = "%d@%s" % (self.spread_port, self.spread_server)
+        self._connection = spread.connect(server)
+    
+    def register(self):
+        '''Register with Spread service for group "elvinrrd".
+        '''
+        self._connection.join('elvinrrd')
+    
+    def run(self):
+        while True:
+            m = self._connection.receive()
+            if m and hasattr(m, 'message'):
+                # RegularMsgType
+                mio = StringIO(m.message)
+                up = cPickle.Unpickler(mio)
+                msg = up.load()
+                self.storeRRD(msg)
+    
+
 
 
 def ReadConfig( filename ):
@@ -327,7 +387,7 @@ def log( text ):
         sys.stdout.write( "%s\n" % (text) )
 
 def main():
-    usage_short = "[-hvd] [-e elvin_url] [-s elvin_scope] [-l logfile] -c elvinrrd.cf"
+    usage_short = "[-hvd] [-e elvin_url] [-s elvin_scope] [-S spread_server] [-P spread_port] [-l logfile] -c elvinrrd.cf"
     usage = "usage: %s %s" % (sys.argv[0], usage_short)
     
     if len(sys.argv) <= 1:
@@ -344,11 +404,16 @@ def main():
             metavar="URL", help="Use elvin server at URL")
     parser.add_option('-s', '--elvinscope', dest='elvin_scope', \
             metavar="SCOPE", help="Use elvin scope SCOPE")
+    parser.add_option('-S', '--spreadserver', dest='spread_server',     \
+            metavar="HOSTNAME", help="Use Spread server at HOSTNAME")
+    parser.add_option('-P', '--spreadport', dest='spread_port', \
+            metavar="PORT", help="Use Spread port number PORT")
     parser.add_option('-l', '--logfile', dest='logfile',        \
                         metavar="FILE", help="Log to FILE")
     parser.add_option('-c', '--configfile', dest='configfile',  \
                         metavar="FILE", help="Load config from FILE")
-    parser.set_defaults(verbose=False, debug=False, elvin_url=ELVIN_URL, elvin_scope=ELVIN_SCOPE)
+    #parser.set_defaults(verbose=False, debug=False, elvin_url=ELVIN_URL, elvin_scope=ELVIN_SCOPE)
+    parser.set_defaults(verbose=False, debug=False)
     
     global options
     (options, args) = parser.parse_args()
@@ -373,13 +438,19 @@ def main():
     # Create pointer to rrdtool module
     rrd = rrdtool
     
-    e = storeconsumer(options.elvin_url, options.elvin_scope)
+    if options.elvin_url or options.elvin_scope:
+        e = storeconsumer(options.elvin_url, options.elvin_scope)
+    elif options.spread_server or options.spread_port:
+        e = SpreadStore(options.spread_server, options.spread_port)
+    else:
+        raise Exception("Options for either Spread or Elvin messaging must be supplied.")
+        
     e.rrd = rrd
     e.rrddict = rrddict
     e.register()
     if options.verbose:
-        log( "Starting Elvin main loop" )
-    e.elvinc.run()
+        log( "Starting main loop" )
+    e.run()
 
 
 if __name__ == "__main__":
