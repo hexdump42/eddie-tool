@@ -19,19 +19,19 @@ N COMMONALERT:
 
     # Notification
     Level 0:
-	email(ALERT_EMAIL,WARN)		# email( <address>, <MSG object> )
+        email(ALERT_EMAIL,WARN)                # email( <address>, <MSG object> )
 
     # Warning
     Level 1:
-	email(ALERT_EMAIL,WARN),ticker(WARN_P)
+        email(ALERT_EMAIL,WARN),ticker(WARN_P)
 
     # Alert
     Level 2:
-	email(PAGER_EMAIL,ALERT_P),ticker(ALERT_P)
+        email(PAGER_EMAIL,ALERT_P),ticker(ALERT_P)
 
     # Serious Alert
     Level 3:
-	email(ALERT_EMAIL,ALERT),email(PAGER_EMAIL,ALERT_P),ticker(ALERT_P)
+        email(ALERT_EMAIL,ALERT),email(PAGER_EMAIL,ALERT_P),ticker(ALERT_P)
 
 
 # COMMONFIXED definition
@@ -59,11 +59,11 @@ N COMMONRESTART:
 
     # Restart and notify
     Level 0:
-	restart("%(name)s"),email(ALERT_EMAIL,RE_WARN)
+        restart("%(name)s"),email(ALERT_EMAIL,RE_WARN)
 
     # Restart/page
     Level 1:
-	restart("%(name)s"),email(PAGER_EMAIL,RE_WARN),ticker(RE_WARN_P)
+        restart("%(name)s"),email(PAGER_EMAIL,RE_WARN),ticker(RE_WARN_P)
 
 
 # NAMEDRESTART definition
@@ -74,11 +74,11 @@ N NAMEDRESTART:
 
     # Restart and notify
     Level 0:
-	restart("bind"),email(ALERT_EMAIL,RE_WARN)
+        restart("bind"),email(ALERT_EMAIL,RE_WARN)
 
     # Restart/page
     Level 1:
-	restart("bind"),email(PAGER_EMAIL,RE_WARN),ticker(RE_WARN_P)
+        restart("bind"),email(PAGER_EMAIL,RE_WARN),ticker(RE_WARN_P)
 
 
 ###########################################################################
@@ -155,9 +155,9 @@ PID sshd2:
 #  active listening ports (eg: 'netstat -anv') and performing actions if the
 #  defined port/protocol/bind-address is not in the list.
 SP ssh:
-    port='ssh'			# port to check, as defined in /etc/services
-    protocol='tcp'		# protocol, eg: tcp or udp
-    bindaddr='0.0.0.0'		# '*' on Solaris, or '0.0.0.0' on Linux
+    port='ssh'                        # port to check, as defined in /etc/services
+    protocol='tcp'                # protocol, eg: tcp or udp
+    bindaddr='0.0.0.0'                # '*' on Solaris, or '0.0.0.0' on Linux
     rule='not exists'
     action=COMMONALERT(commonmsg.sp,1)
 
@@ -175,15 +175,15 @@ COM loadavg:
 # LOGSCAN directive scans logfiles, looking for lines which match the given
 # regex and performs the given actions.
 LOGSCAN daemonlog:
-    file='/var/log/daemonlog'	# logfile to scan
-    regex='.*'			# regex to match
-    scanperiod='12h'		# how often to scan
+    file='/var/log/daemonlog'        # logfile to scan
+    regex='.*'                        # regex to match
+    scanperiod='12h'                # how often to scan
     action=email(ALERT_EMAIL, "daemonlog %(h)s:%(file)s", "-- Logscan matched %(linecount)d lines: --\n%(lines)s")
 
 LOGSCAN priv:
-    file='/var/log/messages'	# logfile to scan
-    regex='.*priv.*'		# regex to match
-    scanperiod='2h'			# how often to scan
+    file='/var/log/messages'        # logfile to scan
+    regex='.*priv.*'                # regex to match
+    scanperiod='2h'                        # how often to scan
     action=email(ALERT_EMAIL, "priv scan %(h)s:%(file)s", "-- Logscan matched %(linecount)d lines: --\n%(lines)s")
 
 

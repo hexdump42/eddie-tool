@@ -198,19 +198,19 @@ ALIAS PAGER_EMAIL="oncall-pager@domain.name"
 
 # These are provided as examples only.  Rules need to be customized for your
 # environment.  Use these as a guide for designing your own rules.
-INCLUDE 'rules/message.rules'	# common MSG definitions
+INCLUDE 'rules/message.rules'       # common MSG definitions
 
-INCLUDE 'rules/common.rules'	# common rules for all hosts
-INCLUDE 'rules/host.rules'	# rule specific to certain hosts
+#INCLUDE 'rules/common.rules'        # common rules for all hosts
+#INCLUDE 'rules/host.rules'          # rule specific to certain hosts
 
-INCLUDE 'rules/cache.rules'	# rules specific to proxy caches
-INCLUDE 'rules/dns.rules'	# rules specific to DNS servers
-INCLUDE 'rules/news.rules'	# rules specific to news servers
+#INCLUDE 'rules/cache.rules'         # rules specific to proxy caches
+#INCLUDE 'rules/dns.rules'           # rules specific to DNS servers
+#INCLUDE 'rules/news.rules'          # rules specific to news servers
 
-INCLUDE 'rules/sys_linux.rules'		# rules for Linux-specific checks
-INCLUDE 'rules/sys_solaris.rules'	# rules for Solaris-specific checks
+#INCLUDE 'rules/sys_linux.rules'     # rules for Linux-specific checks
+#INCLUDE 'rules/sys_solaris.rules'   # rules for Solaris-specific checks
 
-INCLUDE 'rules/rrd.rules'	# rules for storing data in RRD dbs via elvinrrd
+#INCLUDE 'rules/rrd.rules'           # rules for storing data in RRD dbs via elvinrrd
 
-#INCLUDE 'rules/win32_sample.rules'	# sample rules for a win32 host
+#INCLUDE 'rules/win32_sample.rules' # sample rules for a win32 host
 

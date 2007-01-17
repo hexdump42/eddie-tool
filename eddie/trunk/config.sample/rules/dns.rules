@@ -8,54 +8,54 @@ group dns:
     # (see eddie.cf).  Any host called 'dns' would also use this.
 
     PROC named:
-	name='named'
-	rule='not exists'
-	action=COMMONALERT(commonmsg.proc,2)
+        name='named'
+        rule='not exists'
+        action=COMMONALERT(commonmsg.proc,2)
     PROC ntpd:
-	name='ntpd'
-	rule='not exists'
-	action=COMMONALERT(commonmsg.proc,1)
+        name='ntpd'
+        rule='not exists'
+        action=COMMONALERT(commonmsg.proc,1)
     PROC radiusd:
-	name='radiusd'
-	rule='not exists'
-	action=COMMONRESTART(commonmsg.proc,0)
+        name='radiusd'
+        rule='not exists'
+        action=COMMONRESTART(commonmsg.proc,0)
     PROC sendmail:
-	name='sendmail'
-	rule='not exists'
-	action=COMMONALERT(commonmsg.proc,1)
+        name='sendmail'
+        rule='not exists'
+        action=COMMONALERT(commonmsg.proc,1)
 
     FS home:
-	fs='/home'
-	rule='pctused >= 98'
-	action=COMMONALERT(commonmsg.fs,0)
+        fs='/home'
+        rule='pctused >= 98'
+        action=COMMONALERT(commonmsg.fs,0)
     FS opt:
-	fs='/opt'
-	rule='pctused >= 97'
-	action=COMMONALERT(commonmsg.fs,1)
+        fs='/opt'
+        rule='pctused >= 97'
+        action=COMMONALERT(commonmsg.fs,1)
     FS varlog:
-	fs='/var/log'
-	rule='pctused >= 95'
-	action=COMMONALERT(commonmsg.fs,2)
+        fs='/var/log'
+        rule='pctused >= 95'
+        action=COMMONALERT(commonmsg.fs,2)
     FS varspool:
-	fs='/var/spool'
-	rule='pctused >= 90'
-	action=COMMONALERT(commonmsg.fs,2)
+        fs='/var/spool'
+        rule='pctused >= 90'
+        action=COMMONALERT(commonmsg.fs,2)
 
     PID named1:
-	pidfile='/var/run/named.pid'
-	rule='not exists'
-	action=COMMONALERT(commonmsg.pid,0)
+        pidfile='/var/run/named.pid'
+        rule='not exists'
+        action=COMMONALERT(commonmsg.pid,0)
     PID named2:
-	pidfile='/var/run/named.pid'
-	rule='exists and not running'
-	action=COMMONALERT(commonmsg.pidpr,1)
+        pidfile='/var/run/named.pid'
+        rule='exists and not running'
+        action=COMMONALERT(commonmsg.pidpr,1)
     PID sendmail1:
-	pidfile='/etc/mail/sendmail.pid'
-	rule='not exists'
-	action=COMMONALERT(commonmsg.pid,0)
+        pidfile='/etc/mail/sendmail.pid'
+        rule='not exists'
+        action=COMMONALERT(commonmsg.pid,0)
     PID sendmail2:
-	pidfile='/etc/mail/sendmail.pid'
-	rule='exists and not running'
-	action=COMMONALERT(commonmsg.pidpr,1)
+        pidfile='/etc/mail/sendmail.pid'
+        rule='exists and not running'
+        action=COMMONALERT(commonmsg.pidpr,1)
 
 

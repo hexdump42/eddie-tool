@@ -5,25 +5,25 @@
 group linux:
 
     PROC syslogd:
-	name='syslogd'
-	template=proctpl
-	action=COMMONALERT(commonmsg.proc,2)
+        name='syslogd'
+        template=proctpl
+        action=COMMONALERT(commonmsg.proc,2)
     PROC klogd:
-	name='klogd'
-	template=proctpl
-	action=COMMONALERT(commonmsg.proc,2)
+        name='klogd'
+        template=proctpl
+        action=COMMONALERT(commonmsg.proc,2)
     PROC sshd:
-	name='sshd'
-	template=proctpl
-	action=COMMONALERT(commonmsg.proc,2)
+        name='sshd'
+        template=proctpl
+        action=COMMONALERT(commonmsg.proc,2)
     PROC crond:
-	name='crond'
-	template=proctpl
-	action=COMMONALERT(commonmsg.proc,2)
+        name='crond'
+        template=proctpl
+        action=COMMONALERT(commonmsg.proc,2)
     PROC xinetd:
-	name='xinetd'
-	template=proctpl
-	action=COMMONALERT(commonmsg.proc,2)
+        name='xinetd'
+        template=proctpl
+        action=COMMONALERT(commonmsg.proc,2)
 
 
     #### Directives to store system stats in RRD (via Elvin messaging)
@@ -57,7 +57,7 @@ group linux:
     SYS cpu_rrd:
         rule="True"        # always true
         scanperiod='1m'
-        action=elvinrrd('cpulinux-%(h)s',		\
+        action=elvinrrd('cpulinux-%(h)s',                \
                         'cpu_user=%(ctr_cpu_user)d',    \
                         'cpu_nice=%(ctr_cpu_nice)d',    \
                         'cpu_system=%(ctr_cpu_system)d',\
@@ -82,7 +82,7 @@ group linux:
     SYS contextsw_rrd:
         scanperiod='5m'
         rule='True'        # always perform action
-        action=elvinrrd("cs-%(h)s",			\
+        action=elvinrrd("cs-%(h)s",                        \
                         "contextswitch=%(ctr_contextswitches)s" )
         console=None
 
@@ -90,7 +90,7 @@ group linux:
     SYS paging_rrd:
         scanperiod='5m'
         rule='True'        # always perform action
-        action=elvinrrd("paging-%(h)s",			\
+        action=elvinrrd("paging-%(h)s",                        \
                         "pages_in=%(ctr_pages_in)s",    \
                         "pages_out=%(ctr_pages_out)s" )
         console=None
@@ -99,7 +99,7 @@ group linux:
     SYS swapping_rrd:
         scanperiod='5m'
         rule='True'        # always perform action
-        action=elvinrrd("swapping-%(h)s",		\
+        action=elvinrrd("swapping-%(h)s",                \
                         "swap_in=%(ctr_pages_swapin)s", \
                         "swap_out=%(ctr_pages_swapout)s" )
         console=None
