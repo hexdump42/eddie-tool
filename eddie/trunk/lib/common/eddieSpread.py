@@ -153,7 +153,7 @@ class Spread(object):
                 # Loop to watch message queue for any Spread notifications to be sent
                 #   from other Spread functions or actions.
                 # This means no other threads should block when sending Spread notifications.
-                while True:
+                while status:
                     m = self.eq.get(BLOCK)        # get next message or wait for one
                     if m.time_valid():
                         log.log("<eddieSpread>Spread.main(): Sending msg from queue, %s"%(m), 9)
@@ -162,7 +162,10 @@ class Spread(object):
                             log.log("<eddieSpread>Spread.main(): msg sent, %s"%(m), 6)
                         except Exception, details:
                             log.log("<eddieSpread>Spread.main(): Spread exception, %s, msg %s not sent"%(details, m), 3)
-                            self.eq.put(m)        # put msg back in queue for re-try
+                            if 'closed mbox' in str(details):
+                                # connection has been closed, so break out & try to re-connect
+                                status = False
+                                self.eq.put(m)        # put msg back in queue for re-try
                     else:
                         log.log("<eddieSpread>Spread.main(): message no longer valid, discarding %s"%(m), 9)
             
