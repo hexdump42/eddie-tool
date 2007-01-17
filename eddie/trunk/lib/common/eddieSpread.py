@@ -186,10 +186,9 @@ class Spread(object):
         
         # Create Spread connection
         log.log("<eddieSpread>Spread.connect(): Opening connection to Spread, '%s'" %(self.server), 5)
-        name = "eddie@%s" % (log.hostname)
         
         try:
-            self.connection = spread.connect(self.server, name, 0, 0)
+            self.connection = spread.connect(self.server, '', 0, 0)
         except spread.error, msg:
             log.log("<eddieSpread>Spread.connect(): Spread could not connect, '%s'" %(msg), 5)
         else:
