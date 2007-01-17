@@ -121,6 +121,16 @@ SCANPERIOD=10m          # by default scan every 10 minutes
 #ELVINSCOPE='Elvin'
 
 
+# SPREADSERVER, SPREADPORT
+#  Specifies how to connect to a Spread server.
+#  These settings (and the use of Spread) are optional.
+#  Use: SPREADSERVER='<Spread server hostname or IP>'
+#       SPREADPORT=<Spread server port number>
+
+#SPREADSERVER='localhost'
+#SPREADPORT=4803
+
+
 # INTERPRETERS
 #  Defines processes which are "interpreters", where the first argument will be
 #  the real name of the process when examining the process table.  This only
