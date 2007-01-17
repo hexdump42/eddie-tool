@@ -1,10 +1,10 @@
 
 '''
-File		: diskdevice.py 
+File                : diskdevice.py 
 
-Start Date	: 20051021
+Start Date        : 20051021
 
-Description	:
+Description        :
   **TODO: this is currently a place-holder - it does not yet do anything.**
 
   This is an Eddie data collector.  It collects disk & tape -usage
@@ -83,7 +83,7 @@ class DiskStatistics(datacollect.DataCollect):
 
     def collectData(self):
 
-	self.data.datahash = {}
+        self.data.datahash = {}
 
         for device_name in linux_diskio.get_device_names():
             device_stats = linux_diskio.LinuxDiskIO(device_name)
@@ -111,8 +111,8 @@ class TapeStatistics(datacollect.DataCollect):
 
     def collectData(self):
 
-	# *TODO*
-	self.data.datahash = {}
+        # *TODO*
+        self.data.datahash = {}
 
         log.log( "<diskdevice>TapeStatistics.collectData(): *not yet implemented*", 5 )
 
@@ -122,17 +122,17 @@ class Disk:
     """
 
     def __init__(self, name):
-	self.name = name		# eg, "sd100" or "md50"
-	self.stats = {}
+        self.name = name                # eg, "sd100" or "md50"
+        self.stats = {}
 
     def setStats(self, stats):
-	"""Set the disk I/O statistics - a dict.
+        """Set the disk I/O statistics - a dict.
         """
-	self.stats = stats
+        self.stats = stats
 
     def getHash( self ):
-	"""Returns a dictionary of all the stats for this disk."""
-	return self.stats.copy()
+        """Returns a dictionary of all the stats for this disk."""
+        return self.stats.copy()
 
 
 ##

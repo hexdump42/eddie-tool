@@ -1,10 +1,10 @@
 
 '''
-File		: proc.py 
+File                : proc.py 
 
-Start Date	: 20050708 
+Start Date        : 20050708 
 
-Description	:
+Description        :
   This is an Eddie data collector.  It collects process information on
   a Win32 system.
 
@@ -14,9 +14,9 @@ Description	:
   directives that request it (e.g., PROC):
 
   Stats available for processes are:
-      pid		- Process ID [int]
-      exe		- Full executable name [string]
-      procname		- Base executable name (without path) [string]
+      pid                - Process ID [int]
+      exe                - Full executable name [string]
+      procname                - Base executable name (without path) [string]
 
 $Id$
 '''
@@ -104,9 +104,9 @@ class procList(datacollect.DataCollect):
         """Overload '[]' to return corresponding process object for given
         process name.
 
-	Note that when processes are collected there may be multiple
-	processes with the same name.  This dictionary only keeps a
-	reference to one of those (no guarantee which one).
+        Note that when processes are collected there may be multiple
+        processes with the same name.  This dictionary only keeps a
+        reference to one of those (no guarantee which one).
         """
 
         processes = self.getHash( 'nameHash' )  # safely get copy of process name dictionary
@@ -141,28 +141,28 @@ class procList(datacollect.DataCollect):
         """Collect process list.
         """
 
-	self.data.datahash = {}		# dict of processes keyed by pid
-	self.data.proclist = []		# list of processes
-	self.data.nameHash = {}		# dict of processes keyed by process name
+        self.data.datahash = {}                # dict of processes keyed by pid
+        self.data.proclist = []                # list of processes
+        self.data.nameHash = {}                # dict of processes keyed by process name
 
-	procs = win32process.EnumProcesses()
+        procs = win32process.EnumProcesses()
 
-	for pid in procs:
-	    try:
-		han = win32api.OpenProcess(win32con.PROCESS_QUERY_INFORMATION|win32con.PROCESS_VM_READ, 0, pid)
-	    except:
-		# privileges may prevent querying the process details
-		han = None
-	    p = proc(pid, han)
+        for pid in procs:
+            try:
+                han = win32api.OpenProcess(win32con.PROCESS_QUERY_INFORMATION|win32con.PROCESS_VM_READ, 0, pid)
+            except:
+                # privileges may prevent querying the process details
+                han = None
+            p = proc(pid, han)
 
-	    if han:
-		han.Close()
+            if han:
+                han.Close()
 
-	    self.data.proclist.append(p)
-	    self.data.datahash[p.pid] = p
-	    self.data.nameHash[p.procname] = p
+            self.data.proclist.append(p)
+            self.data.datahash[p.pid] = p
+            self.data.nameHash[p.procname] = p
 
-	log.log( "<proc>procList.collectData(): new proc list created", 7 )
+        log.log( "<proc>procList.collectData(): new proc list created", 7 )
 
 
 
@@ -172,32 +172,32 @@ class proc:
 
     def __init__(self, pid, han):
 
-	if han:
-	    try:
-		exe = win32process.GetModuleFileNameEx(han, 0)
-	    except pywintypes.error, msg:
-		if msg[0] != 299 : # we keep getting this error for some reason..?
-		    # Error is "Only part of a ReadProcessMemory or WriteProcessMemory request was completed."
-		    log.log( "<proc>proc.__init__(): failed win32process.GetModuleFileNameEx(), %s" %(msg), 5 )
-		exe = "<unknown>"
-	else:
-	    exe = "<unknown>"
+        if han:
+            try:
+                exe = win32process.GetModuleFileNameEx(han, 0)
+            except pywintypes.error, msg:
+                if msg[0] != 299 : # we keep getting this error for some reason..?
+                    # Error is "Only part of a ReadProcessMemory or WriteProcessMemory request was completed."
+                    log.log( "<proc>proc.__init__(): failed win32process.GetModuleFileNameEx(), %s" %(msg), 5 )
+                exe = "<unknown>"
+        else:
+            exe = "<unknown>"
 
-	self.pid = pid			# process ID
-	self.exe = exe			# full executable name (incl path)
-	self.procname = os.path.basename(exe)	# executable name (no path)
+        self.pid = pid                        # process ID
+        self.exe = exe                        # full executable name (incl path)
+        self.procname = os.path.basename(exe)        # executable name (no path)
 
 
     def procinfo(self):
-	"""Return process details as a dictionary.
+        """Return process details as a dictionary.
         """
 
-	info = {}
-	info["pid"] = self.pid
-	info["exe"] = self.exe
-	info["procname"] = self.procname
+        info = {}
+        info["pid"] = self.pid
+        info["exe"] = self.exe
+        info["procname"] = self.procname
 
-	return info
+        return info
 
 
 ##

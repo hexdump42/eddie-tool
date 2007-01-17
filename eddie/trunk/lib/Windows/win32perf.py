@@ -5,18 +5,18 @@ Requires Mark Hammond's win32all package.
 doctests:
 
 >>> wp = Win32Performance()
->>> wp							#doctest: +ELLIPSIS
+>>> wp                                                        #doctest: +ELLIPSIS
 <__main__.Win32Performance instance at 0x...>
 >>> wp.addCounter( "System", "Context Switches/sec" )
 >>> wp.addCounter( "System", "System Calls/sec" )
->>> wp.get()						#doctest: +ELLIPSIS
+>>> wp.get()                                                #doctest: +ELLIPSIS
 {'System System Calls/sec': ..., 'System Context Switches/sec': ...}
 >>> wp.close()
 >>> ctrs = getCounters('Network Interface')
 >>> inst = getInstances('Network Interface')
->>> getDriveNames()					#doctest: +ELLIPSIS
+>>> getDriveNames()                                        #doctest: +ELLIPSIS
 [...'C:\\\\'...]
->>> getDriveNames(DRIVE_FIXED)				#doctest: +ELLIPSIS
+>>> getDriveNames(DRIVE_FIXED)                                #doctest: +ELLIPSIS
 ['C:\\\\'...]
 >>>
 """
@@ -80,46 +80,46 @@ class Win32Performance:
     """
 
     def __init__( self ):
-	self.counters = []
-	self.hq = win32pdh.OpenQuery()
+        self.counters = []
+        self.hq = win32pdh.OpenQuery()
 
 
     def addCounter( self, object, counter, instance=None ):
-	"""Add a system performance counter.
-	object is like "System", "Processor", etc.
-	counter is like "Context Switches/sec"
-	instance is optional, a numeric string, (eg "0") or "_TOTAL"
-	"""
+        """Add a system performance counter.
+        object is like "System", "Processor", etc.
+        counter is like "Context Switches/sec"
+        instance is optional, a numeric string, (eg "0") or "_TOTAL"
+        """
 
-	try:
-	    wcounter = Win32Counter( object, counter, instance )
-	    wcounter.open( self.hq )
-	except pywintypes.error:
-	    raise Win32PerfError( "Cannot add counter ('%s', '%s', '%s')" %(object,counter,instance) )
-	self.counters.append(wcounter)
+        try:
+            wcounter = Win32Counter( object, counter, instance )
+            wcounter.open( self.hq )
+        except pywintypes.error:
+            raise Win32PerfError( "Cannot add counter ('%s', '%s', '%s')" %(object,counter,instance) )
+        self.counters.append(wcounter)
 
 
     def get( self, pause=None ):
-	"""Return a dictionary of all counters added by addCounter().
-	If pause is set (positive integer) then wait this number of
-	  seconds between two consequetive queries.  Some stats need
-	  two queries so the result can be averaged.
-	"""
+        """Return a dictionary of all counters added by addCounter().
+        If pause is set (positive integer) then wait this number of
+          seconds between two consequetive queries.  Some stats need
+          two queries so the result can be averaged.
+        """
 
-	win32pdh.CollectQueryData( self.hq )
-	if pause:
-	    time.sleep( pause )
-	    win32pdh.CollectQueryData( self.hq )
+        win32pdh.CollectQueryData( self.hq )
+        if pause:
+            time.sleep( pause )
+            win32pdh.CollectQueryData( self.hq )
 
-	perfvals = {}
-	for c in self.counters:
-	    val = c.getValue()
-	    perfvals[c.name] = val
-	return perfvals
+        perfvals = {}
+        for c in self.counters:
+            val = c.getValue()
+            perfvals[c.name] = val
+        return perfvals
 
 
     def close( self ):
-	win32pdh.CloseQuery( self.hq )
+        win32pdh.CloseQuery( self.hq )
 
 
 class Win32Counter:
@@ -127,47 +127,47 @@ class Win32Counter:
     """
 
     def __init__( self, object, counter, instance=None, machine=None ):
-	self.object = object
-	self.counter = counter
-	self.instance = instance
-	self.machine = machine
-	self.inum = -1
-	self.path = None
-	self.hc = None
+        self.object = object
+        self.counter = counter
+        self.instance = instance
+        self.machine = machine
+        self.inum = -1
+        self.path = None
+        self.hc = None
 
-	self.name = "%s %s" %(object, counter)
-	if instance:
-	    self.name = self.name + " %s" %(instance)
+        self.name = "%s %s" %(object, counter)
+        if instance:
+            self.name = self.name + " %s" %(instance)
 
 
     def open( self, hq ):
-	"""Open a counter request from an already open win32pdh query.
-	"""
+        """Open a counter request from an already open win32pdh query.
+        """
 
-	self.path = win32pdh.MakeCounterPath( (self.machine, self.object, self.instance, None, self.inum, self.counter) )
-	self.hc = win32pdh.AddCounter( hq, self.path )
+        self.path = win32pdh.MakeCounterPath( (self.machine, self.object, self.instance, None, self.inum, self.counter) )
+        self.hc = win32pdh.AddCounter( hq, self.path )
 
 
     def close( self ):
-	"""Remove the counter request from the win32pdh query.
-	"""
+        """Remove the counter request from the win32pdh query.
+        """
 
-	win32pdh.RemoveCounter( self.hc )
+        win32pdh.RemoveCounter( self.hc )
 
 
     def getValue( self, format=win32pdh.PDH_FMT_LONG ):
-	"""Return the value of the counter.
-	"""
+        """Return the value of the counter.
+        """
 
-	try:
-	    type, val = win32pdh.GetFormattedCounterValue(self.hc, format)
-	except pywintypes.error:
-	    # Sometimes this query randomly fails with unhelpful error messages such as:
-	    #  (-2147481640, 'GetFormattedCounterValue', 'No error message is available')
-	    type = None
-	    val = None
+        try:
+            type, val = win32pdh.GetFormattedCounterValue(self.hc, format)
+        except pywintypes.error:
+            # Sometimes this query randomly fails with unhelpful error messages such as:
+            #  (-2147481640, 'GetFormattedCounterValue', 'No error message is available')
+            type = None
+            val = None
 
-	return val
+        return val
 
 
 ### Module functions
@@ -218,19 +218,19 @@ def getDriveNames( filter=None ):
     """
 
     if type(filter) == type(1):
-	filter = (filter,)	# convert to tuple of one value
+        filter = (filter,)        # convert to tuple of one value
     elif filter:
-	try:
-	    filter = tuple(filter)
-	except TypeError:
-	    raise SyntaxError('filter must be a tuple or integer')
+        try:
+            filter = tuple(filter)
+        except TypeError:
+            raise SyntaxError('filter must be a tuple or integer')
 
     allDrives = [drive for drive in win32api.GetLogicalDriveStrings().split("\x00") if drive != '']
 
     if filter:
-	return [drive for drive in allDrives if win32file.GetDriveType(drive) in filter]
+        return [drive for drive in allDrives if win32file.GetDriveType(drive) in filter]
     else:
-	return allDrives
+        return allDrives
 
 
 

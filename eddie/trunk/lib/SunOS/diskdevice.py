@@ -1,10 +1,10 @@
 
 '''
-File		: diskdevice.py 
+File                : diskdevice.py 
 
-Start Date	: 20041005
+Start Date        : 20041005
 
-Description	:
+Description        :
   This is an Eddie data collector.  It collects disk & tape -usage
   statistics using /usr/bin/kstat.
 
@@ -55,7 +55,7 @@ import utils
 ##
 
 KSTAT_CMD = '/usr/bin/kstat'
-KSTAT_ARG = '-p -c '	# needs a class after it, eg: "disk" or "/tape|disk/"
+KSTAT_ARG = '-p -c '        # needs a class after it, eg: "disk" or "/tape|disk/"
 
 
 ##
@@ -74,7 +74,7 @@ class DiskStatistics(datacollect.DataCollect):
     def __init__(self):
         apply( datacollect.DataCollect.__init__, (self,) )
 
-	self.kstat_class = "disk"	# default kstat class
+        self.kstat_class = "disk"        # default kstat class
 
 
     ##################################################################
@@ -86,46 +86,46 @@ class DiskStatistics(datacollect.DataCollect):
 
     def collectData(self):
 
-	#self.data.datalist = []		# list of disk objects
-	self.data.datahash = {}		# hash of same objects keyed on device name (eg: sd100, md10)
-	self.data.numdisks = 0
+        #self.data.datalist = []                # list of disk objects
+        self.data.datahash = {}                # hash of same objects keyed on device name (eg: sd100, md10)
+        self.data.numdisks = 0
 
-	if not os.path.isfile( KSTAT_CMD ):
-	    #log.log( "<diskdevice>DiskStatistics.collectData(): No kstat command '%s'" %(KSTAT_CMD), 4 )
-	    raise datacollect.DataFailure, "No kstat command '%s'" %(KSTAT_CMD)
+        if not os.path.isfile( KSTAT_CMD ):
+            #log.log( "<diskdevice>DiskStatistics.collectData(): No kstat command '%s'" %(KSTAT_CMD), 4 )
+            raise datacollect.DataFailure, "No kstat command '%s'" %(KSTAT_CMD)
 
-	# get the tcp stats
-	cmd = "%s %s %s" % (KSTAT_CMD, KSTAT_ARG, self.kstat_class)
-	rawList = utils.safe_popen( cmd, 'r' )
+        # get the tcp stats
+        cmd = "%s %s %s" % (KSTAT_CMD, KSTAT_ARG, self.kstat_class)
+        rawList = utils.safe_popen( cmd, 'r' )
 
-	for line in rawList.readlines():
-	    try:
-	        (keys,value) = string.split( line )
-	    except ValueError:
-		# should be 2 white-space separated fields per line
-		log.log( "<diskdevice>DiskStatistics.collectData(): cannot parse kstat line '%s'" %(lines), 5 )
-		continue
+        for line in rawList.readlines():
+            try:
+                (keys,value) = string.split( line )
+            except ValueError:
+                # should be 2 white-space separated fields per line
+                log.log( "<diskdevice>DiskStatistics.collectData(): cannot parse kstat line '%s'" %(lines), 5 )
+                continue
 
-	    try:
-		(type,index,name,key) = string.split( keys, ':' )
-	    except ValueError:
-		# should be 4 colon separated fields for keys
-		log.log( "<diskdevice>DiskStatistics.collectData(): cannot parse kstat keys '%s'" %(keys), 5 )
-		continue
+            try:
+                (type,index,name,key) = string.split( keys, ':' )
+            except ValueError:
+                # should be 4 colon separated fields for keys
+                log.log( "<diskdevice>DiskStatistics.collectData(): cannot parse kstat keys '%s'" %(keys), 5 )
+                continue
 
-	    try:
-		# fetch already existing Disk object
-	        disk = self.data.datahash[name]
-	    except KeyError:
-		# create new Disk object if needed
-		disk = Disk( type, index, name )
-	        self.data.datahash[name] = disk
-	        #self.data.datalist.append( disk )
-	        self.data.numdisks = self.data.numdisks + 1
+            try:
+                # fetch already existing Disk object
+                disk = self.data.datahash[name]
+            except KeyError:
+                # create new Disk object if needed
+                disk = Disk( type, index, name )
+                self.data.datahash[name] = disk
+                #self.data.datalist.append( disk )
+                self.data.numdisks = self.data.numdisks + 1
 
-	    disk.setStat( key, value )
+            disk.setStat( key, value )
 
-	utils.safe_pclose( rawList )
+        utils.safe_pclose( rawList )
 
         log.log( "<diskdevice>DiskStatistics.collectData(): Collected stats for %d disks" %(self.data.numdisks), 6 )
 
@@ -139,7 +139,7 @@ class TapeStatistics(datacollect.DataCollect):
     def __init__(self):
         apply( datacollect.DataCollect.__init__, (self,) )
 
-	self.kstat_class = "tape"	# default kstat class
+        self.kstat_class = "tape"        # default kstat class
 
 
     ##################################################################
@@ -151,46 +151,46 @@ class TapeStatistics(datacollect.DataCollect):
 
     def collectData(self):
 
-	#self.data.datalist = []		# list of tape objects
-	self.data.datahash = {}		# hash of same objects keyed on device name (eg: sd100, md10)
-	self.data.numtapes = 0
+        #self.data.datalist = []                # list of tape objects
+        self.data.datahash = {}                # hash of same objects keyed on device name (eg: sd100, md10)
+        self.data.numtapes = 0
 
-	if not os.path.isfile( KSTAT_CMD ):
-	    #log.log( "<diskdevice>TapeStatistics.collectData(): No kstat command '%s'" %(KSTAT_CMD), 4 )
-	    raise datacollect.DataFailure, "No kstat command '%s'" %(KSTAT_CMD)
+        if not os.path.isfile( KSTAT_CMD ):
+            #log.log( "<diskdevice>TapeStatistics.collectData(): No kstat command '%s'" %(KSTAT_CMD), 4 )
+            raise datacollect.DataFailure, "No kstat command '%s'" %(KSTAT_CMD)
 
-	# get the tcp stats
-	cmd = "%s %s %s" % (KSTAT_CMD, KSTAT_ARG, self.kstat_class)
-	rawList = utils.safe_popen( cmd, 'r' )
+        # get the tcp stats
+        cmd = "%s %s %s" % (KSTAT_CMD, KSTAT_ARG, self.kstat_class)
+        rawList = utils.safe_popen( cmd, 'r' )
 
-	for line in rawList.readlines():
-	    try:
-	        (keys,value) = string.split( line )
-	    except ValueError:
-		# should be 2 white-space separated fields per line
-		log.log( "<diskdevice>TapeStatistics.collectData(): cannot parse kstat line '%s'" %(lines), 5 )
-		continue
+        for line in rawList.readlines():
+            try:
+                (keys,value) = string.split( line )
+            except ValueError:
+                # should be 2 white-space separated fields per line
+                log.log( "<diskdevice>TapeStatistics.collectData(): cannot parse kstat line '%s'" %(lines), 5 )
+                continue
 
-	    try:
-		(type,index,name,key) = string.split( keys, ':' )
-	    except ValueError:
-		# should be 4 colon separated fields for keys
-		log.log( "<diskdevice>TapeStatistics.collectData(): cannot parse kstat keys '%s'" %(keys), 5 )
-		continue
+            try:
+                (type,index,name,key) = string.split( keys, ':' )
+            except ValueError:
+                # should be 4 colon separated fields for keys
+                log.log( "<diskdevice>TapeStatistics.collectData(): cannot parse kstat keys '%s'" %(keys), 5 )
+                continue
 
-	    try:
-		# fetch already existing Disk object
-	        tape = self.data.datahash[name]
-	    except KeyError:
-		# create new Disk object if needed
-		tape = Disk( type, index, name )
-	        self.data.datahash[name] = tape
-	        #self.data.datalist.append( tape )
-	        self.data.numtapes = self.data.numtapes + 1
+            try:
+                # fetch already existing Disk object
+                tape = self.data.datahash[name]
+            except KeyError:
+                # create new Disk object if needed
+                tape = Disk( type, index, name )
+                self.data.datahash[name] = tape
+                #self.data.datalist.append( tape )
+                self.data.numtapes = self.data.numtapes + 1
 
-	    tape.setStat( key, value )
+            tape.setStat( key, value )
 
-	utils.safe_pclose( rawList )
+        utils.safe_pclose( rawList )
 
         log.log( "<diskdevice>TapeStatistics.collectData(): Collected stats for %d tapes" %(self.data.numtapes), 6 )
 
@@ -204,27 +204,27 @@ class Disk:
 
     def __init__( self, type, index, name ):
 
-	self.kstat_type = type		# eg, "sd" or "md"
-	self.kstat_index = int(index)	# eg, 100
-	self.name = name		# eg, "sd100" or "md50"
-	self.stats = {}
+        self.kstat_type = type                # eg, "sd" or "md"
+        self.kstat_index = int(index)        # eg, 100
+        self.name = name                # eg, "sd100" or "md50"
+        self.stats = {}
 
 
     def setStat( self, key, value ):
-	"""Set a statistic named key to value."""
+        """Set a statistic named key to value."""
 
-	try:
-	    propervalue = eval( value )	# convert to actual type (eg, int, float)
-	except NameError:
-	    propervalue = value		# otherwise leave as string
+        try:
+            propervalue = eval( value )        # convert to actual type (eg, int, float)
+        except NameError:
+            propervalue = value                # otherwise leave as string
 
-	self.stats[key] = propervalue
+        self.stats[key] = propervalue
 
 
     def getHash( self ):
-	"""Returns a dictionary of all the stats for this disk."""
+        """Returns a dictionary of all the stats for this disk."""
 
-	return self.stats.copy()
+        return self.stats.copy()
 
 
 ##

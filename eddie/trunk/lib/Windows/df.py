@@ -1,10 +1,10 @@
 
 '''
-File		: df.py 
+File                : df.py 
 
-Start Date	: 20050629
+Start Date        : 20050629
 
-Description	:
+Description        :
   This is an Eddie data collector.  It collects filesystem usage statistics
   using win32file.GetDiskFreeSpace()
 
@@ -61,7 +61,7 @@ class dfList(datacollect.DataCollect):
     """dfList provides access to disk usage statistics."""
 
     def __init__(self):
-	apply( datacollect.DataCollect.__init__, (self,) )
+        apply( datacollect.DataCollect.__init__, (self,) )
 
 
     ##################################################################
@@ -70,9 +70,9 @@ class dfList(datacollect.DataCollect):
     def __str__(self):
         """Create string to display disk usage stats."""
 
-	d = self.getHash()
+        d = self.getHash()
 
-	rv = ""
+        rv = ""
         for item in d.keys():
             rv = rv + str(d[item]) + '\n'
 
@@ -81,22 +81,22 @@ class dfList(datacollect.DataCollect):
 
     def __getitem__(self, name):
         """Extends DataCollect.__getitem__() to search mounthash if default
-	datahash fails.
+        datahash fails.
 
-	The dfList object can be treated like a dictionary and keyed by
-	either device or mount point.
+        The dfList object can be treated like a dictionary and keyed by
+        either device or mount point.
         """
 
-	try:
-	    r = apply( datacollect.DataCollect.__getitem__, (self, name) )
-	except KeyError:
-	    self.data_semaphore.acquire()	# thread-safe access to self.data
-	    try:
+        try:
+            r = apply( datacollect.DataCollect.__getitem__, (self, name) )
+        except KeyError:
+            self.data_semaphore.acquire()        # thread-safe access to self.data
+            try:
                 r = self.data.mounthash[name]        # try to find mount point
             except KeyError:
-		self.data_semaphore.release()
-		raise KeyError, "Key %s not found in data hashes" % (name)
-	    self.data_semaphore.release()
+                self.data_semaphore.release()
+                raise KeyError, "Key %s not found in data hashes" % (name)
+            self.data_semaphore.release()
 
         return r
 
@@ -105,27 +105,27 @@ class dfList(datacollect.DataCollect):
     # Private methods.  No thread safety if not using public methods.
 
     def collectData(self):
-	"""Collect disk usage data.
-	"""
+        """Collect disk usage data.
+        """
 
-	self.data.datahash = {}
-	self.data.mounthash = {}
+        self.data.datahash = {}
+        self.data.mounthash = {}
 
-	drives = win32perf.getDriveNames(filter=(win32perf.DRIVE_FIXED,win32perf.DRIVE_REMOVABLE))
-	drives = [d[:-1] for d in drives if d not in ('A:\\', 'B:\\')]	# remove '\'; ignore A: & B:
+        drives = win32perf.getDriveNames(filter=(win32perf.DRIVE_FIXED,win32perf.DRIVE_REMOVABLE))
+        drives = [d[:-1] for d in drives if d not in ('A:\\', 'B:\\')]        # remove '\'; ignore A: & B:
 
-	for fs in drives:
-	    try:
-		fsinfo = win32file.GetDiskFreeSpace( fs+'\\' )
-	    except pywintypes.error, err:
-		log.log( "<df>dfList.collectData(): pywintypes.error, %s"%(err), 7 )
-		continue	# skip invalid drives
-	    assert len(fsinfo) == 4
-	    p = df(fs, fsinfo)
-	    self.data.datahash[fs] = p	# dictionary of filesystem devices
-	    self.data.mounthash[fs] = p	# dictionary of mount points (hmm, same)
+        for fs in drives:
+            try:
+                fsinfo = win32file.GetDiskFreeSpace( fs+'\\' )
+            except pywintypes.error, err:
+                log.log( "<df>dfList.collectData(): pywintypes.error, %s"%(err), 7 )
+                continue        # skip invalid drives
+            assert len(fsinfo) == 4
+            p = df(fs, fsinfo)
+            self.data.datahash[fs] = p        # dictionary of filesystem devices
+            self.data.mounthash[fs] = p        # dictionary of mount points (hmm, same)
 
-	log.log( "<df>dfList.collectData(): filesystem data collected", 7 )
+        log.log( "<df>dfList.collectData(): filesystem data collected", 7 )
 
 
 ##################################################################
@@ -135,32 +135,32 @@ class df:
     """df object holds stats on disk usage for a file system."""
 
     def __init__(self, fsname, fsinfo):
-	self.sectors_per_cluster = fsinfo[0]
-	self.bytes_per_sector = fsinfo[1]
-	self.free_clusters = fsinfo[2]
-	self.total_clusters = fsinfo[3]
+        self.sectors_per_cluster = fsinfo[0]
+        self.bytes_per_sector = fsinfo[1]
+        self.free_clusters = fsinfo[2]
+        self.total_clusters = fsinfo[3]
 
-	self.data = {}
-	self.data['fsname']  = fsname			# Filesystem name (device)
-	self.data['size']    = self.total_clusters * self.bytes_per_sector * self.sectors_per_cluster / 1024	# Size of filesystem (kBytes)
-	self.data['avail']   = self.free_clusters * self.bytes_per_sector * self.sectors_per_cluster / 1024	# kBytes free
-	self.data['used']    = self.data['size'] - self.data['avail']	# kBytes used
-	self.data['pctused'] = int(100.0 * self.data['used'] / self.data['size'])	# Percentage Used
-	self.data['mountpt'] = fsname		# Mount point - same as fsname for Win32
+        self.data = {}
+        self.data['fsname']  = fsname                        # Filesystem name (device)
+        self.data['size']    = self.total_clusters * self.bytes_per_sector * self.sectors_per_cluster / 1024        # Size of filesystem (kBytes)
+        self.data['avail']   = self.free_clusters * self.bytes_per_sector * self.sectors_per_cluster / 1024        # kBytes free
+        self.data['used']    = self.data['size'] - self.data['avail']        # kBytes used
+        self.data['pctused'] = int(100.0 * self.data['used'] / self.data['size'])        # Percentage Used
+        self.data['mountpt'] = fsname                # Mount point - same as fsname for Win32
 
 
     def __str__(self):
-	str = "%-20s %10s %10s %10s %4s %-12s\n" % ("Filesystem","Size","Used","Available","Use%","Mounted on")
-	str = str + "%-20s %10s %10s %10s %4s %-12s" % (self.data['fsname'],self.data['size'],self.data['used'],self.data['avail'],self.data['pctused'],self.data['mountpt'])
+        str = "%-20s %10s %10s %10s %4s %-12s\n" % ("Filesystem","Size","Used","Available","Use%","Mounted on")
+        str = str + "%-20s %10s %10s %10s %4s %-12s" % (self.data['fsname'],self.data['size'],self.data['used'],self.data['avail'],self.data['pctused'],self.data['mountpt'])
 
-	return(str)
+        return(str)
 
 
     def getHash(self):
-	"""Return a copy of the filesystem data dictionary.
-	"""
+        """Return a copy of the filesystem data dictionary.
+        """
 
-	return self.data.copy()
+        return self.data.copy()
 
 
 ##

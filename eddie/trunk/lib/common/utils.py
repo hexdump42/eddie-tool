@@ -1,10 +1,10 @@
 
 '''
-File		: utils.py 
+File                : utils.py 
 
-Start Date	: 19971217 
+Start Date        : 19971217 
 
-Description	: General utility functions
+Description        : General utility functions
 
 $Id$
 '''
@@ -57,30 +57,30 @@ class Stack:
     """General purpose stack object."""
 
     def __init__(self):
-	self.stack = []
+        self.stack = []
 
     def __str__(self):
-	return "%s" % self.stack
+        return "%s" % self.stack
 
     def __len__(self):
-	return len(self.stack)
+        return len(self.stack)
 
     def __getitem__(self, item):
-	return self.stack[item]
+        return self.stack[item]
 
     def push(self, obj):
-	self.stack.append( obj )
+        self.stack.append( obj )
 
     def pop(self):
-	obj = self.stack[-1]
-	del self.stack[-1]
-	return obj
+        obj = self.stack[-1]
+        del self.stack[-1]
+        return obj
 
     def top(self):
-	if len(self.stack) == 0:
-	    return None
-	else:
-	    return self.stack[-1]
+        if len(self.stack) == 0:
+            return None
+        else:
+            return self.stack[-1]
 
 
 ## Functions
@@ -93,43 +93,43 @@ def trickySplit( line, delim ):
        would return: [ "email(root,'hi there')", "system('echo hi, mum')" ]
     """
 
-    parenCnt = 0		# count of ()'s
-    curlyCnt = 0		# count of {}'s
-    squareCnt = 0		# count of []'s
-    doubleqCnt = 0		# count of ""'s
-    quoteCnt = 0		# count of '''s
+    parenCnt = 0                # count of ()'s
+    curlyCnt = 0                # count of {}'s
+    squareCnt = 0                # count of []'s
+    doubleqCnt = 0                # count of ""'s
+    quoteCnt = 0                # count of '''s
 
-    list = []			# list of split strings
-    current = ''		# the current split string
+    list = []                        # list of split strings
+    current = ''                # the current split string
 
     for c in line:
-	if c == '(':
-	    parenCnt = parenCnt + 1
-	elif c == ')':
-	    parenCnt = parenCnt - 1
-	elif c == '{':
-	    curlyCnt = curlyCnt + 1
-	elif c == '}':
-	    curlyCnt = curlyCnt - 1
-	elif c == '[':
-	    squareCnt = squareCnt + 1
-	elif c == ']':
-	    squareCnt = squareCnt - 1
-	elif c == '"':
-	    doubleqCnt = 1 - doubleqCnt
-	elif c == "'":
-	    quoteCnt = 1 - quoteCnt
-	elif c == delim:
-	    if parenCnt == 0 and curlyCnt == 0 and squareCnt == 0 and doubleqCnt == 0 and quoteCnt == 0:
-		# split here!
-		list.append(current)
-		current = ''
-		continue
+        if c == '(':
+            parenCnt = parenCnt + 1
+        elif c == ')':
+            parenCnt = parenCnt - 1
+        elif c == '{':
+            curlyCnt = curlyCnt + 1
+        elif c == '}':
+            curlyCnt = curlyCnt - 1
+        elif c == '[':
+            squareCnt = squareCnt + 1
+        elif c == ']':
+            squareCnt = squareCnt - 1
+        elif c == '"':
+            doubleqCnt = 1 - doubleqCnt
+        elif c == "'":
+            quoteCnt = 1 - quoteCnt
+        elif c == delim:
+            if parenCnt == 0 and curlyCnt == 0 and squareCnt == 0 and doubleqCnt == 0 and quoteCnt == 0:
+                # split here!
+                list.append(current)
+                current = ''
+                continue
 
-	current = current + c
+        current = current + c
 
     if len(current) > 0:
-	list.append(current)
+        list.append(current)
 
     return list
 
@@ -143,28 +143,28 @@ def quoteArgs( list ):
     newlist = []
     sre = re.compile( "([\t ]*[A-Za-z0-9_]*[\t ]*\()(.*)([\t ]*\)[\t ]*)" )
     for s in list:
-	inx = sre.search( s )
-	if inx != None:
-	    argline = inx.group(2)
-	    arglist = string.split( argline, ',' )
-	    newcmd = inx.group(1)		# build new command
-	    i = 0				# count arguments so we don't put ',' before 1st argument
-	    for a in arglist:
-		a = string.strip( a )
-		# if argument is not already enclosed in quotes ("" or '')
-		if re.search( "^[\"'].*[\"']$", a ) == None:
-		    a = '"' + a + '"'		# enclose it in quotes
-		if i > 0:
-		    newcmd = newcmd + ','	# put comma before argument 2-onwards
-		newcmd = newcmd + a
-		i = i + 1
-	    newcmd = newcmd + inx.group(3)
-	    newlist.append( newcmd )		# add our "quote-arg'd" command to list
-	else:
-	    newlist.append( s )			# add un-changed command to list
+        inx = sre.search( s )
+        if inx != None:
+            argline = inx.group(2)
+            arglist = string.split( argline, ',' )
+            newcmd = inx.group(1)                # build new command
+            i = 0                                # count arguments so we don't put ',' before 1st argument
+            for a in arglist:
+                a = string.strip( a )
+                # if argument is not already enclosed in quotes ("" or '')
+                if re.search( "^[\"'].*[\"']$", a ) == None:
+                    a = '"' + a + '"'                # enclose it in quotes
+                if i > 0:
+                    newcmd = newcmd + ','        # put comma before argument 2-onwards
+                newcmd = newcmd + a
+                i = i + 1
+            newcmd = newcmd + inx.group(3)
+            newlist.append( newcmd )                # add our "quote-arg'd" command to list
+        else:
+            newlist.append( s )                        # add un-changed command to list
     
     return newlist
-	
+        
  
 
 def charpresent( s, chars ):
@@ -172,8 +172,8 @@ def charpresent( s, chars ):
        chars is found in the string s.  If none are found, 0 is returned."""
 
     for c in chars:
-	if string.find( s, c ) != -1:
-	    return 1
+        if string.find( s, c ) != -1:
+            return 1
     return 0
 
 
@@ -184,17 +184,17 @@ def stripquote( s ):
 
     # if not a string, don't touch it
     if type(s) != type("string"):
-	return s
+        return s
 
     # strip whitespace from ends
     s = string.strip( s )
 
     # strip quotes from ends (only in pairs)
     while len(s) > 0 and (s[0] in ["'", '"'] and s[-1] in ["'", '"']):
-	if s[0] == "'" or s[0] == '"':
-	    s = s[1:]
-	if s[-1] == "'" or s[-1] == '"':
-	    s = s[:-1]
+        if s[0] == "'" or s[0] == '"':
+            s = s[1:]
+        if s[-1] == "'" or s[-1] == '"':
+            s = s[:-1]
 
     return s
 
@@ -204,24 +204,24 @@ def atom( ch ):
        eg: s=seconds, m=minutes, h=hours, d=days, w=weeks, c=calendar=months, y=years"""
 
     if ch == 's' or ch == 'S':
-	mult = 1
+        mult = 1
     elif ch == 'm' or ch == 'M':
-	mult = 60
+        mult = 60
     elif ch == 'h' or ch == 'H':
-	mult = 60*60
+        mult = 60*60
     elif ch == 'd' or ch == 'D':
-	mult = 60*60*24
+        mult = 60*60*24
     elif ch == 'w' or ch == 'W':
-	mult = 60*60*24*7
+        mult = 60*60*24*7
     elif ch == 'c' or ch == 'C':
-	mult = 60*60*24*30			# not exact...
+        mult = 60*60*24*30                        # not exact...
     elif ch == 'y' or ch == 'Y':
-	mult = 60*60*24*365
+        mult = 60*60*24*365
     else:
-	mult = None
+        mult = None
 
     return mult
-	
+        
 
 def val2secs( value ):
     """
@@ -230,14 +230,14 @@ def val2secs( value ):
     """
 
     if re.search( '[mshdwcyMSHDWCY]', value ) == None:
-	return string.atoi(value)
+        return string.atoi(value)
     timech = value[-1]
     value = value[:-1]
     mult = atom( timech )
     if mult == None:
-	return None		# error parsing multiplier character
+        return None                # error parsing multiplier character
     if mult == 0:
-	return 0
+        return 0
     return string.atoi(value)*mult
 
 
@@ -258,14 +258,14 @@ def safe_popen( cmd, mode ):
 
     systemcall_semaphore.acquire()
     try:
-	r = os.popen(cmd, mode)
+        r = os.popen(cmd, mode)
     except:
-	# if popen() raises an exception we must release the
-	# semaphore lock before continuing, otherwise all further calls block -
-	# which will lock up all the available threads...
-	systemcall_semaphore.release()
-	e = sys.exc_info()
-	raise e[0], e[1]
+        # if popen() raises an exception we must release the
+        # semaphore lock before continuing, otherwise all further calls block -
+        # which will lock up all the available threads...
+        systemcall_semaphore.release()
+        e = sys.exc_info()
+        raise e[0], e[1]
 
     return r
 
@@ -274,14 +274,14 @@ def safe_pclose( fh ):
     """Close the file handler and release the semaphore."""
 
     try:
-	fh.close()
+        fh.close()
     except:
-	# if close() raises an exception we must release the
-	# semaphore lock before continuing, otherwise all further calls block -
-	# which will lock up all the available threads...
-	systemcall_semaphore.release()
-	e = sys.exc_info()
-	raise e[0], e[1]
+        # if close() raises an exception we must release the
+        # semaphore lock before continuing, otherwise all further calls block -
+        # which will lock up all the available threads...
+        systemcall_semaphore.release()
+        e = sys.exc_info()
+        raise e[0], e[1]
 
     systemcall_semaphore.release()
 
@@ -303,14 +303,14 @@ def safe_getstatusoutput( cmd ):
 
     systemcall_semaphore.acquire()
     try:
-	(r, output) = commands.getstatusoutput( cmd )
+        (r, output) = commands.getstatusoutput( cmd )
     except:
-	# if getstatusoutput() raises an exception we must release the
-	# semaphore lock before continuing, otherwise all further calls block -
-	# which will lock up all the available threads...
-	systemcall_semaphore.release()
-	e = sys.exc_info()
-	raise e[0], e[1]
+        # if getstatusoutput() raises an exception we must release the
+        # semaphore lock before continuing, otherwise all further calls block -
+        # which will lock up all the available threads...
+        systemcall_semaphore.release()
+        e = sys.exc_info()
+        raise e[0], e[1]
 
     systemcall_semaphore.release()
 
@@ -355,30 +355,30 @@ def sendmail_bin( headers, body ):
     """
 
     if not os.path.exists( SENDMAIL ):
-	raise "utils.sendmail_bin exception", "sendmail not found, check SENDMAIL setting: '%s'"%(SENDMAIL)
+        raise "utils.sendmail_bin exception", "sendmail not found, check SENDMAIL setting: '%s'"%(SENDMAIL)
 
     # make sure headers ends in carriage-return
     if headers[-1] != '\n':
-	headers = headers + '\n'
+        headers = headers + '\n'
 
     # add default headers if not already specified
     global EMAIL_FROM
     if not re.search( "^From:", headers, re.M ):
-	if EMAIL_FROM == None:
-	    EMAIL_FROM = os.getenv("USER")
-	    if EMAIL_FROM == None:
-		EMAIL_FROM = 'root'
-	headers = headers + 'From: %s\n' % (EMAIL_FROM)
+        if EMAIL_FROM == None:
+            EMAIL_FROM = os.getenv("USER")
+            if EMAIL_FROM == None:
+                EMAIL_FROM = 'root'
+        headers = headers + 'From: %s\n' % (EMAIL_FROM)
 
     if not re.search( "^Reply-To:", headers, re.M ):
-	if EMAIL_REPLYTO != None:
-	    headers = headers + 'Reply-To: %s\n' % (EMAIL_REPLYTO)
+        if EMAIL_REPLYTO != None:
+            headers = headers + 'Reply-To: %s\n' % (EMAIL_REPLYTO)
 
     try:
-	hostname = os.uname()[1]
+        hostname = os.uname()[1]
     except AttributeError:
-	import platform
-	hostname = platform.node()
+        import platform
+        hostname = platform.node()
     headers = headers + 'X-Generated-By: %s:%s\n' % (hostname, sys.argv[0])
 
     # send the email via the sendmail binary
@@ -405,31 +405,31 @@ def sendmail_smtp( headers, body ):
 
     # make sure headers ends in carriage-return
     if headers[-1] != '\n':
-	headers = headers + '\n'
+        headers = headers + '\n'
 
     # add default headers if not already specified
     global EMAIL_FROM
     if not re.search( "^From:", headers, re.M ):
-	if EMAIL_FROM == None:
-	    EMAIL_FROM = os.getenv("USER")
-	    if EMAIL_FROM == None:
-		EMAIL_FROM = 'root'
-	headers = headers + 'From: %s\n' % (EMAIL_FROM)
+        if EMAIL_FROM == None:
+            EMAIL_FROM = os.getenv("USER")
+            if EMAIL_FROM == None:
+                EMAIL_FROM = 'root'
+        headers = headers + 'From: %s\n' % (EMAIL_FROM)
 
     if not re.search( "^Reply-To:", headers, re.M ):
-	if EMAIL_REPLYTO != None:
-	    headers = headers + 'Reply-To: %s\n' % (EMAIL_REPLYTO)
+        if EMAIL_REPLYTO != None:
+            headers = headers + 'Reply-To: %s\n' % (EMAIL_REPLYTO)
 
     m = re.search("^To: (.*)$",headers, re.M)
-    toaddr = m.group(1)	
+    toaddr = m.group(1)        
     if toaddr.find(','):
-	toaddr = toaddr.split(',')
+        toaddr = toaddr.split(',')
 
     try:
-	hostname = os.uname()[1]
+        hostname = os.uname()[1]
     except AttributeError:
-	import platform
-	hostname = platform.node()
+        import platform
+        hostname = platform.node()
     headers = headers + 'X-Generated-By: %s:%s\n' % (hostname, sys.argv[0])
 
     msg = "%s\r\n%s" % (headers, body)
@@ -437,21 +437,21 @@ def sendmail_smtp( headers, body ):
     # Try and send to each server in turn until we succeed
     errmsg = []
     for server in SMTP_SERVERS:
-    	try:
-	    smtpserv = smtplib.SMTP(server)
-	    smtpserv.sendmail(EMAIL_FROM, toaddr, msg)
-	    smtpserv.quit()
-	except:
-	    errmsg.append("<utils>sendmail_smtp: Tried via %s: %s" % (server, sys.exc_info()[0]))
-	    continue
-	else:
-	    log.log("<utils>sendmail_smtp: Sent mail via %s" % server,6)
-	    return 1
+        try:
+            smtpserv = smtplib.SMTP(server)
+            smtpserv.sendmail(EMAIL_FROM, toaddr, msg)
+            smtpserv.quit()
+        except:
+            errmsg.append("<utils>sendmail_smtp: Tried via %s: %s" % (server, sys.exc_info()[0]))
+            continue
+        else:
+            log.log("<utils>sendmail_smtp: Sent mail via %s" % server,6)
+            return 1
 
     # Don't complain unless we can't send mail via any server
     log.log("<utils>sendmail_smtp: Could not send email to %s via any servers %s" % (`toaddr`, SMTP_SERVERS),4)
     for msg in errmsg:
-	log.log(msg,4)
+        log.log(msg,4)
     return 0
 
 
@@ -467,9 +467,9 @@ def get_work_dir():
     """
 
     if WORKDIR:
-	return str(WORKDIR)	# make sure we return a string
+        return str(WORKDIR)        # make sure we return a string
     else:
-	raise WorkdirError( "WORKDIR has not been defined" )
+        raise WorkdirError( "WORKDIR has not been defined" )
 
 
 
@@ -481,10 +481,10 @@ def set_sub_work_dir( subdir ):
     workdir = get_work_dir()
     worksubdir = os.path.join( workdir, subdir )
     if not os.path.isdir( worksubdir ):
-	try:
-	    os.makedirs( worksubdir, 0700 )	# create all dirs - access by user only
-	except OSError, err:
-	    raise WorkdirError( "Cannot create WORKDIR subdirectory '%s', %s" % (worksubdir, err) )
+        try:
+            os.makedirs( worksubdir, 0700 )        # create all dirs - access by user only
+        except OSError, err:
+            raise WorkdirError( "Cannot create WORKDIR subdirectory '%s', %s" % (worksubdir, err) )
 
     return worksubdir
 
@@ -497,16 +497,16 @@ def typeFromString( val ):
     """
 
     try:
-	return int(val)         # try as an integer
+        return int(val)         # try as an integer
     except:
-	try:
-	    return float(val)   # try as a float
-	except:
-	    try:
-		return str(val)  # return a string (almost every object has a __str__ method)
-	    except:
-		log.log( "<utils>typeFromString: unhandled cast", 4 )
-		return None
+        try:
+            return float(val)   # try as a float
+        except:
+            try:
+                return str(val)  # return a string (almost every object has a __str__ method)
+            except:
+                log.log( "<utils>typeFromString: unhandled cast", 4 )
+                return None
 
 
 def parseVars(text, vDict):
@@ -524,15 +524,15 @@ def parseVars(text, vDict):
     # Keep parsing the text string until there are no '%(', or we've done a few parses...
     parses = 0
     while ( parses == 0 or text.find('%(') >= 0 ) and parses < 5:
-	parses = parses + 1
-	try:
-	    text = text % vDict
-	except KeyError, msg:
-	    log.log( "<utils>parseVars(): KeyError exception for '%s' from string '%s' (%d) with dictionary '%s'" % (msg, text, parses, vDict), 5 )
-	    return text
-	except TypeError, msg:
-	    log.log( "<utils>parseVars(): TypeError exception for '%s' from string '%s' (%d) with dictionary '%s'" % (msg, text, parses, vDict), 5 )
-	    return text
+        parses = parses + 1
+        try:
+            text = text % vDict
+        except KeyError, msg:
+            log.log( "<utils>parseVars(): KeyError exception for '%s' from string '%s' (%d) with dictionary '%s'" % (msg, text, parses, vDict), 5 )
+            return text
+        except TypeError, msg:
+            log.log( "<utils>parseVars(): TypeError exception for '%s' from string '%s' (%d) with dictionary '%s'" % (msg, text, parses, vDict), 5 )
+            return text
 
     return text
 
@@ -546,34 +546,34 @@ def create_child( doSTDs ):
     """
 
     try:
-	child_pid = os.fork()
-	if child_pid:  # parent gets the child PID returned
-	    return child_pid
+        child_pid = os.fork()
+        if child_pid:  # parent gets the child PID returned
+            return child_pid
     except OSError, e:
-	raise Exception, "create_child(): fork() failed: %s [%d]" % (e.strerror, e.errno)
+        raise Exception, "create_child(): fork() failed: %s [%d]" % (e.strerror, e.errno)
 
     # create a new session for the child process (if available)
     if hasattr(os, 'setsid'):
-	os.setsid()
+        os.setsid()
 
     # fork() again so the parent (the session group leader), can exit.
     # We can now never gain a controlling terminal again.
 #    if os.fork() != 0:
-#	sys.exit(0)
+#        sys.exit(0)
 
     if doSTDs:
-	# child closes its originating terminal connections:
-	os.close(0)  # stdin
-	os.close(1)  # stdout
-	os.close(2)  # stderr
-	nulld = '/dev/null'
-	if (hasattr(os, 'devnull')):
-	    nulld = os.devnull
-	# This call to open is guaranteed to return the lowest file descriptor,
-	# which will be 0 (stdin), since it was closed above.
-	sys.stdin  = open(nulld, 'r')
-	sys.stdout = open(nulld, 'a+')
-	sys.stderr = open(nulld, 'a+', 0)
+        # child closes its originating terminal connections:
+        os.close(0)  # stdin
+        os.close(1)  # stdout
+        os.close(2)  # stderr
+        nulld = '/dev/null'
+        if (hasattr(os, 'devnull')):
+            nulld = os.devnull
+        # This call to open is guaranteed to return the lowest file descriptor,
+        # which will be 0 (stdin), since it was closed above.
+        sys.stdin  = open(nulld, 'r')
+        sys.stdout = open(nulld, 'a+')
+        sys.stderr = open(nulld, 'a+', 0)
 
     return 0  # child gets "0" returned
 

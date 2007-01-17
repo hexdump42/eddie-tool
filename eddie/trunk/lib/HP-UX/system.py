@@ -1,10 +1,10 @@
 
 '''
-File		: system.py
+File                : system.py
 
-Start Date	: 19990520
+Start Date        : 19990520
 
-Description	:
+Description        :
   This is an Eddie data collector.  It collects System data and statistics on
   an HP-UX system.
   The following statistics are currently collected and made available to
@@ -103,7 +103,7 @@ class system(datacollect.DataCollect):
     """
 
     def __init__(self):
-	apply( datacollect.DataCollect.__init__, (self,) )
+        apply( datacollect.DataCollect.__init__, (self,) )
 
 
 
@@ -120,7 +120,7 @@ class system(datacollect.DataCollect):
         Collect system statistics data.
         """
 
-	self.data.datahash = {}		# dict of system data
+        self.data.datahash = {}                # dict of system data
 
         vmstat_dict = self._getvmstat()
         if vmstat_dict:
@@ -130,7 +130,7 @@ class system(datacollect.DataCollect):
         if uptime_dict:
             self.data.datahash.update(uptime_dict)
 
-	log.log( "<system>system.collectData(): new system list created", 7 )
+        log.log( "<system>system.collectData(): new system list created", 7 )
 
 
     def _getvmstat(self):

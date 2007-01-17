@@ -1,10 +1,10 @@
 
 '''
-File		: timeQueue.py 
+File                : timeQueue.py 
 
-Start Date	: 20001005
+Start Date        : 20001005
 
-Description	: Queue-derived queue ordering objects by next-run time.
+Description        : Queue-derived queue ordering objects by next-run time.
 
 timeQueue is the queueing class derived from Python's Queue class.  It is as
 thread-friendly as Queue, the major difference being objects are inserted
@@ -69,62 +69,62 @@ class timeQueue(Queue.Queue):
     These will only be called with appropriate locks held."""
 
     def head(self, block=1, timeout=None):
-	"""Return the head item in the queue without removing it from
-	the queue. (get() will remove item from queue.)
+        """Return the head item in the queue without removing it from
+        the queue. (get() will remove item from queue.)
 
         If optional arg 'block' is 1 (the default), block if
         necessary until an item is available.  Otherwise (block is 0),
         return an item if one is immediately available, else raise the
         Empty exception."""
 
-	if 'not_empty' in dir(self):
-	    # Python 2.4+ Queue implementation...
-	    self.not_empty.acquire()
-	    try:
-		if not block:
-		    if self._empty():
-			raise Empty
-		elif timeout is None:
-		    while self._empty():
-			self.not_empty.wait()
-		else:
-		    if timeout < 0:
-			raise ValueError("'timeout' must be a positive number")
-		    endtime = _time() + timeout
-		    while self._empty():
-			remaining = endtime - _time()
-			if remaining <= 0.0:
-			    raise Empty
-			self.not_empty.wait(remaining)
-		item = self._head()
-		self.not_full.notify()
-		return item
-	    finally:
-		self.not_empty.release()
+        if 'not_empty' in dir(self):
+            # Python 2.4+ Queue implementation...
+            self.not_empty.acquire()
+            try:
+                if not block:
+                    if self._empty():
+                        raise Empty
+                elif timeout is None:
+                    while self._empty():
+                        self.not_empty.wait()
+                else:
+                    if timeout < 0:
+                        raise ValueError("'timeout' must be a positive number")
+                    endtime = _time() + timeout
+                    while self._empty():
+                        remaining = endtime - _time()
+                        if remaining <= 0.0:
+                            raise Empty
+                        self.not_empty.wait(remaining)
+                item = self._head()
+                self.not_full.notify()
+                return item
+            finally:
+                self.not_empty.release()
 
-	else:
-	    # Pre-Python 2.4 Queue
-	    if block:
-		self.esema.acquire()
-	    elif not self.esema.acquire(0):
-		raise Empty
-	    self.mutex.acquire()
-	    was_full = self._full()
-	    item = self._head()
-	    if was_full:
-		self.fsema.release()
-	    if not self._empty():
-		self.esema.release()
-	    self.mutex.release()
+        else:
+            # Pre-Python 2.4 Queue
+            if block:
+                self.esema.acquire()
+            elif not self.esema.acquire(0):
+                raise Empty
+            self.mutex.acquire()
+            was_full = self._full()
+            item = self._head()
+            if was_full:
+                self.fsema.release()
+            if not self._empty():
+                self.esema.release()
+            self.mutex.release()
 
-	return item
+        return item
 
 
     # Initialize the queue representation
     def _init(self, maxsize):
         self.maxsize = maxsize
-        self.time_queue = []	# queue in order of time
-        self.object_list = []	# list of objects to return
+        self.time_queue = []        # queue in order of time
+        self.object_list = []        # list of objects to return
 
     def _qsize(self):
         return len(self.time_queue)
@@ -139,23 +139,23 @@ class timeQueue(Queue.Queue):
 
     # Put a new item in the queue
     def _put(self, it):
-	(item, time) = it
-	if self._empty():
-	    # queue is empty, add to start
-	    self.time_queue.append(time)
-	    self.object_list.append(item)
-	else:
-	    i = 0
-	    while i < len(self.time_queue):
-		if time < self.time_queue[i]:
-		    self.time_queue.insert(i, time)
-		    self.object_list.insert(i, item)
-		    break
-		i = i + 1
-	    if i == len(self.time_queue):
-		# append to end
-		self.time_queue.append(time)
-		self.object_list.append(item)
+        (item, time) = it
+        if self._empty():
+            # queue is empty, add to start
+            self.time_queue.append(time)
+            self.object_list.append(item)
+        else:
+            i = 0
+            while i < len(self.time_queue):
+                if time < self.time_queue[i]:
+                    self.time_queue.insert(i, time)
+                    self.object_list.insert(i, item)
+                    break
+                i = i + 1
+            if i == len(self.time_queue):
+                # append to end
+                self.time_queue.append(time)
+                self.object_list.append(item)
 
     # Get an item from the queue
     # We always want the first item from queue

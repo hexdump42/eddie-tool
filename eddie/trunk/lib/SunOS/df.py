@@ -1,10 +1,10 @@
 
 '''
-File		: df.py 
+File                : df.py 
 
-Start Date	: 19971204 
+Start Date        : 19971204 
 
-Description	:
+Description        :
   This is an Eddie data collector.  It collects filesystem usage statistics
   using a call to '/usr/bin/df'.
 
@@ -83,7 +83,7 @@ class dfList(datacollect.DataCollect):
 
     def __str__(self):
         """Create string to display disk usage stats.
-	"""
+        """
 
         d = self.getHash()
 
@@ -120,71 +120,71 @@ class dfList(datacollect.DataCollect):
     # Private methods.  No thread safety if not using public methods.
 
     def collectData(self):
-    	"""Collect full disk usage data
-	"""
+            """Collect full disk usage data
+        """
 
-	# df -g -l : get detailed information for all local filesystems
-	rawList = utils.safe_popen('/usr/bin/df -g -l', 'r')
-	self.data.datahash = {}
-	self.data.mounthash = {}
-	data={}
+        # df -g -l : get detailed information for all local filesystems
+        rawList = utils.safe_popen('/usr/bin/df -g -l', 'r')
+        self.data.datahash = {}
+        self.data.mounthash = {}
+        data={}
 
-	m1re = '(?P<mountpt>\S+)\s*\((?P<fsname>[^\)]+)\S*\):\s+(?P<blocksize>\d+) block size\s+(?P<fragsize>\d+) frag size'
-	m2re = '\s*(?P<totalblocks>\d+) total blocks\s+(?P<freeblocks>\d+) free blocks\s+(?P<availblocks>\d+) available\s+(?P<totalfiles>\-?\d+) total files'
-	m3re = '\s*(?P<freefiles>\d+) free files\s+(?P<filesysid>\d+) filesys id.*'
-	m4re = '\s*(?P<fstype>\S+) fstype \s+(?P<flag>\S+) flag\s+(?P<filelen>\d+) filename length'
+        m1re = '(?P<mountpt>\S+)\s*\((?P<fsname>[^\)]+)\S*\):\s+(?P<blocksize>\d+) block size\s+(?P<fragsize>\d+) frag size'
+        m2re = '\s*(?P<totalblocks>\d+) total blocks\s+(?P<freeblocks>\d+) free blocks\s+(?P<availblocks>\d+) available\s+(?P<totalfiles>\-?\d+) total files'
+        m3re = '\s*(?P<freefiles>\d+) free files\s+(?P<filesysid>\d+) filesys id.*'
+        m4re = '\s*(?P<fstype>\S+) fstype \s+(?P<flag>\S+) flag\s+(?P<filelen>\d+) filename length'
 
-	for line in rawList.readlines():
-	    m1 = re.match( m1re, line )
-	    if m1:
-		data['mountpt'] = m1.group('mountpt').strip()
-		data['fsname'] = m1.group('fsname').strip()
-		data['blocksize'] = int(m1.group('blocksize'))	# filesystem (logical) block size
-		data['fragsize'] = int(m1.group('fragsize'))
-		continue
+        for line in rawList.readlines():
+            m1 = re.match( m1re, line )
+            if m1:
+                data['mountpt'] = m1.group('mountpt').strip()
+                data['fsname'] = m1.group('fsname').strip()
+                data['blocksize'] = int(m1.group('blocksize'))        # filesystem (logical) block size
+                data['fragsize'] = int(m1.group('fragsize'))
+                continue
 
-	    m2 = re.match( m2re, line )
-	    if m2:
-		data['totalblocks'] = int(m2.group('totalblocks')) # lots of physical block size (512B)
-		data['size'] = data['totalblocks'] / 2				# kBytes
-		data['freeblocks'] = int(m2.group('freeblocks'))
-		data['usedblocks'] = data['totalblocks'] - data['freeblocks']
-		data['used'] = data['usedblocks'] / 2				# kBytes
-		data['availblocks'] = int(m2.group('availblocks'))
-		data['avail'] = data['availblocks'] / 2				# kBytes
-		data['totalinodes'] = int(m2.group('totalfiles'))
-		# Some pseudo filesystems have no size (eg /proc)
-		try:
-		    data['pctused'] = 100.0 * data['usedblocks'] / data['totalblocks']
-		except ZeroDivisionError:
-		    data['pctused'] = 0.0
-		continue
+            m2 = re.match( m2re, line )
+            if m2:
+                data['totalblocks'] = int(m2.group('totalblocks')) # lots of physical block size (512B)
+                data['size'] = data['totalblocks'] / 2                                # kBytes
+                data['freeblocks'] = int(m2.group('freeblocks'))
+                data['usedblocks'] = data['totalblocks'] - data['freeblocks']
+                data['used'] = data['usedblocks'] / 2                                # kBytes
+                data['availblocks'] = int(m2.group('availblocks'))
+                data['avail'] = data['availblocks'] / 2                                # kBytes
+                data['totalinodes'] = int(m2.group('totalfiles'))
+                # Some pseudo filesystems have no size (eg /proc)
+                try:
+                    data['pctused'] = 100.0 * data['usedblocks'] / data['totalblocks']
+                except ZeroDivisionError:
+                    data['pctused'] = 0.0
+                continue
 
-	    m3 = re.match( m3re, line )
-	    if m3:
-		data['availinodes'] = int(m3.group('freefiles'))
-		data['usedinodes'] = data['totalinodes'] - data['availinodes']
-		try:
-		    data['pctinodes'] = 100.0 * data['usedinodes'] / data['totalinodes']
-		except ZeroDivisionError:
-		    data['pctinodes'] = 0.0
-		data['filesysid'] = int(m3.group('filesysid'))
-		continue
+            m3 = re.match( m3re, line )
+            if m3:
+                data['availinodes'] = int(m3.group('freefiles'))
+                data['usedinodes'] = data['totalinodes'] - data['availinodes']
+                try:
+                    data['pctinodes'] = 100.0 * data['usedinodes'] / data['totalinodes']
+                except ZeroDivisionError:
+                    data['pctinodes'] = 0.0
+                data['filesysid'] = int(m3.group('filesysid'))
+                continue
 
-	    m4 = re.match(m4re, line)
-	    if m4:
-		data['fstype'] = m4.group('fstype')
-		data['flag'] = m4.group('flag')
-		data['filelen'] = int(m4.group('filelen'))
-		continue
+            m4 = re.match(m4re, line)
+            if m4:
+                data['fstype'] = m4.group('fstype')
+                data['flag'] = m4.group('flag')
+                data['filelen'] = int(m4.group('filelen'))
+                continue
 
-	    if line=='\n':		# empty line
-		mount = df(data)	# so create df object
-		self.data.mounthash[data['mountpt']] = mount
-		self.data.datahash[data['fsname']] = mount
-		data={}
+            if line=='\n':                # empty line
+                mount = df(data)        # so create df object
+                self.data.mounthash[data['mountpt']] = mount
+                self.data.datahash[data['fsname']] = mount
+                data={}
 
-	utils.safe_pclose( rawList )
+        utils.safe_pclose( rawList )
 
         log.log( "<df>dfList.collectData(): collected data for %d filesystems" % (len(self.data.datahash.keys())), 6 )
 

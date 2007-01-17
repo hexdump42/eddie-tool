@@ -13,11 +13,11 @@ from socket import htons, ntohs
 
 def cksum(s):
     if len(s) & 1:
-	s = s + '\0'
+        s = s + '\0'
     words = array.array('h', s)
     sum = 0
     for word in words:
-	sum = sum + (word & 0xffff)
+        sum = sum + (word & 0xffff)
     hi = sum >> 16
     lo = sum & 0xffff
     sum = hi + lo
@@ -37,7 +37,7 @@ def mks(h):
     try:
         return struct.pack('h', h)
     except struct.error:
-	# some systems want signed, some unsigned ... grrr.
+        # some systems want signed, some unsigned ... grrr.
         return struct.pack('H', h)
 
 def iph2net(s):

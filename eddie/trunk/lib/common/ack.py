@@ -1,10 +1,10 @@
 
 '''
-File		: ack.py 
+File                : ack.py 
 
-Start Date	: 20000124
+Start Date        : 20000124
 
-Description	: Acknowledgement objects to track problem acknowledgements.
+Description        : Acknowledgement objects to track problem acknowledgements.
 
 $Id$
 '''
@@ -42,27 +42,27 @@ class ack:
     """The ack(nowledgement) class to keep state of last acknowledgement."""
 
     def __init__(self):
-	self.clear()
+        self.clear()
 
 
     def clear(self):
-	"""Clear all acknowledgement information."""
+        """Clear all acknowledgement information."""
 
-	self.state = "n"	# acknowledged or not, "y" or "n"
-	self.time = None	# time of acknowledgement
-	self.user = None	# user who acknowledged
-	self.details = None	# other details
+        self.state = "n"        # acknowledged or not, "y" or "n"
+        self.time = None        # time of acknowledgement
+        self.user = None        # user who acknowledged
+        self.details = None        # other details
 
 
     def set(self, user=None, details=None):
-	"""Set a user acknowledgement."""
+        """Set a user acknowledgement."""
 
-	self.clear()		# clear any previous ack first
+        self.clear()                # clear any previous ack first
 
-	self.state = "y"	# acknowledged
-	self.time = time.localtime(time.time())
-	self.user = user
-	self.details = details
+        self.state = "y"        # acknowledged
+        self.time = time.localtime(time.time())
+        self.user = user
+        self.details = details
 
 
 ##

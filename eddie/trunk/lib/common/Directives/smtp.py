@@ -1,10 +1,10 @@
 
 '''
-File		: smtp.py 
+File                : smtp.py 
 
-Start Date	: 20040616
+Start Date        : 20040616
 
-Description	: Directives for smtp checks
+Description        : Directives for smtp checks
 
 $Id$
 '''
@@ -47,44 +47,44 @@ SMTPerror = "SMTPerror"
 
 class smtpclient:
     def __init__(self, host, port=25):
-	if host == "":
-	    raise SMTPerror, "host not given"
+        if host == "":
+            raise SMTPerror, "host not given"
 
-	if type(port) != type(1):
-	    raise SMTPerror, "port must be integer"
+        if type(port) != type(1):
+            raise SMTPerror, "port must be integer"
 
-	self.host = host
-	self.port = port
-	self.connected = 0
+        self.host = host
+        self.port = port
+        self.connected = 0
 
 
     def connect(self):
-	self.smtpsock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.smtpsock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-	tstart = time.time()
-	try:
-	    self.smtpsock.connect( (self.host,self.port) )
-	except socket.error, detail:
-	    log.log( "<smtp>smtp.connect(): exception, %d, '%s'" % (detail[0], detail[1]), 5 )
-	    return 0
+        tstart = time.time()
+        try:
+            self.smtpsock.connect( (self.host,self.port) )
+        except socket.error, detail:
+            log.log( "<smtp>smtp.connect(): exception, %d, '%s'" % (detail[0], detail[1]), 5 )
+            return 0
 
-	data = self.smtpsock.recv(1024)
-	tend = time.time()
+        data = self.smtpsock.recv(1024)
+        tend = time.time()
 
-	if data[:4] != "220 ":
-	    return 0
+        if data[:4] != "220 ":
+            return 0
 
-	self.connected = 1
-	self.timing = tend - tstart
-	return 1
+        self.connected = 1
+        self.timing = tend - tstart
+        return 1
 
 
     def close(self):
-	if self.connected == 0:
-	    raise SMTPerror, "no connection to close"
+        if self.connected == 0:
+            raise SMTPerror, "no connection to close"
 
-	self.smtpsock.close()
-	self.connected = 0
+        self.smtpsock.close()
+        self.connected = 0
 
 
 ##
@@ -100,69 +100,69 @@ class SMTP(directive.Directive):
     """
 
     def __init__(self, toklist):
-	apply( directive.Directive.__init__, (self, toklist) )
+        apply( directive.Directive.__init__, (self, toklist) )
 
 
     def tokenparser(self, toklist, toktypes, indent):
-	"""
-	Parse directive arguments.
-	"""
+        """
+        Parse directive arguments.
+        """
 
-	apply( directive.Directive.tokenparser, (self, toklist, toktypes, indent) )
+        apply( directive.Directive.tokenparser, (self, toklist, toktypes, indent) )
 
-	# test required arguments
-	try:
-	    self.args.server		# hostname:port
+        # test required arguments
+        try:
+            self.args.server                # hostname:port
         except AttributeError:
             raise directive.ParseFailure, "SMTP Server not specified"
-	try:
-	    self.args.rule
-	except AttributeError:
-	    raise directive.ParseFailure, "Rule not specified"
+        try:
+            self.args.rule
+        except AttributeError:
+            raise directive.ParseFailure, "Rule not specified"
 
-	if ':' in self.args.server:
-	    (self.host, self.port) = self.args.server.split(':')
-	    self.port = int(self.port)
-	else:
-	    self.host = self.args.server
-	    self.port = 25
+        if ':' in self.args.server:
+            (self.host, self.port) = self.args.server.split(':')
+            self.port = int(self.port)
+        else:
+            self.host = self.args.server
+            self.port = 25
 
 
-	# Set variables for Actions to use
-	self.defaultVarDict['server'] = self.host
-	self.defaultVarDict['port'] = self.port
+        # Set variables for Actions to use
+        self.defaultVarDict['server'] = self.host
+        self.defaultVarDict['port'] = self.port
 
-	# define the unique ID
+        # define the unique ID
         if self.ID == None:
-	    self.ID = '%s.SMTP.%s.%d' % (log.hostname,self.host,self.port)
-	self.state.ID = self.ID
+            self.ID = '%s.SMTP.%s.%d' % (log.hostname,self.host,self.port)
+        self.state.ID = self.ID
 
-	log.log( "<smtp>SMTP.tokenparser(): ID '%s' host '%s' port %d" % (self.ID, self.host, self.port), 8 )
+        log.log( "<smtp>SMTP.tokenparser(): ID '%s' host '%s' port %d" % (self.ID, self.host, self.port), 8 )
 
 
     def getData(self):
-	"""
-	The 'check' in this case is to login to the smtp server and
-	perform a few actions, recording the timing of each action.
-	"""
+        """
+        The 'check' in this case is to login to the smtp server and
+        perform a few actions, recording the timing of each action.
+        """
 
-	data = {}
+        data = {}
 
-	connecttime = None
+        connecttime = None
 
-	# create smtp connection object
-	p = smtpclient( self.host, self.port )
-	if p.connect():
-	    data['connected'] = 1
-	    connecttime = p.timing
-	    p.close()
-	else:
-	    data['connected'] = 0
+        # create smtp connection object
+        p = smtpclient( self.host, self.port )
+        if p.connect():
+            data['connected'] = 1
+            connecttime = p.timing
+            p.close()
+        else:
+            data['connected'] = 0
 
-	# assign variables
-	data['connecttime'] = connecttime
+        # assign variables
+        data['connecttime'] = connecttime
 
-	log.log( "<smtp>SMTP.getData(): connecttime=%s" % connecttime, 7 )
+        log.log( "<smtp>SMTP.getData(): connecttime=%s" % connecttime, 7 )
 
         return data
 

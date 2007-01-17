@@ -1,10 +1,10 @@
 
 '''
-File		: sockets.py
+File                : sockets.py
 
-Start Date	: 20010615
+Start Date        : 20010615
 
-Description	: Provides a sockets interface into the running eddie state.
+Description        : Provides a sockets interface into the running eddie state.
 
 $Id$
 '''
@@ -74,23 +74,23 @@ def printState(Config, ccsock):
     # Get the name of this Config object
     cname = Config.name + "."
     if cname == "__main__.":
-	cname = ""		# root Config has no name
+        cname = ""                # root Config has no name
 
     # Loop the active config and print the state of each rule
     for i in Config.groupDirectives.keys():
-	d = Config.groupDirectives[i]
-	# do not show templates or directives where console=None
-	if d.args.template != 'self' and d.console_output != None:
-	    try:
-		cstr = d.console_str()
-	    except KeyError:
-		cstr = "<directive not ready>"
-	    except:
-		e = sys.exc_info()
-		tb = traceback.format_list( traceback.extract_tb( e[2] ) )
-		log.log( "<sockets>printState(): console_str exception for %s: %s %s %s" % (d,e[0],e[1],tb), 5 )
-		cstr = ""
-	    ccsock.send("%s%s - %s\n" % (cname, d, cstr))
+        d = Config.groupDirectives[i]
+        # do not show templates or directives where console=None
+        if d.args.template != 'self' and d.console_output != None:
+            try:
+                cstr = d.console_str()
+            except KeyError:
+                cstr = "<directive not ready>"
+            except:
+                e = sys.exc_info()
+                tb = traceback.format_list( traceback.extract_tb( e[2] ) )
+                log.log( "<sockets>printState(): console_str exception for %s: %s %s %s" % (d,e[0],e[1],tb), 5 )
+                cstr = ""
+            ccsock.send("%s%s - %s\n" % (cname, d, cstr))
 
     # chris 2004-09-20: throw away any domain parts of hostname; group names can't contain dots
     shorthostname = log.hostname.split('.')[0]
@@ -101,8 +101,8 @@ def printState(Config, ccsock):
     shorthostname = shorthostname.replace('-','_')
 
     for c in Config.groups:
-	if c.name == shorthostname or (c.name in Config.classDict.keys() and shorthostname in Config.classDict[c.name]):
-	    printState(c, ccsock)
+        if c.name == shorthostname or (c.name in Config.classDict.keys() and shorthostname in Config.classDict[c.name]):
+            printState(c, ccsock)
 
 
 
@@ -110,27 +110,27 @@ def listen(s, Config, die_event):
 
     while not die_event.isSet():
         # Select timeout 1 second
-	try:
-	    r,w,e=select.select([s],[s],[s], 1.0)
-	except:
+        try:
+            r,w,e=select.select([s],[s],[s], 1.0)
+        except:
             e = sys.exc_info()
             tb = traceback.format_list( traceback.extract_tb( e[2] ) )
 
-	    if e[1][0] == 4:	# Interrupted system call, caused by CTRL-C,
-				# which is already being handled
-		log.log( "<sockets>listen(), Interrupted system call, ignored.", 5 )
-		continue
-	    else:
-		log.log( "<sockets>listen(), exception in select(): %s, %s, %s" % (e[0], e[1], tb), 3 )
-		break
+            if e[1][0] == 4:        # Interrupted system call, caused by CTRL-C,
+                                # which is already being handled
+                log.log( "<sockets>listen(), Interrupted system call, ignored.", 5 )
+                continue
+            else:
+                log.log( "<sockets>listen(), exception in select(): %s, %s, %s" % (e[0], e[1], tb), 3 )
+                break
 
         if r:
             ccsock, addr = s.accept()
-	    log.log( "<sockets>listen(), accepted connection from %s:%d"%addr, 6 )
+            log.log( "<sockets>listen(), accepted connection from %s:%d"%addr, 6 )
 
             ccsock.send('Eddie Console Gateway\n')
 
-	    printState( Config, ccsock )
+            printState( Config, ccsock )
 
             ccsock.close()
 
@@ -157,19 +157,19 @@ def console_server_thread(Config, die_event, consport):
         except socket.error:
             e = sys.exc_info()
 
-            if e[1][0] == errno.EADDRINUSE:		# address already in use
+            if e[1][0] == errno.EADDRINUSE:                # address already in use
                 log.log("<sockets>console_server_thread(), Port %d already in use - exiting" % (consport), 3 )
-		sys.stderr.write( "Eddie: port %d already in use, quitting\n" % (consport) )
-                die_event.set()		# signal other threads to exit
+                sys.stderr.write( "Eddie: port %d already in use, quitting\n" % (consport) )
+                die_event.set()                # signal other threads to exit
                 s.close()
                 s = None
-		return
+                return
 
-            if e[1][0] == errno.ECONNRESET:	# 'Connection reset by peer'
+            if e[1][0] == errno.ECONNRESET:        # 'Connection reset by peer'
                 log.log( "<sockets>console_server_thread(), Connection reset by peer - continuing.", 7 )
                 continue
 
-            if e[1][0] == errno.EPIPE:		# 'Broken Pipe'
+            if e[1][0] == errno.EPIPE:                # 'Broken Pipe'
                 log.log( "<sockets>console_server_thread(), Broken pipe - continuing.", 8 )
                 continue
 
@@ -181,7 +181,7 @@ def console_server_thread(Config, die_event, consport):
 
             if socketerrors > 100:
                 log.log( "<sockets>console_server_thread(), Too many socket errors - exiting.", 3 )
-                die_event.set()		# signal other threads to exit
-		return
+                die_event.set()                # signal other threads to exit
+                return
 
 

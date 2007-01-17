@@ -1,10 +1,10 @@
 
 '''
-File		: df.py 
+File                : df.py 
 
-Start Date	: 20041206 
+Start Date        : 20041206 
 
-Description	:
+Description        :
   This is an Eddie data collector.  It collects filesystem usage statistics
   using 'df'.
 
@@ -66,7 +66,7 @@ class dfList(datacollect.DataCollect):
 
     def __str__(self):
         """Create string to display disk usage stats.
-	"""
+        """
 
         d = self.getHash()
 
@@ -107,15 +107,15 @@ class dfList(datacollect.DataCollect):
         """Collect disk usage data.
         """
 
-	# List all local filesystems
-	# Note: we don't bother with NFS filesystems at this point.
-	# TODO: allow user-specified filesystem types
-	rawList = utils.safe_popen('/bin/df -l -k', 'r')
+        # List all local filesystems
+        # Note: we don't bother with NFS filesystems at this point.
+        # TODO: allow user-specified filesystem types
+        rawList = utils.safe_popen('/bin/df -l -k', 'r')
 
         self.data.datahash = {}
         self.data.mounthash = {}
 
-	# skip header line
+        # skip header line
         rawList.readline()
 
         for line in rawList.readlines():
@@ -137,7 +137,7 @@ class df:
     """
 
     def __init__(self, *arg):
-	self.raw = arg[0]
+        self.raw = arg[0]
 
         self.data = {}
         self.data['fsname']  = self.raw[0]              # Filesystem name (device)

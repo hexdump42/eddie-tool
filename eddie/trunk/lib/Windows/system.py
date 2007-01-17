@@ -1,10 +1,10 @@
 
 '''
-File		: system.py
+File                : system.py
 
-Start Date	: 20050709
+Start Date        : 20050709
 
-Description	:
+Description        :
   This is an Eddie data collector.  It collects System data and statistics
   on a Win32 system.
 
@@ -53,17 +53,17 @@ import win32perf
 
 
 COUNTERS = (
-	( "System", "Context Switches/sec", None ),
-	( "System", "System Calls/sec", None ),
-	( "System", "Processes", None ),
-	( "System", "System Up Time", None ),
-	( "System", "Threads", None ),
-	( "Processor", "% Processor Time", "_TOTAL" ),
-	( "Processor", "% Idle Time", "_TOTAL" ),
-	( "Processor", "% Interrupt Time", "_TOTAL" ),
-	( "Processor", "% Privileged Time", "_TOTAL" ),
-	( "Processor", "% User Time", "_TOTAL" ),
-	( "Processor", "Interrupts/sec", "_TOTAL" ),
+        ( "System", "Context Switches/sec", None ),
+        ( "System", "System Calls/sec", None ),
+        ( "System", "Processes", None ),
+        ( "System", "System Up Time", None ),
+        ( "System", "Threads", None ),
+        ( "Processor", "% Processor Time", "_TOTAL" ),
+        ( "Processor", "% Idle Time", "_TOTAL" ),
+        ( "Processor", "% Interrupt Time", "_TOTAL" ),
+        ( "Processor", "% Privileged Time", "_TOTAL" ),
+        ( "Processor", "% User Time", "_TOTAL" ),
+        ( "Processor", "Interrupts/sec", "_TOTAL" ),
     )
 
 
@@ -75,23 +75,23 @@ class system(datacollect.DataCollect):
 
     The names of all the stats collected by the system class are:
 
-	"System Context Switches/sec"
-	"System System Calls/sec"
-	"System Processes"
-	"System System Up Time"
-	"System Threads"
-	"Processor % Processor Time _TOTAL"
-	"Processor % Idle Time _TOTAL"
-	"Processor % Interrupt Time _TOTAL"
-	"Processor % Privileged Time _TOTAL"
-	"Processor % User Time _TOTAL"
-	"Processor Interrupts/sec _TOTAL"
+        "System Context Switches/sec"
+        "System System Calls/sec"
+        "System Processes"
+        "System System Up Time"
+        "System Threads"
+        "Processor % Processor Time _TOTAL"
+        "Processor % Idle Time _TOTAL"
+        "Processor % Interrupt Time _TOTAL"
+        "Processor % Privileged Time _TOTAL"
+        "Processor % User Time _TOTAL"
+        "Processor Interrupts/sec _TOTAL"
     """
 
     def __init__(self):
-	apply( datacollect.DataCollect.__init__, (self,) )
+        apply( datacollect.DataCollect.__init__, (self,) )
 
-	self.wp = None
+        self.wp = None
 
 
 
@@ -108,40 +108,40 @@ class system(datacollect.DataCollect):
         """Collect system statistics data.
         """
 
-	self.data.datahash = {}		# dict of system data
+        self.data.datahash = {}                # dict of system data
 
 
-	system_dict = self._getSystemStats()
-	if system_dict:
-	    self.data.datahash.update(system_dict)
+        system_dict = self._getSystemStats()
+        if system_dict:
+            self.data.datahash.update(system_dict)
 
         log.log( "<system>system.collectData(): collected data for %d system statistics" % (len(self.data.datahash.keys())), 6 )
 
 
 
     def _getSystemStats(self):
-	"""Get system statistics from win32perf module.
-	"""
+        """Get system statistics from win32perf module.
+        """
 
-	if not self.wp:
-	    self.wp = win32perf.Win32Performance()
-	    for object, counter, instance in COUNTERS:
-		try:
-		    self.wp.addCounter( object, counter, instance )
-		except win32perf.Win32PerfError, err:
-		    log.log( "<system>system._getSystemStats(): addCounter failed, %s" %(err), 5 )
+        if not self.wp:
+            self.wp = win32perf.Win32Performance()
+            for object, counter, instance in COUNTERS:
+                try:
+                    self.wp.addCounter( object, counter, instance )
+                except win32perf.Win32PerfError, err:
+                    log.log( "<system>system._getSystemStats(): addCounter failed, %s" %(err), 5 )
 
-	# re-use same wp every scan.
-	# Note that Win32 appears to only update the statistics about once
-	# per minute.
-	perfcounters = self.wp.get()
+        # re-use same wp every scan.
+        # Note that Win32 appears to only update the statistics about once
+        # per minute.
+        perfcounters = self.wp.get()
 
-	# Other method is to re-connect Win32Performance every time.
-	#perfcounters = self.wp.get(pause=5)
-	#self.wp.close()
-	#self.wp = None
+        # Other method is to re-connect Win32Performance every time.
+        #perfcounters = self.wp.get(pause=5)
+        #self.wp.close()
+        #self.wp = None
 
-	return perfcounters
+        return perfcounters
 
 
 ##

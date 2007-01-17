@@ -1,10 +1,10 @@
 
 '''
-File		: disk.py 
+File                : disk.py 
 
-Start Date	: 20041005 
+Start Date        : 20041005 
 
-Description	: Disk directives
+Description        : Disk directives
 
 $Id$
 '''
@@ -56,59 +56,59 @@ class DISK(directive.Directive):
 
     Example:
 
-	# /dev/md/dsk/d20 == /var
-	DISK md20_thruput:
-	    device='md20'
-	    scanperiod='5m'
-	    rule='1'        # always perform action
-	    action='elvinrrd("disk-%(h)s_%(device)s", "rbytes=%(nread)s", "wbytes=%(nwritten)s")'
+        # /dev/md/dsk/d20 == /var
+        DISK md20_thruput:
+            device='md20'
+            scanperiod='5m'
+            rule='1'        # always perform action
+            action='elvinrrd("disk-%(h)s_%(device)s", "rbytes=%(nread)s", "wbytes=%(nwritten)s")'
     """
 
     def __init__(self, toklist):
-	# FS requires the DiskStatistics collector object from the diskdevice module
-	self.need_collectors = ( ('diskdevice','DiskStatistics'), )		# (module, collector-class) required
+        # FS requires the DiskStatistics collector object from the diskdevice module
+        self.need_collectors = ( ('diskdevice','DiskStatistics'), )                # (module, collector-class) required
 
-	apply( directive.Directive.__init__, (self, toklist) )
+        apply( directive.Directive.__init__, (self, toklist) )
 
 
     def tokenparser(self, toklist, toktypes, indent):
-	"""Parse directive arguments."""
+        """Parse directive arguments."""
 
-	apply( directive.Directive.tokenparser, (self, toklist, toktypes, indent) )
+        apply( directive.Directive.tokenparser, (self, toklist, toktypes, indent) )
 
-	# test required arguments
-	try:
-	    self.args.device
-	except AttributeError:
-	    raise directive.ParseFailure, "Device not specified"
-	try:
-	    self.args.rule
-	except AttributeError:
-	    raise directive.ParseFailure, "Rule not specified"
+        # test required arguments
+        try:
+            self.args.device
+        except AttributeError:
+            raise directive.ParseFailure, "Device not specified"
+        try:
+            self.args.rule
+        except AttributeError:
+            raise directive.ParseFailure, "Rule not specified"
 
-	# Set any directive-specific variables
-	self.defaultVarDict['device'] = self.args.device
-	self.defaultVarDict['rule'] = self.args.rule
+        # Set any directive-specific variables
+        self.defaultVarDict['device'] = self.args.device
+        self.defaultVarDict['rule'] = self.args.rule
 
-	# define the unique ID
-	if self.ID == None:
-	    self.ID = '%s.DISK.%s' % (log.hostname,self.args.device)
-	self.state.ID = self.ID
+        # define the unique ID
+        if self.ID == None:
+            self.ID = '%s.DISK.%s' % (log.hostname,self.args.device)
+        self.state.ID = self.ID
 
-	log.log( "<disk>DISK.tokenparser(): ID '%s' device '%s' rule '%s'" % (self.state.ID, self.args.device, self.args.rule), 8 )
+        log.log( "<disk>DISK.tokenparser(): ID '%s' device '%s' rule '%s'" % (self.state.ID, self.args.device, self.args.rule), 8 )
 
 
     def getData(self):
-	"""Called by Directive docheck() method to fetch the data required for
-	evaluating the directive rule.
-	"""
+        """Called by Directive docheck() method to fetch the data required for
+        evaluating the directive rule.
+        """
 
-	disk = self.data_collectors['diskdevice.DiskStatistics'][self.args.device]
-	if disk == None:
-	    log.log( "<disk>DISK.docheck(): Error, device not found '%s'" % (self.args.device), 4 )
-	    return None
-	else:
-	    return disk.getHash()
+        disk = self.data_collectors['diskdevice.DiskStatistics'][self.args.device]
+        if disk == None:
+            log.log( "<disk>DISK.docheck(): Error, device not found '%s'" % (self.args.device), 4 )
+            return None
+        else:
+            return disk.getHash()
 
 
 
@@ -128,50 +128,50 @@ class TAPE(directive.Directive):
     """
 
     def __init__(self, toklist):
-	# FS requires the TapeStatistics collector object from the diskdevice module
-	self.need_collectors = ( ('diskdevice','TapeStatistics'), )		# (module, collector-class) required
+        # FS requires the TapeStatistics collector object from the diskdevice module
+        self.need_collectors = ( ('diskdevice','TapeStatistics'), )                # (module, collector-class) required
 
-	apply( directive.Directive.__init__, (self, toklist) )
+        apply( directive.Directive.__init__, (self, toklist) )
 
 
     def tokenparser(self, toklist, toktypes, indent):
-	"""Parse directive arguments."""
+        """Parse directive arguments."""
 
-	apply( directive.Directive.tokenparser, (self, toklist, toktypes, indent) )
+        apply( directive.Directive.tokenparser, (self, toklist, toktypes, indent) )
 
-	# test required arguments
-	try:
-	    self.args.device
-	except AttributeError:
-	    raise directive.ParseFailure, "Device not specified"
-	try:
-	    self.args.rule
-	except AttributeError:
-	    raise directive.ParseFailure, "Rule not specified"
+        # test required arguments
+        try:
+            self.args.device
+        except AttributeError:
+            raise directive.ParseFailure, "Device not specified"
+        try:
+            self.args.rule
+        except AttributeError:
+            raise directive.ParseFailure, "Rule not specified"
 
-	# Set any directive-specific variables
-	self.defaultVarDict['device'] = self.args.device
-	self.defaultVarDict['rule'] = self.args.rule
+        # Set any directive-specific variables
+        self.defaultVarDict['device'] = self.args.device
+        self.defaultVarDict['rule'] = self.args.rule
 
-	# define the unique ID
-	if self.ID == None:
-	    self.ID = '%s.TAPE.%s' % (log.hostname,self.args.device)
-	self.state.ID = self.ID
+        # define the unique ID
+        if self.ID == None:
+            self.ID = '%s.TAPE.%s' % (log.hostname,self.args.device)
+        self.state.ID = self.ID
 
-	log.log( "<disk>TAPE.tokenparser(): ID '%s' device '%s' rule '%s'" % (self.state.ID, self.args.device, self.args.rule), 8 )
+        log.log( "<disk>TAPE.tokenparser(): ID '%s' device '%s' rule '%s'" % (self.state.ID, self.args.device, self.args.rule), 8 )
 
 
     def getData(self):
-	"""Called by Directive docheck() method to fetch the data required for
-	evaluating the directive rule.
-	"""
+        """Called by Directive docheck() method to fetch the data required for
+        evaluating the directive rule.
+        """
 
-	tape = self.data_collectors['diskdevice.TapeStatistics'][self.args.device]
-	if tape == None:
-	    log.log( "<disk>TAPE.docheck(): Error, device not found '%s'" % (self.args.device), 4 )
-	    return None
-	else:
-	    return tape.getHash()
+        tape = self.data_collectors['diskdevice.TapeStatistics'][self.args.device]
+        if tape == None:
+            log.log( "<disk>TAPE.docheck(): Error, device not found '%s'" % (self.args.device), 4 )
+            return None
+        else:
+            return tape.getHash()
 
 
 ##

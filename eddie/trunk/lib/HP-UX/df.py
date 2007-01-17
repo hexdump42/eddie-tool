@@ -1,10 +1,10 @@
 
 '''
-File		: df.py 
+File                : df.py 
 
-Start Date	: 20010709
+Start Date        : 20010709
 
-Description	:
+Description        :
   This is an Eddie data collector.  It collects filesystem usage statistics
   using 'bdf'.
 
@@ -106,29 +106,29 @@ class dfList(datacollect.DataCollect):
         Collect disk usage data.
         """
 
-	dfre = "^([/0-9a-zA-Z]+)\s*\(([/0-9a-zA-Z])\s*\)\s*:\s*([0-9]+)\s*total allocated Kb\s*([0-9]+)\s*free allocated Kb\s*([0-9]+)\s*used allocated Kb\s*([0-9]+)\s*% allocation used"
+        dfre = "^([/0-9a-zA-Z]+)\s*\(([/0-9a-zA-Z])\s*\)\s*:\s*([0-9]+)\s*total allocated Kb\s*([0-9]+)\s*free allocated Kb\s*([0-9]+)\s*used allocated Kb\s*([0-9]+)\s*% allocation used"
 
-	rawList = utils.safe_popen('bdf', 'r')
-	rawList.readline()		# skip header
+        rawList = utils.safe_popen('bdf', 'r')
+        rawList.readline()                # skip header
 
-	self.data.datahash = {}		# dict of filesystems keyed by device
-	self.data.mounthash = {}	# dict of filesystems keyed by mount point
+        self.data.datahash = {}                # dict of filesystems keyed by device
+        self.data.mounthash = {}        # dict of filesystems keyed by mount point
 
-	prevline = None
-	for line in rawList.readlines():
-	    if prevline:
-		line = prevline + " " + line	# join any previous line to current
-		prevline = None
-	    fields = string.split(line)
-	    if len(fields) == 1:		# if 1 field, assume rest on next line
-		prevline = line
-		continue
-	    p = df(fields)
-	    self.data.datahash[fields[0]] = p	# dict of filesystem devices
-	    self.data.mounthash[fields[5]] = p	# dict of mount points
- 	    prevline = None
+        prevline = None
+        for line in rawList.readlines():
+            if prevline:
+                line = prevline + " " + line        # join any previous line to current
+                prevline = None
+            fields = string.split(line)
+            if len(fields) == 1:                # if 1 field, assume rest on next line
+                prevline = line
+                continue
+            p = df(fields)
+            self.data.datahash[fields[0]] = p        # dict of filesystem devices
+            self.data.mounthash[fields[5]] = p        # dict of mount points
+             prevline = None
 
-	utils.safe_pclose( rawList )
+        utils.safe_pclose( rawList )
 
         log.log( "<df>dfList.collectData(): collected data for %d filesystems" % (len(self.data.datahash.keys())), 6 )
 
@@ -142,7 +142,7 @@ class df:
     """
 
     def __init__(self, *arg):
-	self.raw = arg[0]
+        self.raw = arg[0]
 
         self.data = {}
         self.data['fsname']  = self.raw[0]              # Filesystem name (device)

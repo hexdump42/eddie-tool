@@ -1,10 +1,10 @@
 
 '''
-File		: netstat.py 
+File                : netstat.py 
 
-Start Date	: 19980122
+Start Date        : 19980122
 
-Description	:
+Description        :
   This is an Eddie data collector module.  It collects Network-related statistics.
   It defines four Data Collectors:
 
@@ -64,27 +64,27 @@ class TCPtable(datacollect.DataCollect):
 
     def collectData(self):
 
-	self.data.datalist = []		# list of tcp objects
-	self.data.datahash = {}		# hash of same objects keyed on '<ip>:<port>'
-	self.data.numconnections = 0
+        self.data.datalist = []                # list of tcp objects
+        self.data.datahash = {}                # hash of same objects keyed on '<ip>:<port>'
+        self.data.numconnections = 0
 
-	# get the tcp stats
-	rawList = utils.safe_popen('netstat -anf inet | grep ^tcp | grep LISTEN', 'r')
+        # get the tcp stats
+        rawList = utils.safe_popen('netstat -anf inet | grep ^tcp | grep LISTEN', 'r')
 
-	for line in rawList.readlines():
-	    f = string.split(line)
+        for line in rawList.readlines():
+            f = string.split(line)
 
-	    if len(f) != 6:
-		continue		# should be 6 fields per line
+            if len(f) != 6:
+                continue                # should be 6 fields per line
 
-	    t = tcp(f)			# new tcp instance
+            t = tcp(f)                        # new tcp instance
 
-	    self.data.datalist.append(t)
-	    self.data.datahash['%s:%s' % (t.local_addr_ip,t.local_addr_port)] = t
+            self.data.datalist.append(t)
+            self.data.datahash['%s:%s' % (t.local_addr_ip,t.local_addr_port)] = t
 
-	    self.data.numconnections = self.data.numconnections + 1
+            self.data.numconnections = self.data.numconnections + 1
 
-	utils.safe_pclose( rawList )
+        utils.safe_pclose( rawList )
 
         log.log( "<netstat>TCPtable.collectData(): Collected %d TCP connections" %(self.data.numconnections), 6 )
 
@@ -95,31 +95,31 @@ class tcp:
 
     def __init__(self, fields):
 
-	if len(fields) != 6:
-	    raise "Netstat Parse Error", "tcp class requires 6 fields, not %d" % (len(fields))
+        if len(fields) != 6:
+            raise "Netstat Parse Error", "tcp class requires 6 fields, not %d" % (len(fields))
 
-	# local address
-	dot = string.rfind(fields[3], '.')
-	if dot == -1:
-	    raise "Netstat Parse Error", "tcp, expected '<ip>.<port>', found '%s'" % (fields[3])
-	self.local_addr_ip = fields[3][:dot]
-	self.local_addr_port = fields[3][dot+1:]
+        # local address
+        dot = string.rfind(fields[3], '.')
+        if dot == -1:
+            raise "Netstat Parse Error", "tcp, expected '<ip>.<port>', found '%s'" % (fields[3])
+        self.local_addr_ip = fields[3][:dot]
+        self.local_addr_port = fields[3][dot+1:]
 
-	# remote address
-	dot = string.rfind(fields[4], '.')
-	if dot == -1:
-	    raise "Netstat Parse Error", "tcp, expected '<ip>.<port>', found '%s'" % (fields[4])
-	self.remote_addr_ip = fields[4][:dot]
-	self.remote_addr_port = fields[4][dot+1:]
+        # remote address
+        dot = string.rfind(fields[4], '.')
+        if dot == -1:
+            raise "Netstat Parse Error", "tcp, expected '<ip>.<port>', found '%s'" % (fields[4])
+        self.remote_addr_ip = fields[4][:dot]
+        self.remote_addr_port = fields[4][dot+1:]
 
-	# send queue size
-	self.send_queue = int(fields[2])
+        # send queue size
+        self.send_queue = int(fields[2])
 
-	# receive queue size
-	self.receive_queue = int(fields[1])
+        # receive queue size
+        self.receive_queue = int(fields[1])
 
-	# state
-	self.state = fields[5]
+        # state
+        self.state = fields[5]
 
 
 
@@ -141,27 +141,27 @@ class UDPtable(datacollect.DataCollect):
 
     def collectData(self):
 
-	self.data.datalist = []		# list of tcp objects
-	self.data.datahash = {}		# hash of same objects keyed on '<ip>:<port>'
-	self.data.numconnections = 0
+        self.data.datalist = []                # list of tcp objects
+        self.data.datahash = {}                # hash of same objects keyed on '<ip>:<port>'
+        self.data.numconnections = 0
 
-	# get the udp stats
-	rawList = utils.safe_popen('netstat -anf inet | grep ^udp', 'r')
+        # get the udp stats
+        rawList = utils.safe_popen('netstat -anf inet | grep ^udp', 'r')
 
-	for line in rawList.readlines():
-	    f = string.split(line)
+        for line in rawList.readlines():
+            f = string.split(line)
 
-	    if len(f) != 5:
-		continue		# should be 2 fields per line
+            if len(f) != 5:
+                continue                # should be 2 fields per line
 
-	    t = udp(f)			# new udp instance
+            t = udp(f)                        # new udp instance
 
-	    self.data.datalist.append(t)
-	    self.data.datahash['%s:%s' % (t.local_addr_ip,t.local_addr_port)] = t
+            self.data.datalist.append(t)
+            self.data.datahash['%s:%s' % (t.local_addr_ip,t.local_addr_port)] = t
 
-	    self.data.numconnections = self.data.numconnections + 1
+            self.data.numconnections = self.data.numconnections + 1
 
-	utils.safe_pclose( rawList )
+        utils.safe_pclose( rawList )
 
         log.log( "<netstat>UDPtable.collectData(): Collected %d UDP connections" %(self.data.numconnections), 6 )
 
@@ -172,28 +172,28 @@ class udp:
 
     def __init__(self, fields):
 
-	if len(fields) != 5:
-	    raise "Netstat Parse Error", "udp class requires 5 fields, not %d" % (len(fields))
+        if len(fields) != 5:
+            raise "Netstat Parse Error", "udp class requires 5 fields, not %d" % (len(fields))
 
-	# local address
-	dot = string.rfind(fields[3], '.')
-	if dot == -1:
-	    raise "Netstat Parse Error", "tcp, expected '<ip>.<port>', found '%s'" % (fields[3])
-	self.local_addr_ip = fields[3][:dot]
-	self.local_addr_port = fields[3][dot+1:]
+        # local address
+        dot = string.rfind(fields[3], '.')
+        if dot == -1:
+            raise "Netstat Parse Error", "tcp, expected '<ip>.<port>', found '%s'" % (fields[3])
+        self.local_addr_ip = fields[3][:dot]
+        self.local_addr_port = fields[3][dot+1:]
 
-	# remote address
-	dot = string.rfind(fields[4], '.')
-	if dot == -1:
-	    raise "Netstat Parse Error", "tcp, expected '<ip>.<port>', found '%s'" % (fields[4])
-	self.remote_addr_ip = fields[4][:dot]
-	self.remote_addr_port = fields[4][dot+1:]
+        # remote address
+        dot = string.rfind(fields[4], '.')
+        if dot == -1:
+            raise "Netstat Parse Error", "tcp, expected '<ip>.<port>', found '%s'" % (fields[4])
+        self.remote_addr_ip = fields[4][:dot]
+        self.remote_addr_port = fields[4][dot+1:]
 
-	# send queue size
-	self.send_queue = int(fields[2])
+        # send queue size
+        self.send_queue = int(fields[2])
 
-	# receive queue size
-	self.receive_queue = int(fields[1])
+        # receive queue size
+        self.receive_queue = int(fields[1])
 
 
 
@@ -218,28 +218,28 @@ class IntTable(datacollect.DataCollect):
         Collect network interface data.
         """
 
-	self.data.datahash = {}		# hash of same objects keyed on interface name
-	self.data.numinterfaces = 0
+        self.data.datahash = {}                # hash of same objects keyed on interface name
+        self.data.numinterfaces = 0
 
-	# get the interface stats
-	rawList = utils.safe_popen('netstat -in', 'r')
+        # get the interface stats
+        rawList = utils.safe_popen('netstat -in', 'r')
 
-	# skip header line
-	rawList.readline()
+        # skip header line
+        rawList.readline()
 
-	for line in rawList.readlines():
-	    f = string.split(line)
+        for line in rawList.readlines():
+            f = string.split(line)
 
-	    if len(f) != 6:
-		continue		# should be 6 fields per line
+            if len(f) != 6:
+                continue                # should be 6 fields per line
 
-	    t = interface(f)		# new interface instance
+            t = interface(f)                # new interface instance
 
-	    self.data.datahash[t.name] = t
+            self.data.datahash[t.name] = t
 
-	    self.data.numinterfaces = self.data.numinterfaces + 1
+            self.data.numinterfaces = self.data.numinterfaces + 1
 
-	utils.safe_pclose( rawList )
+        utils.safe_pclose( rawList )
 
         log.log( "<netstat>IntTable.collectData(): Collected data for %d interfaces" %(self.data.numinterfaces), 6 )
 
@@ -250,40 +250,40 @@ class interface:
 
     def __init__(self, fields):
 
-	if len(fields) != 6:
-	    raise "Netstat Parse Error", "interface class requires 6 fields, not %d" % (len(fields))
+        if len(fields) != 6:
+            raise "Netstat Parse Error", "interface class requires 6 fields, not %d" % (len(fields))
 
-	# interface name address
-	self.name = fields[0]
+        # interface name address
+        self.name = fields[0]
 
-	# mtu
-	self.mtu = int(fields[1])
+        # mtu
+        self.mtu = int(fields[1])
 
-	# net/dest
-	self.net = fields[2]
+        # net/dest
+        self.net = fields[2]
 
-	# address
-	self.address = fields[3]
+        # address
+        self.address = fields[3]
 
-	# input packets
-	self.ipkts = long(fields[4])
+        # input packets
+        self.ipkts = long(fields[4])
 
-	# output packets
-	self.opkts = long(fields[5])
+        # output packets
+        self.opkts = long(fields[5])
 
 
     def ifinfo(self):
-	"""Return interface details as a dictionary."""
+        """Return interface details as a dictionary."""
 
-	info = {}
-	info['name'] = self.name
-	info['mtu'] = self.mtu
-	info['net'] = self.net
-	info['address'] = self.address
-	info['ipkts'] = self.ipkts
-	info['opkts'] = self.opkts
+        info = {}
+        info['name'] = self.name
+        info['mtu'] = self.mtu
+        info['net'] = self.net
+        info['address'] = self.address
+        info['ipkts'] = self.ipkts
+        info['opkts'] = self.opkts
 
-	return info
+        return info
 
 
 ##
