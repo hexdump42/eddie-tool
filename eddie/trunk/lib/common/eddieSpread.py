@@ -103,7 +103,7 @@ class Message(object):
         (self.validity_time) setting."""
         
         if self.validity_time == ANYTIME:
-            return 1                # don't care when message is sent
+            return True             # don't care when message is sent
         
         now = time.time()
         if (now-self.timestamp) <= self.validity_time*60.0:
@@ -130,7 +130,14 @@ class Spread(object):
             UseSpread = False
             raise SpreadInitError("Spread administratively disabled")
         
+        global SPREADPORT
+        if not SPREADPORT:
+            SPREADPORT = spread.DEFAULT_SPREAD_PORT
+        self.server = "%d@%s" % (SPREADPORT, SPREADSERVER)
+        
         self.eq = Queue.Queue()                # Spread message queue
+        
+        self.connected = False
     
     def startup(self):
         """Start the Spread management thread."""
@@ -140,65 +147,65 @@ class Spread(object):
         self.sthread.start()            # start the thread running
     
     def main(self):
-        """The Spread management thread."""
-        
-        waittime = 1                                # time to wait before re-connecting
+        """The Spread management thread.
+        Loop to watch message queue for any Spread notifications to be sent
+            from other Spread functions or actions.
+        This means no other threads should block when sending Spread notifications.
+        """
         
         while True:
-            status = self.connect()                 # open Spread connection
-            if status:
-                #self.join()                         # join any groups
-                waittime = 1                        # reset wait time
+            m = self.eq.get(BLOCK)        # get next message or wait for one
+            log.log("<eddieSpread>Spread.main(): got msg from queue, size now: %d"%(self.eq.qsize()), 5)
+            if m.time_valid():
                 
-                # Loop to watch message queue for any Spread notifications to be sent
-                #   from other Spread functions or actions.
-                # This means no other threads should block when sending Spread notifications.
-                while status:
-                    m = self.eq.get(BLOCK)        # get next message or wait for one
-                    if m.time_valid():
-                        log.log("<eddieSpread>Spread.main(): Sending msg from queue, %s"%(m), 9)
-                        try:
-                            self._actual_send(m.emsg)
-                            log.log("<eddieSpread>Spread.main(): msg sent, %s"%(m), 6)
-                        except Exception, details:
-                            log.log("<eddieSpread>Spread.main(): Spread exception, %s, msg %s not sent"%(details, m), 3)
-                            if 'closed mbox' in str(details):
-                                # connection has been closed, so break out & try to re-connect
-                                status = False
-                                self.eq.put(m)        # put msg back in queue for re-try
-                    else:
-                        log.log("<eddieSpread>Spread.main(): message no longer valid, discarding %s"%(m), 9)
+                while not self.connected:
+                    self.connect()
             
+                log.log("<eddieSpread>Spread.main(): Sending msg from queue, %s"%(m), 5) #9)
+                try:
+                    self._actual_send(m.emsg)
+                    log.log("<eddieSpread>Spread.main(): msg sent, %s"%(m), 5) #6)
+                except Exception, details:
+                    log.log("<eddieSpread>Spread.main(): Spread exception, %s, msg %s not sent"%(details, m), 3)
+                    if details[0] == -8 or 'closed mbox' in str(details):
+                        # connection has been closed or died, so break out & try to re-connect
+                        log.log("<eddieSpread>Spread.main(): Spread connection closed unexpectedly", 4)
+                        self.connected = False
+                        self.eq.put(m)        # put msg back in queue for re-try
             else:
-                log.log("<eddieSpread>Spread.main(): Spread connect failed, waiting %d secs"%(waittime), 5)
-                time.sleep( waittime )
-                waittime = min( waittime * 2, 60*60*4 ) # inc wait time but max 4 hours
-            
-            log.log("<eddieSpread>Spread.main(): Spread connection closed...  reconnecting", 4)
+                log.log("<eddieSpread>Spread.main(): message no longer valid, discarding %s"%(m), 5) #9)
+                    
+            if self.eq.qsize() == 0:
+                log.log("<eddieSpread>Spread.main(): queue empty, disconnecting from Spread.", 5) #9)
+                self.disconnect()
     
     def connect(self):
         """Create a Spread connection.
         """
         
-        global SPREADPORT
-        if not SPREADPORT:
-            SPREADPORT = spread.DEFAULT_SPREAD_PORT
-        self.server = "%d@%s" % (SPREADPORT, SPREADSERVER)
+        waittime = 1                                # time to wait before re-connecting
         
-        status = 0
+        while not self.connected:
+            # Create Spread connection
+            log.log("<eddieSpread>Spread.connect(): Opening connection to Spread, '%s'" %(self.server), 5)
         
-        # Create Spread connection
-        log.log("<eddieSpread>Spread.connect(): Opening connection to Spread, '%s'" %(self.server), 5)
-        
+            try:
+                self.connection = spread.connect(self.server, '', 0, 0)
+            except spread.error, msg:
+                log.log("<eddieSpread>Spread.connect(): Spread could not connect, '%s'. Waiting %d secs for retry" %(msg, waittime), 5)
+                time.sleep( waittime )
+                waittime = min( waittime * 2, 60*10 ) # inc wait time but max 10 minutes
+            else:
+                log.log("<eddieSpread>Spread.connect(): Connected to Spread, '%s'" %(self.server), 5)
+                self.connected = True
+    
+    def disconnect(self):
         try:
-            self.connection = spread.connect(self.server, '', 0, 0)
-        except spread.error, msg:
-            log.log("<eddieSpread>Spread.connect(): Spread could not connect, '%s'" %(msg), 5)
-        else:
-            log.log("<eddieSpread>Spread.connect(): Connected to Spread, '%s'" %(self.server), 5)
-            status = 1
-        
-        return status
+            log.log("<eddieSpread>Spread.disconnect(): disconnecting from Spread.", 5) #9)
+            self.connection.disconnect()
+        except:
+            pass
+        self.connected = False
     
     def join(self):
         self.connection.join('eddie')
@@ -210,6 +217,7 @@ class Spread(object):
         
         m = Message(emsg, validity_time)
         self.eq.put(m)
+        log.log("<eddieSpread>Spread.notify(): msg added to queue, size now: %d"%(self.eq.qsize()), 5)
         
         return 0
     
@@ -217,7 +225,7 @@ class Spread(object):
         sio = StringIO()
         p = cPickle.Pickler(sio)
         p.dump(msg)
-        r = self.connection.multicast(spread.RELIABLE_MESS, 'elvinrrd', sio.getvalue())
+        r = self.connection.multicast(spread.FIFO_MESS, 'elvinrrd', sio.getvalue())
         if r == 0:
             raise SpreadError("Spread multicast failed")
     
