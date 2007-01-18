@@ -155,16 +155,16 @@ class Spread(object):
         
         while True:
             m = self.eq.get(BLOCK)        # get next message or wait for one
-            log.log("<eddieSpread>Spread.main(): got msg from queue, size now: %d"%(self.eq.qsize()), 5)
+            log.log("<eddieSpread>Spread.main(): got msg from queue, size now: %d"%(self.eq.qsize()), 9)
             if m.time_valid():
                 
                 while not self.connected:
                     self.connect()
             
-                log.log("<eddieSpread>Spread.main(): Sending msg from queue, %s"%(m), 5) #9)
+                log.log("<eddieSpread>Spread.main(): Sending msg from queue, %s"%(m), 9)
                 try:
                     self._actual_send(m.emsg)
-                    log.log("<eddieSpread>Spread.main(): msg sent, %s"%(m), 5) #6)
+                    log.log("<eddieSpread>Spread.main(): msg sent, %s"%(m), 6)
                 except Exception, details:
                     log.log("<eddieSpread>Spread.main(): Spread exception, %s, msg %s not sent"%(details, m), 3)
                     if details[0] == -8 or 'closed mbox' in str(details):
@@ -173,10 +173,10 @@ class Spread(object):
                         self.connected = False
                         self.eq.put(m)        # put msg back in queue for re-try
             else:
-                log.log("<eddieSpread>Spread.main(): message no longer valid, discarding %s"%(m), 5) #9)
+                log.log("<eddieSpread>Spread.main(): message no longer valid, discarding %s"%(m), 9)
                     
             if self.eq.qsize() == 0:
-                log.log("<eddieSpread>Spread.main(): queue empty, disconnecting from Spread.", 5) #9)
+                log.log("<eddieSpread>Spread.main(): queue empty, disconnecting from Spread.", 9)
                 self.disconnect()
     
     def connect(self):
@@ -187,7 +187,7 @@ class Spread(object):
         
         while not self.connected:
             # Create Spread connection
-            log.log("<eddieSpread>Spread.connect(): Opening connection to Spread, '%s'" %(self.server), 5)
+            log.log("<eddieSpread>Spread.connect(): Opening connection to Spread, '%s'" %(self.server), 6)
         
             try:
                 self.connection = spread.connect(self.server, '', 0, 0)
@@ -196,12 +196,12 @@ class Spread(object):
                 time.sleep( waittime )
                 waittime = min( waittime * 2, 60*10 ) # inc wait time but max 10 minutes
             else:
-                log.log("<eddieSpread>Spread.connect(): Connected to Spread, '%s'" %(self.server), 5)
+                log.log("<eddieSpread>Spread.connect(): Connected to Spread, '%s'" %(self.server), 6)
                 self.connected = True
     
     def disconnect(self):
         try:
-            log.log("<eddieSpread>Spread.disconnect(): disconnecting from Spread.", 5) #9)
+            log.log("<eddieSpread>Spread.disconnect(): disconnecting from Spread.", 6)
             self.connection.disconnect()
         except:
             pass
@@ -217,7 +217,7 @@ class Spread(object):
         
         m = Message(emsg, validity_time)
         self.eq.put(m)
-        log.log("<eddieSpread>Spread.notify(): msg added to queue, size now: %d"%(self.eq.qsize()), 5)
+        log.log("<eddieSpread>Spread.notify(): msg added to queue, size now: %d"%(self.eq.qsize()), 9)
         
         return 0
     
