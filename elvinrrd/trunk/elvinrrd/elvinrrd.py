@@ -3,7 +3,7 @@
 ## File         : elvinrrd.py
 ## Author       : Chris Miles - http://chrismiles.info/
 ## Start Date   : 2001-08-27
-## Description  : Elvin4 consumer to store data sent via Elvin into RRDtool databases.
+## Description  : Consumer to store data sent via messaging system into RRDtool databases.
 ## Home         : http://www.psychofx.com/elvinrrd/
 ##
 ## $Id$
@@ -12,7 +12,7 @@
 
 ################################################################
 
-__version__ = """2.3"""
+__version__ = """2.4"""
 
 ################################################################
 
@@ -62,6 +62,7 @@ ELVIN_SCOPE='elvin'
 # Default Spread host/port
 SPREAD_SERVER='localhost'
 SPREAD_PORT=4803
+SPREAD_GROUP='elvinrrd'
 
 
 ################################################################
@@ -265,24 +266,50 @@ class SpreadStore(Base):
         
         self.spread_server = spread_server
         self.spread_port = spread_port
+        self.connected = False
         
+        self.connect()
+    
+    def connect(self):
+        waittime = 1        # time to wait before re-connecting
         server = "%d@%s" % (self.spread_port, self.spread_server)
-        self._connection = spread.connect(server)
+        
+        while not self.connected:
+            try:
+                log("Connecting to Spread server: %s" % server)
+                self._connection = spread.connect(server)
+                self.connected = True
+                log("Connected to Spread server: %s" % server)
+            except spread.error, err:
+                log("Spread connection failed: %s - waiting %s seconds before retry" % (err,waittime))
+                time.sleep(waittime)
+                waittime = min( waittime * 2, 60*10 ) # inc wait time but max 10 minutes
+        
+        self.register()
     
     def register(self):
         '''Register with Spread service for group "elvinrrd".
         '''
-        self._connection.join('elvinrrd')
+        log("Joining Spread group: %s" % SPREAD_GROUP)
+        self._connection.join(SPREAD_GROUP)
     
     def run(self):
         while True:
-            m = self._connection.receive()
-            if m and hasattr(m, 'message'):
-                # RegularMsgType
-                mio = StringIO(m.message)
-                up = cPickle.Unpickler(mio)
-                msg = up.load()
-                self.storeRRD(msg)
+            if self.connected:
+                try:
+                    m = self._connection.receive()
+                except spread.error, err:
+                    log("Spread connection lost: %s" % err)
+                    self.connected = False
+                else:
+                    if m and hasattr(m, 'message'):
+                        # RegularMsgType
+                        mio = StringIO(m.message)
+                        up = cPickle.Unpickler(mio)
+                        msg = up.load()
+                        self.storeRRD(msg)
+            else:   # not connected
+                self.connect()
     
 
 
@@ -447,7 +474,7 @@ def main():
         
     e.rrd = rrd
     e.rrddict = rrddict
-    e.register()
+    #e.register()
     if options.verbose:
         log( "Starting main loop" )
     e.run()
