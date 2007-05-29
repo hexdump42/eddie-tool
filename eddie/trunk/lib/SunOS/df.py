@@ -120,7 +120,7 @@ class dfList(datacollect.DataCollect):
     # Private methods.  No thread safety if not using public methods.
 
     def collectData(self):
-            """Collect full disk usage data
+        """Collect full disk usage data
         """
 
         # df -g -l : get detailed information for all local filesystems
