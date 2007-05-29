@@ -184,7 +184,13 @@ class Base(object):
                     if options.verbose:
                         log( "Creating rrd: %s" % (createargs,) )
                     self.rrd.create( *createargs )
-                    self.rrd.update( *u )
+                    try:
+                        self.rrd.update( *u )
+                    except rrdtool.error, e:
+                        logmsg = "RRD update after create failed for %s: %s" % (msg,str(e))
+                        sys.stderr.write(logmsg)
+                        if options.logfile:
+                            log(logmsg)
             else:
                 sys.stderr.write( "IOError: %s, message %s\n" % (err, msg) )
                 if options.logfile:
