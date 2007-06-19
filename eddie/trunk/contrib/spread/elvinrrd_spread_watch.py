@@ -28,6 +28,7 @@ import platform
 from pprint import pprint
 import sys
 import time
+from datetime import datetime
 
 # optparse is only available in 2.3+, but optik provides the same 
 # functionality for python 2.2
@@ -61,6 +62,9 @@ def spread_watch(spread_host='127.0.0.1', spread_port=spread.DEFAULT_SPREAD_PORT
                 up = cPickle.Unpickler(mio)
                 j = up.load()
                 pprint(j)
+                tstamp = j.get('timestamp', None)
+                if tstamp:
+                    print "  timestamp = %s" %str(datetime.fromtimestamp(tstamp))
             else:
                 # MembershipMsgType
                 print "* Membership change for group: %s" % m.group
