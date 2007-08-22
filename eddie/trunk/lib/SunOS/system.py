@@ -104,8 +104,8 @@ class system(datacollect.DataCollect):
         procs_running        - number of processes running (int)
         procs_blocked        - number of processes blocked (int)
         procs_waiting        - number of processes waiting (int)
-        mem_swapfree        - amount of free swap (kB) (int)
-        mem_free        - amount of free RAM (kB) (int)
+        mem_swapfree        - amount of free swap (bytes) (int)
+        mem_free        - amount of free RAM (bytes) (int)
         page_reclaims        - page reclaims (int)
         minor_faults        - minor faults (int)
         kb_paged_in        - kilobytes paged in (int)
@@ -309,8 +309,8 @@ class system(datacollect.DataCollect):
             vmstat_dict['procs_running'] = int(v_split[0])
             vmstat_dict['procs_blocked'] = int(v_split[1])
             vmstat_dict['procs_waiting'] = int(v_split[2])
-            vmstat_dict['mem_swapfree'] = int(v_split[3])
-            vmstat_dict['mem_free'] = int(v_split[4])
+            vmstat_dict['mem_swapfree'] = int(v_split[3]) * 1024    # bytes
+            vmstat_dict['mem_free'] = int(v_split[4]) * 1024    # bytes
             vmstat_dict['page_reclaims'] = int(v_split[5])
             vmstat_dict['minor_faults'] = int(v_split[6])
             vmstat_dict['kb_paged_in'] = int(v_split[7])
