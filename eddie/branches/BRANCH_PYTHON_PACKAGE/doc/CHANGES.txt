@@ -1,0 +1,1018 @@
+Eddie CHANGES
+(reverse chronological order)
+
+Eddie-0.35 (31-Oct-2005)
+ - Linux: Added a dummy diskdevice module for Linux.  The implementation of
+   this is still yet to be done.
+ - Fixed compatibility issue with FILE directive and Python pre 2.3.  Those
+   versions do not have os.path.sep.
+ - Added regfile to LOGSCAN directive, which points to a file containing
+   multiple regular expressions to match against.  Patch submitted by
+   Dougal Scott.
+ - Linux: Fix to handle /proc/stat changes on Linux kernel 2.6.11+.
+ - Enhancements to PRTDIAG directive:
+    * Report details of any hardware failures on U280R.
+    * Added support for U480R hardware.
+   Patch submitted by Dougal Scott.
+ - Improvement to HTTP directive handling if the Python does not support SSL
+   connections.  Patch submitted by Dougal Scott.
+ - Added SMTP directive which provides a simple facility to measure the response
+   time of an SMTP connection to a server.  Submitted by Dougal Scott.
+ - Fixed minor bug where length of time of thread count over threshold was
+   not being shown in minutes when it was expected to be.
+   Patch submitted by Dougal Scott.
+ - System specific Directives are now automatically loaded from a Directives
+   subdirectory beneath the system lib directory if it exists.
+   Example: Linux-specific directive modules will be loaded from:
+     lib/Linux/Directives/
+   Patch submitted by Dougal Scott.
+ - SP directive now supports a bindaddr value of "any".  This will cause the
+   directive to ignore the bind address when testing (ie: compare port only).
+   Patch submitted by Dougal Scott.
+ - Use Python True/False instead of 1/0 for booleans in common directives.
+ - Added 'expectrexp' option to PORT directive.  This allows regular expression
+   matching against the response of a PORT connection.
+   Patch submitted by Dougal Scott.
+ - Added a 'missing' flag to FILE directive which indicates when an existing
+   file has disappeared.
+   Also added a 'lastexists' variable for use in FILE rules.
+ - Improvements to the keepdiff option of the FILE directive.
+   * Keep copies of files being monitored in WORKDIR/FILEprevs/ where
+     WORKDIR is the new option defined in eddie.cf.
+   * If the copy of a file in FILEprevs disappears then set an appropriate
+     message for action output.
+   * If the copy of a file in FILEprevs disappears then make sure another
+     copy is saved.
+   * Use semi-readable unique filenames for the saved copies.
+ - Added get_work_dir() and set_sub_work_dir() functions to utils.py for
+   directive code to call to retrieve the WORKDIR location.  set_sub_work_dir()
+   is used to create a subdirectory within WORKDIR.  It will raise WorkdirError
+   if it fails.  Otherwise it returns the full directory path.
+ - Added config option WORKDIR which defines a location where Eddie can
+   store temporary files.  This can be used by directives that need to
+   save some information or state to the filesystem.  The directory can
+   be safely removed when Eddie is not running.  Eddie does not clean
+   up the directory itself (it may clean up some files before shutting
+   down).  The whole directory tree will be created on startup if it
+   doesn't already exist.  Eddie may create subdirectories within this
+   WORKDIR directory.  Example:
+       WORKDIR="/var/tmp/eddieworkdir"
+ - Win32: Catch an exception that is randomly generatede by
+   win32pdh.GetFormattedCounterValue() sometimes. The returned error is
+   unhelpful,
+   (-2147481640, 'GetFormattedCounterValue', 'No error message is available')
+   so just return None values instead of letting the thread die.
+ - Added capability for FILE directive to keep diffs of changes to a file.
+   The diffs can then be sent in an email when a change is detected.
+   New FILE arguments:
+   keepdiff={true|false}
+    - flag whether to keep a copy of the file to produce diffs
+   context_lines=<integer>
+    - how many context lines to show around the changed lines
+   difftype={context|unified|full}
+    - which diff method to use (see Python difflib module for more information)
+ - Added README.win32.txt for Win32 platform install information.
+ - Added rules/win32_sample.rules - a sample set of Win32 rules.
+ - Win32 df collector: ignore A: and B: drives when collecting stats.
+   Otherwise Windows prompts for the media to be inserted! (Unless a
+   floppy is in the drive ... yeah right)
+ - Win32: Fix win32perf doctest for systems that have an A: drive.
+ - Win32: Added support for Win32 systems with datacollectors: df,
+   diskdevice, netstat, proc and system.  Most of them use win32perf
+   module which is a wrapper for Mark Hammond's win32all package.
+ - Added doctests for FILE directive.
+ - Fetch hostname from platform.node() if os.uname() is not available.
+   (Fix for Win32 compatibility.)
+ - Added a doctest for timeQueue module.
+ - Fixed bug in timeQueue in Python 2.4+ support where head() call was
+   actually performing a get().
+ - Use platform-independent method (ie: os.path) for constructing config
+   paths, rather than assuming '/' is path separator.  (Fix for Win32
+   compatibility.)
+ - Added support for systems that do not support os.uname() - try to use
+   the platform module instead (ie: Win32).  Check that the system handles
+   each signal before trying to register signal handlers for them (Win32
+   doesn't support some of the signals).
+ - Solaris: Catch some more possible errors when parsing 'ps' output for
+   Solaris.  The %CPU field can be a '-' instead of a decimal number (seems
+   to be that way for zombie processes).
+ - Solaris: Handle parsing netstat output for Solaris 10.
+ - Fixed small bug with eddie_wrapper when EDDIE_ADMIN was not defined.
+ - Big improvements to the Redhat init.d script in the contrib directory,
+   making it much more compatible with all new versions of Redhat Linux.
+ - Added chkconfig lines to sample init.d script for Redhat Linux.
+ - Linux: Detecting interpreters in Linux process lists was broken.
+ - Linux: added support for new netstat formats in newer kernels.
+ - Linux: Get VM statistics from /proc/vmstat (on newer kernels).
+ - Added support for Python 2.4 Queue class, which Eddie's timeQueue class is
+   derived from.  The implementation of Queue changed slightly in Python 2.4.
+ - Log the version of Python in use at startup, along with systype.
+ - Added optional definition of EDDIE_ADMIN environment variable in the rc
+   startup scripts to receive Eddie restart/exception notifications from
+   eddie_wrapper.
+ - Eddie now prints no output to stdout by default.  Any global exceptions
+   are printed to stderr on exiting.
+ - eddie_wrapper improvements: eddie output on exit is only emailed to
+   $EDDIE_ADMIN if the Eddie return-code is non-zero.  By default no
+   $EDDIE_ADMIN is set (so no email is sent by default) and $EDDIE_ADMIN
+   can now be defined outside the eddie_wrapper script (ie: in a startup
+   script).
+ - Bugfix: console now shows groups that match special hostnames, those that
+   contain '.' or '-' characters.  A shortcut hack that will be replaced in
+   the future.
+ - FreeBSD: Added fetching of more system counters from '/sbin/sysctl -a'.
+ - FreeBSD: process list parsing was broken.
+ - FreeBSD: proc module needed to import sys so that exceptions could
+   be logged.
+ - Added a bit of a hack (sorry) which allows hostnames containing '-' to be
+   used as group names.  The '-' must be replaced with '_' for the match to
+   work.  This is because group names in the config cannot contain characters
+   like '-'.  This will be resolved in the future when proper matching options
+   are implemented fully.
+ - Solaris: Better handling of Solaris process date/time parsing errors.
+   Patch submitted by Dougal Scott.
+ - Solaris: PRTDIAG directive: added support for Sun Blade servers
+   (SUNW,Serverblade1).  Patch submitted by Dougal Scott.
+ - When sending email by the SMTP method and multiple SMTP servers are
+   available, only log failure if all SMTP servers are unavailable to
+   send the message.  Patch submitted by Dougal Scott.
+ - FreeBSD: Added collecting swap usage stats from '/usr/sbin/pstat -sk'.
+ - Bugfix: Elvin ElvinConnectMaxRetries exceptions were not being caught
+   properly.
+ - Solaris: SunOS df data collector would fail when a CD was inserted, as
+   total files is reported as -1.  Patch submitted by Dougal Scott.
+ - FreeBSD raises a socket exception ('Host is down') when a host is
+   unreachable, which can be safely ignored by the ping code.
+ - Improved the sample config for N COMMONFIXED.
+ - FreedBSD: Added support for FreeBSD system, proc, netstat, df modules.
+ - A quick fix to the config parser which means that Eddie will run on systems
+   that do not yet have system-specific modules.  Non system-specific
+   directives will still work on these systems, such as all the network
+   directives (PING, SNMP, etc) and others like FILE.
+ - Solaris: Fixed DataFailure exception when kstat command cannot be found.
+ - Catch an exception properly in FS directive when filesystem was not
+   found.
+ - Fixed fstpl directive in common.rules example file.
+ - Modified eddie_wrapper to use a Python call to fetch the current time
+   rather than relying on GNU date.  This has improved compatability with
+   more types of systems, as it can be assumed that Python will be available
+   to run EDDIE !
+ - Handle Elvin connection problems more gracefully, backing off before
+   retrying.
+ - Disabled counting of file descriptors in use, which is only needed for
+   debugging on rare occasions.
+ - Bugfix in HTTP when trying to determine error string for some types of
+   exceptions.
+ - Improved PING multi-threaded reliability on platforms that were causing
+   problems because they simply used the current pid as the icmp_id.
+   On platforms where all threads share the same process id this was causing
+   unreliable ping results as the wrong threads would accept the wrong icmp
+   replies.  It now uses the current thread object's memory address for the
+   icmp_id to make them as unique as possible and avoid such confusion.
+ - New directive: TAPE - functions almost exactly like the DISK directive
+   but fetches stats from the TapeStatistics class from the diskdevice
+   module (which is currently only available for Solaris).
+   Example:
+    TAPE st52_thruput:
+        device='st52'
+        scanperiod='5m'
+        rule='1'        # always perform action
+        action='elvinrrd("tape-%(h)s_%(device)s", "rbytes=%(nread)s", "wbytes=%(nwritten)s")'
+ - New directive, DISK.  This uses the new DiskStatistics data collector from
+   a diskdevice module (available for Solaris-only so far) to enable rules
+   to be created using disk device activity stats.
+   Example: a directive which collects bytes read/written to the disk device
+   md20 and sends these counters to elvinrrd
+    DISK md20_thruput:
+        device='md20'
+        scanperiod='5m'
+        rule='1'        # always perform action
+        action='elvinrrd("disk-%(h)s_%(device)s", "rbytes=%(nread)s", "wbytes=%(nwritten)s")'
+ - Solaris: added a new Data Collector, DiskStatistics, in module diskdevice.py
+   (for Solaris only so far).  On Solaris this collects disk activity statistics
+   from a call to kstat, ie, '/usr/bin/kstat -p -c disk'.  All stats generated
+   by that command are collected for each disk and made available to directives.
+ - Solaris: enhanced the network interface statistics collection to fetch
+   more detailed stats from 'netstat -k' for each physical interface.
+   An example of the statistics now available for an interface (hme0 on 5.7)
+   are:
+     ipackets 65360226 ierrors 25 opackets 77502512 oerrors 0 collisions 0
+     defer 0 framing 0 crc 0 sqe 0 code_violations 0 len_errors 0
+     ifspeed 100 buff 0 oflo 0 uflo 0 missed 25 tx_late_collisions 0
+     retry_error 0 first_collisions 0 nocarrier 0 inits 7 nocanput 440
+     allocbfail 0 runt 0 jabber 0 babble 0 tmd_error 0 tx_late_error 0
+     rx_late_error 0 slv_parity_error 0 tx_parity_error 0 rx_parity_error 0
+     slv_error_ack 0 tx_error_ack 0 rx_error_ack 0 tx_tag_error 0
+     rx_tag_error 0 eop_error 0 no_tmds 0 no_tbufs 0 no_rbufs 0
+     rx_late_collisions 0 rbytes 1726897560 obytes 834302609 multircv 7535 multixmt 0
+     brdcstrcv 248816 brdcstxmt 1667 norcvbuf 440 noxmtbuf 0 phy_failures 0
+   as well as info from 'netstat -in' such as mtu, network, etc.
+ - Solaris: now collects more detailed filesystem information in SunOS/df.py,
+   including inode usage, filesystem type, flags, and blocks as well as kBytes
+   used.  The full list of variables now available to directives is:
+     fsname  - filesystem name (string)
+     mountpt - mount point (string)
+     size    - size of filesystem in kBytes (int)
+     used    - kBytes used (int)
+     avail   - kBytes free (int)
+     pctused - percentage of filesystem used (float)
+     totalblocks - total amount of physical blocks (512 Bytes/block) (int)
+     usedblocks - number of physical blocks used (int)
+     availblocks - number of physical blocks available for unprivileged users (int)
+     freeblocks - number of physical blocks free (int)
+     blocksize - filesystem (logical) block size (int)
+     fragsize - filesystem fragmentation size (int)
+     totalinodes - total inodes on filesystem (int)
+     usedinodes - number of inodes used (int)
+     availinodes - number of inodes left available (int)
+     pctinodes - percentage of inodes used (float)
+     filesysid - filesystem id (int)
+     fstype - type of filesystem (string)
+     flag - filesystem flags (string)
+     filelen - max filename length (int)
+   Thanks to Dougal Scott for submitting this patch.
+ - When matching hostnames to group names, ignore any domain parts of the
+   hostname it is fully-qualified.  Group names cannot contain
+   non-alphanumeric characters, so will only match the host part of a FQDN.
+ - Bugfix: clear checkdependson if it is assigned an empty string.
+ - Solaris: improvement to uptime/loadavg stats collection where it is
+   possible for the "day(s)" section of /usr/bin/uptime output to be
+   missing (usually if wtmpx rotated more often than the system boot,
+   thus losing the last 'reboot' entry) so SunOS/system.py now handles
+   this exceptional case.
+
+Eddie-0.34 (13-Sep-2004)
+ - OpenBSD: collect in/out byte counters for network interfaces, which
+   requires an extra netstat call.
+ - OpenBSD: added drops counter to network interface stats.
+ - OpenBSD: fixed some bugs preventing network interface statistics collection
+   from working properly.
+ - Improved handling of exceptions when counting file descriptors in use.
+   Instead of raising a global exception (and causing EDDIE to die) just log
+   the exception and carry on.
+ - Perform global housekeeping duties more often.  Now they are every
+   1 minute instead of every 10 minutes.  This means that changes to
+   config and rules files will be picked up much faster.
+ - Added pysnmp module to Extra dir, which EDDIE uses for making SNMP queries.
+ - Extra 3rd-party modules are now being distributed with EDDIE.  They will
+   live in lib/common/Extra/ and are provided to make installation simpler
+   for commonly-used modules.
+ - HTTP: Make sure 'ip' message variable is initialized in HTTP directives.
+ - HTTP: Some HTTP response exceptions were not being caught properly.
+ - HTTP: Some socket.timeout checks weren't checking for the correct version
+   of Python (which was causing AttributeError exceptions).
+ - HTTP: Changed the logging of response body read() exceptions which were not
+   working for some types of exceptions.
+ - Made eddie_wrapper smarter about finding a date or gdate command to use.
+ - Darwin: Fixed a bug parsing vmstat statistics.  These counters were
+   being truncated (and hence wrong) before.
+ - Darwin: Better handling of parsing errors in the proc data collector.
+ - The COM directive now shares the utils.systemcall_semaphore semaphore
+   rather than relying on its own.  This prevents conflicts between any
+   threads that need to perform a system() (or os.popen() or
+   commands.getstatusoutput()) simultaneously.
+   Thanks to Denis Menshikov for verifying this issue.
+ - Bugfix for SP directive determining the right protocol (Dougal Scott).
+ - Bugfix for a problem that occasionally the get TCPtable returns no entries
+   for no obvious reason. This means that all the SP style checks would
+   start complaining that no one is listening (Dougal Scott).
+ - If ELVINURL and ELVINSCOPE are both undefined in eddie.cf then disable
+   Elvin functionality.
+ - Update to MYSQL directive adding "result#" variable (Dougal Scott).
+ - Converted mysql.py from DOS line endings to UNIX.
+ - Fixed 'daemon' call in contrib init script so it works properly on newer
+   versions of Redhat.
+ - Added new exception DataFailure.
+   Changed exceptions to be subclasses of Exception.
+   Catch DataFailure exceptions from collectData().  These are raised if the
+   Data Collector encounters a major problem collecting the data.
+ - Added support for Redhat Enterprise Linux (or perhaps newer kernels 2.4.21+)
+   which has extra stats added to the cpu fields in /proc/stat.  The cpu counters
+   now available with these kernels are:
+    ctr_cpu_user
+    ctr_cpu_nice
+    ctr_cpu_system
+    ctr_cpu_idle
+    ctr_cpu_iowait
+    ctr_cpu_hardirq
+    ctr_cpu_softirq
+
+Eddie-0.33 (15-Jul-2004)
+ - Handle socket timeout exceptions properly when HTTP response read() fails.
+ - Handle socket.settimeout() not being available on Python pre-2.3 versions.
+ - A new HTTP rule/action variable 'timedout' has been added which will be set
+   to 1 if a socket timeout exception has occurred, otherwise it will be 0.
+ - Added HTTP directive option 'request_timeout' which specifies how long a
+   HTTP(S) connection should wait for a response before timing out with an
+   error.  This makes use of a new Python 2.3 feature where socket timeouts
+   can be configured, hence this option is only available when Eddie is
+   running on Python 2.3+.
+ - Better defaults for SENDMAIL and ELVIN settings in sample eddie.cf.
+ - Added better logging of HTTP directive actions.
+ - Enhancements to HTTP directive:
+   Supports URLs with non-standard ports, eg: http://localhost:8080/
+   Added finer grained timing of four parts of the HTTP connection:
+     time_resolve  - elapsed time to resolve hostname to IP
+     time_connect  - elapsed time to connect to server
+     time_request  - elapsed time to send HTTP/S request to server
+     time_response - elapsed time to retrieve the server response (and close connection)
+     time          - elapsed total time (sum of above)
+ - Added system-specific sample rules for Linux & Solaris.
+ - Added testing ruleset for OpenBSD in development/testing/.
+ - Added initial OpenBSD support, thanks to John McInnes.
+ - DataCollect now logs what module is being requested for import.
+ - Fixed act2ok bug in FILE test.
+ - Remove accidental accented character from nice() comments.
+   It was causing a DeprecationWarning in Python 2.3.3+.
+ - Created a full directive test suite for Darwin (OS X) to provide standard
+   testing of all possible directives (or as many as possible).
+   These live in development/testing/.
+ _ PING: PING directive was logging pktloss as decimal when it should have been
+   a percentage.
+ - SP: Local address IP for SP directives (using netstat data-collector) can now
+   be specified as '*' or '0.0.0.0' for Solaris.  '*' is automatically
+   converted to '0.0.0.0' for consistency.
+ - First version of OS-specific modules ported to Mac OS X (Darwin).
+   Tested on OS X 10.3.3 (Darwin 7.3.0).  Needs plenty more testing.
+ - HTTP: Initialize HTTP directive exception data so variable substitution in 
+   messages doesn't fail.
+ - Added new directive argument: checktime
+   Used to restrict directive execution to specified times.  The value
+   is a Python expression which can use various variables representing
+   the current time and day:
+       day ('mon', 'tue', etc); time (HHMM); hour (0-23); minute (0-59); second (0-59).
+   And for shorthands, the fixed lists:
+       weekdays ('mon' - 'fri'), weekend ('sat', 'sun').
+   Examples:
+       checktime='day=="mon" or day=="tue"'
+       checktime='day in weekdays and hour>18'
+ - Only perform act2ok action(s) if some actions were already called.
+   In cases where the check fails but actiondependson causes actions to
+   be skipped, we don't need the act2ok actions to be called.
+ - Added MYSQL directive submitted by Dougal Scott.
+ - PING: Fixed a socket exception for gethostbyname failures.
+ - Added option to disable a directive.  Specify 'disabled=1' in a directive
+   to force it to be disabled.
+ - SNMP directive now supports 64-bit counters split into high/low OIDs.  Specify
+   these as "OIDhigh:OIDlow".
+   Example:
+     oid='1.3.6.1.2.1.2.2.1.10.2:1.3.6.1.2.1.2.2.1.10.3'
+   Where the first OID is the High 32 bits and the second OID is the lower 32 bits.
+ - Added an FS template, fstpl, to sample common.rules.
+
+Eddie-0.32 (21-Apr-2003)
+ - Added an exception handler for httplib read() where it can fail in
+   some circumstances.
+ - Fixed HTTP timing so that the whole HTTP session was timed, not just the
+   connect part.  This was mis-leading before.
+ - If no output from COM directive, set outfield1 anyway so rule
+   strings don't break.  Suggested by Arcady Genkin.
+ - Changed some sample rules to use ALERT_EMAIL alias rather than "alert"
+   fixed email address.  Thanks to Zac Stevens <zts@itga.com.au> for
+   pointing them out.
+ - Added restart option to redhat init.d script in contrib.
+ - Added new directive parameter: actionmaxcalls - defines the maxmimum number
+   of times actions will be called for a particular failure.
+ - Minor bugfix: sendmail_smtp() was returning wrong return codes; successful
+   posts were showing as failures, etc.
+ - Added new directive parameter: excludehosts
+   Directive will be skipped on any hosts specified by excludehosts.
+   Specified as a string containing a comma-separated list of hostnames.
+ - If groups of the same name are defined, merge them together rather than
+   throwing an error.  This allows for more custom rule configurations.
+   Requested by Arcady Genkin <agenkin@cdf.toronto.edu>
+
+Eddie-0.31 (11-Dec-2002)
+ - Increased Linux system counters from int to long.
+ - Fixed bug with isfile/isdir/etc shorthands not working properly.
+ - Console displays "<directive not ready>" for directives which have not
+   yet been initialised, rather than throwing KeyError exception.
+ - Added option to send emails via SMTP servers, rather than relying on
+   a local sendmail binary.  Either option can now be used.
+   Set SMTP_SERVERS in config to use SMTP server option.  This option
+   is now the default, and server defaults to 'localhost'.
+   Based on a submission by Dougal Scott <dwagon@connect.com.au>
+ - Fixed FILE example rule when performing cron test.
+   Noted by Dougal Scott <dwagon@connect.com.au>.
+ - Convert the weird time format that Solaris ps returns for etime and time
+   into plain seconds, which is a lot more useful for rules rather than
+   checking lengths or doing a integer conversion of a subslice of the
+   result and then a comparison based on that.
+   Patched by Dougal Scott <dwagon@connect.com.au>.
+ - Improved error output when parsing rules.
+ - Fixed bug when using Python pre-2.2 versions.
+ - Added some more sample directives.
+ - Added support for remembering historical data in directives.  Rules can
+   reference data from previous samples.
+ - Changed actionperiod slightly, so first actionperiod defaults to scanperiod,
+   then actionperiod expression is used thereafter.
+ - Shift sticky and type bits of mode across, right justified.
+ - Improved handling of tokenization errors.
+ - Directive is cancelled (not re-queued) if there are too many
+   SNMP query failures (usually host not responding or some other
+   network or transport failure).
+ - Added shorthand booleans to FILE directive for checking file types in rules:
+     issocket
+     issymlink
+     isfile
+     isblockdevice
+     isdir
+     ischardevice
+     isfifo
+ - Updated docs with version 0.30 changes (forgot to do this at release time,
+   oops).
+ - Improved handling of sockets errors for console.
+ - Fixed issue with templates not being handled before rest of directive arguments.
+ - Added perm, sticky and type rule variables to the FILE directive.  They are
+   shorthands for the permissions, sticky/setuid/setgid and file type bits
+   of a file's mode.
+ - Improved config syntax error handling of bad directive names.
+ - Implemented check and action dependency definitions.  Two new directive
+   options are: actiondependson and checkdependson.  These can be set to a
+   string containing a list of directives (comma-separated) that this directive
+   is dependent on.  If any of the dependent directives has failed when this
+   directive comes to perform its check or action (depending on which option
+   was used) then that check or action will be skipped.
+ - Added new directive option actionperiod.  This is a string containing an
+   expression which, when evaluated, sets the current period between actions
+   being performed.  This allows for periods between actions to different to
+   the period between checks.  It also allows for the period to be defined by
+   a mathematical expression, so the action period could exponentially increase
+   for example (for actions called during a single failure - the action period
+   will be reset when the failure is fixed).
+ - Enforced unique group and directive names at same group level.
+ - Improved error handling of console connections from bad clients.
+ - Fixed syntax error in sample config.
+ - Changed Linux ctr_interrupts system counter from int to long.
+ - Improved error handling of snmp directive.
+ - Improved handling of group configuration errors.
+ - Finally removed dependency on user-compiled 'top' command for collecting
+   some system stats on Solaris.  All current stats are collected from uptime
+   and vmstat commands now, which should be standard on any Solaris system.
+ - Fetch Linux memory statistics from /proc/meminfo.
+
+Eddie-0.30 (31-May-2002)
+ - Prevented failed calls to 'top' (which will soon be made redundant anyway)
+   from causing system stats collection to fail on Solaris.
+ - Removed fetching WCHAN field from process information on Linux, as this
+   sometimes caused kernel warnings to output or logged.  The field doesn't
+   appear particularly useful.
+ - Changed Linux Context switch counter from an int to a long.
+ - Fixed bug when an error parsing top output locks the system call semaphore
+   on Solaris.
+ - Fixed small bug when parsing string variables and catching exceptions in
+   actions.
+ - Added SENDMAIL config option to specify location of the sendmail binary
+   which EDDIE uses to send all email.
+ - Fixed bug when templates not in same group as directive referencing them.
+ - Changes PID directive argument 'pid' to 'pidfile'.
+ - Better handling of missing pysnmp module in snmp.py.
+ - Added basic SNMP directive based on a module by Dougal Scott
+   <dwagon@connect.com.au>. Requires pysnmp.
+ - Changed Linux 'df' call to 'df -l' which lists all local filesystems.
+   Much friendlier now that there are many alternative filesystems available
+   for Linux.
+ - Added patch by Kees Bakker <kees.bakker@altium.nl> to handle Linux df
+   when it sometimes outputs filesystem information over multiple lines.
+ - Added outfield variables to the COM directive.  The out variable is split
+   by whitespace and the fields are stored in outfieldn variables, e.g.,
+   outfield1, outfield2, etc.  This is to assist rule creation.
+ - Added netsaint action and Elvin notification method, submitted by
+   Dougal Scott <dwagon@connect.com.au>.
+ - Added minor bug-fixes, thanks to pre-release testing by Dougal Scott
+   <dwagon@connect.com.au>.
+ - Linux ctr_cpu_idle variables need to be longs (instead of ints) as the
+   counters are larger than expected.
+ - Created a HTTP directive for performing HTTP (and HTTPS) tests.
+ - Fixed minor bug when displaying config lines that have parsing errors.
+ - Fixed bug in METASTAT directive.
+ - Removed the CRON directive.  It is redundant now that the FILE directive
+   can perform the same test.
+ - Added a new data variable to FILE directive: now, which contains the
+   current time for use in tests with atime/mtime/ctime.
+ - LOGSCAN directive now initalizes data variables on first check, which is
+   only for finding the end of the logfile in question.  This prevents an
+   exception when variables are needed for console strings before second
+   check has run.
+ - Removed optional actionList from being logged by directives also.
+ - Fixed bug with directives trying to log the action list, which is optional
+   now and may not exist.
+ - Moved sample M/MSG definitions to message.rules file.
+ - Added some more sample rules.
+ - Cleaned up sample rules and updated for the latest directive changes.
+   Added some elvinrrd sample rules.
+ - Minor cleanup of base directory path; just found os.path.norm() :)
+ - Fixed small problem with arg parsing handling None values.
+ - Fixed small bug in PORT directive: when a check fails due to a connection
+   timeout, the recv string that wasn't set was still being searched.
+ - Cleaned up config formatting some more so that actions do not need to be
+   inside strings, they can be entered directly in a function call-like
+   format, e.g.,
+     action=ticker("Load on %(h)s is %(out)s", timeout=1)
+   or for a notification object,
+     action=COMMONALERT(commonmsg.fs,1)
+ - Changed PROC argument 'procname' to 'name' and action variable
+   'proc_check_name' to 'name' also, for consistency.
+ - Fixed minor bug with lack of expect argument for PORT directive.
+ - Removed data collection modules which are not required.
+ - Cleaned up all data collection modules and classes to simplify their
+   definitions.  Data collectors should be derived from the DataCollect
+   base class which handles all the data caching and thread-locking.
+ - Changes to parseConfig to simply directive definitions.
+ - Removed old datastore module.
+ - Fixed up console code to handle errors better.
+ - Changed Directive base-class to simplify directive definitions.
+ - New datacollect module which defines DataModules class to handle dynamic
+   importing of architecture-dependent data collection modules, and
+   DataCollect class to provide a base-class for data collectors.
+ - Fixed PING directive to handle un-resolvable addresses.  Also returns ping
+   round-trip-times in seconds as a floating-point number.
+ - Simplified directive definitions by moving most of the common code to
+   Directive base-class.  New directives only need to define __init__,
+   tokenparser and getData methods.
+ - Removed requirement for action variables to be prefixed by directive name.
+   Action variables now have the same name as the rule variables, for
+   consistency.  Changed a few more variable names so they make more sense.
+ - Moved common directive definitions from directive.py to
+   Directives/common.py.
+ - OS-dependent modules are now imported dynamically when needed, not in the
+   main eddie.py anymore.  All data collection modules are handled by the
+   new datacollect module.
+ - Removed old method of determining systype with external script (wasn't used
+   anymore anyway).
+ - Fixed bug with Pinger where it would throw an exception when pinging
+   addresses that did not resolve.
+ - Added extra console argument variables:
+   . lastchecktime - date/time of last directive execution
+   . problemfirstdetect - date/time of current failure first detected (only if
+   state is failed)
+   . problemlastfail - date/time of current failure last detected (only if state
+   is failed)
+ - Cleaned up description of ADMINLEVEL in sample config so it makes more sense.
+ - Added console argument to directives to specify how the console output should
+   look for that directive.  console=None can be specified to hide that directive
+   from console output.
+ - Added support for EXT3 filesystems in Linux filesystem checking code.
+   Patch submitted by Kees Bakker <kees.bakker@altium.nl>
+ - Fixed a minor bug where directives using the eval() function and catching
+   an exception would log a very ugly looking message. This was due to the Python
+   eval() function modifying the user-supplied environment dictionary by adding
+   the __builtin__ dictionary.  When this is printed it looks horrible.
+ - Added 'actelse' directive argument to perform actions if directive state is
+   ok and has not changed with last check.
+   Based on patches submitted by Dougal Scott <dwagon@connect.com.au>
+ - Changed Linux counter variables to have 'ctr_' at start of name, to be
+   consistent with Solaris and HP-UX variables.
+ - Fixed minor bug in HP-UX and Solaris system data collection.
+ - Fixed bug in uptime parsing in HP-UX system.py.
+ - Added a timeout argument to the ticker action.
+ - Re-implemented Elvin connection and notification code using the Elvin
+   ThreadedLoop client and a dedicated Elvin thread which should prevent
+   other threads from blocking on Elvin problems.
+ - Specify full path for solaris 'ps' command to prevent calling wrong version of
+   'ps'.
+ - Started work on a basic Developer's Guide: doc/dev_guide.txt.
+ - Standardised logging levels and tidied up all logging.
+ - Added system performance data collecting from 'uptime' and 'vmstat -s' 
+   commands on Solaris.
+ - Improved network interface statistics on Linux by retrieving data from
+   /proc/net/dev.
+
+Eddie-0.29 (non-public release)
+
+Eddie-0.28 (9-Mar-2002)
+ - Cleaned up df code, added data caching and made thread-safe, like other
+   data collectors.
+ - Fixed up eddie_wrapper locating GNU date on Solaris.
+ - Fixed memory-leak in disk-usage code (reported by Dougal Scott
+   <dwagon@connect.com.au>).
+ - Exit with error if all threads are locked (cannot kill threads in current
+   Python implementation).
+   Make eddie_wrapper a little smarter when restarting eddie process.
+ - Added example init.d scripts to contrib for Solaris and Redhat Linux.
+ - Added another vmstat parser to get free memory/swap information for
+   Solaris.
+ - Added a common semaphore for utils.safe_popen()/safe_pclose() and
+   utils.safe_getstatusoutput() to use between them.  It appears that
+   system calls, of any sort - system() calls, popen(), commands module,
+   etc - are not thread-safe and cannot be performed simultaneously by
+   multiple threads at once.  This should prevent such race-conditions as
+   all EDDIE system calls use these functions.
+ - Cleaned up access to the system stats cache so that only one thread at a
+   time will be refreshing the data.
+ - Added some more smarts to eddie_wrapper:
+   - don't start Eddie if one is already running.
+   - don't restart Eddie more than a set number of times in a short period of
+     time (requires GNU date command).
+ - Put semaphore lock around Elvin notify to ensure thread-safe notifications
+   are being sent.  Suspect duplicates were being sent before.
+ - Now logs the current thread name for each log entry for improved debugging.
+ - A lot of cleaning up of system.py for Solaris.
+   Added all counter stats from 'vmstat -s'.
+   Changed gathering of loadavg/uptime stats from '/usr/bin/uptime' rather than
+   '/opt/local/bin/top' - trying to phase out use of 'top'.
+   Improved documentation at top of class, with listing of every stats variable
+   available from the system class.
+ - Added prtdiag parsing for Enterprise class servers (E3500,E6500,etc)
+   for temperature.
+ - Added support for prtdiag for Sun U280R's.
+ - Added list of paths to find metastat command for Solaris METASTAT directive.
+ - Added PRTDIAG directive to provide an interface to the system-specific
+   data provided by prtdiag on Sun machines.
+   Currently only system temperatures are extracted for U450s and U250s.
+ - Added support for VxFS filesystems in df.py for Solaris.
+ - Updated docs to require Python versions 1.6+
+
+Eddie-0.27 (12-Nov-2001)
+ - Put semaphore lock around Elvin connect calls to prevent multiple threads
+   trying to connect at once.
+ - Fixed bug with ELVINURL and ELVINSCOPE config options not being set
+   properly.
+ - Socket errors in Console code are matched with errno error names, rather
+   than assuming the error numbers are the same across platforms.
+   [Bug reported by: Ivar Zarans <iff@alcaron.ee>]
+ - Handle socket errors from PINGs nicely.
+ - Added a reconnect() function to force the elvin connection closed before
+   reconnecting.
+ - Cleaned up eddieElvin4 code, including connecting and auto-reconnecting to
+   Elvin server when connection is lost.
+ - Added better exception handling for "Connection Timed Out" error in PORT
+   directive isalive() function.
+ - Fixed file descriptor leak in PORT directive isalive() function when
+   Connection Refused exception is handled the socket file descriptor was
+   not being closed.
+ - Added more system statistics to the Linux system data collector module.
+   Added most of the stats available from /proc/stat, including:
+     cpu_user      - total cpu in user space
+     cpu_nice      - total cpu in user nice space
+     cpu_system    - total cpu in system space
+     cpu_idle      - total cpu in idle thread
+     cpu%d_user    - per cpu in user space (e.g., cpu0, cpu1, etc)
+     cpu%d_nice    - per cpu in user nice space (e.g., cpu0, cpu1, etc)
+     cpu%d_system  - per cpu in system space (e.g., cpu0, cpu1, etc)
+     cpu%d_idle    - per cpu in idle thread (e.g., cpu0, cpu1, etc)
+     pages_in      - pages read in
+     pages_out     - pages written out
+     pages_swapin  - swap pages read in
+     pages_swapout - swap pages written out
+     interrupts    - number of interrupts received
+     contextswitches - number of context switches
+     boottime      - time of boot (epoch)
+     processes     - number of processes started (I think?)
+   These are now available to directives like SYS.
+ - Cleaned up eddie-adm email headers.
+
+Eddie-0.26 (1-Oct-2001)
+ - Changed elvinrrd() action call arguments slightly.  It is now:
+   elvinrrd( 'rrdkey', 'arg1=val1', 'arg2=val2', ... )
+   The first argument must be the RRD database name to store data into.
+   All arguments following that (one or more) are "variable=data" strings
+   where variable is the name of the variable in the RRD db and data is
+   the data to store in that variable.  RRD dbs can have multiple variables
+   so this allows some or all of them to be updated in one action call.
+ - Wrapped the critical calls in safe_popen(), safe_pclose() and
+   safe_getstatusoutput() in try/except clauses, so that any exceptions are
+   intercepted and the semaphore locks are released (exceptions are then
+   raised again to be handled as normal).  This stops threads being blocked
+   on semaphore acquires which used up the thread pool quickly and was
+   obviously bad.
+ - Added elvinrrd action which is used to send data samples over Elvin to a
+   consumer which stores that data into an RRD database.
+ - Updated elvindb() action and elvindb() Elvin function to support Elvin4.
+   elvindb actions are now working again.
+ - Directive states now transition from "ok" to "failinitial" to "fail".
+   "ok" indicates the directive is fine;
+   "failinitial" indicates the directive is current transitioning to the "fail"
+    state or is waiting on a re-check;
+   "fail" indicates the directive has definitely failed.
+ - Fixed a small bug where a directive performing multiple checks (numchecks>1)
+   which fails one of the first checks but passes a subsequent re-check still
+   performs the act2ok action, which it should not do.
+ - Directive threads are named, for easier debugging.  The name they are given
+   is the ID of the directive they are executing.
+ - Cleaned up ALIAS code to support being passed in action calls properly.
+ - Cleaned up action calling code.  Actions called from action and act2ok now
+   use the same action evaluation function, whether actions are called
+   directly as a function or from Notification objects.  Thus actions can be
+   called directly or Notification objects used from both action and act2ok
+   arguments, and can even be combined.
+ - Added a rule argument to RADIUS directive so rules can be written to test
+   radius auths.  The variable passed is set in the rule environment and is
+   set to either 0 for failed or 1 for passed.
+ - FILE directive now makes the file statistics from the previous check
+   available so rules can compare the current statistics against the previous
+   statistics to see if files or file metadata have changed over time.
+   Variables are same but prepended by 'last', e.g.: rule='md5 != lastmd5'
+ - Fixed bug: Connection not being closed in all cases for PORT isalive()
+   function.
+ - Added new directive, FILE, allowing tests to be made on a file based on
+   standard file statistics (size, mode, ownerships, etc) and md5 hashes.
+ - Update lastfailtime in stateok function so any actions called by act2ok
+   will know the full age of the problem.
+ - Added PING directive to provide network ping checking of hosts.
+ - Added initial HP-UX support.
+ - Fixed bug in PROC R() check.
+
+
+Eddie-0.25 (6-Jul-2001)
+ - Changed where varDict action variables are set in some directives so that
+   they are available for act2ok action calls.
+ - Improved error handling in directive.py
+ - Fixed problem with DF list not refreshing itself properly.
+ - Changed CONSPORT config option to CONSOLE_PORT.
+   I find more verbose to be much user-friendlier than less.
+ - Added two new config settings:
+    EMAIL_FROM='emailaddress'
+    EMAIL_REPLYTO='emailaddress'
+   so the From: and Reply-To: fields in the email action can be set.
+   If these are not set, they default to the current USER for the From: field,
+   and '' for the Reply-To: field.
+ - Cleaned up PORT directive isalive() handling Connection Refused exceptions.
+ - Create a QUICKSTART text document to give the impatient a quick way to
+   get Eddie running.
+ - sockets.py: handle port already in use by exiting and signalling the other
+   non-daemon threads to exit.  If the port is in use the whole program should
+   exit cleanly with an appropriate error message now.
+   Similarly, exit cleanly (and signal other threads to exit) if too many
+   socket errors.
+ - config.py: Improved error handling; if CONSPORT is not a positive integer a
+   ParseFailure is raised.
+ - The console server thread will not be started if CONSPORT=0.  This allows
+   the console feature to be disabled if required.
+ - Main thread will now also exit if please_die Event is set.  This allows
+   other threads to signal that the program should exit.
+ - Added act2ok param - allows you to specify a Notification object
+   to use when Check goes from bad to good
+ - Log accepted connections with remote IP:port, for security or whatever.
+ - directive.py: made directive string representation tidier.
+ - sockets.py: Handle "Interrupted system call" (from CTRL-C) nicely.
+ - Chaged eddie.py - changes include cleaning up the way threads
+   are started and stoped, there is now start_threads() and
+   stop_threads().  I did this so that both the scheduler thread
+   and the console socket thread can be started and stop easily
+   when the config changes.
+ - Added config var CONSPORT - this is the port to listen to
+   console connections on.  The default is 33343.
+ - Added sockets.py - A sockets interface to the current state of
+   all eddie checks, this will be used for a console like interface.
+ - Removed DEFs and replaced by ALIASes which are now used to define string
+   aliases to be substituted during config parsing, or during action argument
+   parsing.  '$' signs are not used anymore, giving a much nicer Python
+   look-and-feel.
+ - Added %(problemage)s %(problemfirstdetect)s to sample MSGs to demonstrate
+   usage.  These are substituted for the age of the current directing being
+   false and the time the first false was detected respectively; or empty
+   strings ("") if the problem age is currently 0.
+ - Added more detailed logging of thread usage, making thread problems easier
+   to track.
+ - Added a utils.safe_getstatusoutput() as a thread-safe wrapper around
+   commands.getstatusoutput().
+   The IPF directive now uses this to avoid deadlocks.
+ - Problem age and First time detected variables are now substitutable values
+   within an email message body, %(problemage)s and %(problemfirstdetect)s,
+   instead of automatically being appended to the bottom of every email.
+   Note, these variables are empty ("") if the problem age is zero.
+ - Changed all os.popen() calls to use the thread-safe utils.safe_popen().
+   This should prevent deadlocks when multiple directives are gathering info.
+ - Added 'negate' option to LOGSCAN - will match lines which do NOT match the
+   regex.
+ - Added formatted exception traceback to safeCheck() logging.
+ - Fixed socket connect() call in pop3.py to support Python 2.1
+ - Email admin logs when exiting due to config parse failure.
+ - Added LOGSCAN examples.
+ - Updated sample rules to reflect new config layout and features.
+ - Log Eddie version and systype.
+   Also log when configuration parsing complete.
+ - Cleaned up pop3.py imports.
+ - Added LOGSCAN directive for monitoring logfiles.
+ - Fixed PROC custom rules setting.
+ - Fixed directives setting their own ID only if none set in config.
+ - parseFailure() logs problem to logfile as well as printing to stdout.
+ - Cleaned up sample eddie.cf and added verbose comments.
+ - Catch any uncaught exceptions around main() so they are logged and displayed
+   nicely, making it easier for the Eddie admin to see and act on them.
+   Hence eddie doesn't have to be run from eddie_wrapper with stderr captured
+   (which didn't really work properly anyway).
+ - Fixed socket connect() call in PORT directive to use tuple as argument
+   rather than two arguments.  This changed in Python-2.1 (but works with
+   older versions).
+ - Removed the old snpp code which wasn't being used.  This should be replaced
+   with updated code.
+ - Elvin config parameters have changed from ELVINHOST and ELVINPORT to
+   ELVINURL and ELVINSCOPE to support Elvin4 properly.
+ - The Elvin tickertape action is now called ticker() [it was just called
+   elvin() before].
+ - Updated Elvin code to support Elvin4 and moved to new file eddieElvin4.py.
+   Elvin3 will no longer be supported.
+ - Replaced any use of old regex module with new re module (using regex causes
+   warnings with Python-2.1).
+ - Tested under Python-2.1.  Had to modify some of the globals to avoid new
+   warnings under 2.1.
+ - Updated system.py to handle 'top' under Solaris 8.
+ - Directive threads are started with safeCheck() which wraps up docheck()
+   in try/except so all un-caught exceptions within that thread will be caught
+   and the thread can exit cleanly.
+ - Cleaned up parsing of 'top' a bit more, so it works better under Solaris 8.
+ - Added support for directive templates.  A directive can be created to be
+   only used as a template for other directives, supplying default settings;
+   as well as standard directives can also be used as templates for other
+   directives.
+   Directive template creation, eg:
+       PROC 'template1':   template=self   scanperiod='5m' checks=2 checkwait=30
+       PROC 'cron':        template='template1'    procname='crond' action="..."
+  special template=self means this directive is a template and not to
+  schedule it.
+  Can use other working directives as templates also.
+  Template should be same directive type as directive using it - but this is
+  not enforced because it shouldn't hurt.... directives ignore any arguments
+  they don't need.
+ - Added support for new Directive arguments:
+    numchecks=<int>
+    checkwait=<time>
+   numchecks specifies how many checks a directive should perform before
+   calling its actions.  By default this will be 1.  Setting this to 2
+   will force 2 checks before actions are called.  It can be set to any
+   positive integer, include 0.  0 is a special case which indicates that
+   this directive will not perform any checks.  This could be used to
+   temporarily disabled a directive, for example.
+   checkwait specifies how long the directive will wait before performing
+   its next re-check if numchecks>1.  Its value is a standard time specification
+   eg: '5' = 5 seconds; '5s' = 5 seconds; '2m' = 2 minutes; '5h' = 5 hours.
+   By default checkwait is 0 which means the next re-check will run instantly.
+   checkwait should normally be set to a meaningful value if numchecks>1.
+ - Added ALIAS definition.  Similar to DEFs but ALIASes are replaced inside
+   action calls, etc.  Whereas DEFs are only translated during config file
+   parsing time.
+   Note: DEFs break the Python-like look&feel of the config file and may
+   disappear in the future if they can be replaced neatly.
+ - Cleaned up logging in config.py.  LOGFILE should be the first option
+   in eddie.cf so logs end up in the right place.
+ - Handle scanperiod argument in directives so scanperiod can be overrided
+   for each directive.
+ - Signals received during a time.sleep() under Linux cause an IOError
+   exception so just catch these and move on.  Main thread should be
+   handling the shutdown cleanly anyway.
+ - Cleaned up directive tokenparsing so base Directive class does as
+   much of the work as possible and user-written directive objects
+   only have to test existance of arguments and setup.
+ - New config format, which is not compatable with old format.
+   All arguments to a directive are now named arguments.
+ - Max number of threads to use can be limited in eddie.cf with the
+   NUMTHREADS variable now.  Should be set > 5 for normal use.
+   If set too low checks will never be allowed to run.
+ - Created Radius auth checking directive.
+ - Added clean exiting code to SIGINT, same as SIGTERM.
+ - Cleaned up exiting on SIGTERM signal.  The scheduler thread is signalled to
+   die and the main thread will wait for the scheduler thread to receive the
+   signal and exit before exiting cleanly itself.  All "worker" threads are
+   ignored and should die of their own accord.
+ - Put semaphores around COM checks which do os.system() calls.
+   Only one COM check will execute at a time.
+ - Made proc.py thread-friendly.
+ - timeQueue is the queueing class derived from Python's Queue class.  It is as
+   thread-friendly as Queue, the major difference being objects are inserted
+   into the queue based on a given time.  Objects with the lowest times are
+   closest to the front of the queue.
+   To support this, objects have to be added along with their time, so a
+   2-tuple must be added, eg: q.put( (obj, time) ).  Similarly q.get()
+   returns the same 2-tuple.
+   An extra public method has been added, over what Queue offers, q.head().
+   This method returns the item (and time) from the front of the queue,
+   exactly as q.get(), but does not remove it from the queue.
+ - To support the new queueing of jobs, all directives must end by submitting
+   themselves back into the queue.  A
+   Config.q.put(self,time.time()+self.scanperiod) will submit itself back
+   into the queue and schedule itself to be run in self.scanperiod seconds.
+   If a directive does not put itself back into the queue it will not be
+   called again (this can be useful if there is some sort of error and the
+   directive should not be called again).
+ - os.popen() appears to cause problems when used by multiple threads at once,
+   so all such calls now use a wrapper, utils.safe_popen() which performs
+   a semaphore lock around os.popen().  utils.safe_pclose() _MUST_ be called
+   after the pipe has been finished with or the semaphore will not be released
+   and all other calls will be blocked forever.
+ - Core of Eddie is now multi-threaded using a scheduler thread to run each
+   check in its own thread.  Thread usage is limited so things don't get out
+   of control.
+   The scheduler tracks jobs with a derivative of Python's Queue class which
+   orders items by time, so that the job to be started soonest will be at the
+   front of the queue.  This will now allow directives to specify their own
+   scanperiod and execute as often or as little as desired, indepentently of
+   other directives.
+   Modified config files are still automatically detected (sometime within a 10
+   minute period by the "Housecleaning" thread (main process)) which causes the
+   scheduler to be signalled to exit and then the configs are re-read and a new
+   scheduler will be started up.
+
+
+Eddie-0.24 (1-Oct-2000)
+ - Added custom disksuite check to alert if any metadevices require
+   maintenance.  Skips checking if /usr/opt/SUNWmd/sbin/metastat not found.
+ - Separate system.py for Solaris 5.8 because of differences.
+ - Better logging of problem states for debugging.  Problem states track
+   the current "state" of a problem (ok, failed, etc), and the time when
+   the problem was first detected.
+ - Email action now includes the age of the problem and when the problem was
+   first detected (if not the first time) in the email.
+ - Added handler for when pop3 connections are failing or not authing.
+ - Fixed bug with parsing config when indentations are incorrect.
+   Handles it better now by raising a ParseFailure exception and pointing
+   out the error line in the config file.
+ - Changed string variable substitution method from %variable to Python's
+   format %(variable)s.  This lets us use Python's built-in variable
+   substitution on strings and makes the implementation much simpler.
+ - Log parsing failures in parseVars()
+ - Fixed small bug with pop3 error checking.
+
+
+Eddie-0.23 (19-Jun-2000)
+ - cleaned up Solaris x86 support (still fairly untested).
+ - changed Linux system.py to get statistics from /proc rather than
+   parsing 'top' output.
+ - added close() method to kstat object and removed kstat_close() call
+   from kstat object initialization function which was possibly causing
+   seg faults in solkstatmodule.so.
+ - elvindb() action now takes optional string argument containing the
+   column/value pairs to store in the database (via Elvin).
+ - added POP3TIMING directive for checking and timing pop3 connections
+   in new pop3 directive module.
+ - added CRON directive for cron checks in solaris.py directive module.
+ - added IPF directive for ipfilter tests.
+ - added support for custom Directive imports from new Directive directory.
+ - added count of filedescriptors for debugging.
+ - fixed bug with PROC check which would only perform check on first
+   process found with the name specified.  It now performs checks on every
+   process with the specified name.
+ - added a kstat_close() to fix a file-descriptor leak in solkstatmodule.so.
+ - added a default class, DataStore, for storage subclasses to use, which
+   automatically caches data.
+ - added support for iostat data to STORE directive.
+ - find OS-specific modules in multiple directories from most specific
+   to least specific (eg: OS/version/architecture, OS/version, then OS).
+ - changed auto system type determination to internal code rather than
+   calling separate 3rd-party 'systype' script.
+ - added iostat objects for collecting iostat data under Solaris.  Uses
+   a shared library, solkstatmodule.so, created by the Eddie developers
+   and included.
+
+
+Eddie-0.22 (15-May-2000)
+ - added defaults for out and err in COM directive to stop an exception
+   when the executed command did not write stdout or stderr files.
+ - fixed SIGALRM so it works properly under Linux.  (Works slightly
+   differently to Solaris).
+ - COM did not use the return value of a os.system() call properly.  This
+   has been fixed as per the wait (2) call.
+ - email() action takes an optional 3rd argument which is the body of
+   the message.  Otherwise the 2nd argument is used as both subject and body.
+ - msg is copied to subject for simple email() call with only subject given.
+ - changed import for new Elvin.py module.
+ - now using Python 1.5.2
+ - fixed process name hash keys.
+ - added Solaris x86 support.
+ - added Linux support (tested with RedHat 6).
+
+
+Eddie-0.21 (4-Oct-1999)
+ - catch timeouts while trying to stat config files and skip the config file
+   modified checks.
+ - added '-n' to 'netstat -i' coz resolving interfaces on some hosts were
+   taking forever.
+ - fixed Elvin messaging with new ElvinConnection object.
+ - added Elvin db data-storage consumer daemon.
+ - separated Solaris 2.5 and 2.7-specific lib areas.
+ - added caching functionality to data gathering code.
+ - added functions to return hashes of network information.
+ - changed eddie-elvin interface to maintain single shared connection to Elvin
+   server.
+ - added double-checking for SP directive.
+ - added STORE directive to enable configuration of data to be sent via
+   elvindb().
+ - added elvindb() functionality to send database objects over Elvin to
+   database consumer.
+ - added support for Solaris 2.7.
+ - created sample config files in config.sample.
+ - fixed quote problem with address specified in SP check.
+ - PORT directive handles multiple lines sent to destination.
+ - added estored development to contrib area.
+ - added creation of system objects for collecting system stats.
+ - added SYS directive to allow detailed checks to be performed on system
+   data such as load-average, memory/swap usage, cpu idle %, etc.
+ - parses email address strings for variable definitions.
+ - fixed int overflow errors in netstat data collection.
+ - elvin() will use subject as message if message is blank for Tickertape.
+ - fixed small bug with actions parsing '%' at end of line.
+ - added directive 'NET' to allow detailed checks on current network
+   statistics.
+ - netstat object now obtains all current network statistics from host
+   (ie: 'netstat -s') under Solaris.
+ - added 'IF' directive to enable detailed network interface checks.
+ - added new rule for process checking to allow complex checks to be performed
+   on running processes.
+ - automatically re-load config files if any have changed.
+ - during process (and pid) checks, if process isn't found, sleep a bit then
+   double check.
+ - now only pulls in process info when called, and caches that info for a
+   set time before fetching it again.
+ - now pulls in every bit of process info that ps can provide.
+ - added a wrapper for eddie to capture major exceptions and auto restart.

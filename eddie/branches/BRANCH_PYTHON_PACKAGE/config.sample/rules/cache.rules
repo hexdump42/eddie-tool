@@ -1,0 +1,129 @@
+# EDDIE config file
+#  Rules specific to cache boxes.
+#  This is just a sample configuration, and only provided as a guide
+#  for designing your own rules.
+
+
+group host5:
+    # This group will be used by the server with hostname 'host5'.
+
+    PROC named:
+        name='named'
+        rule='not exists'
+        numchecks=2                # do 2 checks before alerting
+        checkwait='30s'                # wait 30 secs between 2nd check
+        action=COMMONALERT(commonmsg.proc,2)
+
+    PID named1:
+        pidfile='/var/run/named.pid'
+        rule='not exists'
+        scanperiod='30m'        # only check every 30min
+        action=COMMONALERT(commonmsg.pid,0)
+    PID named2:
+        pidfile='/var/run/named.pid'
+        rule='exists and not running'
+        scanperiod='30m'        # only check every 30min
+        action=COMMONALERT(commonmsg.pidpr,1)
+
+    # Check that host6 is still on the network
+    PING host6ping:
+        host='host6'
+        rule='not alive'
+        scanperiod='1h'
+        numchecks=3
+        checkwait='1m'
+        action=COMMONALERT(commonmsg.ping,2)
+        act2ok=COMMONFIXED(commonmsg.ping,1)
+        console='%(state)s pktloss=%(pktloss)s%% (Last check: %(lastchecktime)s)'
+
+
+group host6:
+    # This group will be used by the server with hostname 'host6'.
+
+    PROC syslog:
+        name='syslog'
+        rule='not exists'
+        numchecks=2                # do 2 checks before alerting
+        checkwait='30s'                # wait 30 secs between 2nd check
+        action=COMMONALERT(commonmsg.proc,2)
+
+    PID syslog_pid1:
+        pidfile='/var/run/syslog.pid'
+        rule='not exists'
+        scanperiod='30m'        # only check every 30min
+        action=COMMONALERT(commonmsg.pid,0)
+    PID syslog_pid2:
+        pidfile='/var/run/syslog.pid'
+        rule='exists and not running'
+        scanperiod='30m'        # only check every 30min
+        action=COMMONALERT(commonmsg.pidpr,1)
+
+    # Check that host5 is still on the network
+    PING host5ping:
+        host='host5'
+        rule='not alive'
+        scanperiod='1h'
+        numchecks=3
+        checkwait='1m'
+        action=COMMONALERT(commonmsg.ping,2)
+        act2ok=COMMONFIXED(commonmsg.ping,1)
+        console='%(state)s pktloss=%(pktloss)s%% (Last check: %(lastchecktime)s)'
+
+
+group cache:
+    # This group will be used by any hosts defined in the CLASS 'cache'
+    # (see eddie.cf).  Any host called 'cache' would also use this.
+
+    PROC squid:
+        name='squid'
+        rule='not exists'
+        numchecks=3                # do 3 checks before alerting
+        checkwait='20s'                # wait 20 secs between 2nd & 3rd checks
+        action=COMMONALERT(commonmsg.proc,2)
+
+    PROC httpd:
+        name='httpd'
+        rule='not exists'
+        scanperiod='30m'        # only check every 30 mins
+        numchecks=2                # do 2 checks before alerting
+        checkwait='1m'                # wait 1 min between 2nd check
+        action=COMMONALERT(commonmsg.proc,2)
+
+    FS home:
+        fs='/home'
+        rule='pctused >= 99'        # alert if >= 99% full
+        scanperiod='1h'                # only check once an hour
+        action=COMMONALERT(commonmsg.fs,0)
+    FS opt:
+        fs='/opt'
+        rule='pctused >= 97'
+        scanperiod='1h'                # only check once an hour
+        action=COMMONALERT(commonmsg.fs,2)
+    FS varlog:
+        fs='/var/log'
+        rule='pctused >= 95'
+        action=COMMONALERT(commonmsg.fs,2)
+    FS varlogcache:
+        fs='/var/log/cache'
+        rule='pctused >= 95'
+        action=COMMONALERT(commonmsg.fs,2)
+
+    SP http:
+        port='http'        # check http port is listening
+        protocol='tcp'        # tcp protocol
+        bindaddr='*'        # '*' == '0.0.0.0'
+        scanperiod='30m'        # check every 30 mins
+        numchecks=2                # perform 2 checks
+        checkwait='30s'                # wait 30s before 2nd check
+        rule='not exists'
+        action=COMMONALERT(commonmsg.sp,1)
+    SP proxy:
+        port=8080
+        protocol='tcp'
+        bindaddr='0.0.0.0'
+        scanperiod='30m'
+        numchecks=2
+        checkwait='30s'
+        rule='not exists'
+        action=COMMONALERT(commonmsg.sp,1)
+

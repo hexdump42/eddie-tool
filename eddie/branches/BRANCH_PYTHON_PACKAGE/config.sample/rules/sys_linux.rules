@@ -1,0 +1,122 @@
+# EDDIE config file
+#  Rules specific to Linux servers.
+
+
+group linux:
+
+    PROC syslogd:
+        name='syslogd'
+        template=proctpl
+        action=COMMONALERT(commonmsg.proc,2)
+    PROC klogd:
+        name='klogd'
+        template=proctpl
+        action=COMMONALERT(commonmsg.proc,2)
+    PROC sshd:
+        name='sshd'
+        template=proctpl
+        action=COMMONALERT(commonmsg.proc,2)
+    PROC crond:
+        name='crond'
+        template=proctpl
+        action=COMMONALERT(commonmsg.proc,2)
+    PROC xinetd:
+        name='xinetd'
+        template=proctpl
+        action=COMMONALERT(commonmsg.proc,2)
+
+
+    #### Directives to store system stats in RRD (via Elvin messaging)
+
+    # Store swap stats
+    SYS swap_rrd:
+        scanperiod='5m'
+        rule='True'        # always perform action
+        action=elvinrrd("swaplinux-%(h)s",              \
+                        "swaptotal=%(swap_total)s",     \
+                        "swapused=%(swap_used)s",       \
+                        "swapfree=%(swap_free)s" )
+        console=None
+
+    # Store all memory stats
+    SYS mem_rrd:
+        scanperiod='5m'
+        rule='True'        # always perform action
+        action=elvinrrd("memlinux-%(h)s",               \
+                        "memtotal=%(mem_total)s",       \
+                        "memused=%(mem_used)s",         \
+                        "memfree=%(mem_free)s",         \
+                        "memshared=%(mem_shared)s",     \
+                        "membuffers=%(mem_buffers)s",   \
+                        "memcached=%(mem_cached)s" )
+        console=None
+
+    # Send CPU data to RRD
+    # Newer kernels provide more detailed stats, so choose one of the
+    # two directives below by disabling the other.
+    SYS cpu_rrd:
+        rule="True"        # always true
+        scanperiod='1m'
+        action=elvinrrd('cpulinux-%(h)s',                \
+                        'cpu_user=%(ctr_cpu_user)d',    \
+                        'cpu_nice=%(ctr_cpu_nice)d',    \
+                        'cpu_system=%(ctr_cpu_system)d',\
+                        'cpu_idle=%(ctr_cpu_idle)d' )
+        console=None
+
+    SYS cpu2_rrd:
+        disabled=1
+        rule="True"        # always true
+        scanperiod='1m'
+        action=elvinrrd('cpulinux2-%(h)s',                \
+                        'cpu_user=%(ctr_cpu_user)d',      \
+                        'cpu_nice=%(ctr_cpu_nice)d',      \
+                        'cpu_system=%(ctr_cpu_system)d',  \
+                        'cpu_iowait=%(ctr_cpu_iowait)d',  \
+                        'cpu_hardirq=%(ctr_cpu_hardirq)d',\
+                        'cpu_softirq=%(ctr_cpu_softirq)d',\
+                        'cpu_idle=%(ctr_cpu_idle)d' )
+        console=None
+
+    # Store kernel context switch stats
+    SYS contextsw_rrd:
+        scanperiod='5m'
+        rule='True'        # always perform action
+        action=elvinrrd("cs-%(h)s",                        \
+                        "contextswitch=%(ctr_contextswitches)s" )
+        console=None
+
+    # Store kernel pages in/out
+    SYS paging_rrd:
+        scanperiod='5m'
+        rule='True'        # always perform action
+        action=elvinrrd("paging-%(h)s",                        \
+                        "pages_in=%(ctr_pages_in)s",    \
+                        "pages_out=%(ctr_pages_out)s" )
+        console=None
+
+    # Store kernel swap in/out
+    SYS swapping_rrd:
+        scanperiod='5m'
+        rule='True'        # always perform action
+        action=elvinrrd("swapping-%(h)s",                \
+                        "swap_in=%(ctr_pages_swapin)s", \
+                        "swap_out=%(ctr_pages_swapout)s" )
+        console=None
+
+
+    # Store stats for eth0
+    IF eth0_rrd:
+        name='eth0'
+        scanperiod='5m'
+        rule='True'        # always perform action
+        action='elvinrrd("if-%(h)s_%(name)s", "ipkts=%(rx_packets)s", "ierrs=%(rx_errs)s", "opkts=%(tx_packets)s", "oerrs=%(tx_errs)s", "collis=%(tx_colls)s")'
+        console=None
+
+    IF eth0_thru_rrd:
+        name='eth0'
+        scanperiod='5m'
+        rule='True'        # always perform action
+        action='elvinrrd("net-%(h)s_%(name)s", "ibytes=%(rx_bytes)s", "obytes=%(tx_bytes)s")'
+        console=None
+

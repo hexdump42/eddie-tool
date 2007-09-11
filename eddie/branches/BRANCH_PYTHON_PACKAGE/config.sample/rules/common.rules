@@ -1,0 +1,228 @@
+# EDDIE config file
+#  Common rules for all machines
+#
+#  This is a sample configuration only, and only provided as a guide
+#  for designing your own rules.
+
+
+
+###########################################################################
+# Notification Definitions
+# These define notification levels, and what actions to perform at each level.
+# (Future versions of EDDIE will support problem escalation from lower levels
+# to higher levels; but this has not been implemented yet)
+
+# COMMONALERT definition
+#  Common notification object which defines various levels of problem severity
+#  and what actions to take at each level, and can be used by most directives.
+N COMMONALERT:
+
+    # Notification
+    Level 0:
+        email(ALERT_EMAIL,WARN)                # email( <address>, <MSG object> )
+
+    # Warning
+    Level 1:
+        email(ALERT_EMAIL,WARN),ticker(WARN_P)
+
+    # Alert
+    Level 2:
+        email(PAGER_EMAIL,ALERT_P),ticker(ALERT_P)
+
+    # Serious Alert
+    Level 3:
+        email(ALERT_EMAIL,ALERT),email(PAGER_EMAIL,ALERT_P),ticker(ALERT_P)
+
+
+# COMMONFIXED definition
+#  Common notification object used for when directives are OK again
+#  (i.e., change state from "fail" to "ok")
+N COMMONFIXED:
+
+    Level 0:
+        email(ALERT_EMAIL,FIXED)
+
+    Level 1:
+        email(ALERT_EMAIL,FIXED),ticker(FIXED_P)
+
+    Level 2:
+        email(PAGER_EMAIL,FIXED_P),ticker(FIXED_P)
+                                                                                
+    Level 3:
+        email(ALERT_EMAIL,FIXED),email(PAGER_EMAIL,FIXED_P),ticker(FIXED_P)
+
+
+# COMMONRESTART definition
+#  Common notification object used for PROC directives that try and restart
+#  a dead process.
+N COMMONRESTART:
+
+    # Restart and notify
+    Level 0:
+        restart("%(name)s"),email(ALERT_EMAIL,RE_WARN)
+
+    # Restart/page
+    Level 1:
+        restart("%(name)s"),email(PAGER_EMAIL,RE_WARN),ticker(RE_WARN_P)
+
+
+# NAMEDRESTART definition
+#  A specific notification object used to restart the 'named' process because
+#  the COMMONRESTART object wasn't sufficient (init script differs from process
+#  name, which COMMONRESTART relies on).
+N NAMEDRESTART:
+
+    # Restart and notify
+    Level 0:
+        restart("bind"),email(ALERT_EMAIL,RE_WARN)
+
+    # Restart/page
+    Level 1:
+        restart("bind"),email(PAGER_EMAIL,RE_WARN),ticker(RE_WARN_P)
+
+
+###########################################################################
+# TEMPLATES
+
+# define a PROC template to make the other PROC definitions much simpler
+#  PROCs using this template will inherit all the settings, but the settings
+#  can still be overridden per directive.
+PROC proctpl:
+    template=self           # indicates this is a template definition
+    scanperiod='20m'        # check processes every 20 mins
+    numchecks=3             # number of checks to make before alerting
+    checkwait=10            # interval between re-checks
+    rule='not exists'       # default rule to use
+    action=COMMONALERT(commonmsg.proc,0)
+    act2ok=COMMONFIXED(commonmsg.proc,0)
+
+# a template for FS directives
+FS fstpl:
+    template=self           # indicates this is a template definition
+    scanperiod='10m'        # check filesystems every 10 mins
+    actionperiod='t*1.5'    # exponential delay for subsequent alerts
+    rule='pctused >= 90'    # default rule to use
+    action=COMMONALERT(commonmsg.fs,1)
+    act2ok=COMMONFIXED(commonmsg.fs,0)
+
+###########################################################################
+# COMMON DIRECTIVES
+# All hosts will use these directives.
+
+PROC cron:
+    name='cron'
+    template=proctpl
+    action=COMMONRESTART(commonmsg.proc)
+PROC syslogd:
+    name='syslogd'
+    template=proctpl
+    action=COMMONALERT(commonmsg.proc)
+PROC inetd:
+    name='inetd'
+    template=proctpl
+    action=COMMONALERT(commonmsg.proc,1)
+PROC sshd:
+    name='sshd'
+    template=proctpl
+    action=COMMONALERT(commonmsg.proc,1)
+
+
+# FS directives perform checks on filesystems.
+FS root:
+    fs='/'
+    rule='pctused >= 90'
+    action=COMMONALERT(commonmsg.fs,1)
+    act2ok=COMMONFIXED(commonmsg.fs,1)
+FS var:
+    fs='/var'
+    rule='pctused >= 90'
+    action=COMMONALERT(commonmsg.fs,2)
+    act2ok=COMMONFIXED(commonmsg.fs,2)
+
+
+# PID directives use pidfiles to perform checks.
+PID sshd1:
+    pidfile='/var/run/sshd.pid'
+    rule='not exists'
+    action=COMMONALERT(commonmsg.pid,0)
+PID sshd2:
+    pidfile='/var/run/sshd.pid'
+    rule='exists and not running'
+    action=COMMONALERT(commonmsg.pidpr,1)
+
+
+# SP directives perform service port checks by examining the current list of
+#  active listening ports (eg: 'netstat -anv') and performing actions if the
+#  defined port/protocol/bind-address is not in the list.
+SP ssh:
+    port='ssh'                        # port to check, as defined in /etc/services
+    protocol='tcp'                # protocol, eg: tcp or udp
+    bindaddr='0.0.0.0'                # '*' on Solaris, or '0.0.0.0' on Linux
+    rule='not exists'
+    action=COMMONALERT(commonmsg.sp,1)
+
+
+# COM directives can execute any commands and process rules based on the
+#  output (stdout, stderr or return value) of the commands.
+
+# This is one way to check the loadavg of a server.
+COM loadavg:
+    cmd="uptime | cut -d, -f4 | awk '{print $3}'"
+    rule="float(out) > 6.0"
+    action=elvin("Load on %(h)s is %(out)s")
+
+
+# LOGSCAN directive scans logfiles, looking for lines which match the given
+# regex and performs the given actions.
+LOGSCAN daemonlog:
+    file='/var/log/daemonlog'        # logfile to scan
+    regex='.*'                        # regex to match
+    scanperiod='12h'                # how often to scan
+    action=email(ALERT_EMAIL, "daemonlog %(h)s:%(file)s", "-- Logscan matched %(linecount)d lines: --\n%(lines)s")
+
+LOGSCAN priv:
+    file='/var/log/messages'        # logfile to scan
+    regex='.*priv.*'                # regex to match
+    scanperiod='2h'                        # how often to scan
+    action=email(ALERT_EMAIL, "priv scan %(h)s:%(file)s", "-- Logscan matched %(linecount)d lines: --\n%(lines)s")
+
+
+# PING directive pings hosts and allows checks to be made on the results.  The
+# simplest test is "not alive" meaning no pings returned.
+PING hostalive:
+    host='10.1.1.1'
+    rule='not alive'
+    scanperiod='15m'
+    numchecks=2
+    checkwait='1m'
+    action=COMMONALERT(commonmsg.ping,2)
+    act2ok=COMMONFIXED(commonmsg.ping,1)
+
+
+# Alert if load-average exceeds 2.00
+# Exclude directive on hosts named 'crazy' and 'mental'
+# Customise the console message for this directive
+SYS loadavg5:
+    rule="loadavg5 > 2.00"
+    action=email(ALERT_EMAIL, '%(h)s loadavg: %(loadavg5).02f')
+    scanperiod='5m'
+    excludehosts='crazy,mental'
+    console="%(state)s loadavg5=%(loadavg5).02f"
+
+
+# Check our mail server is responding
+PORT smtpcheck:
+    host='my.mail.server'
+    port=25
+    scanperiod='30m'
+    rule='not alive'
+    action=COMMONALERT(commonmsg.port,1)
+    act2ok=COMMONFIXED(commonmsg.port)
+
+# Alert if /etc/passwd changes
+FILE passwd:
+    file='/etc/passwd'
+    rule='md5 != lastmd5'
+    scanperiod='1h'
+    action=ticker("%(file)s has changed"), email(ALERT_EMAIL,"%(file)s has changed")
+

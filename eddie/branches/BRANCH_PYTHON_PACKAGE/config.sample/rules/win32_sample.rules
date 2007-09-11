@@ -1,0 +1,146 @@
+# EDDIE config file
+#  This is a sample configuration only, and only provided as a guide
+#  for designing your own rules.
+
+group THEHOSTNAME:
+    HTTP httpfromwin32:
+        url = 'http://www.domain.name/'
+        rule='failed'
+        scanperiod='5m'
+        numchecks=2
+        checkwait=15
+        actionperiod='t * 3'
+        action=email(ALERT_EMAIL, "%(url)s failed: %(errstr)s", """
+url: %(url)s                    \n
+IP: %(ip)s                      \n
+errstr: %(errstr)s              \n
+errno: %(errno)s                \n
+exception: %(exception)s        \n
+timedout: %(timedout)s          \n
+Total time = %(time)s           \n
+Time resolve = %(time_resolve)s \n
+Time connect = %(time_connect)s \n
+Time request = %(time_request)s \n
+Time response = %(time_response)s \n
+-- \n
+%(problemage)s                  \n
+%(problemfirstdetect)s
+""")
+        act2ok=email(ALERT_EMAIL, '%(url)s ok', """%(url)s ok.\n
+-- \n
+%(problemage)s\n
+%(problemfirstdetect)s
+""" )
+        #actelse=email(ALERT_EMAIL, '%(url)s ok', "httptime-%(h)s_%(hostname)s time=%(time)f time_resolve=%(time_resolve)f time_connect=%(time_connect)f time_request=%(time_request)f time_response=%(time_response)f" )
+
+    PING test_ping:
+        host='my.hostname.com'
+        numpings=5
+        rule='not alive'
+        scanperiod='5m'
+        numchecks=2
+        checkwait=10
+        actionperiod='t * 2'
+        console="%(state)s pktloss=%(pktloss)s%% (Last check: %(lastchecktime)s)"
+        action=COMMONALERT(commonmsg.ping)
+        act2ok=COMMONFIXED(commonmsg.ping)
+
+
+    PROC proc_tmpl:
+        template=self
+        scanperiod='5m'
+        actionperiod='t * 2'
+        numchecks=2
+        checkwait=5
+        rule='not exists'
+        act2ok=COMMONFIXED(commonmsg.proc)
+        console='%(state)s (Last check: %(lastchecktime)s)'
+
+    PROC proctest:
+        name='FreeMeter.exe'
+        template=proc_tmpl
+        action=COMMONALERT(commonmsg.proc,1)
+
+    PORT porttest1:
+        host='localhost'
+        port=80
+        rule='not alive'
+        action=email(ALERT_EMAIL, 'port %(port)s not responding on %(host)s')
+        actelse=email(ALERT_EMAIL, 'port %(port)s IS OK on %(host)s')
+
+    PORT porttest2:
+        host='localhost'
+        port=25
+        expect='220 '
+        rule='not alive or not matched'
+        action=email(ALERT_EMAIL, 'port %(port)s problem on %(host)s', '%(recv)s')
+        actelse=email(ALERT_EMAIL, 'port %(port)s is OK on %(host)s', '%(recv)s')
+
+    FILE file_change:
+        file='D:\eddie.log'
+        scanperiod='3m'
+        #rule='mtime != lastmtime'
+        rule='md5 != lastmd5'
+        action=email(ALERT_EMAIL, '%(file)s has been modified.')
+
+
+    SYS systesting:
+        rule="1"
+        scanperiod="60s"
+        action=email(ALERT_EMAIL, "system stats", "CS=%(System Context Switches/sec)s, syscalls=%(System System Calls/sec)s, procs=%(System Processes)s, threads=%(System Threads)s")
+        #action=elvinrrd("wincs-%(h)s", "wincs=%(System Context Switches/sec)s"), elvinrrd("winsyscalls-%(h)s", "winsyscalls=%(System System Calls/sec)s"), elvinrrd("winprocs-%(h)s", "winprocs=%(System Processes)s"), elvinrrd("winthreads-%(h)s", "winthreads=%(System Threads)s"), elvinrrd("winints-%(h)s", "winints=%(Processor Interrupts/sec _TOTAL)s")
+
+    SYS systesting2:
+        rule="1"
+        scanperiod="1m"
+        action=email(ALERT_EMAIL, "system stats cpu", "Processor=%(Processor % Processor Time _TOTAL)s, Interrupt=%(Processor % Interrupt Time _TOTAL)s, User=%(Processor % User Time _TOTAL)s, Priv=%(Processor % Privileged Time _TOTAL)s, idle=%(Processor % Idle Time _TOTAL)s, ints=%(Processor Interrupts/sec _TOTAL)s")
+        #action=elvinrrd("cpuwin-%(h)s", "cpu_processor=%(Processor % Processor Time _TOTAL)s", "cpu_interrupt=%(Processor % Interrupt Time _TOTAL)s", "cpu_user=%(Processor % User Time _TOTAL)s", "cpu_priv=%(Processor % Privileged Time _TOTAL)s", "cpu_idle=%(Processor % Idle Time _TOTAL)s")
+
+    FS C_drive:
+        fs='C:'
+        rule='pctused >= 90'
+        scanperiod='5m'
+        actionperiod='t * 3'
+        action=COMMONALERT(commonmsg.fs,1)
+        act2ok=COMMONFIXED(commonmsg.fs)
+        console="%(state)s %(pctused)s%% (Last check: %(lastchecktime)s)"
+
+    FS C_drive_rrd:
+        fs='C:'
+        rule="1"
+        scanperiod='5m'
+        action=email(ALERT_EMAIL, "%(h)s C: Drive", "used=%(used)s size=%(size)s")
+        #action=elvinrrd("fs-%(h)s_C","used=%(used)s", "size=%(size)s")
+        console=None
+
+    # Send network interface stats to RRD
+    IF intf_pro100_rrd:
+        name='Intel 21041-Based PCI Ethernet Adapter [Generic]'
+        scanperiod='1m'
+        rule='1'        # always perform action
+        action=email(ALERT_EMAIL, "%(h)s %(name)s", "ipkts=%(rx_packets)s ierrs=%(rx_errs)s opkts=%(tx_packets)s oerrs=%(tx_errs)s collis=0")
+        #action=elvinrrd("ifg-%(h)s_IntelNIC", "ipkts=%(rx_packets)s", "ierrs=%(rx_errs)s", "opkts=%(tx_packets)s", "oerrs=%(tx_errs)s", "collis=0")
+        console=None
+
+    IF intf_pro100_thru_rrd:
+        name='Intel 21041-Based PCI Ethernet Adapter [Generic]'
+        scanperiod='1m'
+        rule='1'        # always perform action
+        action=email(ALERT_EMAIL, "%(h)s %(name)s", "ibytes=%(rx_bytes)s obytes=%(tx_bytes)s")
+        #action=elvinrrd("netg-%(h)s_IntelNIC", "ibytes=%(rx_bytes)s", "obytes=%(tx_bytes)s")
+        console=None
+
+    DISK total_thruput:
+        device='_Total'
+        scanperiod='1m'
+        rule='1'        # always perform action
+        action=email(ALERT_EMAIL, "%(h)s Total Disk Activity rbytes=%(PhysicalDisk Disk Read Bytes/sec _Total)s wbytes=%(PhysicalDisk Disk Write Bytes/sec _Total)s")
+        #action=elvinrrd("diskg-%(h)s_TOTAL", "rbytes=%(PhysicalDisk Disk Read Bytes/sec _Total)s", "wbytes=%(PhysicalDisk Disk Write Bytes/sec _Total)s")
+
+    DISK disk0_thruput:
+        device='0 C:'
+        scanperiod='1m'
+        rule='1'        # always perform action
+        action=email(ALERT_EMAIL, "%(h)s disk0 Disk Activity", "rbytes=%(PhysicalDisk Disk Read Bytes/sec 0 C:)s wbytes=%(PhysicalDisk Disk Write Bytes/sec 0 C:)s")
+        #action=elvinrrd("diskg-%(h)s_disk0", "rbytes=%(PhysicalDisk Disk Read Bytes/sec 0 C:)s", "wbytes=%(PhysicalDisk Disk Write Bytes/sec 0 C:)s")
+

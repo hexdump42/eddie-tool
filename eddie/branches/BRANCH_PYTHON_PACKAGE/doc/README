@@ -1,0 +1,28 @@
+This is the EDDIE Tool.  It is a monitoring, security and performance
+analysis tool for most common operating systems.
+
+It is still being continuously developed but is very stable in its current
+form and has been used in production for over 5 years (it is the primary
+monitoring tool at the author's places of employment, for example).
+
+Documentation is online at http://eddie-tool.net/doc/ and in the doc
+directory of the EDDIE-Tool distribution.
+
+You need to create a config directory where config.sample is located
+and create an eddie.cf config file and rules files.  See config.sample
+for examples.
+
+See QUICKSTART.txt if you are impatient.
+
+See README.win32.txt if you are installing on Win32 (Windows XP or
+Server).
+
+See README.OpenBSD.txt if you are installing on OpenBSD.
+
+See LICENSE.txt for licensing details.
+
+See http://eddie-tool.net/ for more information.
+
+Email eddie-info at eddie-tool dot net for information/help/tips/
+comments/etc or join one of the mailing lists.  On IRC try #eddie-tool on
+irc.freenode.net.  The authors will be only too happy to assist.

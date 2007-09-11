@@ -1,0 +1,95 @@
+# EDDIE config file
+#  Rules specific to certain hosts.
+#  This is a sample configuration only, and only provided as a guide
+#  for designing your own rules.
+
+
+group host1:
+
+    PROC radiusd:
+        name='radiusd'
+        rule='not exists'
+        action=COMMONALERT(commonmsg.proc,1)
+    PROC named:
+        name='named'
+        rule='not exists'
+        action=COMMONALERT(commonmsg.proc,2)
+
+    ## Alert if /var/log is 95% full or more
+    FS varlog:
+        fs='/var/log'
+        rule='pctused >= 95'
+        actionperiod='t * 2'        # double time between consequetive alerts
+        action=COMMONALERT(commonmsg.fs,2)
+
+    # Alert if average filesystem growth over the past 3 scan periods
+    # was over 5% between scan period.
+    FS varlog_grow:
+        fs='/var/log'
+        scanperiod='2m'
+        history = 3
+        rule='(pctused + history[1].pctused + history[2].pctused + history[3].pctused) / 3 > 5'
+        action=email(ALERT_EMAIL,'%(mountpt)s grew to %(pctused)s')
+
+    PID namedex:
+        pidfile='/var/run/named.pid'
+        rule='not exists'
+        action=COMMONALERT(commonmsg.pid,0)
+    PID namedpr:
+        pidfile='/var/run/named.pid'
+        rule='exists and not running'
+        action=COMMONALERT(commonmsg.pidpr,1)
+
+    SP ftp:
+        port='ftp'
+        protocol='tcp'
+        bindaddr='*'
+        rule='not exists'
+        action=COMMONALERT(commonmsg.sp,0)
+    SP telnet:
+        port='telnet'
+        protocol='tcp'
+        bindaddr='*'
+        rule='not exists'
+        action=COMMONALERT(commonmsg.sp,0)
+    SP pop3:
+        port=110
+        protocol='tcp'
+        bindaddr='*'
+        rule='not exists'
+        action=COMMONALERT(commonmsg.sp,1)
+
+    ## Check ntp stratum is sane
+    COM stratum3:
+        cmd="/opt/local/sbin/xntpdc -c sysinfo | grep stratum | awk '{ print $2 }'"
+        rule="int(out) > 3"
+        action=email(ALERT_EMAIL,"NTP Stratum > 3")
+
+    ## Check one of the network interfaces is up
+    IF hme1:
+        name='hme1'
+        scanperiod='5m'
+        rule='not exists'
+        action=email("alert", "Interface %(name)s is not enabled")
+
+
+
+group host2:
+
+    POP3TIMING pop3test:
+        server='my.pop3.server'
+        user='fred'
+        password='fredsdog'
+        rule='not connected'
+        action=ticker("pop3 to %(server)s failed")
+        actelse=ticker("pop3 to %(server)s successful, connecttime=%(connecttime)s")
+
+    RADIUS radtest:
+        server='my.radius.server:1812'
+        secret='mysekret'
+        user='fred@my.domain'
+        password='fredsdog'
+        rule='passed'
+        action=ticker("Radius auth passed, time=%(timing)s")
+        actelse=ticker("Radius auth failed"), email("alert", "Radius auth failed ...")
+
