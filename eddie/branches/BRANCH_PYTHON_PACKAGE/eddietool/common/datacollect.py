@@ -116,7 +116,7 @@ class DataModules:
         imported = False
         for ospath in self.os_search_path:
             try:
-                exec "from eddietool.%s import %s" % (ospath, module)
+                exec "from eddietool.arch.%s import %s" % (ospath, module)
                 imported = True
                 break
             except ImportError, err:
