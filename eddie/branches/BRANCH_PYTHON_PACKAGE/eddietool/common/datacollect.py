@@ -55,6 +55,10 @@ class DataFailure(Exception):
     """
     pass
 
+class DataModuleError(Exception):
+    pass
+
+
 
 ##
 ## Data collection management classes
@@ -67,9 +71,25 @@ class DataModules:
     and creates data collection objects as required.
     """
 
-    DataModuleError = "DataModule Error"        # for exceptions
-
-    def __init__(self):
+    def __init__(self, osname, osver, osarch):
+        osver = 'v' + osver.replace('.', '_')
+        
+        self.osname = osname
+        self.osver = osver
+        self.osarch = osarch
+        
+        # most specific to least specific
+        self.os_search_path = []
+        if osname and osver and osarch:
+            self.os_search_path.append( '.'.join([osname,osver,osarch]) )
+            self.os_search_path.append( '.'.join([osname,osarch,osver]) )
+        if osname and osver:
+            self.os_search_path.append( '.'.join([osname,osver]) )
+        if osname and osarch:
+            self.os_search_path.append( '.'.join([osname,osarch]) )
+        if osname:
+            self.os_search_path.append(osname)
+        
         self.collectors = {}                # dictionary of collectors and their associated objects
 
 
@@ -87,11 +107,18 @@ class DataModules:
 
         log.log( "<datacollect>DataModules.request(): importing module '%s' for collector '%s'" % (module,collector), 8 )
 
-        try:
-            exec "import %s" % (module)
-        except ImportError, err:
-            log.log( "<datacollect>DataModules.request(): error, collector '%s'/module '%s' not found or not available, import error: %s" % (collector,module,err), 3 )
-            raise self.DataModuleError, "Collector '%s', module '%s' not found or not available, import error: %s" % (collector,module,err)
+        imported = False
+        for ospath in self.os_search_path:
+            try:
+                exec "from eddietool.%s import %s" % (ospath, module)
+                imported = True
+                break
+            except ImportError, err:
+                pass
+        
+        if not imported:
+            log.log( "<datacollect>DataModules.request(): error, collector '%s'/module '%s' not found or not available, os_search_path=%s" % (collector,module,self.os_search_path), 3 )
+            raise DataModuleError("Collector '%s', module '%s' not found or not available, os_search_path=%s" % (collector,module,self.os_search_path))
 
         # initialise new collector instance
         initstr = "self.collectors[collector] = %s.%s()" % (module,collector)
@@ -99,7 +126,7 @@ class DataModules:
             exec initstr
         except AttributeError:
             log.log( "<datacollect>DataModules.request(): error, no such collector '%s' in module '%s'" % (collector,module), 3 )
-            raise self.DataModuleError, "No such collector '%s' in module '%s'" % (collector,module)
+            raise DataModuleError("No such collector '%s' in module '%s'" % (collector,module))
 
         log.log( "<datacollect>DataModules.request(): collector %s/%s initialised" % (module,collector), 7 )
 

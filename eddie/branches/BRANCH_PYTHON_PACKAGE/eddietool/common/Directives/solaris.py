@@ -36,10 +36,9 @@ __license__ = '''
 # Imports: Python
 import os
 import re
+
 # Imports: Eddie
-import log
-import directive
-import utils
+from eddietool.common import log, directive, utils
 
 
 ##

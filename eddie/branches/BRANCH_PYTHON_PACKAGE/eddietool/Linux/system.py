@@ -76,9 +76,9 @@ __license__ = '''
 import string
 import re
 import os
+
 # Eddie modules
-import datacollect
-import log
+from eddietool.common import datacollect, log
 
 
 class system(datacollect.DataCollect):

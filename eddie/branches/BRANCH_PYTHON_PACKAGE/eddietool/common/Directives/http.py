@@ -40,8 +40,7 @@ import time
 import sys
 import socket
 # Imports: Eddie
-import directive
-import log
+from eddietool.common import directive, log
 
 
 ##

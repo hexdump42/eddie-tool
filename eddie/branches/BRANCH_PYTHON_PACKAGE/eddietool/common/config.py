@@ -53,7 +53,9 @@ except ImportError:
     pass
 
 ## Define exceptions
-ParseFailure = 'ParseFailure'
+class ParseFailure(Exception):
+    pass
+
 
 ############### DEFAULT SETTINGS ###################
 ##
@@ -620,19 +622,19 @@ def loadExtraDirectives( directivedir ):
     sys.path = [directivedir,] + sys.path        # restrict module path
     extradirectives = os.listdir(directivedir)
     for m in extradirectives:
-        if m[-3:] == ".py":                        # only want ".py" files
-            mname = m[:-3]                        # get module name
-            exec "import %s"%(mname)                # import module
-            exec "mobjs = dir(%s)"%(mname)        # list of module's objects
-            for o in mobjs:                        # Cycle thru module's objects
-                d = "%s.%s"%(mname,o)
-                exec "dtype = type(%s)"%(d)        # Get object type
-                if dtype == type(Config):        # only want "class" objects
-                    exec "directives[o] = %s"%(d) # add to directives dict
+        if m.endswith(".py") and not m.startswith('_'):
+            mname = m[:-3]                          # get module name
+            mod = __import__(mname)                 # import module
+            mobjs = dir(mod)                        # list of module's objects
+            for o in mobjs:                         # Cycle thru module's objects
+                d = "mod.%s"%o
+                exec "dtype = type(%s)"%(d)         # Get object type
+                if dtype == type(Config):           # only want "class" objects
+                    exec "directives[o] = %s"%(d)   # add to directives dict
 
     sys.path = oldsyspath                # restore module path
 
-    #print "directives:",directives
+    # print "directives:",directives
 
     directives.update(directives)                # add new directives to directives table
 

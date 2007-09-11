@@ -45,10 +45,9 @@ import string
 import re
 import sys
 import platform
+
 # Eddie modules
-import datacollect
-import log
-import utils
+from eddietool.common import datacollect, log, utils
 
 
 ##

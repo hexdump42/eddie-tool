@@ -44,10 +44,10 @@ __license__ = '''
 # Python modules
 import os
 import string
+
 # Eddie modules
-import datacollect
-import log
-import utils
+from eddietool.common import datacollect, log, utils
+
 
 from linux_diskio import linux_diskio
 

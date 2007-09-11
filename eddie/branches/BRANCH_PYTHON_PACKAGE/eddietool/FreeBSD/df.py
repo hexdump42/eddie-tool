@@ -47,10 +47,9 @@ __license__ = '''
 
 # Python Modules
 import string
+
 # Eddie Modules
-import datacollect
-import log
-import utils
+from eddietool.common import datacollect, log, utils
 
 
 class dfList(datacollect.DataCollect):

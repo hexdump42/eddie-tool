@@ -40,10 +40,8 @@ __license__ = '''
 
 
 
-# Python modules
 # Eddie modules
-import datacollect
-import log
+from eddietool.common import datacollect, log, utils
 import win32perf
 
 

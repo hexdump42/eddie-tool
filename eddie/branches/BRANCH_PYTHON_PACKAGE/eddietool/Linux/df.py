@@ -46,8 +46,9 @@ __license__ = '''
 
 # Python Modules
 import re, string
+
 # Eddie Modules
-import datacollect, log, utils
+from eddietool.common import datacollect, log, utils
 
 
 # This fetches data by parsing system calls of common commands.  This was done because

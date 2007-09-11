@@ -35,8 +35,10 @@ __license__ = '''
 
 # Python imports
 import os, string, time, threading
+
 # Eddie imports
-import log, utils
+from eddietool.common import log, utils
+
 
 # List of interpreters - default empty
 interpreters = []

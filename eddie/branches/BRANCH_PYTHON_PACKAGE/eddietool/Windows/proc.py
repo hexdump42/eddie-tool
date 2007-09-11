@@ -47,14 +47,15 @@ __license__ = '''
 
 # Python modules
 import os
+
 # Win32 modules
 import win32process
 import win32api
 import win32con
 import pywintypes
+
 # Eddie modules
-import datacollect
-import log
+from eddietool.common import datacollect, log, utils
 
 
 # List of interpreters - default empty - not used for Windows
