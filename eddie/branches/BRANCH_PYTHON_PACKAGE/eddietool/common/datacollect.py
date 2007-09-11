@@ -72,7 +72,13 @@ class DataModules:
     """
 
     def __init__(self, osname, osver, osarch):
-        osver = 'v' + osver.replace('.', '_')
+        bad_chars = ('.', '-')
+        for c in bad_chars:
+            osname = osname.replace(c, '_')
+            osver = osver.replace(c, '_')
+            osarch = osarch.replace(c, '_')
+        
+        osver = 'v' + osver         # can't start with digit
         
         self.osname = osname
         self.osver = osver
