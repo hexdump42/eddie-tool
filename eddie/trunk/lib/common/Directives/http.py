@@ -124,6 +124,14 @@ class HTTP(directive.Directive):
             if self.request_timeout < 0.0:
                 raise directive.ParseFailure, "%s: request_timeout (%s) cannot be negative" %(self.ID,self.args.request_timeout)
 
+        # cmiles 2007-09-24: option to specify the server name to connect to, which
+        #   will be used instead of the server name from the URL.  The server name
+        #   from the URL will still be used for the HTTP host header.
+        try:
+            self.server = self.args.server
+        except AttributeError:
+            self.server = None
+
         # Set variables for Actions to use
         self.defaultVarDict['url'] = self.args.url
         self.defaultVarDict['rule'] = self.args.rule
@@ -131,6 +139,7 @@ class HTTP(directive.Directive):
         self.defaultVarDict['port'] = self.port
         self.defaultVarDict['file'] = self.file
         self.defaultVarDict['request_timeout'] = self.request_timeout
+        self.defaultVarDict['server'] = self.server
 
         # define the unique ID
         if self.ID == None:
@@ -187,14 +196,22 @@ class HTTP(directive.Directive):
         data['status'] = ""
         data['reason'] = ""
         data['body'] = ""
+        data['server'] = ""
 
         e = None
 
+        if self.server is not None:
+            hostname = self.server
+            data['server'] = self.server
+        else:
+            hostname = self.hostname
+        
         # Resolve the hostname to IP address (and time it)
-        log.log( "<http>HTTP.getData(): Resolving %s"%(self.hostname), 7 )
+        log.log( "<http>HTTP.getData(): Resolving %s"%(hostname), 7 )
         time_resolve_start = time.time()
+        
         try:
-            ip = socket.gethostbyname( self.hostname )
+            ip = socket.gethostbyname( hostname )
         except:
             time_resolve_end = time.time()
             e = sys.exc_info()
@@ -204,13 +221,13 @@ class HTTP(directive.Directive):
             data['time_resolve'] = time_resolve_end - time_resolve_start
             data['time'] = data['time_resolve']
             data['failed'] = 1
-            log.log( "<http>HTTP.getData(): Resolving %s failed, exception=%s, errno=%s, errstr=%s"%(self.hostname,data['exception'],data['errno'],data['errstr']), 7 )
+            log.log( "<http>HTTP.getData(): Resolving %s failed, exception=%s, errno=%s, errstr=%s"%(hostname,data['exception'],data['errno'],data['errstr']), 7 )
             return data
 
         time_resolve_end = time.time()
         data['time_resolve'] = time_resolve_end - time_resolve_start
         data['ip'] = ip
-        log.log( "<http>HTTP.getData(): Resolved %s to: %s, time=%f"%(self.hostname,ip,data['time_resolve']), 7 )
+        log.log( "<http>HTTP.getData(): Resolved %s to: %s, time=%f"%(hostname,ip,data['time_resolve']), 7 )
 
         time_start = time_resolve_start
         time_end = time_resolve_end

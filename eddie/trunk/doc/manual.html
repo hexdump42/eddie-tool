@@ -925,6 +925,13 @@
           connection and returning an error (variable 'timedout' will then be set
           to 1).  Requires Python 2.3+ (socket settimeout() functionality).
           [Eddie 0.33+]
+     <li> <b>server=&lt;hostname_or_ip&gt;</b> <i>(optional)</i>:
+          <br>
+          - specify the server to connect to; useful if the address of the server
+          differs from the address specified in the URL.  For example, making a
+          connection to a server with a different address than that specified
+          in the HTTP host header.
+          [Eddie 0.36+]
     </ul><br>
 
     Rule Variables:
