@@ -1,0 +1,70 @@
+# EDDIE config file
+#  Rules specific to News servers.
+#  This is a sample configuration only, and only provided as a guide
+#  for designing your own rules.
+
+
+group news:
+
+    ###########################################################################
+    # MESSAGES
+
+    M inndmsg:
+        M throttled:
+            MSG ALERT: "Alert: innd on %(h)s is throttled"
+                "ALERT: innd on %(h)s needs urgent attention."
+
+
+    ###########################################################################
+    # Notification Definitions
+
+    N INNDALERT:
+
+        # Notify
+        Level 0:
+            email(ALERT_EMAIL,ALERT),ticker(ALERT_P)
+
+        # Notify/page
+        Level 1:
+            email(ALERT_EMAIL,ALERT),email(SYSSUP_EMAIL,ALERT_P),ticker(ALERT_P)
+
+
+
+    ###########################################################################
+    # RULES
+
+    PROC innd:
+        name='innd'
+        rule=NR
+        action=COMMONALERT(commonmsg.proc,2)
+    PROC actived:
+        name='actived'
+        rule=NR
+        action=email(ALERT_EMAIL,"Alert: %(procp)s on %(h)s not running - restarting..."),system("su news -c /opt/local/news/bin/actived")
+
+
+    FS varspool:
+        fs='/var/spool'
+        rule='capac>=95'
+        action=COMMONALERT(commonmsg.fs,2)
+    FS news:
+        fs='/news'
+        rule='capac>=90'
+        action=COMMONALERT(commonmsg.fs,2)
+
+
+    SP nntp:
+        port='nntp'
+        protocol='tcp'
+        bindaddr='*'
+        rule='not exists'
+        action=COMMONALERT(commonmsg.sp,1)
+
+    # Check with ctlinnd if innd is sane or not
+    COM ctlinnd:
+        cmd='/opt/local/news/bin/ctlinnd mode | grep "^Server " | grep -v "^Server running" | grep -v "Flushing log and syslog files"'
+        rule="out != ''"
+        action=INNDALERT(inndmsg.throttled,1)
+
+
+

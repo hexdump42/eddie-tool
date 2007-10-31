@@ -1,0 +1,66 @@
+<?xml version="1.0"?>
+<!DOCTYPE service_bundle SYSTEM "/usr/share/lib/xml/dtd/service_bundle.dtd.1">
+<!--
+    Eddie SMF Manifest
+    Chris Miles 20070529
+-->
+
+<service_bundle type='manifest' name='eddie:default'>
+
+<service
+        name='site/eddie'
+        type='service'
+        version='1'>
+
+        <create_default_instance enabled='false' />
+
+        <single_instance />
+
+        <dependency name='paths'
+            grouping='require_all'
+            restart_on='error'
+            type='path'>
+            <service_fmri value='file://localhost/opt/eddie/config/eddie.cf' />
+        </dependency>
+
+        <dependency name='network'
+            grouping='require_any'
+            restart_on='error'
+            type='service'>
+                <service_fmri value='svc:/network/service' />
+        </dependency>
+
+        <dependent
+                name='eddie-user'
+                grouping='optional_all'
+                restart_on='none'>
+                <service_fmri value='svc:/milestone/multi-user' />
+        </dependent>
+
+        <!--
+                The timeout needs to be large enough to wait for startup.
+        -->
+        <exec_method
+            type='method'
+            name='start'
+            exec='/usr/local/svc/method/eddie start'
+            timeout_seconds='60' />
+
+        <exec_method
+            type='method'
+            name='stop'
+            exec='/usr/local/svc/method/eddie stop'
+            timeout_seconds='60' />
+
+        <stability value='Unstable' />
+
+        <template>
+                <common_name>
+                        <loctext xml:lang='C'>
+                        Eddie-Tool monitoring agent.
+                        </loctext>
+                </common_name>
+        </template>
+</service>
+
+</service_bundle>
