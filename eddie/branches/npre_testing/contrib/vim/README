@@ -1,0 +1,17 @@
+Here is a syntax file for vim that I use, which helps when editing. Hopefully
+other people might find it useful too.
+
+To use it you can either ':set filetype=eddie' when you are within vim, or
+include the following in your ~/.vim/filetype.vim file:
+
+        augroup filetypedetect
+        au BufNewFile,BufRead /opt/eddie/config/*.rules set filetype=eddie
+        au BufNewFile,BufRead /opt/eddie/config/eddie.cf set filetype=eddie
+        augroup END
+
+
+--
+Dougal Scott                    Connect Internet Solutions
+dwagon@connect.com.au           9/114 Albert Rd
+Senior Systems Administrator    South Melbourne, Australia, 3205
+

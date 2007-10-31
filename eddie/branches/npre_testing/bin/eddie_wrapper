@@ -1,0 +1,154 @@
+#!/bin/sh
+#
+## A simple wrapper script to help make sure that EDDIE-Tool is
+##   always running, and to re-start it if it isn't.  If EDDIE-Tool
+##   dies too many times in a row then this script will bail out.
+##   If EDDIE_ADMIN is set then this address will receive email
+##   notifications when EDDIE-Tool needs to be restarted.  The
+##   notifications will include any output (like exceptions).
+##   
+## 19990302 Chris Miles - http://chrismiles.info/
+##
+########################################################################
+## (C) Chris Miles 2001-2004
+##
+## The author accepts no responsibility for the use of this software and
+## provides it on an ``as is'' basis without express or implied warranty.
+##
+## Redistribution and use in source and binary forms are permitted
+## provided that this notice is preserved and due credit is given
+## to the original author and the contributors.
+##
+## This program is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+########################################################################
+
+## Address to receive restart messages, including tracebacks for any
+##   bad exceptions.  Set to empty or comment out to disable sending
+##   messages.  If set as an environment variable it will not be
+##   over-written.  Defaults to not set.
+
+if [ "$EDDIE_ADMIN" = "" ]
+then
+    #EDDIE_ADMIN=eddie-adm@domain.name
+    EDDIE_ADMIN=
+fi
+
+## Failure to start EDDIE-Tool after MAX_RETRIES in a short period of time
+##   indicates a serious problem.  eddie_wrapper will then die.
+MAX_TRIES=10
+
+## Python is used to get the current time.  If it isn't in the path then
+##   set it here.
+PYTHON="python"
+
+## Set path for commands like mail/sleep/python/...
+PATH=/bin:/usr/bin:/usr/local/bin:$PATH
+export PATH
+
+## stdout/err from Eddie stored in temp file
+RUNFILE=/var/run/eddie/tmp/eddie$$.out
+
+## Create (if necessary) /var/run/eddie/tmp
+if [ ! -d /var/run/eddie/tmp ]; then
+    mkdir -p /var/run/eddie/tmp >/dev/null 2>&1
+    if [ $? -gt 0 ]; then
+	echo '$0: "mkdir -p /var/run/eddie/tmp" failed.'
+	RUNFILE=/var/tmp/eddie$$.out
+    fi
+fi
+
+## Find mail program
+if [ -x /bin/mailx ]; then		# Solaris
+    MAIL=/bin/mailx
+elif [ -x /bin/mail ]; then		# Linux
+    MAIL=/bin/mail
+else
+    MAIL=mail				# dunno...
+fi
+
+## clean up a bit
+rm -f /var/run/eddie/tmp/*.out
+
+## Find pgrep
+PGREP=`which pgrep`
+if [ "$PGREP" = "" ]
+then
+    PGREP="useps"
+fi
+
+## Find eddie/bin/
+EDDIEPATH=`dirname $0`
+if [ "$EDDIEPATH" = "" ]
+then
+    EDDIEPATH="."
+fi
+
+
+## Start the loop to startup EDDIE-Tool and try and restart it if it dies
+
+tries=0
+
+while [ 1 ]; do
+    if [ "$PGREP" = "useps" ]
+    then
+	pid=`ps -ef | grep \.\*python\.\*eddie.py  | grep -v grep | awk '{ print $2 }'`
+    else
+	pid=`$PGREP eddie.py`
+    fi
+
+    if [ "${pid}" != "" ]; then
+	echo "Error: Eddie is already running."
+	exit 2
+    fi
+
+    #start_time=`$GDATE "+%s"`
+    start_time=`$PYTHON -c "import time ; print int(time.time())"`
+
+    $EDDIEPATH/eddie.py >>$RUNFILE
+
+    retcode=$?
+
+    if [ $retcode -ne 0 ]
+    then
+	echo "eddie_wrapper: eddie died at `date` return code: $retcode" >> $RUNFILE
+
+	curtime=`$PYTHON -c "import time ; print int(time.time())"`
+	restart_time=`expr $curtime - $start_time`
+	if [ $restart_time -lt 120 ]; then
+	    tries=`expr $tries + 1`
+	else
+	    tries=0
+	fi
+
+	if [ $tries -gt $MAX_TRIES ]; then
+	    echo "eddie_wrapper: Too many restarts ($tries) in a short time. eddie_wrapper quitting." >>$RUNFILE
+	fi
+
+	if [ "$EDDIE_ADMIN" != "" ]
+	then
+	    # Sent output to EDDIE_ADMIN if defined
+	    $MAIL -s "Eddie output on `hostname` at `date`" $EDDIE_ADMIN < $RUNFILE
+	else
+	    # Otherwise to stdout
+	    cat $RUNFILE
+	fi
+	rm -f $RUNFILE
+
+	if [ $tries -gt $MAX_TRIES ]; then
+	    exit 3
+	fi
+
+	sleep 60
+    else
+	sleep 5
+    fi
+
+    rm -f $RUNFILE
+
+    echo "eddie_wrapper: restarting Eddie at `date` [tries=$tries]." >> $RUNFILE
+done
+
+# clean up some more
+rm -f $RUNFILE

@@ -1,0 +1,267 @@
+# EDDIE config file
+#  Common message definitions for other rules to use.
+#
+#  Most messages are suitable for emails, except the messages with names
+#    ending in "_P" which are short messages suitable for pagers or SMS.
+#
+#  Whilst this is only a sample rules file, it can be used with little or
+#  no modification with your own directive configs.
+
+
+##
+## Common notification messages that can be used by most directives.
+##
+M commonmsg:
+
+    ##
+    ## Common notification messages for PROC directives
+    ##
+    M proc:
+        MSG WARN: "Warning: %(name)s on %(h)s not running"
+            """The %(name)s process on %(h)s is not running
+
+-- 
+%(problemage)s
+%(problemfirstdetect)s
+"""
+
+        MSG WARN_P: "Warn: The %(name)s daemon on %(h)s is not running." ""
+
+        MSG ALERT: "Alert: %(name)s on %(h)s not running"
+            """ALERT: The %(name)s daemon on %(h)s is not running.
+
+-- 
+%(problemage)s
+%(problemfirstdetect)s
+"""
+
+        MSG ALERT_P: "ALERT: The %(name)s daemon on %(h)s is not running." ""
+
+        MSG RE_WARN: "Alert: %(name)s on %(h)s not running and is being restarted"
+            """ALERT: The %(name)s daemon on %(h)s not running and is being restarted.
+
+-- 
+%(problemage)s
+%(problemfirstdetect)s
+"""
+
+        MSG RE_WARN_P: "ALERT: The %(name)s daemon on %(h)s not running and is being restarted." ""
+
+        MSG RE_ERR: "Alert: %(name)s on %(h)s not restarting"
+            """ALERT: The %(name)s daemon on %(h)s will not restart.
+
+-- 
+%(problemage)s
+%(problemfirstdetect)s
+"""
+
+        MSG RE_ERR_P: "ALERT: The %(name)s daemon on %(h)s will not restart." ""
+
+        MSG FIXED_P: "The %(name)s daemon on %(h)s has been fixed." ""
+
+        MSG FIXED: "%(name)s on %(h)s has been fixed"
+            """ALERT: The %(name)s daemon on %(h)s has been fixed.
+
+-- 
+%(problemage)s
+%(problemfirstdetect)s
+"""
+
+    ##
+    ## Common notification messages for PID directives
+    ##
+    M pid:
+        MSG WARN: "Warning: pid file %(pidfile)s not found on %(h)s"
+            """Pid file %(pidfile)s not found on %(h)s.
+
+-- 
+%(problemage)s
+%(problemfirstdetect)s
+"""
+
+        MSG WARN_P: "%(h)s: pid file %(pidfile)s not found" ""
+
+        MSG ALERT: "ALERT: pid file %(pidfile)s not found on %(h)s"
+            """Pid file %(pidfile)s not found on %(h)s.
+
+-- 
+%(problemage)s
+%(problemfirstdetect)s
+"""
+
+        MSG ALERT_P: "%(h)s: pid file %(pidfile)s not found" ""
+
+    ##
+    ## Common notification messages for PID directives using the
+    ## 'exists and not running' style check
+    ##
+    M pidpr:
+        MSG WARN: "Warning: process %(pid)s (from %(pidfile)s) on %(h)s not running"
+            """Warning: The process with pid %(pid)s (from pidfile '%(pidfile)s') on %(h)s is not running.
+
+-- 
+%(problemage)s
+%(problemfirstdetect)s
+"""
+
+        MSG WARN_P: "%(h)s warn: pid %(pid)s from %(pidfile)s not running" ""
+
+        MSG ALERT: "Warning: process %(pid)s (from %(pidfile)s) on %(h)s not running"
+            """ALERT: The process with pid %(pid)s (from pidfile '%(pidfile)s') on %(h)s is not running.
+
+%(act)s
+-- 
+%(problemage)s
+%(problemfirstdetect)s
+"""
+
+        MSG ALERT_P: "%(h)s alert: pid %(pid)s from %(pidfile)s not running" ""
+
+    ##
+    ## Common notification messages for FS directives
+    ##
+    M fs:
+        MSG WARN: "Warning: %(h)s:%(mountpt)s at %(pctused)s%% - %(avail)s of %(size)s remain"
+            """Filesystem %(mountpt)s on %(h)s has failed this FS rule:
+    %(rule)s
+
+----------------------------------------------------------------------
+%(df)s
+----------------------------------------------------------------------
+
+%(problemage)s
+%(problemfirstdetect)s
+"""
+
+        MSG WARN_P: "Warn: %(h)s:%(mountpt)s at %(pctused)s%% - %(avail)s of %(size)s remain" ""
+
+        MSG ALERT: "Alert: %(h)s:%(mountpt)s at %(pctused)s%% - %(avail)s of %(size)s remain"
+            """Filesystem %(mountpt)s on %(h)s has failed this FS rule:
+    %(rule)s
+
+----------------------------------------------------------------------
+%(df)s
+----------------------------------------------------------------------
+
+Please free up space immediately.
+
+-- 
+%(problemage)s
+%(problemfirstdetect)s
+"""
+
+        MSG ALERT_P: "Alert: %(h)s:%(mountpt)s at %(pctused)s%% - %(avail)s of %(size)s remain" ""
+
+        MSG FIXED_P: "%(h)s:%(mountpt)s OK now at %(pctused)s%%" ""
+
+        MSG FIXED: "%(h)s:%(mountpt)s is now fixed (%(pctused)s%%)"
+            """Filesystem %(mountpt)s on %(h)s has been fixed.
+
+%(problemage)s
+%(problemfirstdetect)s
+"""
+
+
+    ##
+    ## Common notification messages for SP directives
+    ##
+    M sp:
+        MSG WARN: "Warning: Port %(protocol)s/%(port)s on %(h)s not responding"
+            """The service port %(protocol)s/%(port)s on %(h)s is not responding.
+
+-- 
+%(problemage)s
+%(problemfirstdetect)s
+"""
+
+        MSG WARN_P: "%(h)s warn: Port %(protocol)s/%(port)s not responding" ""
+
+        MSG ALERT: "ALERT: Port %(protocol)s/%(port)s on %(h)s not responding"
+            """The service port %(protocol)s/%(port)s on %(h)s is not responding.
+Please fix this immediately.
+
+-- 
+%(problemage)s
+%(problemfirstdetect)s
+"""
+                    
+        MSG ALERT_P: "%(h)s ALERT: Port %(protocol)s/%(port)s not responding" ""
+
+        MSG FIXED: "Port %(protocol)s/%(port)s on %(h)s is now working"
+            """The service port %(protocol)s/%(port)s on %(h)s is now responding again.
+    
+--
+%(problemage)s
+%(problemfirstdetect)s
+"""
+              
+        MSG FIXED_P: "%(h)s: Port %(protocol)s/%(port)s is now responding" ""
+
+    ##
+    ## Common notification messages for PORT directives
+    ##
+    M port:
+        MSG WARN: "Warning: Port %(port)s on %(host)s not responding"
+            """The service port %(port)s on %(host)s is not responding.
+
+-- 
+%(problemage)s
+%(problemfirstdetect)s
+"""
+
+        MSG WARN_P: "Warn: Port %(port)s on %(host)s not responding" ""
+        MSG ALERT: "Alert: Port %(port)s on %(host)s not responding"
+            """Alert: The service port %(port)s on %(host)s is not responding.
+
+Send data: %(send)s
+Expecting: %(expect)s
+Actually received: %(recv)s
+
+-- 
+%(problemage)s
+%(problemfirstdetect)s
+"""
+
+        MSG ALERT_P: "Alert: Port %(port)s on %(host)s not responding" ""
+
+        MSG FIXED: "%(host)s:%(port)s is OK now"
+            """%(host)s:%(port)s is responding again now.
+
+%(problemage)s
+%(problemfirstdetect)s
+"""
+
+        MSG FIXED_P: "%(host)s:%(port)s is OK now"
+
+
+    ##
+    ## Common notification messages for PING directives
+    ##
+    M ping:
+        MSG WARN: "%(host)s FAILED Ping"
+            """Warning: %(host)s has failed ping.
+
+%(problemage)s
+%(problemfirstdetect)s
+"""
+
+        MSG WARN_P: "%(host)s FAILED Ping %(problemage)s" ""
+
+        MSG ALERT: "%(host)s FAILED Ping"
+            """Alert: %(host)s has failed ping.
+
+%(problemage)s
+%(problemfirstdetect)s
+"""
+
+        MSG ALERT_P: "%(host)s FAILED Ping %(problemage)s" ""
+
+        MSG FIXED: "%(host)s PASSED Ping"
+            """OK: %(host)s has passed ping.
+
+%(problemage)s
+%(problemfirstdetect)s
+"""
+
+        MSG FIXED_P: "%(host)s PASSED Ping %(problemage)s" ""
+

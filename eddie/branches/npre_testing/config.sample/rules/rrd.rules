@@ -1,0 +1,34 @@
+# EDDIE config file
+#  Sample rules for sending data to RRD databases via the elvinrrd tool.
+#  The elvinrrd action is built-in to EDDIE, but requires an Elvin server
+#   to connect to (the public Elvin server, 'elvin://elvin.dstc.edu.au'
+#   can be used for testing) and the elvinrrd daemon, available from
+#   http://www.psychofx.com/elvinrrd/
+
+
+# Store root filesystem usage in RRD
+FS root_rrd:
+    fs='/'
+    rule="True"
+    scanperiod='5m'
+    action=elvinrrd("fs-%(h)s_root","used=%(used)s", "size=%(size)s")
+    console=None
+
+
+# Store 1, 5 and 15 minute load-average stats in RRD
+SYS loadavg1_rrd:
+    rule="True"        # always true
+    scanperiod='1m'
+    action=elvinrrd('loadavg1-%(h)s', 'loadavg1=%(loadavg1)f')
+    console=None
+SYS loadavg5_rrd:
+    rule="True"        # always true
+    scanperiod='5m'
+    action=elvinrrd('loadavg5-%(h)s', 'loadavg5=%(loadavg5)f')
+    console=None
+SYS loadavg15_rrd:
+    rule="True"        # always true
+    scanperiod='15m'
+    action=elvinrrd('loadavg15-%(h)s', 'loadavg15=%(loadavg15)f')
+    console=None
+

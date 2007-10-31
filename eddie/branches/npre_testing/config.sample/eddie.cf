@@ -1,0 +1,216 @@
+# Eddie Global Config File
+#
+# $Id$
+#
+
+# LOGFILE
+#  Specifies the file that Eddie logs to.  Log detail is defined by
+#  LOGLEVEL.  LOGFILE should always be defined first.
+#  Use: LOGFILE="<filename>"
+
+LOGFILE="/var/log/eddie.log"
+
+
+# LOGLEVEL
+#  LOGLEVEL specifies how much detail is logged to the file
+#  specified by LOGFILE.  The value should be between 0 and
+#  9.  The higher the value, the more detail is logged.  Set
+#  to 0 to not log anything.
+#  Use: LOGLEVEL=<int 0-9>
+
+LOGLEVEL=6
+
+
+# ADMIN
+#  Specifies an email address for logs to be emailed to.  The level
+#  of detail is defined by ADMINLEVEL.  The frequency of emails is
+#  defined by ADMIN_NOTIFY.
+#  Use: ADMIN="<email address>"
+
+ADMIN="eddie-adm@domain.name"
+
+
+# ADMINLEVEL
+#  ADMINLEVEL is similar to LOGLEVEL, it defines how much log detail
+#  is stored to be emailed periodically (see ADMIN_NOTIFY) to the
+#  EDDIE administrator (defined by ADMIN).  Set to 0 to disable.
+#  Use: ADMINLEVEL=<int 0-9>
+
+ADMINLEVEL=3
+
+
+# ADMIN_NOTIFY
+#  Specifies how often logs are emailed to ADMIN.
+#  Use: ADMIN_NOTIFY=<int>[smhdwcy]
+
+ADMIN_NOTIFY=1h         # Send Admin summaries once per hour
+
+
+# NUMTHREADS
+#  Define the maximum number of threads Eddie should attempt to limit itself to
+#  using.  All directives are executed in their own thread so they do not hold
+#  up other directives scheduled for the same time.  A recommended minimum is
+#  about 5 (although there is no checking yet so be careful).  A good setting
+#  is probably 15 to 20.  
+
+NUMTHREADS=20
+
+
+# SCANPERIOD
+#  Defines the default scanperiod for every directive.  This is the amount of
+#  time a directive waits between executing.  This setting can be overridden
+#  when defining the directive.
+#  Use: SCANPERIOD=<int>[smhdwcy]
+
+SCANPERIOD=10m          # by default scan every 10 minutes
+
+
+# CONSOLE_PORT
+#  Defines the tcp port which the Eddie Console Server thread listens on.
+#  This provides a read-only interface to the current state of all active
+#  directives within a running Eddie.  The default port is 33343.
+#  Set to 0 to disable this feature.
+#  Use: CONSOLE_PORT=<int>
+#CONSOLE_PORT=33343
+
+
+# EMAIL_FROM, EMAIL_REPLYTO
+#  Define the From: and Reply-To: fields used by the email action.
+#  If not set, default values will be used.
+#  Use: EMAIL_FROM='emailaddress'
+#       EMAIL_REPLYTO='emailaddress'
+
+#EMAIL_FROM='root@my.domain'
+#EMAIL_REPLYTO='sysadmins@my.domain'
+
+
+# SENDMAIL
+#  Define the location of the sendmail binary, which EDDIE uses to send
+#  all email.  This is usually either '/usr/lib/sendmail' (Solaris) or
+#  '/usr/sbin/sendmail' (Redhat Linux).  Defaults to '/usr/lib/sendmail'.
+#  If this option is set after the SMTP_SERVERS option, this will be used
+#  as the method to send email.
+#  This option cannot be used on Win32.
+#  Use: SENDMAIL='/path/to/sendmail'
+
+#SENDMAIL='/usr/sbin/sendmail'
+
+
+# SMTP_SERVERS
+#  Define one or more servers to make SMTP connections to for sending
+#  email.  Servers are specified by hostname or IP address, separated
+#  by commas.  The first server will be used, unless the connection
+#  fails, then each server will be attempted in turn.
+#  Defaults to 'localhost'.
+#  If this option is set after the SENDMAIL option, this will be used
+#  as the method to send email.
+#  This option must be used to send email on Win32.
+#  Use: SMTP_SERVERS='smtp0.domain.com,smtp1.domain.com'
+
+#SMTP_SERVERS='localhost'
+
+
+# ELVINURL, ELVINSCOPE
+#  Specifies how to connect to an Elvin4 server.  See Elvin docs
+#  at http://elvin.dstc.edu.au/
+#  These settings (and the use of Elvin) are optional.
+#  Use: ELVINURL='<elvin server url>'
+#       ELVINSCOPE='<elvin server scope>'
+
+#ELVINURL='elvin://elvin.dstc.edu.au'
+#ELVINSCOPE='Elvin'
+
+
+# SPREADSERVER, SPREADPORT
+#  Specifies how to connect to a Spread server.
+#  These settings (and the use of Spread) are optional.
+#  Use: SPREADSERVER='<Spread server hostname or IP>'
+#       SPREADPORT=<Spread server port number>
+
+#SPREADSERVER='localhost'
+#SPREADPORT=4803
+
+
+# INTERPRETERS
+#  Defines processes which are "interpreters", where the first argument will be
+#  the real name of the process when examining the process table.  This only
+#  effects the PROC directive and means you can look for a process called
+#  "test.py" which looks like "/usr/bin/python /export/util/test.py" in the
+#  process table.  Eddie is smart enough to ignore the first part,
+#  "/usr/bin/python" and treat the second part as the actual process name
+#  (which is normally what you want).
+#  Use: INTERPRETERS='<name>[,<name> ...]'
+
+INTERPRETERS='sh,bash,perl,perl5.001,perl5.003,perl5.004,python,python1.5,python1.5.2'
+
+
+# WORKDIR
+#  Defines a location where Eddie can store temporary files.  This is used
+#  by various directives that need to save some information or state to
+#  the filesystem.  The directory can be safely removed when Eddie is not
+#  running.  Eddie does not clean up the directory itself (it may clean up
+#  some files before shutting down).  The whole directory tree will be
+#  created on startup if it doesn't already exist.
+
+WORKDIR="/var/tmp/eddieworkdir"
+
+
+# RESCANCONFIGS
+#  Normally Eddie will constantly check its config files for changes, and
+#  re-load them after stopping the threads.  This flag can turn off that
+#  behavior.  If it is set to 0/false/off, then you can still send Eddie a
+#  HUP signal to have it reload the configs.
+
+#RESCANCONFIGS=false
+
+
+
+# CLASS
+#  Define classes of hosts which share the same Eddie config.  The name of the
+#  class will match the name of a "group" definition.  Each host whose hostname
+#  is listed in the CLASS definition will use the equivalent "group" of the
+#  same name.
+#  Use: CLASS <name>=<hostname>[,<hostname> ...]
+
+CLASS news=host1,host2
+CLASS dns=host3
+CLASS cache=host5,host6,host7
+
+CLASS linux=host3,host4
+CLASS solaris=host1,host2,host5
+
+
+# ALIAS
+#  Define some aliases which will be substituted during config parsing,
+#  or, if located within action calls, will be substituted when that
+#  action is called.
+#  Use: ALIAS <name>="<string>"
+
+ALIAS ALERT_EMAIL="alert@domain.name"
+ALIAS PAGER_EMAIL="oncall-pager@domain.name"
+
+
+# INCLUDE
+#  Continue parsing the file named after INCLUDE.  This allows the
+#  configuration to be split into multiple files.  Eddie rules and directives
+#  are usually defined in separate files to keep things tidy.
+#  Use: INCLUDE '<filename>'
+
+# These are provided as examples only.  Rules need to be customized for your
+# environment.  Use these as a guide for designing your own rules.
+INCLUDE 'rules/message.rules'       # common MSG definitions
+
+#INCLUDE 'rules/common.rules'        # common rules for all hosts
+#INCLUDE 'rules/host.rules'          # rule specific to certain hosts
+
+#INCLUDE 'rules/cache.rules'         # rules specific to proxy caches
+#INCLUDE 'rules/dns.rules'           # rules specific to DNS servers
+#INCLUDE 'rules/news.rules'          # rules specific to news servers
+
+#INCLUDE 'rules/sys_linux.rules'     # rules for Linux-specific checks
+#INCLUDE 'rules/sys_solaris.rules'   # rules for Solaris-specific checks
+
+#INCLUDE 'rules/rrd.rules'           # rules for storing data in RRD dbs via elvinrrd
+
+#INCLUDE 'rules/win32_sample.rules' # sample rules for a win32 host
+

@@ -1,0 +1,63 @@
+# EDDIE config file
+#  Rules specific to Solaris servers.
+
+
+group solaris:
+
+    PROC syslogd:
+        name='syslogd'
+        template=proctpl
+        action=COMMONALERT(commonmsg.proc,2)
+    PROC ipmon:
+        name='ipmon'
+        template=proctpl
+        action=COMMONALERT(commonmsg.proc,2)
+    PROC cron:
+        name='cron'
+        template=proctpl
+        action=COMMONALERT(commonmsg.proc,2)
+
+
+    #### RRD store directives
+
+    SYS scanrate_rrd:
+        rule="True"
+        scanperiod='1m'
+        action="elvinrrd('sr-%(h)s', 'scanrate=%(ctr_pages_examined_by_the_clock_daemon)s')"
+        console=None
+
+    SYS cpu_rrd:
+        rule="True"
+        scanperiod='1m'
+        action='elvinrrd("cpusolaris-%(h)s", "cpu_user=%(ctr_user_cpu)s", "cpu_system=%(ctr_system_cpu)s", "cpu_idle=%(ctr_idle_cpu)s", "cpu_wait=%(ctr_wait_cpu)s")'
+        console=None
+
+    SYS contextsw_rrd:
+        rule="True"
+        scanperiod='5m'
+        action="elvinrrd('cs-%(h)s', 'contextswitch=%(ctr_cpu_context_switches)s')"
+        console=None
+
+    SYS interrupts_rrd:
+        rule="True"
+        scanperiod='5m'
+        action="elvinrrd('ints-%(h)s', 'interrupts=%(ctr_device_interrupts)s')"
+        console=None
+
+    SYS syscalls_rrd:
+        rule="True"
+        scanperiod='5m'
+        action="elvinrrd('syscalls-%(h)s', 'syscalls=%(ctr_system_calls)s')"
+        console=None
+
+    SYS memfree_rrd:
+        rule="True"
+        scanperiod='5m'
+        action="elvinrrd('memfree-%(h)s', 'memfree=%(mem_free)s')"
+        console=None
+
+    METASTAT maintenance:
+        rule='need_maintenance'
+        scanperiod='6h'
+        action=email(ALERT_EMAIL, 'A metadevice on %(h)s requires maintenenace')
+
