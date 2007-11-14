@@ -73,6 +73,7 @@ SCANPERIOD=10m          # by default scan every 10 minutes
 #  Use: CONSOLE_PORT=<int>
 #CONSOLE_PORT=33343
 
+#NRPE_PORT=5666
 
 # EMAIL_FROM, EMAIL_REPLYTO
 #  Define the From: and Reply-To: fields used by the email action.

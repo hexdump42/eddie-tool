@@ -49,6 +49,7 @@ import time
 import signal
 import re
 import threading
+
 # optparse is only available in 2.3+, but optik provides the same 
 # functionality for python 2.2
 try:
@@ -103,7 +104,8 @@ extralibdir = os.path.join(basedir, 'lib/common/Extra')
 sys.path = oslibdirs + [commonlibdir,extralibdir] + sys.path
 
 # EDDIE common modules
-import parseConfig, directive, config, log, timeQueue, sockets, eddieElvin4, datacollect, utils, eddieSpread
+import parseConfig, directive, config, log, timeQueue, sockets, \
+    eddieElvin4, datacollect, utils, eddieSpread, nrped
 
 # Main config file - this file INCLUDEs all other config files
 # We set the default here, but this can be overridden on the command line
@@ -116,6 +118,7 @@ global Config
 global Options
 global sthread
 global cthread
+global nthread
 
 # Read directive definitions from lib/common/Directives/
 config.loadExtraDirectives(os.path.join(commonlibdir, "Directives"))
@@ -129,7 +132,7 @@ for pth in oslibdirs:
         config.loadExtraDirectives(subdir)
 
 
-def start_threads(sargs, cargs):
+def start_threads(sargs, cargs, nargs):
     """Start any support threads that are required.
     Currently these are:
      - Scheduler thread: schedules directives to run [required]
@@ -147,6 +150,13 @@ def start_threads(sargs, cargs):
         cthread = threading.Thread(group=None, target=sockets.console_server_thread, name='Console', args=cargs, kwargs={})
         cthread.setDaemon(1)        # mark thread as Daemon-thread so EDDIE will not block when trying to terminate
         cthread.start()
+
+    global nthread		# the NRPE daemon thread
+    if config.nrpeport > 0:
+	nthread = threading.Thread(group=None,
+		target=nrped.nrped_thread, name='nrped', args=nargs, kwargs={})
+	nthread.setDaemon(1)
+	nthread.start()
 
     return()
 
@@ -203,8 +213,9 @@ def SigHandler( sig, frame ):
 
         sargs = (q, Config, please_die)
         cargs = (Config, please_die, config.consport)
+	nargs = (Config, please_die, config.nrpeport)
 
-        start_threads(sargs, cargs)
+        start_threads(sargs, cargs, nargs)
 
     elif 'SIGINT' in dir(signal) and sig == signal.SIGINT:
         # SIGINT (CTRL-c) - quit now
@@ -498,7 +509,8 @@ def main():
 
                 sargs = (q,Config,please_die)
                 cargs = (Config, please_die, config.consport)
-                start_threads(sargs,cargs)
+                nargs = (Config, please_die, config.nrpeport)
+                start_threads(sargs, cargs, nargs)
 
 
             # email admin the adminlog if required

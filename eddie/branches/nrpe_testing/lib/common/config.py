@@ -82,6 +82,8 @@ consport=33343
 rescan_configs = True
 
 
+nrpeport=5666
+
 ####################################################
 
 
@@ -453,6 +455,28 @@ class CONSOLE_PORT(ConfigOption):
             raise ParseFailure, "CONSOLE_PORT must be a positive integer, %d" % (consport)
 
         log.log( "<config>CONSOLE_PORT: consport set to '%d'." % (consport), 8 )
+
+class NRPE_PORT(ConfigOption):
+    """Set the tcp port to listen on for NRPE connections"""
+
+    def __init__( self, list, typelist ):
+	apply( ConfigOption.__init__, (self,list, typelist) )
+
+	# if we don't have 3 elements ['CONSOLE_PORT', '=', <int>] then raise an error
+	if len(list) != 3:
+	    raise ParseFailure, "NRPE_PORT definition has %d tokens when expecting 3" % len(list)
+
+	# ok, value is 3rd list element
+	global nrpeport
+	try:
+	    nrpeport = int(list[2])		# set the config option
+	except TypeError:			# must be integer
+	    raise ParseFailure, "NRPE_PORT is not an integer, '%s'" % (list[2])
+
+	if nrpeport < 0:
+	    raise ParseFailure, "NRPE_PORT must be a positive integer, %d" % (consport)
+
+	log.log("<config>NRPE_PORT: nrpeport set to '%d'."%nrpeport, 8)
 
 
 class EMAIL_FROM(ConfigOption):
