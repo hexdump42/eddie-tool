@@ -17,7 +17,7 @@ $Id$
 '''
 
 
-__version__ = '0.36'
+__version__ = '0.37-svn'
 
 __copyright__ = 'Copyright (c) Chris Miles 2001-2007'
 
