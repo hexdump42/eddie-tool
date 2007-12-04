@@ -1,6 +1,78 @@
 Eddie CHANGES
 (reverse chronological order)
 
+Eddie-0.36 (04-Dec-2007)
+ - Eddie will now throw an error and exit if a config file cannot be read.
+ - Added persist_cookies option to HTTP directive.  It is used to
+   specify whether to persist server-defined cookies on the client
+   side.  If enabled, Eddie HTTP checks will send back any cookies
+   defined by the server, doing its best to obey expire times.
+   Disabled by default.
+ - Added "server" option to HTTP directive, used to specify the server
+   name to connect to. This will be used instead of the server name
+   from the URL.  The server name from the URL will still be used for
+   the HTTP host header.
+ - SunOS: Changed mem_free and mem_swapfree to return as bytes (although
+   they are rounded up to the nearest kbyte).
+ - Added Solaris SMF method/manifest files to contrib.
+ - Full find & replace of all evil tabs to spaces.
+ - Added some tools to contrib/spread/ to use for testing elvinrrd message
+   passing over Spread. These tools send & receive elvinrrd messages the
+   same way that Eddie and ElvinRRD do.
+ - Added support for Spread messaging as an alternative to Elvin.
+ - Bugfix: make sure body is initialised so MSG parsing doesn't fail if a
+   HTTP check fails before assigning anything to the body.
+ - Bugfix: reason was not defined before actions were called, causing
+   exception in some cases.
+ - Bugfix: make sure status is initialised before generating any alerts.
+ - Changes to the Elvin code to make re-connections more reliable. Use
+   elvin.SyncLoop instead of elvin.ThreadedLoop. Disabled auto-discovery.
+ - Implemented the DiskStatistics data collector for Linux.
+   This uses a new linux_diskio module which has been added to the Eddie
+   distribution.
+ - Correct tcp/udp port bug in SP class: searching for "port=123" was matching
+   to a bound port of 1234 because of use of string.find().
+ - For any var name that contains "_pages_", create a "_bytes_" version.
+ - Added vars: ctr_swap_pages_inactive, ctr_bytes_per_page
+ - New var for "COM" directive: outfields
+ - Added "DBI" directive, for database query checking.
+   Based heavily on the (undocumented) mysql directive.
+ - Solve startup race condition for "checkdependson": initial state cannot be "ok".
+   Create state "unknown", and change "Directive.checkDependencies" to consider
+   all non-"ok" status to be failure (this include "failinitial").
+ - Two important enhancements to Directive.tokenparser:
+   1) When parsing the config file, for every argument in the directive, if its
+    value is a STRING type, then use utils.typeFromString() to set its value,
+    so we get a decent data type for it (int, float, string).  This reduces the
+    typecasting in evaluated expressions.
+   2) When parsing the config file, for every scalar (int, float, string) argument
+    in the directive, put it into the defaultVarDict.  This allows for setting
+    "variables" in the directive, and then using that in the rule.  For example,
+    if the directive (or template) has "maxcpu=30", then the rule can address
+    this like "rule='pcpu > _maxcpu'".
+ - Added "--daemon" command-line option, and supporting "utils.create_child"
+   routine.  Also created brief documentation for all command-line switches.
+ - Changed in logscanning.py: Detect inode number change: if watched file's
+   inode number changes, then read from start of the file.
+ - For the "email" action, convert "\n" strings in the body text into newline
+   characters.  This allows for:
+     email('foo@bar.com', 'host: %(h)s', 'Host: %(h)s\nAge: %(problemage)s')
+   instead of having odd-looking multi-line strings in the config file.
+ - Added "RESCANCONFIGS" config option. Defaults to original behavior.
+   This option allows the disabling of Eddie's constant scanning and reloading
+   if its config files.
+ - Fixed very minor bug where action variables were updated multiple times
+   for no good reason.  Reported by Mark Taylor.
+ - Added "log" action.  Use it to append to a log file, log via syslog, or
+   print on the eddie tty.
+ - Log the ImportError message if a requested data collector module fails
+   to import.  Helps users debug why the module won't load.
+ - Replaced references to whrandom module with random instead. whrandom is
+   being deprecated.
+ - Changed option parsing to use optparse/optik (ticket #5) and added
+   support for specifying an alternate config file from the command line
+   (ticket #6).
+
 Eddie-0.35 (31-Oct-2005)
  - Linux: Added a dummy diskdevice module for Linux.  The implementation of
    this is still yet to be done.

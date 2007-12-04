@@ -17,9 +17,9 @@ $Id$
 '''
 
 
-__version__ = '0.36-svn'
+__version__ = '0.36'
 
-__copyright__ = 'Copyright (c) Chris Miles 2001-2005'
+__copyright__ = 'Copyright (c) Chris Miles 2001-2007'
 
 __author__ = 'Chris Miles; Rod Telford'
 
