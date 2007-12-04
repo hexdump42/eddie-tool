@@ -38,6 +38,15 @@ import sys, os, string, tokenize
 import config, log, utils
 
 
+#### Exceptions ####
+
+class ConfigError(Exception):
+    pass
+
+
+
+#### Classes ####
+
 class State:
     """Keep state of tokenization as config is being parsed."""
 
@@ -362,11 +371,12 @@ def readFile(file, state):
     state.dir = os.path.dirname( file )
 
     try:
-            conf = open(file, 'r')
-    except IOError:
-        print "Error opening file '%s'" % file;
-        log.log( "<parseConfig>readFile(), Error, Cannot open '%s' - skipping" % (file), 4 )
-        return
+        conf = open(file, 'r')
+    except IOError, e:
+        msg = "Error opening file '%s': %s" % (file, str(e))
+        sys.stderr.write(msg + '\n')
+        log.log( msg, 4 )
+        raise ConfigError(msg)
 
     # add this filename to the list of config files
     configfiles.append(file)

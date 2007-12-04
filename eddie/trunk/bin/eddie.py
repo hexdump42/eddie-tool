@@ -524,6 +524,10 @@ def main():
 if __name__ == "__main__":
     try:
         main()
+    
+    except parseConfig.ConfigError:
+        sys.exit(1)
+    
     except:                # catch any uncaught exceptions so we can log them
         e = sys.exc_info()
         import exceptions
