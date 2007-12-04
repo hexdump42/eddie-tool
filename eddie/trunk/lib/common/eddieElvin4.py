@@ -67,8 +67,11 @@ except ImportError:
 
 ################################################################
 ## Exceptions:
-ElvinError = 'ElvinError'
-ElvinInitError = 'ElvinInitError'
+class ElvinError(Exception):
+    pass
+
+class ElvinInitError(Exception):
+    pass
 
 
 ################################################################
@@ -120,11 +123,11 @@ class Elvin:
 
         global UseElvin
         if UseElvin == 0:
-            raise ElvinInitError, "Elvin modules not found"
+            raise ElvinInitError("Elvin modules not found")
 
         if not ELVINURL and not ELVINSCOPE:
             UseElvin = 0
-            raise ElvinInitError, "Elvin administratively disabled"
+            raise ElvinInitError("Elvin administratively disabled")
 
         self.eq = Queue.Queue()                # Elvin message queue
 
