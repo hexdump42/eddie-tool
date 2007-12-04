@@ -932,6 +932,13 @@
           connection to a server with a different address than that specified
           in the HTTP host header.
           [Eddie 0.36+]
+     <li> <b>persist_cookies=&lt;True | False&gt;</b> <i>(optional)</i>:
+          <br>
+          - option to specify whether to persist server-defined cookies
+          on the client side.  If enabled, Eddie HTTP checks will send back any
+          cookies defined by the server, doing its best to obey expire times.
+          Disabled by default.
+          [Eddie 0.36+]
     </ul><br>
 
     Rule Variables:

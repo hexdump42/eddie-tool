@@ -11,7 +11,7 @@ $Id$
 
 __version__ = '$Revision$'
 
-__copyright__ = 'Copyright (c) Chris Miles 2002-2005'
+__copyright__ = 'Copyright (c) Chris Miles 2002-2007'
 
 __author__ = 'Chris Miles'
 
@@ -34,11 +34,14 @@ __license__ = '''
 
 
 # Imports: Python
+import cookielib
 import httplib
 import re
-import time
 import sys
 import socket
+import time
+import urllib2
+
 # Imports: Eddie
 import directive
 import log
@@ -47,6 +50,17 @@ import log
 ##
 ## Directives ##
 ##
+
+class FakeResponse(object):
+    """Mimics a urllib2 response object, or just enough to satisfy
+    the part of the interface required by cookielib.CookieJar.
+    """
+    def __init__(self, msg):
+        self.msg = msg
+    
+    def info(self):
+        return self.msg
+    
 
 
 class HTTP(directive.Directive):
@@ -63,6 +77,8 @@ class HTTP(directive.Directive):
 
     def __init__(self, toklist):
         apply( directive.Directive.__init__, (self, toklist) )
+        
+        self.cookies = []
 
 
     def tokenparser(self, toklist, toktypes, indent):
@@ -132,6 +148,15 @@ class HTTP(directive.Directive):
         except AttributeError:
             self.server = None
 
+        # cmiles 2007-12-04: option to specify whether to persist server-defined cookies
+        #   on the client side.  If enabled, Eddie HTTP checks will send back any
+        #   cookies defined by the server, doing its best to obey expire times.
+        #   Disabled by default.
+        try:
+            self.persist_cookies = self.args.persist_cookies
+        except AttributeError:
+            self.persist_cookies = False
+        
         # Set variables for Actions to use
         self.defaultVarDict['url'] = self.args.url
         self.defaultVarDict['rule'] = self.args.rule
@@ -140,6 +165,7 @@ class HTTP(directive.Directive):
         self.defaultVarDict['file'] = self.file
         self.defaultVarDict['request_timeout'] = self.request_timeout
         self.defaultVarDict['server'] = self.server
+        self.defaultVarDict['persist_cookies'] = self.persist_cookies
 
         # define the unique ID
         if self.ID == None:
@@ -160,7 +186,7 @@ class HTTP(directive.Directive):
             time_connect  (float) - elapsed time to connect to server
             time_request  (float) - elapsed time to send HTTP/S request to server
             time_response (float) - elapsed time to retrieve the server response (and close connection)
-            timedout        (boolean) - true if request timed out
+            timedout      (boolean) - true if request timed out
 
             if failed:
                 exception (string) - exception type
@@ -274,12 +300,18 @@ class HTTP(directive.Directive):
 
         # Send user-agent to be a good netizen
         # Set hostname so HTTP/1.1 works properly (we connect to the IP address above)
-        extra_headers = { 'User-Agent': 'EDDIE-Tool/%s'%(log.version),
-                               'Host' : self.hostname 
-                        }
+        extra_headers = {
+            'User-Agent': 'EDDIE-Tool/%s'%(log.version),
+            'Host' : self.hostname,
+        }
+        
+        if self.persist_cookies and self.cookies:
+            extra_headers['Cookie'] = '; '.join(["%s=%s"%(c.name, c.value) for c in self.cookies if not c.is_expired()])
 
         # Send request to server
         log.log( "<http>HTTP.getData(): Sending request: %s"%(self.file), 7 )
+        log.log( "<http>HTTP.getData(): Headers set to: %s"%(extra_headers), 8 )
+        
         # cmiles 2004-07-13: set a socket timeout if one is specified
         if self.request_timeout != None:
             try:
@@ -365,7 +397,20 @@ class HTTP(directive.Directive):
         data['length'] = r.length
         data['version'] = r.version
         data['header'] = str(r.msg)
-
+        
+        if self.persist_cookies:
+            # cookielib isn't designed to play nicely on its own (when not used with
+            #   urllib2) but we can easily fool it to handle cookies for us anyway.
+            resp = FakeResponse(r.msg)
+            req = urllib2.Request(self.args.url)
+        
+            j = cookielib.CookieJar()
+            j._now = int(time.time())
+            cookies = j.make_cookies(resp, req)
+            if cookies:
+                log.log( "<http>HTTP.getData(): Received cookies: %s" %(cookies,), 8 )
+                self.cookies = cookies
+        
         conn.close()
 
         # cmiles - 2003-04-02: moved time_end from before getresponse() to after close()
