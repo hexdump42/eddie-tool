@@ -34,13 +34,17 @@ __license__ = '''
 
 
 # Imports: Python
-import cookielib
 import httplib
 import re
 import sys
 import socket
 import time
 import urllib2
+
+try:
+    import cookielib
+except:
+    cookielib = None
 
 # Imports: Eddie
 import directive
@@ -155,6 +159,9 @@ class HTTP(directive.Directive):
         try:
             self.persist_cookies = self.args.persist_cookies
         except AttributeError:
+            self.persist_cookies = False
+        if cookielib is None:
+            # if cookielib module is not available (Python 2.3 and earlier) then disable
             self.persist_cookies = False
         
         # Set variables for Actions to use
