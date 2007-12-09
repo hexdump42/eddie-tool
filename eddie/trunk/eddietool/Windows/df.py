@@ -48,13 +48,14 @@ __license__ = '''
 
 # Python Modules
 import string
+
 # Win32 Modules
 import pywintypes
 import win32file
 import win32perf
+
 # Eddie Modules
-import datacollect
-import log
+from eddietool.common import datacollect, log
 
 
 class dfList(datacollect.DataCollect):

@@ -62,9 +62,7 @@ import sys
 sys.path.append('..')        # for Eddie common modules
 
 # Imports: Eddie
-import log
-import directive
-import utils
+from eddietool.common import log, directive, utils
 
 
 ##

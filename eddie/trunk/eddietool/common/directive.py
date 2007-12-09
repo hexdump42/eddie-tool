@@ -35,22 +35,27 @@ __license__ = '''
 
 # Imports: Python
 import string, re, sys, time, traceback
+
 # Imports: Eddie
-import action, utils, log, ack, history
+import action, utils, log, ack, history, datacollect
 
 
 ##
 ## Define exceptions
 ##
 
-# ParseFailure: a problem occured parsing the directive definition or the
-#   directive arguments.  Config parsing will halt and an error will be
-#   printed, pointing out the config line where parsing stopped.
-ParseFailure = 'ParseFailure'
+class ParseFailure(Exception):
+    """ParseFailure: a problem occured parsing the directive definition or the
+    directive arguments.  Config parsing will halt and an error will be
+    printed, pointing out the config line where parsing stopped.
+    """
 
-# DirectiveError: a critical error was caught while executing the directive.
-#   The directive will not be re-scheduled for future execution.
-DirectiveError = 'DirectiveError'
+
+class DirectiveError(Exception):
+    """DirectiveError: a critical error was caught while executing the directive.
+    The directive will not be re-scheduled for future execution.
+    """
+
 
 
 ##
@@ -287,10 +292,10 @@ class Directive:
 
             try:
                 self.data_collectors["%s.%s"%(module,collector)] = data_modules.request( module, collector )
-            except data_modules.DataModuleError:
+            except datacollect.DataModuleError:
                 e = sys.exc_info()
                 log.log( "<directive>Directive.request_collector(): error requesting %s.%s, %s %s" % (module,collector,e[0],e[1]), 1 )
-                raise ParseFailure, "Error requesting collector %s.%s for directive %s:\n%s\n%s" % (module,collector,self.ID,e[0],e[1])
+                raise ParseFailure("Error requesting collector %s.%s for directive %s:\n%s\n%s" % (module,collector,self.ID,e[0],e[1]))
 
         return 1                # ok
 
@@ -395,7 +400,7 @@ class Directive:
             if self.args.template != 'self':
                 tpldirective = self.findDirective(self.args.template, self.Config)
                 if tpldirective == None:
-                    raise ParseFailure, "template '%s' not found." % (self.args.template)
+                    raise ParseFailure("template '%s' not found." % (self.args.template))
                 else:
                     # copy template directive arguments
                     for t in dir(tpldirective.args):
@@ -407,7 +412,7 @@ class Directive:
                                 val = utils.typeFromString( val )
                             exec( 'self.args.%s = val' % (t) )
                         except:
-                            raise ParseFailure, "Error parsing template argument '%s'" % (t)
+                            raise ParseFailure("Error parsing template argument '%s'" %t)
 
         for t in tokdict.keys():
             # Use action parser for any of the action lists
@@ -427,7 +432,7 @@ class Directive:
                         val = utils.typeFromString( val )
                     exec( 'self.args.%s = val' % (t) )
                 except:
-                    raise ParseFailure, "Error parsing argument '%s'" % (t)
+                    raise ParseFailure("Error parsing argument '%s'" %t)
 
         # Parse rest of directive arguments
 
@@ -440,7 +445,7 @@ class Directive:
             if type(self.args.scanperiod) != type(1):
                 self.args.scanperiod = utils.val2secs( self.args.scanperiod )
                 if self.args.scanperiod == None:
-                    raise ParseFailure, "Invalid scanperiod: '%s'"%(self.args.scanperiod)
+                    raise ParseFailure("Invalid scanperiod: '%s'"%(self.args.scanperiod))
             self.scanperiod = self.args.scanperiod        # set the scanperiod
 
         try:
@@ -453,16 +458,16 @@ class Directive:
             try:
                 self.args.numchecks = int(self.args.numchecks)
             except ValueError:
-                raise ParseFailure, "numchecks argument is not integer: '%s'"%(self.args.numchecks)
+                raise ParseFailure("numchecks argument is not integer: '%s'"%(self.args.numchecks))
         if self.args.numchecks < 0:
-            raise ParseFailure, "numchecks argument must be > 0: '%s'"%(self.args.numchecks)
+            raise ParseFailure("numchecks argument must be > 0: '%s'"%(self.args.numchecks))
 
         # convert checkwait to integer seconds if not already
         try:
             if type(self.args.checkwait) != type(1):
                 self.args.checkwait = utils.val2secs( self.args.checkwait )
         except:
-            raise ParseFailure, "checkwait argument has incorrect value '%s'"%(self.args.checkwait)
+            raise ParseFailure("checkwait argument has incorrect value '%s'"%(self.args.checkwait))
 
         # Set console_output if possible
         try:
@@ -476,7 +481,7 @@ class Directive:
         except AttributeError:
             pass        # history argument not set, so leave as default
         except ValueError:
-            raise ParseFailure, "history must be an integer: '%s'"%(self.history_size)
+            raise ParseFailure("history must be an integer: '%s'"%(self.history_size))
         else:
             self.history = history.History( self.history_size )
 
@@ -492,7 +497,7 @@ class Directive:
                 if directive:
                     self.actiondependson.append( directive )
                 else:
-                    raise ParseFailure, "Directive %s, referred to in actiondependson, not found"%(d)
+                    raise ParseFailure("Directive %s, referred to in actiondependson, not found"%(d))
 
         # Set check dependents if given
         try:
@@ -507,7 +512,7 @@ class Directive:
                     if directive:
                         self.checkdependson.append( directive )
                     else:
-                        raise ParseFailure, "Directive '%s', referred to in checkdependson, not found"%(d)
+                        raise ParseFailure("Directive '%s', referred to in checkdependson, not found"%(d))
 
         # chris 2002-12-24: excludehosts parameter to exclude specific hosts;
         #        Requires a comma-separated list of hostnames.
@@ -527,10 +532,10 @@ class Directive:
         except AttributeError:
             pass        # no actionmaxcalls given
         except ValueError:
-            raise ParseFailure, "actionmaxcalls must be an integer: '%s'"%(self.args.actionmaxcalls)
+            raise ParseFailure("actionmaxcalls must be an integer: '%s'"%(self.args.actionmaxcalls))
         else:
             if actionmaxcalls < 0:
-                raise ParseFailure, "actionmaxcalls must be >= 0: %s"%(self.args.actionmaxcalls)
+                raise ParseFailure("actionmaxcalls must be >= 0: %s"%(self.args.actionmaxcalls))
             self.actionmaxcalls = actionmaxcalls
 
         # Set any default action variables
@@ -732,7 +737,7 @@ class Directive:
         for argline in toklist:
             if len(argline) < 3 or argline[1] != '=':
                 log.log( "<directive>Directive.parseArgs(): invalid directive argument '%s'" % (string.join(argline)), 1)
-                raise ParseFailure, "invalid directive argument '%s'" %(string.join(argline))
+                raise ParseFailure("invalid directive argument '%s'" %(string.join(argline)))
 
             if len(argline) > 3:
                 argdict[argline[0]] = utils.stripquote(string.join(argline[2:],""))

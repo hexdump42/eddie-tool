@@ -33,12 +33,14 @@ __license__ = '''
 
 
 
-# Imports: ping modules
-import pinger
 # Imports: Python
 import socket
+
 # Imports: Eddie
-import log, directive
+from eddietool.common import log, directive
+
+# Imports: ping modules
+import pinger
 
 
 ##

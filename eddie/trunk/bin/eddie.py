@@ -5,13 +5,11 @@ File         : eddie.py
 
 Start Date   : 19971204 
 
-Description  : EDDIE Tool main startup module.  This module can be run
+Description  : EDDIE Tool main startup module.  This script can be run
   from the command-line, handles argument parsing, and initialises
   all objects and threads required to startup an instance of EDDIE Tool.
 
-  The main thread scheduler is also defined here.
-
-  All other modules will be imported from $EDDIE_HOME/lib/
+  All other modules will be imported from the eddietool package.
 
 $Id$
 '''
@@ -57,18 +55,16 @@ except ImportError:
     try:
         import optik as optparse
     except ImportError:
-        print "Error: EDDIE requires Optik on Python 2.2.x (http://optik.sf.net)"
+        sys.stderr.write("Error: EDDIE requires Optik on Python 2.2.x (http://optik.sf.net)\n")
         sys.exit(1)
 
 
-#print "EDDIE v%s" % (__version__)
-
 # Work out the base EDDIE directory which should contain bin/, lib/, etc...
-cwd = os.getcwd()
-ewd = os.path.split(sys.argv[0])[0]
-fullp = os.path.join(cwd, ewd)
-basedir = os.path.join(fullp, '..')
-basedir = os.path.normpath(basedir)
+# cwd = os.getcwd()
+# ewd = os.path.split(sys.argv[0])[0]
+# fullp = os.path.join(cwd, ewd)
+# basedir = os.path.join(fullp, '..')
+# basedir = os.path.normpath(basedir)
 
 # Determine system type
 try:
@@ -91,25 +87,25 @@ systype = "%s/%s/%s" % (osname,osver,osarch)
 #print "systype:", systype
  
     
-oslibdirs = [ os.path.join(basedir,'lib',osname,osver,osarch),
-              os.path.join(basedir,'lib',osname,osarch,osver),
-              os.path.join(basedir,'lib',osname,osver),
-              os.path.join(basedir,'lib',osname,osarch),
-              os.path.join(basedir,'lib',osname) ]
+# oslibdirs = [ os.path.join(basedir,'lib',osname,osver,osarch),
+#               os.path.join(basedir,'lib',osname,osarch,osver),
+#               os.path.join(basedir,'lib',osname,osver),
+#               os.path.join(basedir,'lib',osname,osarch),
+#               os.path.join(basedir,'lib',osname) ]
 
-commonlibdir = os.path.join(basedir, 'lib/common')
+# commonlibdir = os.path.join(basedir, 'lib/common')
 # chris 2004-09-02: lib/common/Extra/ holds 3rd party modules
-extralibdir = os.path.join(basedir, 'lib/common/Extra')
-sys.path = oslibdirs + [commonlibdir,extralibdir] + sys.path
+# extralibdir = os.path.join(basedir, 'lib/common/Extra')
+# sys.path = oslibdirs + [commonlibdir,extralibdir] + sys.path
 
 # EDDIE common modules
-import parseConfig, directive, config, log, timeQueue, sockets, eddieElvin4, datacollect, utils, eddieSpread
+from eddietool.common import parseConfig, directive, config, log, timeQueue, sockets, eddieElvin4, datacollect, utils, eddieSpread
 
 # Main config file - this file INCLUDEs all other config files
 # We set the default here, but this can be overridden on the command line
-configdir = os.path.join(basedir, 'config')
-default_config_file = os.path.join(configdir, 'eddie.cf')
-config_file = default_config_file
+# configdir = os.path.join(basedir, 'config')
+# default_config_file = os.path.join(configdir, 'eddie.cf')
+# config_file = default_config_file
 
 # Globals
 global Config
@@ -118,15 +114,16 @@ global sthread
 global cthread
 
 # Read directive definitions from lib/common/Directives/
-config.loadExtraDirectives(os.path.join(commonlibdir, "Directives"))
+import eddietool.common.Directives
+config.loadExtraDirectives(eddietool.common.Directives.__path__[0])
 
 # Read system specific directives
 # This is for directive modules in lib/<system>/Directives/ if it exists
 #  for any <system>.
-for pth in oslibdirs:
-    subdir = os.path.join(pth, "Directives")
-    if os.path.isdir(subdir):
-        config.loadExtraDirectives(subdir)
+# for pth in oslibdirs:
+#     subdir = os.path.join(pth, "Directives")
+#     if os.path.isdir(subdir):
+#         config.loadExtraDirectives(subdir)
 
 
 def start_threads(sargs, cargs):
@@ -349,13 +346,13 @@ def doArgs():
     """Parse command-line arguments.
     """
     # define usage and version messages
-    usageMsg = "usage: %prog [options]"
+    usageMsg = "usage: %prog [options] eddie.cfg"
     versionMsg = """EDDIE Tool %s""" % __version__
 
     # get a parser object and define our options
     parser = optparse.OptionParser(usage=usageMsg, version=versionMsg)
-    parser.add_option('-c', '--config', dest='config',                 \
-                        metavar="FILE", help="Load config from FILE")
+    # parser.add_option('-c', '--config', dest='config',                 \
+    #                     metavar="FILE", help="Load config from FILE")
     parser.add_option('--showconfig', action="store_true",         \
                         help="Dump config")
     parser.add_option('-v', '--verbose', action="store_true",        \
@@ -363,28 +360,27 @@ def doArgs():
     parser.add_option('-d', '--daemon', action="store_true",        \
                         help="Run as a daemon")
     parser.set_defaults(showconfig=False, verbose=False,        \
-                        config=default_config_file, daemon=False)
+                        daemon=False)
 
     # Parse.  We dont accept arguments, so we complain if they're found.
     (options, args) = parser.parse_args()
-    if len(args) != 0:
-        parser.error('No extra arguments should be given')
+    if len(args) != 1:
+        parser.error('Configuration file must be given as first argument.')
 
     # All good - return the option dict
-    return options
+    return (options, args[0])
 
 
 def main():
     """Startup routine - setup then start main loop.
     """
-
+    
     log.version = __version__        # Make version string available to other modules
 
     # Parse command-line arguments
     # instantiate global Options object
     global Options
-    Options = doArgs()
-    config_file = Options.config
+    Options, config_file = doArgs()
 
     # Catch most important signals
     for sig in ('SIGALRM', 'SIGHUP', 'SIGINT', 'SIGTERM'):
@@ -406,7 +402,7 @@ def main():
     Config = config.Config( '__main__' )
 
     # data_modules handles access to all data collector modules
-    data_modules = datacollect.DataModules()
+    data_modules = datacollect.DataModules(osname, osver, osarch)
     directive.data_modules = data_modules
 
     # read in config and rules
@@ -416,7 +412,7 @@ def main():
     log.log( "<eddie>main(): Configuration complete from '%s'" % (config_file), 6 )
     log.log( "<eddie>main(): EDDIE %s, systype: %s" % (__version__, systype), 5 )
     log.log( "<eddie>main(): Python version: %s" % (sys.version), 5 )
-    log.log( "<eddie>main(): oslibdirs: %s" % (oslibdirs), 8 )
+    log.log( "<eddie>main(): oslibdirs: %s" % (data_modules.os_search_path), 8 )
 
     if Options.showconfig:
         # Just display the configuration and exit

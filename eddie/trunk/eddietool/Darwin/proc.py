@@ -42,8 +42,9 @@ __license__ = '''
 
 # Python modules
 import string
+
 # Eddie modules
-import datacollect, log, utils
+from eddietool.common import datacollect, log, utils
 
 
 # List of interpreters - default empty

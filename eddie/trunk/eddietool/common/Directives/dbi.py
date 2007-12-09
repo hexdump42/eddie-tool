@@ -33,7 +33,7 @@ __license__ = '''
 
 
 # Imports: Eddie
-import log, directive, utils
+from eddietool.common import log, directive, utils
 
 # Imports python
 import sys, string, time

@@ -47,8 +47,7 @@ except:
     cookielib = None
 
 # Imports: Eddie
-import directive
-import log
+from eddietool.common import directive, log
 
 
 ##

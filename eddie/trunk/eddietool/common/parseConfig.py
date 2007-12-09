@@ -286,7 +286,7 @@ class State:
 
 
             else:
-                raise config.ParseFailure, "Syntax error"
+                raise config.ParseFailure("Syntax error")
                 self.reset()                # reset state
 
         except config.ParseFailure, msg:

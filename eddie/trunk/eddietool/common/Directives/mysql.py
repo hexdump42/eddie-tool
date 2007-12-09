@@ -32,11 +32,12 @@ __license__ = '''
 '''
 
 
-# Imports: Eddie
-import log, directive
-
 # Imports python
 import sys, string, time
+
+# Imports: Eddie
+from eddietool.common import log, directive
+
 
 ################################################################################
 class MYSQL(directive.Directive):

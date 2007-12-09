@@ -35,8 +35,10 @@ __license__ = '''
 
 # Imports: Python
 import sys, os, time, string
+
 # Imports: Eddie
-import log, directive, utils
+from eddietool.common import log, directive, utils
+
 # Imports: Misc
 import radcm
 

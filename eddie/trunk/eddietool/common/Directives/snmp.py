@@ -50,7 +50,7 @@ __license__ = '''
 
 
 import string
-import log, directive
+from eddietool.common import log, directive
 
 class SNMP(directive.Directive):
     """SNMP directive.

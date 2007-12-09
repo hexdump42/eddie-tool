@@ -70,7 +70,7 @@ except ImportError:
 class ElvinError(Exception):
     pass
 
-class ElvinInitError(Exception):
+class ElvinInitError(ElvinError):
     pass
 
 

@@ -40,9 +40,7 @@ __license__ = '''
 ##
 ## Imports: Eddie
 ##
-import directive
-import log
-import utils
+from eddietool.common import directive, log, utils
 
 
 ##

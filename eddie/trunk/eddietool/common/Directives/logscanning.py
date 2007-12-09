@@ -39,8 +39,7 @@ import os
 import string
 import re
 # Imports: Eddie
-import directive
-import log
+from eddietool.common import directive, log
 
 
 ##

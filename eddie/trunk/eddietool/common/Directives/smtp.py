@@ -37,8 +37,7 @@ __license__ = '''
 import socket
 import time
 # Imports: Eddie
-import log
-import directive
+from eddietool.common import log, directive
 
 
 # Define exceptions

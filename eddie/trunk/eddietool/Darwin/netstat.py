@@ -44,10 +44,7 @@ __license__ = '''
 import string
 import re
 # Eddie modules
-import datacollect
-import log
-import utils
-
+from eddietool.common import datacollect, log, utils
 
 
 class TCPtable(datacollect.DataCollect):
