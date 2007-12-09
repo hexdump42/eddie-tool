@@ -15,8 +15,6 @@ $Id$
 '''
 
 
-__version__ = '0.37-svn'
-
 __copyright__ = 'Copyright (c) Chris Miles 2001-2007'
 
 __author__ = 'Chris Miles; Rod Telford'
@@ -39,6 +37,7 @@ __license__ = '''
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 '''
 
+from eddietool.version import version as __version__
 
 # Python modules
 import sys
@@ -348,6 +347,10 @@ def doArgs():
     # define usage and version messages
     usageMsg = "usage: %prog [options] eddie.cfg"
     versionMsg = """EDDIE Tool %s""" % __version__
+    try:
+        versionMsg += " (Build %s)" %'$Revision$'.split()[1]
+    except:
+        pass
 
     # get a parser object and define our options
     parser = optparse.OptionParser(usage=usageMsg, version=versionMsg)

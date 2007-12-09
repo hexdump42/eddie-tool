@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 import sys, os
 
-version = '0.37-svn'
+from eddietool.version import version
 
 setup(name='Eddie-Tool',
     version=version,
