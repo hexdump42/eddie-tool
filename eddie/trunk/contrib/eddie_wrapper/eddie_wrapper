@@ -10,7 +10,7 @@
 ## 19990302 Chris Miles - http://chrismiles.info/
 ##
 ########################################################################
-## (C) Chris Miles 2001-2004
+## (C) Chris Miles 2001-2007
 ##
 ## The author accepts no responsibility for the use of this software and
 ## provides it on an ``as is'' basis without express or implied warranty.
@@ -86,6 +86,14 @@ then
 fi
 
 
+eddieconfig=$1
+if [ "$eddieconfig" = "" ]
+then
+    echo "Config file not specified."
+    exit 1
+fi
+
+
 ## Start the loop to startup EDDIE-Tool and try and restart it if it dies
 
 tries=0
@@ -93,9 +101,9 @@ tries=0
 while [ 1 ]; do
     if [ "$PGREP" = "useps" ]
     then
-	pid=`ps -ef | grep \.\*python\.\*eddie.py  | grep -v grep | awk '{ print $2 }'`
+	pid=`ps -ef | grep \.\*python\.\*eddie-agent  | grep -v grep | awk '{ print $2 }'`
     else
-	pid=`$PGREP eddie.py`
+	pid=`$PGREP eddie-agent`
     fi
 
     if [ "${pid}" != "" ]; then
@@ -106,7 +114,7 @@ while [ 1 ]; do
     #start_time=`$GDATE "+%s"`
     start_time=`$PYTHON -c "import time ; print int(time.time())"`
 
-    $EDDIEPATH/eddie.py >>$RUNFILE
+    $EDDIEPATH/eddie-agent $eddieconfig >>$RUNFILE
 
     retcode=$?
 
