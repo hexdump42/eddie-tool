@@ -124,7 +124,7 @@ class dfList(datacollect.DataCollect):
             p = df(fields)
             self.data.datahash[fields[0]] = p        # dict of filesystem devices
             self.data.mounthash[fields[5]] = p        # dict of mount points
-             prevline = None
+            prevline = None
 
         utils.safe_pclose( rawList )
 

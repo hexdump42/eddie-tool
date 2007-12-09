@@ -149,8 +149,8 @@ class procList:
         rv = ''
 
         self.semaphore.acquire()
-         for item in self.list:
-             rv = rv + str(item) + '\n'
+        for item in self.list:
+            rv = rv + str(item) + '\n'
         self.semaphore.release()
 
         return(rv)

@@ -126,11 +126,11 @@ class Spread(object):
         if not UseSpread:
             raise SpreadInitError("Spread modules not found")
         
+        global SPREADPORT
         if not SPREADSERVER and not SPREADPORT:
             UseSpread = False
             raise SpreadInitError("Spread administratively disabled")
         
-        global SPREADPORT
         if not SPREADPORT:
             SPREADPORT = spread.DEFAULT_SPREAD_PORT
         self.server = "%d@%s" % (SPREADPORT, SPREADSERVER)
