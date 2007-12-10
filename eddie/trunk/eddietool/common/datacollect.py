@@ -112,7 +112,6 @@ class DataModules:
                     globals(),
                     locals(),
                     [module],
-                    -1
                 )
                 modobj = getattr(modparent, module)
                 break
