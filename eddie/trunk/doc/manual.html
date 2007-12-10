@@ -1135,12 +1135,14 @@
      <li> <b>file=&lt;filename&gt;</b> <i>(required)</i>:
           <br>
           - the filename of the file to be scanned.
-     <li> <b>regex=&lt;search string&gt;</b> <i>(required)</i>:
+     <li> <b>regex=&lt;search string&gt;</b> <i>(optional)</i>:
           <br>
           - a string to use to filter scanned lines.  The string can be
           some text to match anywhere on the line, or a more complex regular
           expression.  If all lines are required, regex='.*' should be used.
-     <li> <b>regfile=&lt;filename string&gt;</b> <i>(required)</i>:
+          regex='.*' is now the default (as of Eddie 0.37) if regex and
+          regfile are not specified.
+     <li> <b>regfile=&lt;filename string&gt;</b> <i>(optional)</i>:
           <br>
           - a filename containing multiple regular expressions (one per line)
           which will be used to perform log file line matching.

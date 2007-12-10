@@ -11,7 +11,7 @@ $Id$
 
 __version__ = '$Revision$'
 
-__copyright__ = 'Copyright (c) Chris Miles 2001-2005'
+__copyright__ = 'Copyright (c) Chris Miles 2001-2007'
 
 __author__ = 'Chris Miles'
 
@@ -50,13 +50,14 @@ class LOGSCAN(directive.Directive):
     """LOGSCAN directive.  Scan a file looking for regex matches.
 
     Sample rule:
-       LOGSCAN messages: file="/var/log/messages"
-                         regex=".*error.*"
-                         rule='matchedcount > 0'
-                         action="email('alert', 'Log matched %(matchedcount)d lines', '%(lines)s')"
+       LOGSCAN messages:
+           file="/var/log/messages"
+           regex=".*error.*"
+           rule='matchedcount > 0'
+           action="email('alert@company.com', 'Log matched %(matchedcount)d lines', ' "-- Logscan matched %(matchedcount)d lines (out of %(linecount)d lines scanned): --\n%(lines)s"')"
 
     Optional arguments:
-        negate=true                # only lines NOT matching regex will cause action
+        negate='true'             # only lines NOT matching regex will cause action
         rule=<rule string>        # defaults to 'matchedcount > 0' if not specified
     """
 
@@ -80,9 +81,6 @@ class LOGSCAN(directive.Directive):
         except AttributeError:
             raise directive.ParseFailure, "Filename not specified"
 
-        if not hasattr(self.args, 'regex') and not hasattr(self.args, 'regfile'):
-            raise directive.ParseFailure, "Regex or regfile required"
-
         if hasattr(self.args, 'regfile'):
             self.defaultVarDict['regfile'] = self.args.regfile
             self.regfile = self.args.regfile
@@ -91,14 +89,18 @@ class LOGSCAN(directive.Directive):
                 data = f.readlines()
                 f.close()
             except IOError, err:
-                    raise directive.DirectiveError, "Couldn't process %s: %s" % (self.args.regfile, str(err))
+                raise directive.DirectiveError, "Couldn't process %s: %s" % (self.args.regfile, str(err))
 
             for i in data:
-                    self.reglist.append(re.compile(i.strip()))
+                self.reglist.append(re.compile(i.strip()))
 
         if hasattr(self.args, 'regex'):
-            self.reglist = [re.compile(self.args.regex)]
+            self.reglist.append(re.compile(self.args.regex))
             self.defaultVarDict['regex'] = self.args.regex
+
+        if not self.reglist:
+            # default, if neither regex or regfile are specified
+            self.reglist = [re.compile(r'.*')]
 
         try:
             self.args.negate                # whether to negate rule
@@ -130,10 +132,7 @@ class LOGSCAN(directive.Directive):
                 self.ID = '%s.LOGSCAN.%s.%s' % (log.hostname,self.args.file,self.args.regex)
         self.state.ID = self.ID
 
-        if self.regfile:
-            log.log( "<logscanning>LOGSCAN.tokenparser(): ID '%s' file '%s' regfile '%s' reglist %d records" % (self.ID, self.args.file, self.args.regfile, len(self.reglist)), 7 )
-        else:
-            log.log( "<logscanning>LOGSCAN.tokenparser(): ID '%s' file '%s' regex '%s'" % (self.ID, self.args.file, self.args.regex), 7 )
+        log.log( "<logscanning>LOGSCAN.tokenparser(): ID '%s' file '%s' reglist %s negate=%s" % (self.ID, self.args.file, self.reglist, self.args.negate), 7 )
 
 
     def getData(self):
@@ -189,19 +188,15 @@ class LOGSCAN(directive.Directive):
 
                     while len(line) > 0:
                         data['linecount'] = data['linecount'] + 1
-                        matched = 0
+                        matched = False
                         for i in self.reglist:
                             inx = i.search( line )
-                            if inx:
-                                data['matchedcount'] = data['matchedcount'] + 1
-                                matched = 1
-                                if not self.args.negate:
-                                    matchedlines.append( line )
+                            if inx is not None:
+                                matched = True
                                 break
-                        if not matched:
-                            data['unmatchedcount'] = data['unmatchedcount'] + 1
-                            if self.args.negate:
-                                matchedlines.append( line )
+
+                        if (matched and not self.args.negate) or (not matched and self.args.negate):
+                            matchedlines.append( line )
 
                         line = fp.readline()
 
@@ -209,7 +204,8 @@ class LOGSCAN(directive.Directive):
                     self.filepos = fp.tell()
 
                     fp.close()
-                    matchedcount = len(matchedlines)
+                    data['matchedcount'] = len(matchedlines)
+                    data['unmatchedcount'] = data['linecount'] - data['matchedcount']
 
                     # assign variables
                     data['lines'] = string.join(matchedlines, "")
