@@ -45,12 +45,6 @@ import utils
 import eddieElvin4
 import eddieSpread
 
-# chris 2004-12-03: proc is optional; in fact it should not even be imported
-#        and used in this way, so will have to fix this later.
-try:
-    import proc
-except ImportError:
-    pass
 
 ## Define exceptions
 class ParseFailure(Exception):
@@ -351,20 +345,20 @@ class ADMIN_NOTIFY(ConfigOption):
 class INTERPRETERS(ConfigOption):
     def __init__( self, list, typelist ):
         apply( ConfigOption.__init__, (self,list, typelist) )
-
+        
         # if we don't have 3 elements ['INTERPRETERS', '=', <str>] then raise an error
         if len(list) != 3:
             raise ParseFailure, "INTERPRETERS definition has %d tokens when expecting 3" % len(list)
-
+        
         value = utils.stripquote(list[2])
-        # chris 2004-12-03: this is a terrible way to set interpreters
-        #        TODO re-write this to interface with proc properly
-        try:
-            proc.interpreters = string.split(value, ',')
-        except NameError:
-            log.log( "<config>INTERPRETERS(): interpreters ignored - no proc module.", 5 )
-        else:
-            log.log( "<config>INTERPRETERS(): interpreters defined as '%s'." % (proc.interpreters), 8 )
+        interpreters = string.split(value, ',')
+        
+        # The interpreters list is stored in the proc module for the current system
+        procobj = directive.data_modules.import_module('proc')
+        procobj.interpreters = interpreters
+        
+        log.log( "<config>INTERPRETERS(): interpreters defined as '%s'." % (procobj.interpreters), 8 )
+    
 
 
 ## CLASS - define a class

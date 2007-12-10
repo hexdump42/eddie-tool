@@ -98,7 +98,29 @@ class DataModules:
         
         self.collectors = {}                # dictionary of collectors and their associated objects
 
-
+    
+    def import_module(self, module):
+        """Return a reference to the imported module, or none if the
+        import failed.
+        """
+        modobj = None
+        
+        for ospath in self.os_search_path:
+            try:
+                modparent = __import__(
+                    '.'.join(['eddietool', 'arch', ospath]),
+                    globals(),
+                    locals(),
+                    [module],
+                    -1
+                )
+                modobj = getattr(modparent, module)
+                break
+            except ImportError:
+                pass
+        
+        return modobj
+    
     def request(self, module, collector):
         """Directives request data collection objects and the modules they should
         be defined in.
@@ -113,24 +135,17 @@ class DataModules:
 
         log.log( "<datacollect>DataModules.request(): importing module '%s' for collector '%s'" % (module,collector), 8 )
 
-        imported = False
-        for ospath in self.os_search_path:
-            try:
-                exec "from eddietool.arch.%s import %s" % (ospath, module)
-                imported = True
-                break
-            except ImportError, err:
-                pass
+        modobj = self.import_module(module)
         
-        if not imported:
+        if modobj is None:
             log.log( "<datacollect>DataModules.request(): error, collector '%s'/module '%s' not found or not available, os_search_path=%s" % (collector,module,self.os_search_path), 3 )
             raise DataModuleError("Collector '%s', module '%s' not found or not available, os_search_path=%s" % (collector,module,self.os_search_path))
 
         # initialise new collector instance
-        initstr = "self.collectors[collector] = %s.%s()" % (module,collector)
-        try:
-            exec initstr
-        except AttributeError:
+        if hasattr(modobj, collector):
+            self.collectors[collector] = getattr(modobj, collector)()
+        
+        else:
             log.log( "<datacollect>DataModules.request(): error, no such collector '%s' in module '%s'" % (collector,module), 3 )
             raise DataModuleError("No such collector '%s' in module '%s'" % (collector,module))
 
