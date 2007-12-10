@@ -1946,6 +1946,17 @@
 
     <i>Directive Examples:</i>
     <pre>
+        # test that our postgresql server is alive and responding to requests properly
+        DBI postgresql_check:
+            dbtype='pg'
+            host='localhost'
+            database='monitoring'
+            user='monitoring'
+            password='sshhh'
+            query='select * from monitoring'
+            rule='not connected or results != 1 or result1 != 42'
+            action=email(ALERT_EMAIL, 'PostgreSQL DB %(database)s failed test', 'Query: %(query)s\nConnected: %(connected)s\nError: %(errmsg)s')
+        
         # alert if too many connections to the Postgres database
         DBI db_connections:
             dbtype='pg'
@@ -1954,7 +1965,7 @@
             user='pgsql'
             password='sekrit'
             query='select count(1) from pg_stat_activity'
-            rule='not connected or results != 1 or result1 &gt; 40'
+            rule='connected and results > 0 and result1 &gt; 40'
             action=email('alert', 'Database %(database)s on %(h)s: too many connections (currently %(result1)s)')
             console='%(database)s on %(host)s : connections = %(result1)d'
     </pre>

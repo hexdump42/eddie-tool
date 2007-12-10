@@ -42,24 +42,39 @@ import sys, string, time
 class DBI(directive.Directive):
     """
     Eddie directive for performing database checks
+    
     Syntax:
-            DBI x:        dbtype="<type>"                'pg' for Postgres, 'mysql' for mysql, etc...
-                host="<hostname>"         Defaults to localhost
-                port=<portnum>
-                user="<username>"
-                password="<password>"
-                query="SELECT foo from bar"        Defaults to none
-                rule="<rule>" 
-                action=<actions>
-    Excamples:
-            DBI traffic:
+        DBI name:
+            dbtype="<type>"             # 'pg' for Postgres, 'mysql' for mysql, etc...
+            host="<hostname>"           # Defaults to localhost
+            port=<portnum>
+            user="<username>"
+            password="<password>"
+            query="<SQL query>"         # Defaults to none
+            rule="<rule>" 
+            action=<actions>
+    
+    Examples:
+        DBI postgresql_check:
             dbtype='pg'
             host='localhost'
-            user='eddie'
-            passwd='sekrit'
-            query='SELECT COUNT(1) FROM x WHERE y = z'
-            rule='result1 > 1000'
-            action=email(...)
+            database='monitoring'
+            user='monitoring'
+            password='sshhh'
+            query='select * from monitoring'
+            rule='not connected or results != 1 or result1 != 42'
+            action=email(ALERT_EMAIL, 'PostgreSQL DB %(database)s failed test', 'Query: %(query)s\nConnected: %(connected)s\nError: %(errmsg)s')
+        
+        DBI db_connections:
+            dbtype='pg'
+            host='localhost'
+            database='mydb'
+            user='pgsql'
+            password='sekrit'
+            query='select count(1) from pg_stat_activity'
+            rule='connected and results > 0 and result1 > 40'
+            action=email('alert', 'Database %(database)s on %(h)s: too many connections (currently %(result1)s)')
+            console='%(database)s on %(host)s : connections = %(result1)d'
 
     """
 
@@ -140,7 +155,7 @@ class DBI(directive.Directive):
         """
 
         data = {}
-        data['connected'] = 0
+        data['connected'] = False
         data['errmsg'] = ''
         data['querytime'] = -1
 
@@ -154,7 +169,7 @@ class DBI(directive.Directive):
                 # It just won't be able to do anything
                 self.available = 0
                 exctype,value = sys.exc_info()[:2]
-                log.log("<dbi>getData(): %d db module is not importable %s, %s" % (self.args.dbtype,exctype,value), 5)
+                log.log("<dbi>getData(): %s db module is not importable %s, %s" % (self.args.dbtype,exctype,value), 5)
 
         if not self.available:
             data['errmsg'] = "dbi for %s is not available" % (self.args.dbtype)
@@ -176,7 +191,7 @@ class DBI(directive.Directive):
                 return data
 
             curs = db.cursor()
-            data['connected'] = 1
+            data['connected'] = True
             starttime = time.time()
 
             # allow for query like "SELECT COUNT(1) FROM x WHERE y > %(_maxval)d"
