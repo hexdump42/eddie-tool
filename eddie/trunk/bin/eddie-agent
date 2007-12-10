@@ -411,9 +411,14 @@ def main():
     # read in config and rules
     parseConfig.readConf(config_file, Config)
 
+    try:
+        buildstr = " (Build %s)" %'$Revision$'.split()[1]
+    except:
+        buildstr = ''
+    
     # don't log till now because log file location is defined in configuration
     log.log( "<eddie>main(): Configuration complete from '%s'" % (config_file), 6 )
-    log.log( "<eddie>main(): EDDIE %s, systype: %s" % (__version__, systype), 5 )
+    log.log( "<eddie>main(): EDDIE %s%s, systype: %s" % (__version__, buildstr, systype), 5 )
     log.log( "<eddie>main(): Python version: %s" % (sys.version), 5 )
     log.log( "<eddie>main(): oslibdirs: %s" % (data_modules.os_search_path), 8 )
 
