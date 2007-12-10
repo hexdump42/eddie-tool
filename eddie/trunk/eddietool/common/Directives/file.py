@@ -59,7 +59,7 @@ import time
 import shutil
 import sys
 
-sys.path.append('..')        # for Eddie common modules
+# sys.path.append('..')        # for Eddie common modules
 
 # Imports: Eddie
 from eddietool.common import log, directive, utils

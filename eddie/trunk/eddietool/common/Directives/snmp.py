@@ -93,9 +93,9 @@ class SNMP(directive.Directive):
         self.errors=0
 
         try:
-            from pysnmp import session
+            from eddietool.common.Extra.pysnmp import session
             self.session = session        # save pointer to module if import ok
-            from pysnmp import error
+            from eddietool.common.Extra.pysnmp import error
             self.pysnmperror = error
         except ImportError:
             raise directive.ParseFailure, "Cannot import pysnmp module - SNMP directive not available."
