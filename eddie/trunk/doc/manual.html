@@ -1152,7 +1152,7 @@
      <li> <b>rule=&lt;rule string&gt;</b> <i>(optional)</i>:
           <br>
           - the rule argument is optional for this directive, and defaults
-          to "linecount &gt; 0".  i.e., the rule is true if 1 or more scanned
+          to "matchedcount &gt; 0".  i.e., the rule is true if 1 or more scanned
           lines match the regex.  This can, of course, be overridden by
           supplying a custom rule argument.
     </ul><br>
@@ -1161,25 +1161,27 @@
     <ul>
      <li> <b>linecount</b> (integer)
           <br>
-          - the number of lines scanned.
+          - the number of lines scanned (not necessarily the number of lines
+          returned if a regex was used).
      <li> <b>matchedcount</b> (integer)
           <br>
-          - this variable contains the number of lines which matched the
-          regular expression(s) for this scan.
+          - this variable contains the number of lines that were returned by
+          the scan (i.e. only those that passed the regex filter).
           [Eddie 0.35+]
      <li> <b>unmatchedcount</b> (integer)
           <br>
-          - this variable contains the number of lines which did not match the
-          regular expression(s) for this scan.
+          - this variable contains the number of lines which were filtered out
+          by the regex (and, possibly, negate) rules.
           [Eddie 0.35+]
      <li> <b>lines</b> (string)
           <br>
           - the actual lines of the file that matched the regex are stored in
-          this variable.
+          this variable.  The number of lines returned should always equal
+          matchedcount.
      <li> <i>Examples:</i>
           <pre>
-          rule='linecount &gt; 0'    # true if 1 or more lines matched (default rule)
-          rule='lines != ""'      # true if some lines matched (same result as above)</pre>
+          rule='matchedcount &gt; 0'  # true if 1 or more lines matched (default rule)
+          rule='lines != ""'          # true if some lines matched (same result as above)</pre>
     </ul>
 
     Action Variables:
@@ -1196,7 +1198,7 @@
      <li> Plus all the rule variables as usual.
      <li> <i>Examples:</i>
           <pre>
-          action=email("alert", "%(linecount)d lines matched scan, they are:\n%(lines)s")</pre>
+          action=email("alert", "%(matchedcount)d lines matched scan, they are:\n%(lines)s")</pre>
     </ul>
 
     <i>Directive Examples:</i>
@@ -1206,14 +1208,14 @@
             file='/var/log/messages'
             regex='.*'
             scanperiod='12h'
-            action=email("alert", "%(h)s:%(file)s", "-- Logscan matched %(linecount)d lines: --\n%(lines)s")
+            action=email("alert", "%(h)s:%(file)s", "-- Logscan matched %(matchedcount)d lines: --\n%(lines)s")
 
         # Email lines from /var/log/httpd/error_log, and ignore "notice" messages
         LOGSCAN httpd_error:
             file='/var/log/httpd/error_log'
             regex='.*[notice].*'
             negate=true
-            action=email("alert", "%(h)s:%(file)s", "-- Logscan matched %(linecount)d lines: --\n%(lines)s")
+            action=email("alert", "%(h)s:%(file)s", "-- Logscan matched %(matchedcount)d lines: --\n%(lines)s")
     </pre>
    </p>
 
