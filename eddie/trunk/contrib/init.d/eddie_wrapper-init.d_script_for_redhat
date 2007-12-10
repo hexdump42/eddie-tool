@@ -68,7 +68,7 @@ start() {
 }
 
 stop() {
-    eddiepid=`mypidof eddie.py`
+    eddiepid=`mypidof eddie-agent`
     if test "x$eddiepid" != x; then
 	echo -n $"Stopping Eddie: "
 	kill -TERM $eddiepid
@@ -77,7 +77,7 @@ stop() {
 	success
 	echo
     else
-        echo "eddie.py not running"
+        echo "eddie-agent not running"
     fi
 
     ewrappid=`mypidof eddie_wrapper`
@@ -99,7 +99,7 @@ stop() {
 restart() {
     # kill eddie and rely on eddie_wrapper to restart it
     echo -n $"Restarting Eddie: "
-    eddiepid=`mypidof eddie.py`
+    eddiepid=`mypidof eddie-agent`
     if test "x$eddiepid" != x; then
 	kill -TERM $eddiepid
 	[ $? -eq 0 ] || myfail $?
@@ -107,7 +107,7 @@ restart() {
 	success
 	echo
     else
-        echo "eddie.py not running"
+        echo "eddie-agent not running"
     fi
 
     if test "x`mypidof eddie_wrapper`" = x; then
@@ -126,7 +126,7 @@ case "$1" in
             ;;
         
         status)
-            status eddie.py
+            status eddie-agent
             status eddie_wrapper
             ;;
         restart)

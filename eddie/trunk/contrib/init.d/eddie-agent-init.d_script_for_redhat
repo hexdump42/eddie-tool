@@ -1,0 +1,74 @@
+#!/bin/sh
+##
+## Start/stop script for eddie-agent ... Chris Miles 20071210
+## http://eddie-tool.net/
+##
+## $Id$
+##
+# chkconfig: 345 99 1
+# description: EDDIE-Tool monitoring agent
+
+# Source function library.
+. /etc/rc.d/init.d/functions
+
+CONFIG="/opt/eddie/config/eddie.cf"
+
+SCRIPT="eddie-agent"
+NAME="eddie-agent"
+
+start() {
+    echo -n $"Starting $NAME"
+    daemon --user root --check "$SCRIPT" "$SCRIPT -d $CONFIG"
+    RETVAL=$?
+    [ $RETVAL -eq 0 ] && touch /var/lock/subsys/$NAME
+    echo
+    return $RETVAL
+}
+
+stop() {
+    if test "x`pidof -x $SCRIPT`" != x; then
+	echo -n $"Stopping $NAME: "
+	killproc $SCRIPT
+	echo
+    else
+        echo "$NAME not running"
+    fi
+
+    RETVAL=$?
+    [ $RETVAL -eq 0 ] && rm -f /var/lock/subsys/$NAME
+    return $RETVAL
+}
+
+restart() {
+    stop
+    start
+}
+
+case "$1" in
+        start)
+            start
+            ;;
+        
+        stop)
+            stop
+            ;;
+        
+        status)
+            status $SCRIPT
+            ;;
+        restart)
+            restart
+            ;;
+        condrestart)
+            if test "x`pidof -x $SCRIPT`" != x; then
+                restart
+            fi
+            ;;
+        
+        *)
+            echo $"Usage: $0 {start|stop|restart|condrestart|status}"
+            exit 1
+
+esac
+
+exit 0

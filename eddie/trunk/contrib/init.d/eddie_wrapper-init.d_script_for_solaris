@@ -19,7 +19,7 @@ case "$1" in
 		echo "Error: there is no Eddie config."
 		exit 1
 	fi
-	pid=`/usr/bin/ps -ef | /usr/bin/grep \.\*python\.\*eddie.py  | grep -v grep | awk '{ print $2 }'`
+	pid=`/usr/bin/ps -ef | /usr/bin/grep \.\*python\.\*eddie-agent  | grep -v grep | awk '{ print $2 }'`
 	if [ "${pid}" != "" ]; then
 		echo "Error: Eddie is already running."
 		exit 2
@@ -39,7 +39,7 @@ case "$1" in
 
 'stop')
 	echo "Stopping Eddie... \c"
-	pid=`/usr/bin/ps -ef | /usr/bin/grep \.\*python\.\*eddie.py  | grep -v grep | awk '{ print $2 }'`
+	pid=`/usr/bin/ps -ef | /usr/bin/grep \.\*python\.\*eddie-agent  | grep -v grep | awk '{ print $2 }'`
 	if [ "${pid}" != "" ]; then
 		/usr/bin/kill ${pid}
 		echo done.
@@ -60,7 +60,7 @@ case "$1" in
         ;;
 
 'reload')
-	pid=`/usr/bin/ps -ef | /usr/bin/grep \.\*python\.\*eddie.py  | grep -v grep | awk '{ print $2 }'`
+	pid=`/usr/bin/ps -ef | /usr/bin/grep \.\*python\.\*eddie-agent  | grep -v grep | awk '{ print $2 }'`
 	echo "Reloading Eddie Config... \c"
 	if [ "${pid}" != "" ]; then
 		/usr/bin/kill -HUP ${pid}
