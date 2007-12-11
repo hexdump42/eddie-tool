@@ -104,14 +104,18 @@ class LOGSCAN(directive.Directive):
 
         try:
             self.args.negate                # whether to negate rule
-            if self.args.negate == '1' or self.args.negate == 'true' or self.args.negate == 'on':
-                self.args.negate = 1
-            elif self.args.negate == '0' or self.args.negate == 'false' or self.args.negate == 'off':
-                self.args.negate = 0
+            if self.args.negate == True or self.args.negate == 1 or \
+                    self.args.negate == '1' or self.args.negate.lower() == 'true' or \
+                    self.args.negate.lower() == 'on':
+                self.args.negate = True
+            elif self.args.negate == False or self.args.negate == 0 or \
+                    self.args.negate == '0' or self.args.negate.lower() == 'false' or \
+                    self.args.negate.lower() == 'off':
+                self.args.negate = False
             else:
                 raise directive.ParseFailure, "Unknown argument '%s' to negate option" % (self.args.negate)
         except AttributeError:
-            self.args.negate = 0
+            self.args.negate = False
 
         # Default rule for this directive
         try:
