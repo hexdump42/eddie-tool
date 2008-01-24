@@ -44,6 +44,7 @@
 :syn match eddieStatement +cmd=+
 :syn match eddieStatement +file=+
 :syn match eddieStatement +regex=+
+:syn match eddieStatement +regfile=+
 :syn match eddieStatement +fs=+
 :syn match eddieStatement +console=+
 :syn match eddieStatement +request_timeout=+
