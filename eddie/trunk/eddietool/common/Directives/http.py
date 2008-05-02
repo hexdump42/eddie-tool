@@ -375,7 +375,7 @@ class HTTP(directive.Directive):
                         data['errstr'] = e[1][1]
                     else:
                         data['errstr'] = str(e[1])
-                except AttributeError:
+                except (AttributeError, TypeError):
                     data['errstr'] = str(e)
 
             data['time_response'] = time_response_end - time_response_start
