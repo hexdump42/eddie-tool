@@ -1,3 +1,6 @@
+from ez_setup import use_setuptools
+use_setuptools()
+
 from setuptools import setup, find_packages
 import sys, os
 
@@ -22,7 +25,25 @@ setup(name='Eddie-Tool',
     install_requires=[
         # -*- Extra requirements: -*-
     ],
-    entry_points="""
-    # -*- Entry points: -*-
-    """,
+    entry_points={
+        'console_scripts': [
+            'eddie-agent = eddietool.commands:agent',
+        ],
+    },
+    data_files = [
+        ('config-sample', ['config-sample/eddie.cf']),
+        ('config-sample/rules', [
+            'config-sample/rules/cache.rules',
+            'config-sample/rules/common.rules',
+            'config-sample/rules/dns.rules',
+            'config-sample/rules/host.rules',
+            'config-sample/rules/message.rules',
+            'config-sample/rules/news.rules',
+            'config-sample/rules/rrd.rules',
+            'config-sample/rules/sys_linux.rules',
+            'config-sample/rules/sys_solaris.rules',
+            'config-sample/rules/win32_sample.rules',
+        ]),
+        ('doc', ['doc/manual.html']),
+    ],
 )
