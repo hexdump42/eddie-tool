@@ -196,6 +196,11 @@ class df:
     def __init__(self, arg):
         self.data = arg
 
+    def __str__(self):
+        str = "%-25s %10s %10s %10s %6s  %s\n" % ("Filesystem","Size","Used","Available","Use%","Mounted on")
+        str = str + "%-25s %10s %10s %10s %5.2f%%  %s" % (self.data['fsname'],self.data['size'],self.data['used'],self.data['avail'],self.data['pctused'],self.data['mountpt'])
+
+        return(str)
 
     def getHash(self):
         """Return a copy of the filesystem data dictionary.
