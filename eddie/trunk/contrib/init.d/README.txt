@@ -1,43 +1,54 @@
-This directory contains various init.d scripts for controlling Eddie.
+init.d/SMF contributions
+========================
+
+This directory contains various scripts & manifests for controlling Eddie.
 Use the script appropriate for your operating system & distribution.
-They may need to be modified to suit your specific environment.
+You should modify the file appropriately to suit your specific environment.
 
 
 Redhat Linux
 ------------
 
- Install the chosen init.d script by copying to /etc/init.d/ and
- running chkconfig.
+Install the chosen init.d script by copying to /etc/init.d/ and
+running chkconfig.
 
- Example:
- {{{
+Example::
+
  # cp eddie-agent-init.d_script_for_redhat /etc/init.d/eddie-agent
  # /sbin/chkconfig --add eddie-agent
- }}}
 
- eddie-agent-init.d_script_for_redhat:
+eddie-agent-init.d_script_for_redhat:
  
-   Use to control the eddie-agent daemon directly.
+ Use to control the eddie-agent daemon directly.
 
- eddie_wrapper-init.d_script_for_redhat:
+eddie_wrapper-init.d_script_for_redhat:
 
-   Use to control the eddie-agent daemon via the eddie_wrapper
-   script (found in Eddie source contrib/eddie_wrapper).  This
-   script attempts to re-start eddie-agent if it dies for
-   any reason.
+ Use to control the eddie-agent daemon via the eddie_wrapper
+ script (found in Eddie source contrib/eddie_wrapper).  This
+ script attempts to re-start eddie-agent if it dies for
+ any reason.
 
 
 Solaris
 -------
 
- Solaris 10 / SMF:
+Solaris 10 / SMF:
 
-  The SMF method and manifest scripts are supplied.  Import
-  them using svccfg.
+ An SMF manifest is provided.  Modify it to specify the location
+ of `eddie-agent` and the config file, then import it to create
+ the service with::
 
- Older Solaris releases:
+  # svccfg import eddie-agent.xml
 
-  Copy eddie_wrapper-init.d_script_for_solaris to /etc/init.d/
-  and create symlinks from the /etc/rc*.d/ directories as
-  required.
+ View the service state and start/stop it with::
+
+  # svcs -v eddie-agent
+  # svcadm enable eddie-agent
+  # svcadm disable eddie-agent
+
+Older Solaris releases:
+
+ Copy eddie_wrapper-init.d_script_for_solaris to /etc/init.d/
+ and create symlinks from the /etc/rc*.d/ directories as
+ required.
 

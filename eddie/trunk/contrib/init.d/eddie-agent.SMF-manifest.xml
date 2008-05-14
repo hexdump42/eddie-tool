@@ -1,0 +1,61 @@
+<?xml version="1.0"?>
+<!DOCTYPE service_bundle SYSTEM "/usr/share/lib/xml/dtd/service_bundle.dtd.1">
+<!--
+        Created by Chris Miles <miles.chris@gmail.com> 20080514
+-->
+
+<service_bundle type='manifest' name='eddie-agent'>
+
+<service
+        name='site/eddie-agent'
+        type='service'
+        version='1'>
+
+        <single_instance />
+
+        <instance name='default' enabled='false'>
+
+                <dependency
+                        name='multi-user-server'
+                        grouping='require_all'
+                        restart_on='error'
+                        type='service'>
+                </dependency>
+
+                <exec_method
+                        type='method'
+                        name='start'
+                        exec='/usr/bin/eddie-agent %{config_file}'
+                        timeout_seconds='60' />
+
+                <exec_method
+                        type='method'
+                        name='stop'
+                        exec=':kill'
+                        timeout_seconds='60' />
+
+                <property_group name='startd' type='framework'>
+                        <propval name='duration' type='astring' value='child' />
+                        <propval name='ignore_error' type='astring' value='core,signal' />
+                </property_group>
+
+                <property_group name='application' type='application'>
+                    <propval name='config_file' type='astring' value='/opt/eddie/config/eddie.cf' />
+                </property_group>
+
+                <template>
+                        <common_name>
+                                <loctext xml:lang='C'>
+                                        Eddie-Tool monitoring agent.
+                                </loctext>
+                        </common_name>
+                </template>
+
+        </instance>
+
+        <stability value='Unstable' />
+
+</service>
+
+</service_bundle>
+
