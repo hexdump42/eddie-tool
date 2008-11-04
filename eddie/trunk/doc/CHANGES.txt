@@ -1,6 +1,34 @@
 Eddie CHANGES
 (reverse chronological order)
 
+Eddie-0.37.2 (04-Nov-2008)
+ - Updated the eddie-agent SMF manifest, removing the need for a
+   method script.
+ - Bugfix: Solaris filesystem information was not being output properly.
+ - Add the missing vim syntax colouring to the "regfile" statement.
+   Patch submitted by Peter Poeml.
+ - Improved the parsing of the LOGSCAN negate values.
+ - Updated documentation & comments for the DBI directive.
+ - Cleaned up part of the LOGSCAN code, for computing the number
+   of matched and unmatched lines. LOGSCAN now defaults to matching
+   all lines if neither regex or regfile arguments are defined.
+ - Fixed the documentation for LOGSCAN, which was showing examples
+   using the linecount variable as the number of lines matched,
+   instead of matchedcount.  This had lead to some confusion.
+ - Moved eddie_wrapper shell script to contrib directory.
+ - Renamed "HP-UX" to "HP_UX" as the former was not a valid Python
+   module/package name.
+ - Moved all operating system specific modules under eddietool.arch.
+ - Replace characters in osname, osver, osarch that cannot be used
+   in Python module names.
+ - Exceptions are now defined as sub-classes of Exception.
+ - Restructured source as an installable Python package (eddietool) with a
+   console script "eddie-agent".  setuptools is used so Eddie can be
+   distributed as an egg.
+ - HTTP directive gracefully handles the case of cookielib module not
+   being available (i.e. in Python 2.3 and earlier).  The persist_cookies
+   option will be disabled if cookielib cannot be imported.
+
 Eddie-0.36 (04-Dec-2007)
  - Eddie will now throw an error and exit if a config file cannot be read.
  - Added persist_cookies option to HTTP directive.  It is used to
