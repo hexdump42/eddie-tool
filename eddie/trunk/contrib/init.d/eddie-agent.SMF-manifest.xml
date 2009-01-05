@@ -16,7 +16,7 @@
         <instance name='default' enabled='false'>
 
                 <dependency
-                        name='multi-user-server'
+                        name='all'
                         grouping='require_all'
                         restart_on='error'
                         type='service'>
@@ -25,7 +25,7 @@
                 <exec_method
                         type='method'
                         name='start'
-                        exec='/usr/bin/eddie-agent %{config_file}'
+                        exec='/usr/bin/eddie-agent --startup-delay %{startup_delay} %{config_file}'
                         timeout_seconds='60' />
 
                 <exec_method
@@ -41,6 +41,7 @@
 
                 <property_group name='application' type='application'>
                     <propval name='config_file' type='astring' value='/opt/eddie/config/eddie.cf' />
+                    <propval name='startup_delay' type='astring' value='0' />
                 </property_group>
 
                 <template>
@@ -49,11 +50,14 @@
                                         Eddie-Tool monitoring agent.
                                 </loctext>
                         </common_name>
+                        <documentation> 
+                              <doc_link name='Documentation' uri='http://eddie-tool.net/doc/' /> 
+                        </documentation> 
                 </template>
 
         </instance>
 
-        <stability value='Unstable' />
+        <stability value='Evolving' />
 
 </service>
 

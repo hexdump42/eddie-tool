@@ -438,8 +438,9 @@ def main():
 
     if Options.startup_delay:
         delay = int(Options.startup_delay)
-        log.log( "<eddie>main(): pausing %d seconds before executing rules" %delay, 5)
-        time.sleep(delay)
+        if delay > 0:
+            log.log( "<eddie>main(): pausing %d seconds before executing rules" %delay, 5)
+            time.sleep(delay)
     
     if Options.daemon:
         # Create a child process, then have the parent exit
