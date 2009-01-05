@@ -351,20 +351,33 @@ def doArgs():
     parser = optparse.OptionParser(usage=usageMsg, version=versionMsg)
     # parser.add_option('-c', '--config', dest='config',                 \
     #                     metavar="FILE", help="Load config from FILE")
-    parser.add_option('--showconfig', action="store_true",         \
+    parser.add_option('--showconfig', action="store_true",
+                        default=False,
                         help="Dump config")
-    parser.add_option('-v', '--verbose', action="store_true",        \
+    parser.add_option('-v', '--verbose', action="store_true",
+                        default=False,
                         help="Enable verbose output")
-    parser.add_option('-d', '--daemon', action="store_true",        \
+    parser.add_option('-d', '--daemon', action="store_true",
+                        default=False,
                         help="Run as a daemon")
-    parser.set_defaults(showconfig=False, verbose=False,        \
-                        daemon=False)
+    parser.add_option('-S', '--startup-delay', action='store', dest="startup_delay",        \
+                        default=None, metavar="SECONDS",
+                        help="Number of SECONDS to pause at startup before monitoring rule execution commences.")
 
     # Parse.  We dont accept arguments, so we complain if they're found.
     (options, args) = parser.parse_args()
     if len(args) != 1:
         parser.error('Configuration file must be given as first argument.')
 
+    if options.startup_delay is not None:
+        # Check value is acceptable
+        try:
+            value = int(options.startup_delay)
+            if value < 0:
+                raise ValueError()
+        except:
+            parser.error("-S|--startup-delay value must be a positive integer value.")
+    
     # All good - return the option dict
     return (options, args[0])
 
@@ -423,6 +436,11 @@ def main():
         print Config
         eddieexit()
 
+    if Options.startup_delay:
+        delay = int(Options.startup_delay)
+        log.log( "<eddie>main(): pausing %d seconds before executing rules" %delay, 5)
+        time.sleep(delay)
+    
     if Options.daemon:
         # Create a child process, then have the parent exit
         cpid = utils.create_child(True)
