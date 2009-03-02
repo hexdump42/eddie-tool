@@ -391,6 +391,7 @@ def main():
     # Parse command-line arguments
     # instantiate global Options object
     global Options
+    global config_file
     Options, config_file = doArgs()
 
     # Catch most important signals
