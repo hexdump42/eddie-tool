@@ -36,6 +36,7 @@ __license__ = '''
 import sys, os, string, tokenize
 # Eddie specific modules
 import config, log, utils
+from directive import TemplateDirective
 
 
 #### Exceptions ####
@@ -121,7 +122,7 @@ class State:
                     try:
                         self.direc.Config = self.Config
                         self.direc.tokenparser(self.direcargs, self.directypes, self.indent)
-                    except 'Template':
+                    except TemplateDirective:
                         log.log( "<parseConfig>tokeneater(), directive is a Template, args: %s" % (dir(self.direc.args)), 8 )
 
                     if self.indent < self.direcindent:        # back to previous directive level
@@ -177,7 +178,7 @@ class State:
                 try:
                     self.direc.Config = self.Config
                     self.direc.tokenparser(self.direcargs, self.directypes, self.indent)
-                except 'Template':
+                except TemplateDirective:
                     log.log( "<parseConfig>tokeneater(), directive is a Template, args: %s" % (dir(self.direc.args)), 8 )
 
                 savetoklist = self.toklist        # save token list - not parsed yet

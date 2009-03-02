@@ -57,6 +57,10 @@ class DirectiveError(Exception):
     """
 
 
+class TemplateDirective(Exception):
+    """Directive being parsed is a template.
+    """
+
 
 ##
 ## Directive management objects
@@ -555,7 +559,7 @@ class Directive:
 
         if self.args.template == 'self':
             # jump out of token parsing if this is a template only
-            raise 'Template'
+            raise TemplateDirective
 
 
     def evalAction(self, actioncall):
