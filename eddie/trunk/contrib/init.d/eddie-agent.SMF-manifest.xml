@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE service_bundle SYSTEM "/usr/share/lib/xml/dtd/service_bundle.dtd.1">
 <!--
-        Created by Chris Miles <miles.chris@gmail.com> 20080514
+        Author: Chris Miles <miles.chris@gmail.com> 20090409
 -->
 
 <service_bundle type='manifest' name='eddie-agent'>
@@ -15,12 +15,13 @@
 
         <instance name='default' enabled='false'>
 
-                <dependency
-                        name='all'
-                        grouping='require_all'
-                        restart_on='error'
-                        type='service'>
-                </dependency>
+		<dependency name="network" grouping="require_all" restart_on="error" type="service">
+		    <service_fmri value="svc:/milestone/network:default"/>
+		</dependency>
+
+		<dependency name="filesystem" grouping="require_all" restart_on="error" type="service">
+		    <service_fmri value="svc:/system/filesystem/local"/>
+		</dependency>
 
                 <exec_method
                         type='method'
