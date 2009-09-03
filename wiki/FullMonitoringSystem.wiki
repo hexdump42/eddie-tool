@@ -1,0 +1,34 @@
+#summary Installing all the pieces for a full monitoring solution.
+#labels Phase-Deploy
+
+== How to install all the pieces ==
+
+To have an awesome monitoring system, you need to accompany !EddieTool 
+with some other applications. This will hopefully help with the steps to go through to get all of the parts working together.
+
+
+=== Standalone servers - email notification ===
+Installing !EddieTool standalone will provide email notification of problems. This can also provide a paging system if you have something like an email-to-SMS gateway.
+
+ * InstallEddieTool
+ - requires python 2.2 or newer
+ - requires priveliged access (?) to get some info - ie: network some interface 
+
+=== Using elvin : to populate tickers ===
+Elvin is a tool that can send and receive network messages. Adding Elvin to your install lets you subscribe to alerts and information via a program you may write, or something like a tickertape program. !EddieTool supports sending Elvin messages out of "the box" but requires the elvin libraries to do so.
+
+ * InstallElvin
+
+=== Using elvin : to populate RRD (databases) ===
+
+Round Robin Databases (RRD) are flat text files that can hold historical information which is amortised over time. A popular use of these databases is to graph performance and capacity over time and are the basis of many graphing packages including EddieBrowser, Cricket, Cacti and MRTG. The package to create and query these databases is RRDTool. 
+PyRRD is the python module to link into RRDTool.
+ElvinRRD is a listener that subscribes to elvin channels, and writes RRD data recieved to RR-databases.
+
+These tools allow you to have a central server to recieve elvin messages from remote hosts, and write RRD files for later use in graphical or text based representations of performance and capacity data.
+
+ * InstallRrdTool
+
+ * InstallPyRrd (requires RRD Tool)
+
+ * InstallElvinRrd (listens to elvin, writes to rrd's) - This may have been depricated now by elvincricket 
