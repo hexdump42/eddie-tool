@@ -1,7 +1,7 @@
 #labels Phase-Deploy
 == Installing RRDTool ==
 
-!RRDTool is used to format data from any sort of source you can define, and saves
+RRDTool is used to format data from any sort of source you can define, and saves
 the data in a database.
 
 It comes from: http://people.ee.ethz.ch/~oetiker/webtools/rrdtool/
