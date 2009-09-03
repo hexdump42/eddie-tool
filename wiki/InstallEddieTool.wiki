@@ -1,6 +1,4 @@
-#summary One-sentence summary of this page.
 #labels Featured,Phase-Deploy
-
 !EddieTool comes from:
 
  http://eddie-tool.net/
