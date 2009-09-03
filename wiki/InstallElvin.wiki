@@ -1,4 +1,8 @@
 #labels Phase-Deploy,Deprecated
+_Update: the Elvin project is no longer available.  Use Spread instead. See SpreadMessaging_
+
+----
+
 Elvin has two parts - libelvin and elvind
 
 
