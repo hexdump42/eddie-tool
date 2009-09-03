@@ -1,4 +1,5 @@
 #summary Help with installing Eddie.
+#labels Featured,Phase-Deploy
 
 = Installing Eddie =
 
