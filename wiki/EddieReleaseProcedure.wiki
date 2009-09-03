@@ -1,0 +1,27 @@
+= Procedure for an Eddie Release =
+
+Core:
+ * Update {{{__version__}}} string in {{{bin/eddie.py}}}
+ * Update {{{doc/CHANGES.txt}}} with the important changes from the svn logs.
+ * Create a tarball & zip from an svn export of trunk. E.g.
+  {{{
+$ svn export https://secure.thoh.net/svn/eddie-tool/eddie/trunk eddie-0.36
+$ tar cvzf eddie-0.36.tgz eddie-0.36
+$ zip -r eddie-0.36.zip eddie-0.36
+}}}
+ * Copy the tarball & zip to the public download area.
+ * Copy {{{doc/manual.html}}} to the web server.
+ * Update HTML files on web server:
+  * download/index.html
+  * download/download.html
+  * index.html
+
+Freshmeat:
+ * Add Release at http://freshmeat.net/projects/eddietool/
+
+PYPI:
+ * Add Release at http://pypi.python.org/pypi?%3Aaction=pkg_edit&name=EDDIE-Tool
+
+Mailing Lists:
+ * Send announcement to Eddie lists: eddie-users@yahoogroups.com, eddie-dev@yahoogroups.com
+ * Send announcement to: python-announce-list@python.org
