@@ -15,6 +15,9 @@ Installing !EddieTool standalone will provide email notification of problems. Th
  - requires priveliged access (?) to get some info - ie: network some interface 
 
 === Using elvin : to populate tickers ===
+
+_Update: the Elvin project is no longer available. Use Spread instead. See SpreadMessaging_
+
 Elvin is a tool that can send and receive network messages. Adding Elvin to your install lets you subscribe to alerts and information via a program you may write, or something like a tickertape program. !EddieTool supports sending Elvin messages out of "the box" but requires the elvin libraries to do so.
 
  * InstallElvin
