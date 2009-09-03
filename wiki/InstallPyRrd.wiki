@@ -1,0 +1,14 @@
+== Installing the PyRRD Module ==
+Get it from:
+
+http://sourceforge.net/projects/py-rrdtool/
+
+
+
+{{{
+PYRRDSRC=/home/sarcher/py-rrdtool-0.2.1
+
+cd $PYRRDSRC 
+
+python setup.py install
+}}}
