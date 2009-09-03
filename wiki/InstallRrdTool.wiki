@@ -1,0 +1,52 @@
+#labels Phase-Deploy
+== Installing RRDTool ==
+
+!RRDTool is used to format data from any sort of source you can define, and saves
+the data in a database.
+
+It comes from: http://people.ee.ethz.ch/~oetiker/webtools/rrdtool/
+
+If you have access to a package management system, you will probably be
+able to find rrdtool ready to go.
+
+If you need to build it from source, the documentation with it in
+doc/rrdbuild.txt is excellent.
+
+Most Commonly Required Libraries:
+
+requires libart-2.0
+     ftp://ftp.gnome.org/pub/GNOME/sources/libart_lgpl/2.3/
+  You can find also find an archive copy on
+     http://people.ee.ethz.ch/~oetiker/webtools/rrdtool/pub/libs
+
+requires libpng
+     http://prdownloads.sourceforge.net/libpng/
+  You can find also find an archive copy on
+     http://people.ee.ethz.ch/~oetiker/webtools/rrdtool/pub/libs
+
+cgi-lib
+     http://prdownloads.sourceforge.net/libpng/
+  You can find also find an archive copy on
+     http://people.ee.ethz.ch/~oetiker/webtools/rrdtool/pub/libs
+
+=== Using py-rrdtool ? read this ! ===
+
+py-rrdtool doesn't work with the recently released RRDTool (1.2xx)
+
+Installing the old RRDTool - Assuming all above libraries are in place
+{{{
+wget http://people.ee.ethz.ch/~oetiker/webtools/rrdtool/pub/rrdtool-1.0.x/rrdtool-1.0.50.tar.gz
+gunzip rrdtool-1.0.50.tar.gz
+tar -vxf rrdtool-1.0.50.tar
+cd rrdtool-1.0.50
+./configure --prefix=/opt/rrdtool_1.0.50
+gmake
+gmake install
+}}}
+Linking py-rrdtool with rrdtool
+{{{
+CFLAGS=-I/opt/rrdtool_1.0.50/include
+cd ~sarcher/py-rrdtool-0.2.1
+python setup.py install
+
+}}}
