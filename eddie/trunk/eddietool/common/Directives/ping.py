@@ -115,13 +115,15 @@ class PING(directive.Directive):
         Ping a host a set number of times and record number of successful
         responses and round-trip-time stats (min/max and average).
         """
+        data = {}
 
         # Perform the pinging
         try:
             p = pinger.Pinger( self.args.host, self.args.numpings )
         except socket.error, err:
             log.log( "<ping>PING.getData(): Socket Error, host '%s', %s" % (self.args.host,err), 5 )
-            return None
+            data['alive'] = 0
+            return data
 
         p.ping()
         s = p.get_summary()
@@ -136,7 +138,6 @@ class PING(directive.Directive):
         # eg: (0, 0, 1, 3, 3, 0.0)
 
         # assign variables (see above)
-        data = {}
         data['mintriptime'] = s[0]
         data['avgtriptime'] = s[1]
         data['maxtriptime'] = s[2]
