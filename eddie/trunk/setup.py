@@ -31,7 +31,7 @@ The EDDIE Tool can perform all basic system monitoring checks, such as: filesyst
     keywords='',
     author='Chris Miles',
     author_email='miles.chris@gmail.com',
-    url='http://eddie-tool.net/',
+    url='http://eddie-tool.psychofx.com/',
     download_url='http://pypi.python.org/pypi/EDDIE-Tool',
     license='GPL',
     packages=find_packages(exclude=['ez_setup', 'examples', 'tests']),

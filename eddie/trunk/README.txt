@@ -37,7 +37,7 @@ can be found at:
 * doc/manual.html in the installed egg directory (look
   in the Python lib site-packages).
 
-* http://eddie-tool.net/doc/manual.html
+* http://eddie-tool.psychofx.com/doc/manual.html
 
 The quickest way to get started is to copy the sample
 configuration directory `config-sample` (found in the

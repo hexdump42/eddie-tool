@@ -14,7 +14,7 @@ __copyright__ = 'Copyright (c) Chris Miles 2008'
 
 __author__ = 'Chris Miles'
 
-__url__ = 'http://eddie-tool.net/'
+__url__ = 'http://eddie-tool.psychofx.com/'
 
 __license__ = '''
     This program is free software; you can redistribute it and/or modify
