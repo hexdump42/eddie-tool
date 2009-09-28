@@ -11,7 +11,7 @@ $Id$
 
 __version__ = '$Revision$'
 
-__copyright__ = 'Copyright (c) Chris Miles 2007'
+__copyright__ = 'Copyright (c) Chris Miles 2007-2009'
 
 __author__ = 'Chris Miles'
 
@@ -31,4 +31,4 @@ __license__ = '''
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 '''
 
-version = '0.37.4.0'
+version = '1.0.0'
