@@ -1,0 +1,119 @@
+EddieTool comes from:
+
+> http://eddie-tool.net/
+
+
+
+A quickstart tutorial is available at:
+
+> http://eddie-tool.googlecode.com/svn/eddie/trunk/doc/QUICKSTART.txt
+
+
+
+The basic path is:
+
+download, unpack, install a basic config and run eddie/bin/eddie.py
+
+
+
+It is worth noting, that once your config tree is setup on one server, you can simply copy the whole eddie
+
+tree to other servers. With this in mind, when you are crafting your rulesets, if a rule will only work on say
+
+Linux, and you will be running on linux and solaris, consider using classes to define your hosts.
+
+
+
+A suggested basic config is shown below, and should work on any unix/linux.
+
+It checks the following:
+
+> / is under 90% full -> email if fails check
+
+> /etc/passwd hasn't changed -> email if fails check
+
+
+
+
+
+1) put correct path to python in eddie/bin/eddie.py
+
+2) edit these lines in eddie/config/eddie.cf to reflect your details
+
+```
+
+ADMIN="eddie_admins@mydomain.com"
+
+EMAIL_FROM='eddietool@mydomain.com'
+
+EMAIL_REPLYTO='eddietool@mydomain.com'
+
+SMTP_SERVERS='mail.mydomain.com'
+
+ALIAS ALERT_EMAIL="eddie_alert@mydomain.com"
+
+ALIAS ONCALL_EMAIL="eddie_pager@mydomain.com"
+
+```
+
+2.2) comment out any lines beginning with "CLASS"
+
+
+
+2.3) use these INCLUDE rules
+
+```
+INCLUDE 'rules/message.rules'   # common MSG definitions
+
+INCLUDE 'rules/common.rules'    # common rules for all hosts
+```
+
+
+
+3) copy eddie/config.sample/message.rules and eddie/config.sample/common.rules
+
+to eddie/config/
+
+
+
+4) edit common.rules and go down to "COMMON DIRECTIVES"
+
+
+
+comment or remove all lines below, except for / add in these lines:
+
+```
+
+FS root:
+
+    fs='/'
+
+    rule='pctused >= 90'
+
+    action=COMMONALERT(commonmsg.fs,1)
+
+    act2ok=COMMONFIXED(commonmsg.fs,0)
+
+
+
+FILE passwd:
+
+    file='/etc/passwd'
+
+    rule='md5 != lastmd5'
+
+    scanperiod='1h'
+
+    action=email(ALERT_EMAIL,"%(file)s has changed")
+
+```
+
+
+
+5) Ready to start checking!
+
+priv/sudo/as root run eddie/bin/eddie.py &
+
+
+
+check /var/log/eddie/log for errors
